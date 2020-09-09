@@ -1,0 +1,21 @@
+version: 2.1
+orbs:
+  node: circleci/node@4.0.0
+jobs:
+  build:
+    machine:
+      image: 'ubuntu-1604:201903-01'
+    steps:
+      - checkout
+      - run: docker-compose up
+      - store_artifacts:
+          path: docs-compiled
+      - run: |
+            echo 'export NVM_DIR="/opt/circleci/.nvm"' >> $BASH_ENV
+            echo ' [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
+      - run: |
+          nvm install v12
+          node -v
+          nvm alias default v12
+      - run: npm install moxci
+      - run: npx moxci docs-compiled/index.html -c "Preview the updated docs here.  Thanks for your contribution!"
