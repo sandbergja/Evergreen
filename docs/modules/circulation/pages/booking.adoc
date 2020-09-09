@@ -3,6 +3,8 @@
 
 == Creating a Booking Reservation ==
 
+Booking is super enjoyable!
+
 indexterm:[scheduling,resources using the booking module]
 indexterm:[booking,reserving a resource]
 indexterm:[booking,creating a reservation]
