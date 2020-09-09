@@ -3,6 +3,8 @@
 
 == Initial Configuration ==
 
+Acquisitions is such a great module to work with!
+
 Before beginning to use Acquisitions, the following must be configured by an administrator:
 
 * Cancel/Suspend Reasons (optional)
