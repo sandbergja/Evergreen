@@ -3,6 +3,8 @@
 
 == Editing MARC Records ==
 
+The MARC editor is pretty sweet!
+
 . Retrieve the record. 
 +
 [TIP]
