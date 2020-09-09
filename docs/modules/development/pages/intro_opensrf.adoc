@@ -2,6 +2,13 @@
 :toc:
 
 == Abstract ==
+
+Some *strong markup _that overlaps* emphasized markup_.
+
++monospaced text with an _emphasized_ word+
+
+include::file_that_doesnt_exist.adock[]
+
 The Evergreen open-source library system serves library consortia composed of
 hundreds of branches with millions of patrons - for example,
 http://www.georgialibraries.org/statelibrarian/bythenumbers.pdf[the Georgia
