@@ -225,7 +225,14 @@ within the "form" by name for validation.
       [% l('Send Password Reset Link') %]</button>
   </div>
 </div>
-
+<div class="row reg-field-row" ng-show="!patron.isnew">
+    <div class="col-md-3">
+    </div>
+    <div class="col-md-9">
+        <div ng-show="password_age !== undefined && password_age !== '' && password_age !== '-1'"><i>[% l('Password last changed <b>[_1]</b> day(s) ago', '{{password_age}}') %]</i></div>
+        <div ng-show="password_age === '-1'"><i>[% l('User has never changed their password') %]</i></div>
+    </div>
+</div>
 <div class="row reg-field-row">
   <div class="col-md-6">
     <ul class="nav nav-pills nav-pills-like-tabs">

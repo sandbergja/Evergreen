@@ -281,4 +281,11 @@ ctx.show_reservations_tab = 'false';
 ##############################################################################
 ctx.show_carousels = 'true';
 
+##############################################################################
+# Password Reminder Settings
+##############################################################################
+
+# days since last password change to start reminding a patron to change their password
+# commenting out this line will disable the reminder
+ctx.password_age_reminder = ctx.get_org_setting(ctx.physical_loc || 1, 'auth.password_expire_age');
 %]

@@ -488,6 +488,9 @@ sub load_common {
             $ctx->{authtoken} = $e->authtoken;
             $ctx->{authtime} = $e->authtime;
             $ctx->{user} = $e->requestor;
+            $ctx->{password_age} = int($U->simplereq(
+                'open-ils.actor',
+                'open-ils.actor.get_password_age', $e->authtoken, $ctx->{user}->id));
             my $card = $self->editor->retrieve_actor_card($ctx->{user}->card);
             $ctx->{active_card} = (ref $card) ? $card->barcode : undef;
             $ctx->{place_unfillable} = 1 if $e->requestor->wsid && $e->allowed('PLACE_UNFILLABLE_HOLD', $e->requestor->ws_ou);

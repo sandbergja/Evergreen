@@ -30,6 +30,7 @@ angular.module('egCoreMod')
         // These are fetched with every instance of the page.
         var page_data = [
             service.get_user_settings(),
+            service.get_user_password_age(),
             service.get_clone_user(),
             service.get_stage_user()
         ];
@@ -667,6 +668,18 @@ angular.module('egCoreMod')
                 });
             }
         });
+    }
+
+    service.get_user_password_age = function() {
+        return egCore.net.request(
+            'open-ils.actor', 
+            'open-ils.actor.get_password_age',
+            egCore.auth.token(),
+            service.patron_id
+        ).then(function(age) {
+            console.log("retrieved from AUSPD: "+age)
+            service.password_age = age;
+        });  
     }
 
     service.invalidate_field = function(patron, field) {
@@ -1491,6 +1504,7 @@ function($scope , $routeParams , $q , $uibModal , $window , egCore ,
         $scope.stat_cat_entry_maps = prs.stat_cat_entry_maps;
         $scope.stage_user = prs.stage_user;
         $scope.stage_user_requestor = prs.stage_user_requestor;
+        $scope.password_age = prs.password_age;
 
         $scope.user_settings = prs.user_settings;
         prs.user_settings = {};

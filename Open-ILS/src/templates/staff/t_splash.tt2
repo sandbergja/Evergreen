@@ -5,6 +5,17 @@
       <h1 class="sr-only" i18n>Evergreen Staff Client Home Page</h1>
     </div>
   </div>
+  <div ng-if="password_reset_age && password_age >= (password_reset_age - 7)" class="alert alert-danger row">[% l('Your password is <b>[_1] days</b> old. It is recommended that passwords be updated every <b>[_2] days</b>.','{{password_age}}','{{password_reset_age}}') %] 
+      <p ng-if="!can_self_update">
+        [% l('Please contact an administrator to have your password changed.') %]
+      </p>
+      <div ng-if="can_self_update">
+      <br>
+        <a class="btn btn-warning btn-block" target="_top" href="{{self_update_link}}">
+        [% l('Update Password') %]
+        </a>
+      </div>
+  </div>
   <br/>
   <div class="row" id="splash-nav">
 

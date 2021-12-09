@@ -3061,6 +3061,11 @@ sub load_myopac_update_password {
         return Apache2::Const::OK;
     }
 
+	if($current_pw eq $new_pw) {
+        $ctx->{password_duplicate} = 1;
+        return Apache2::Const::OK;		
+	}
+
     my $pw_regex = $ctx->{get_org_setting}->($e->requestor->home_ou, 'global.password_regex');
 
     if(!$pw_regex) {

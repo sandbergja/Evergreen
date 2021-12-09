@@ -14,6 +14,24 @@
         <div id="acct_sum_block" class="container">
             <h2>[% l('My Account Summary') %]</h2>
                 <div class="row">
+                    <br>
+                    [% IF ctx.password_age && ctx.password_age_reminder && ctx.disable_password_change != 'true' %]
+                    [% need_password_change = ctx.password_age == -1 || ctx.password_age >= ctx.password_age_reminder %]
+                    <div class="col-12">
+                            [% IF ctx.password_age == -1 %]
+                            [% l('You have never changed your password. Please consider updating your password.') %]
+                            [% ELSIF ctx.password_age >= (ctx.password_age_reminder - 7) %]
+                            [% l('Your password is <b>[_1]</b> days old.',ctx.password_age) %][%- IF !need_password_change %] [% l('You will be asked to change your password soon.') %][%- ELSE %] [% l('It is recommended to update your password every <b>[_1]</b> days. Please consider updating your password.',ctx.password_age_reminder) %][% END %]
+                            [% END %]
+                            [% IF need_password_change %]
+                            <br>
+                            <a class="btn btn-sm btn-action" href='update_password'
+                            title="[% l('Change Password') %]"><i class="fas fa-user-cog"></i> [% l("Change Password") %]</a>
+                            <br>
+                            [% END %]
+                    </div>
+                    <br>
+                    [% END %]  
                     <div class="col-12">
                      <span [% IF ctx.expired_card %]class="danger"[% END %]>
                         [% l("Account Expiration Date") %]:

@@ -285,4 +285,12 @@ contents_truncate_length = 50;
 # Edit parts/record/contents.tt2 to designate character length on a field-by-
 # field basis for notes.
 
+
+##############################################################################
+# Password Reminder Settings
+##############################################################################
+
+# days since last password change to start reminding a patron to change their password
+# commenting out this line will disable the reminder
+ctx.password_age_reminder = ctx.get_org_setting(ctx.physical_loc || 1, 'auth.password_expire_age');
 %]
