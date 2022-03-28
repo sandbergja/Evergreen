@@ -1,6 +1,17 @@
 name: Run tests
 on: push
 jobs:
+  build:
+    name: Run perl tests
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3.0.0
+      - run: wget https://evergreen-ils.org/downloads/opensrf-3.2.2.tar.gz && tar -xvf opensrf-3.2.2.tar.gz
+      - run: cd opensrf-3.2.2 && sudo make -f src/extras/Makefile.install ubuntu-focal
+      - run: ./configure --prefix=/openils --sysconfdir=/openils/conf && make
+      - run: sudo make install
+      - run: cd ..
+      - run: ./configure && make && make check
   ng_lint:
     name: Lint the angular app
     runs-on: ubuntu-latest
