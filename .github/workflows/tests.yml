@@ -18,6 +18,7 @@ jobs:
           - 5432:5432
     steps:
       - uses: actions/checkout@v3.0.0
+      - run: autoreconf -i && ./configure --disable-core --disable-apache-modules && make
       - name: install pg_prove
         run: sudo cpan TAP::Parser::SourceHandler::pgTAP
         env:
@@ -35,7 +36,7 @@ jobs:
         run: make && psql --host localhost --username postgres --dbname postgres --file sql/pgtap.sql
         env:
           PGPASSWORD: postgres
-      - run: perl Open-ILS/src/support-scripts/eg_db_config.in --update-config --service all --create-database --create-schema --create-offline --user postgres --password postgres --hostname localhost --port 5432 --database postgres --admin-user admin-user --admin-pass admin-pass
+      - run: perl Open-ILS/src/support-scripts/eg_db_config --update-config --service all --create-database --create-schema --create-offline --user postgres --password postgres --hostname localhost --port 5432 --database postgres --admin-user admin-user --admin-pass admin-pass
       - run: pg_prove Open-ILS/src/sql/Pg/t
   ng_lint:
     name: Lint the angular app
