@@ -35,7 +35,7 @@ jobs:
         run: make && psql --host localhost --username postgres --dbname postgres --file sql/pgtap.sql
         env:
           PGPASSWORD: postgres
-      - run: perl Open-ILS/src/support-scripts/eg_db_config --update-config --service all --create-database --create-schema --create-offline --user postgres --password postgres --hostname localhost --port 5432 --database postgres --admin-user admin-user --admin-pass admin-pass
+      - run: perl Open-ILS/src/support-scripts/eg_db_config.in --update-config --service all --create-database --create-schema --create-offline --user postgres --password postgres --hostname localhost --port 5432 --database postgres --admin-user admin-user --admin-pass admin-pass
       - run: pg_prove Open-ILS/src/sql/Pg/t
   ng_lint:
     name: Lint the angular app
