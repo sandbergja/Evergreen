@@ -1,11 +1,5 @@
 name: Run tests
-on:
-  push:
-    paths:
-      - 'Open-ILS/src/eg2/**'
-  pull_request:
-    paths:
-      - 'Open-ILS/src/eg2/**'
+on: push
 jobs:
   ng_lint:
     name: Lint the angular app
