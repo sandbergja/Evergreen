@@ -1,0 +1,16 @@
+name: Run tests
+on:
+  push:
+    paths:
+      - 'Open-ILS/src/eg2/**'
+  pull_request:
+    paths:
+      - 'Open-ILS/src/eg2/**'
+jobs:
+  ng_lint:
+    name: Lint the angular app
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v3.0.0
+      - run: cd Open-ILS/src/eg2 && npm i && ng lint
