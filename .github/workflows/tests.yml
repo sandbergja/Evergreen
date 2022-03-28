@@ -2,16 +2,41 @@ name: Run tests
 on: push
 jobs:
   build:
-    name: Run perl tests
+    name: Run pgtap tests
     runs-on: ubuntu-20.04
+    services:
+      postgres:
+        image: postgres:11
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
     steps:
       - uses: actions/checkout@v3.0.0
-      - run: wget https://evergreen-ils.org/downloads/opensrf-3.2.2.tar.gz && tar -xvf opensrf-3.2.2.tar.gz
-      - run: cd opensrf-3.2.2 && sudo make -f src/extras/Makefile.install ubuntu-focal
-      - run: ./configure --prefix=/openils --sysconfdir=/openils/conf && make
-      - run: sudo make install
-      - run: cd ..
-      - run: ./configure && make && make check
+      - name: install pg_prove
+        run: sudo cpan TAP::Parser::SourceHandler::pgTAP
+        env:
+          SHELL: /bin/bash
+      - name: install postgres dev
+        run: sudo apt-get install -y --no-install-recommends postgresql-server-dev-all
+      - name: Checkout pgtap
+        uses: actions/checkout@v2
+        with:
+          repository: theory/pgtap
+          path: pgtap
+          ref: v1.1.0
+      - name: install pgtap
+        working-directory: pgtap
+        run: make && psql --host localhost --username postgres --dbname postgres --file sql/pgtap.sql
+        env:
+          PGPASSWORD: postgres
+      - run: perl Open-ILS/src/support-scripts/eg_db_config --update-config --service all --create-database --create-schema --create-offline --user postgres --password postgres --hostname localhost --port 5432 --database postgres --admin-user admin-user --admin-pass admin-pass
+      - run: pg_prove Open-ILS/src/sql/Pg/t
   ng_lint:
     name: Lint the angular app
     runs-on: ubuntu-latest
@@ -19,4 +44,4 @@ jobs:
       - uses: actions/checkout@v3.0.0
       - name: Setup Node.js environment
         uses: actions/setup-node@v3.0.0
-      - run: cd Open-ILS/src/eg2 && npm i && ng lint
+      - run: cd Open-ILS/src/eg2 && npm i && npx ng lint
