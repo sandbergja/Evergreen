@@ -1,0 +1,13 @@
+name: build-and-test
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+        with: berick/evergreen-ansible-installer
+          ref: ubuntu-20.04
+      - run: sudo apt-get update && sudo apt-get install -y software-properties-common
+      - run: sudo apt-add-repository ppa:ansible/ansible -y && sudo apt-get update
+      - run: sudo apt-get install -y ansible
+      - run: sudo ansible-playbook playbook.yml -e eg_git_repository=git@github.com/sandbergja/Evergreen.git -e eg_git_branch=${GITHUB_REF##*/}
