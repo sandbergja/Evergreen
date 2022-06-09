@@ -1,5 +1,8 @@
 name: Run ng lint
 on: [push, pull_request]
+defaults:
+  run:
+    working-directory: Open-ILS/src/eg2
 jobs:
   lint:
     name: Run Angular linter
@@ -11,4 +14,4 @@ jobs:
           cache: 'npm'
           cache-dependency-path: Open-ILS/src/eg2/package-lock.json
       - name: lint
-        run: cd Open-ILS/src/eg2 && npx ng lint
+        run: npx ng lint
