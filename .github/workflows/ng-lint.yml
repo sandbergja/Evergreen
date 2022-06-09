@@ -10,8 +10,13 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v3
+      - name: Cache dependencies
+        uses: actions/cache@v2
         with:
-          cache: 'npm'
-          cache-dependency-path: Open-ILS/src/eg2/package-lock.json
+          path: Open-ILS/src/eg2
+          key: npm-${{ hashFiles('package-lock.json') }}
+          restore-keys: npm-
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
       - name: lint
         run: npx ng lint
