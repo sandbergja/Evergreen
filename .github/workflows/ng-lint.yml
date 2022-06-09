@@ -13,7 +13,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v3
+        with:
           cache: 'npm'
           cache-dependency-path: Open-ILS/src/eg2/package-lock.json
-      - name: 
+      - name: lint
         run: cd Open-ILS/src/eg2 && npx ng lint
