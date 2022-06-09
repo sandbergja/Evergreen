@@ -1,11 +1,5 @@
 name: Run ng lint
-on:
-  push:
-    paths:
-      - 'Open-ILS/src/eg2/**'
-  pull_request:
-    paths:
-      - 'Open-ILS/src/eg2/**'
+on: [push, pull_request]
 jobs:
   lint:
     name: Run Angular linter
