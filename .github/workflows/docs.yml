@@ -2,7 +2,7 @@ name: Build Docs
 on:
   push:
     paths:
-      - 'docs/**'
+      - '**'
   pull_request:
     paths:
       - 'docs/**'
@@ -16,7 +16,7 @@ jobs:
         run: |
           cd docs
           sed -i 's/branches.*/branches: [HEAD]/' site.yml
-          perl generate_docs.pl --base-url http://example.com
+          perl generate_docs.pl --base-url http://example.com --antora-ui-repo-branch update-upstream
       - uses: actions/upload-artifact@v2
         with:
           name: built-docs
