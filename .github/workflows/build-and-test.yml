@@ -10,5 +10,5 @@ jobs:
           repository: evergreen-library-system/OpenSRF
           path: opensrf
       - name: Install prereqs
-        run: sudo apt-get install -y make autoconf automake libtool && sudo make -f src/extras/Makefile.install ubuntu-focal
+        run: sudo make -f src/extras/Makefile.install ubuntu-focal
         working-directory: ./opensrf
