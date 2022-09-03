@@ -1,0 +1,14 @@
+name: Build evergreen and run tests
+on: [push, pull_request]
+jobs:
+  install-opensrf:
+    name: Install Opensrf
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          repository: evergreen-library-system/OpenSRF
+          path: opensrf
+      - name: Install prereqs
+        run: sudo apt-get install -y make autoconf automake libtool && sudo make -f src/extras/Makefile.install ubuntu-focal
+        working-directory: ./opensrf
