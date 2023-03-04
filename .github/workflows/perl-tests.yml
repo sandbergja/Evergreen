@@ -8,7 +8,7 @@ jobs:
       - uses: actions/checkout@v2
       - run: autoreconf -i
       - name: Install dependencies
-        run: make -f Open-ILS/src/extras/Makefile.install ubuntu-jammy
+        run: sudo make -f Open-ILS/src/extras/Makefile.install ubuntu-jammy
       - run: ./configure
       - name: Run tests
         run: make check
