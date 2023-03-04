@@ -9,6 +9,6 @@ jobs:
       - run: autoreconf -i
       - name: Install dependencies
         run: PERL_CPANM_OPT=--notest sudo make -f Open-ILS/src/extras/Makefile.install ubuntu-jammy
-      - run: ./configure --disable-core --disable-web --disable-client
+      - run: ./configure --disable-core --disable-web --disable-client && make
       - name: Run tests
         run: make check
