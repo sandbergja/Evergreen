@@ -1,0 +1,14 @@
+name: Run perl tests
+on: [push, pull_request]
+jobs:
+  test:
+    name: Run Perl tests
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v2
+      - run: autoreconf -i
+      - name: Install dependencies
+        run: make -f Open-ILS/src/extras/Makefile.install ubuntu-jammy
+      - run: ./configure
+      - name: Run tests
+        run: make check
