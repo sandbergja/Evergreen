@@ -1,0 +1,31 @@
+name: Run pgtap tests
+on: push
+# on:
+#   push:
+#     paths:
+#       - 'Open-ILS/src/sql/**'
+#   pull_request:
+#     paths:
+#       - 'Open-ILS/src/sql/**'
+jobs:
+  pgtap:
+    name: Run PgTap tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+
+# TODO:
+# install that script
+# run that script
+# run pgtap
+# run pgtap regress
+# run pgtap live
+# setup to run only on changes to the db directory, sample data, or db script (or its dependencies, if it has some?)
