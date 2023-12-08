@@ -24,12 +24,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build the database schema
-        run: Open-ILS/src/sql/Pg/build-db.sh localhost 5432 postgres postgres postgres
+        run: Open-ILS/src/sql/Pg/build-db.sh postgres 5432 postgres postgres postgres
 
 # TODO:
-# install that script
 # run that script
+# run the sample data loader
 # run pgtap
 # run pgtap regress
 # run pgtap live
+# matrix of postgres versions
 # setup to run only on changes to the db directory, sample data, or db script (or its dependencies, if it has some?)
