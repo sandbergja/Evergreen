@@ -23,6 +23,8 @@ jobs:
           --health-retries 5
     steps:
       - uses: actions/checkout@v4
+      - name: Build the database schema
+        run: Open-ILS/src/sql/Pg/build-db.sh localhost 5432 postgres postgres postgres
 
 # TODO:
 # install that script
