@@ -20,7 +20,7 @@ jobs:
         run: sudo make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-jammy-${{matrix.pg-version}}
 
       - name: create evergreen db superuser
-        run: sudo su - postgres -c 'createuser -s -P evergreen <<< $"password\npassword\n"'
+        run: sudo su - postgres -c "psql < CREATE USER evergreen password 'password'"
       - name: Allow local connections
         run: sudo echo "local all all              trust" >> /etc/postgresql/${{matrix.pg-version}}/main/pg_hba.conf
       - name: Restart postgres
