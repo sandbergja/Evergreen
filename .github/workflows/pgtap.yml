@@ -11,9 +11,12 @@ jobs:
   pgtap:
     name: Run PgTap tests
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        pg-version: [13, 14, 15]
     services:
       postgres:
-        image: postgres:15
+        image: postgres:${{ matrix.pg-version }}
         env:
           POSTGRES_PASSWORD: postgres
         options: >-
@@ -23,6 +26,19 @@ jobs:
           --health-retries 5
     steps:
       - uses: actions/checkout@v4
+      - name: Setup pgTAP
+        run: sudo cpan TAP::Parser::SourceHandler::pgTAP
+      - name: Setup pgtap on database
+        uses: actions/checkout@v2
+        with:
+          repository: theory/pgtap
+          path: pgtap
+          ref: v1.1.0
+      - name: Install pgtap on target
+        working-directory: pgtap
+        run: make && psql --host localhost --username postgres --dbname postgres -c "CREATE EXTENSION pgtap;"
+        env:
+          PGPASSWORD: postgres
       - name: Build the database schema
         run: "Open-ILS/src/sql/Pg/build-db.sh localhost 5432 postgres postgres postgres 1"
 
