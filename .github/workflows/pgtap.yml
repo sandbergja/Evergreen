@@ -20,7 +20,7 @@ jobs:
         run: sudo make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-jammy-${{matrix.pg-version}}
 
       - name: Wait for postgres to be ready
-        run: sudo apt-get install netcat && while ! nc -z HOST PORT; do sleep 1; done;
+        run: sudo apt-get install netcat && while ! nc -z localhost 5432; do sleep 1; done;
 
       - name: Build the database schema
         run: "Open-ILS/src/sql/Pg/build-db.sh localhost 5432 postgres postgres postgres 1"
