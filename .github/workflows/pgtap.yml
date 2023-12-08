@@ -11,7 +11,7 @@ jobs:
   pgtap:
     name: Run PgTap tests
     runs-on: ubuntu-latest
-    container:  ubuntu:bionic
+    container:  node:latest
     strategy:
       matrix:
         pg-version: [13, 14, 15]
