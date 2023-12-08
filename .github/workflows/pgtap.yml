@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install postgres
-        run: make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-jammy-${matrix.pg-version}
+        run: make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-jammy-${{matrix.pg-version}}
       - name: Setup pgTAP
         run: sudo cpan TAP::Parser::SourceHandler::pgTAP
       - name: Setup pgtap on database
