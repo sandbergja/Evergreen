@@ -52,14 +52,18 @@ jobs:
         run: make && psql --host localhost --username postgres --dbname evergreen --file sql/pgtap.sql
         env:
           PGPASSWORD: postgres
+      - name: run pgtap tests
+        run: pg_prove t
+        working-directory: Open-ILS/src/sql/Pg
+      - name: run pgtap regression tests
+        run: pg_prove t/regress
+        working-directory: Open-ILS/src/sql/Pg
+      - name: run pgtap live tests
+        run: pg_prove live_t
+        working-directory: Open-ILS/src/sql/Pg
 
 
 # TODO:
-# run that script successfully
-# run the sample data loader
-# run pgtap
-# run pgtap regress
-# run pgtap live
 # refactor to use some kind of variable for db connection info, dirs
 # matrix of postgres versions
 # setup to run only on changes to the db directory, sample data, or db script (or its dependencies, if it has some?)
