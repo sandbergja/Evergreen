@@ -47,6 +47,11 @@ jobs:
       - name: build database
         run: "./build-db.sh localhost 5432 evergreen postgres postgres 1"
         working-directory: Open-ILS/src/sql/Pg
+      - name: load sample data
+        run: |
+          psql --host localhost --username postgres --dbname postgres --file load_all.sql
+          psql --host localhost --username postgres --dbname postgres --file load_concerto.sql
+        working-directory: Open-ILS/tests/datasets/sql/concerto
       - name: install pgtap extension
         working-directory: pgtap
         run: make && psql --host localhost --username postgres --dbname evergreen --file sql/pgtap.sql
