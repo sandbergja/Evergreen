@@ -48,7 +48,7 @@ jobs:
         env:
           PGPASSWORD: postgres
       - name: install database extensions
-        run: psql -f create_database_extensions.sql 
+        run: psql --host localhost --username postgres --dbname postgres --file create_database_extensions.sql 
         working-directory: ./Open-ILS/src/sql/Pg
         env:
           PGPASSWORD: postgres
