@@ -49,7 +49,7 @@ jobs:
       - name: apt get lib dbi
         run: sudo apt update && sudo apt install -y libdbi-perl
       - name: prepare the eg_db_config script
-        run: sed 's/@sysconfdir@/home/g' Open-ILS/src/support-scripts/eg_db_config.in
+        run: sed -i 's/@sysconfdir@/home/g' Open-ILS/src/support-scripts/eg_db_config.in
       - name: how did it turn out
         run: cat Open-ILS/src/support-scripts/eg_db_config.in
       - name: install database
