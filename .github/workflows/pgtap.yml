@@ -50,6 +50,8 @@ jobs:
         run: sudo apt update && sudo apt install -y libdbi-perl
       - name: install database extensions
         run: psql --host localhost --username postgres --file create_database_extensions.sql -v db_name=evergreen
+        env:
+          PGPASSWORD: postgres
       - name: build database
         run: "./build-db.sh localhost 5432 evergreen postgres postgres 1"
       - name: install pgtap extension
