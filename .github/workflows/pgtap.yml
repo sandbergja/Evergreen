@@ -14,18 +14,6 @@ jobs:
     strategy:
       matrix:
         pg-version: [13, 14, 15]
-    services:
-      postgres:
-        image: postgres:14
-        env:
-          POSTGRES_PASSWORD: postgres
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
     steps:
       - uses: actions/checkout@v4
       - name: install pg_prove
@@ -48,6 +36,8 @@ jobs:
           PGPASSWORD: postgres
       - name: apt get lib dbi
         run: sudo apt update && sudo apt install -y libdbi-perl
+      - name: start postgres
+        run: sudo service postgresql start
       - name: install database extensions
         run: psql --host localhost --username postgres --file create_database_extensions.sql -v db_name=evergreen
         env:
@@ -61,9 +51,6 @@ jobs:
         run: make && psql --host localhost --username postgres --dbname evergreen --file sql/pgtap.sql
         env:
           PGPASSWORD: postgres
-      - name: Build the database schema
-        run: "./build-db.sh localhost 5432 evergreen postgres postgres 1"
-        working-directory: ./Open-ILS/src/sql/Pg
 
 
 # TODO:
