@@ -32,7 +32,7 @@ jobs:
       - name: apt get lib dbi
         run: sudo apt update && sudo apt install -y libdbi-perl
       - name: change postgres to a known password
-        run: /etc/init.d/postgresql restart && psql --host localhost --username postgres -c "ALTER USER postgres WITH PASSWORD 'postgres'"
+        run: sudo /etc/init.d/postgresql restart && psql --host localhost --username postgres -c "ALTER USER postgres WITH PASSWORD 'postgres'"
         env:
           PGPASSWORD: postgres
       - name: Which postgres version is there?
