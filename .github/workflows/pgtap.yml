@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        pg-version: [14]
+        pg-version: [13, 14, 15]
     steps:
       - uses: actions/checkout@v4
       - name: install pg_prove
@@ -21,7 +21,7 @@ jobs:
         env:
           SHELL: /bin/bash
       - name: install postgres extensions and dependencies
-        run: sudo apt update && sudo make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-jammy-${{ matrix.pg-version }}
+        run: sudo make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-jammy-${{ matrix.pg-version }}
       - name: Checkout pgtap
         uses: actions/checkout@v3
         with:
