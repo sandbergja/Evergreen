@@ -58,10 +58,11 @@ jobs:
 
 
 # TODO:
-# run that script
+# run that script successfully
 # run the sample data loader
 # run pgtap
 # run pgtap regress
 # run pgtap live
+# refactor to use some kind of variable for db connection info, dirs
 # matrix of postgres versions
 # setup to run only on changes to the db directory, sample data, or db script (or its dependencies, if it has some?)
