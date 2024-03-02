@@ -49,8 +49,10 @@ jobs:
           PGPASSWORD: postgres
       - name: where even am i
         run: pwd && ls -alrth
+        working-directory: ./Open-ILS/src/sql/Pg
       - name: Build the database schema
-        run: "Open-ILS/src/sql/Pg/build-db.sh localhost 5432 postgres postgres postgres 1"
+        run: "./build-db.sh localhost 5432 postgres postgres postgres 1"
+        working-directory: ./Open-ILS/src/sql/Pg
 
 
 # TODO:
