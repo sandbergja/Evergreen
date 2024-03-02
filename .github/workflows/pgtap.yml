@@ -48,9 +48,7 @@ jobs:
         run: "./build-db.sh localhost 5432 evergreen postgres postgres 1"
         working-directory: Open-ILS/src/sql/Pg
       - name: load sample data
-        run: |
-          psql --host localhost --username postgres --dbname evergreen --file load_all.sql
-          psql --host localhost --username postgres --dbname evergreen --file load_concerto.sql
+        run: psql --host localhost --username postgres --dbname evergreen --file load_all.sql
         working-directory: Open-ILS/tests/datasets/sql/concerto
         env:
           PGPASSWORD: postgres
