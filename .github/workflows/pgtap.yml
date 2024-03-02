@@ -47,6 +47,10 @@ jobs:
         run: make && psql --host localhost --username postgres --dbname postgres --file sql/pgtap.sql
         env:
           PGPASSWORD: postgres
+      - name: set db_name var
+        run: psql --host localhost --username postgres --dbname postgres -c "\set db_name postgres"
+        env:
+          PGPASSWORD: postgres
       - name: install database extensions
         run: psql --host localhost --username postgres --dbname postgres --file create_database_extensions.sql 
         working-directory: ./Open-ILS/src/sql/Pg
