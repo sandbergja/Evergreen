@@ -48,12 +48,10 @@ jobs:
           PGPASSWORD: postgres
       - name: apt get lib dbi
         run: sudo apt update && sudo apt install -y libdbi-perl
-      - name: prepare the eg_db_config script
-        run: sed -i 's/@sysconfdir@/home/g' Open-ILS/src/support-scripts/eg_db_config.in
-      - name: how did it turn out
-        run: cat Open-ILS/src/support-scripts/eg_db_config.in
-      - name: install database
-        run: perl Open-ILS/src/support-scripts/eg_db_config.in --update-config --service all --create-database --create-schema --create-offline --user postgres --password postgres --hostname localhost --database evergreen --admin-user admin --admin-pass demo123 --config_file Open-ILS/examples/opensrf.xml.example
+      - name: install database extensions
+        run: psql --host localhost --username postgres --file create_database_extensions.sql -v db_name=evergreen
+      - name: build database
+        run: "./build-db.sh localhost 5432 evergreen postgres postgres 1"
       - name: install pgtap extension
         working-directory: pgtap
         run: make && psql --host localhost --username postgres --dbname evergreen --file sql/pgtap.sql
