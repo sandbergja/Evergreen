@@ -46,6 +46,8 @@ jobs:
         run: make && psql --host localhost --username postgres --dbname postgres --file sql/pgtap.sql
         env:
           PGPASSWORD: postgres
+      - name: apt get lib dbi
+        run: sudo apt update && sudo apt install -y libdbi-perl
       - name: install database
         run: perl Open-ILS/src/support-scripts/eg_db_config.in --update-config --service all --create-database --create-schema --create-offline --user postgres --password postgres --hostname localhost --database evergreen --admin-user admin --admin-pass demo123 --config_file Open-ILS/examples/opensrf.xml.example
       - name: install pgtap extension
