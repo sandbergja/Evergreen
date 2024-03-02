@@ -14,18 +14,39 @@ jobs:
     strategy:
       matrix:
         pg-version: [13, 14, 15]
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
     steps:
       - uses: actions/checkout@v4
-      - name: Install postgres
-        run: sudo make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-jammy-${{matrix.pg-version}}
+      - name: install pg_prove
+        run: sudo cpan TAP::Parser::SourceHandler::pgTAP
+        env:
+          SHELL: /bin/bash
+      - name: install postgres dev
+        run: sudo apt-get install -y --no-install-recommends postgresql-server-dev-14
 
-      - name: create evergreen db superuser
-        run: sudo su - postgres -c "psql -c CREATE USER evergreen password 'password'"
-      - name: Allow local connections
-        run: sudo echo "local all all              trust" >> /etc/postgresql/${{matrix.pg-version}}/main/pg_hba.conf
-      - name: Restart postgres
-        run: sudo service postgres restart
+      - name: Checkout pgtap
+        uses: actions/checkout@v3
+        with:
+          repository: theory/pgtap
+          path: pgtap
+          ref: v1.2.0
 
+      - name: install pgtap
+        working-directory: pgtap
+        run: make && psql --host localhost --username postgres --dbname postgres --file sql/pgtap.sql
+        env:
+          PGPASSWORD: postgres
       - name: Build the database schema
         run: "Open-ILS/src/sql/Pg/build-db.sh localhost 5432 postgres postgres postgres 1"
 
