@@ -28,12 +28,6 @@ jobs:
           repository: theory/pgtap
           path: pgtap
           ref: v1.2.0
-
-      - name: install pgtap
-        working-directory: pgtap
-        run: make && psql --host localhost --username postgres --dbname postgres --file sql/pgtap.sql
-        env:
-          PGPASSWORD: postgres
       - name: apt get lib dbi
         run: sudo apt update && sudo apt install -y libdbi-perl
       - name: start postgres
@@ -43,6 +37,11 @@ jobs:
         env:
           PGPASSWORD: postgres
         working-directory: Open-ILS/src/sql/Pg
+      - name: install pgtap
+        working-directory: pgtap
+        run: make && psql --host localhost --username postgres --dbname postgres --file sql/pgtap.sql
+        env:
+          PGPASSWORD: postgres
       - name: build database
         run: "./build-db.sh localhost 5432 evergreen postgres postgres 1"
         working-directory: Open-ILS/src/sql/Pg
