@@ -47,19 +47,10 @@ jobs:
         run: make && psql --host localhost --username postgres --dbname postgres --file sql/pgtap.sql
         env:
           PGPASSWORD: postgres
+      - name: where even am i
+        run: pwd && ls -alrth
       - name: Build the database schema
         run: "Open-ILS/src/sql/Pg/build-db.sh localhost 5432 postgres postgres postgres 1"
-
-      - name: Setup pgtap on database
-        uses: actions/checkout@v2
-        with:
-          repository: theory/pgtap
-          path: pgtap
-      - name: Install pgtap
-        working-directory: pgtap
-        run: make && make install
-        env:
-          PGPASSWORD: postgres
 
 
 # TODO:
