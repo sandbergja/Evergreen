@@ -35,6 +35,10 @@ jobs:
         run: |
           sudo service postgresql start
           sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres'"
+      - name: Which postgres version is there?
+        run: psql --host localhost --username postgres -c 'SELECT version();'
+        env:
+          PGPASSWORD: postgres
       - name: install database extensions
         run: psql --host localhost --username postgres --file create_database_extensions.sql -v db_name=evergreen
         env:
