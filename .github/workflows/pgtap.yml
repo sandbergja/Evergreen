@@ -29,11 +29,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: install pg_prove
-        run: sudo cpan TAP::Parser::SourceHandler::pgTAP
+        run: sudo cpan -T TAP::Parser::SourceHandler::pgTAP
         env:
           SHELL: /bin/bash
       - name: install postgres dev
-        run: sudo apt-get install -y --no-install-recommends postgresql-server-dev-14
+        run: sudo apt update && sudo apt install -y --no-install-recommends postgresql-server-dev-14
 
       - name: Checkout pgtap
         uses: actions/checkout@v3
