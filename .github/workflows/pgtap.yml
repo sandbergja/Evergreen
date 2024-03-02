@@ -33,7 +33,6 @@ jobs:
       - name: change postgres to a known password
         run: |
           sudo service postgresql start
-          pg_is_ready
           sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres'"
       - name: install database extensions
         run: psql --host localhost --username postgres --file create_database_extensions.sql -v db_name=evergreen
