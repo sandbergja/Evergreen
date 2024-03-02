@@ -52,6 +52,8 @@ jobs:
           psql --host localhost --username postgres --dbname postgres --file load_all.sql
           psql --host localhost --username postgres --dbname postgres --file load_concerto.sql
         working-directory: Open-ILS/tests/datasets/sql/concerto
+        env:
+          PGPASSWORD: postgres
       - name: install pgtap extension
         working-directory: pgtap
         run: make && psql --host localhost --username postgres --dbname evergreen --file sql/pgtap.sql
