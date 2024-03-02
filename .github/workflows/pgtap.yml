@@ -53,14 +53,20 @@ jobs:
         env:
           PGPASSWORD: postgres
       - name: run pgtap tests
-        run: pg_prove -U evergreen t
+        run: pg_prove --username postgres --dbname evergreen t
         working-directory: Open-ILS/src/sql/Pg
+        env:
+          PGPASSWORD: postgres
       - name: run pgtap regression tests
-        run: pg_prove -U evergreen t/regress
+        run: pg_prove --username postgres --dbname evergreen t/regress
         working-directory: Open-ILS/src/sql/Pg
+        env:
+          PGPASSWORD: postgres
       - name: run pgtap live tests
-        run: pg_prove -U evergreen live_t
+        run: pg_prove --username postgres --dbname evergreen live_t
         working-directory: Open-ILS/src/sql/Pg
+        env:
+          PGPASSWORD: postgres
 
 
 # TODO:
