@@ -48,12 +48,17 @@ jobs:
         env:
           PGPASSWORD: postgres
       - name: install database extensions
-        run: psql --host localhost --username postgres --dbname postgres --file create_database_extensions.sql -v db_name=postgres
+        run: psql --host localhost --username postgres --file create_database_extensions.sql -v db_name=evergreen
         working-directory: ./Open-ILS/src/sql/Pg
         env:
           PGPASSWORD: postgres
+      - name: install pgtap
+        working-directory: pgtap
+        run: make && psql --host localhost --username postgres --dbname evergreen --file sql/pgtap.sql
+        env:
+          PGPASSWORD: postgres
       - name: Build the database schema
-        run: "./build-db.sh localhost 5432 postgres postgres postgres 1"
+        run: "./build-db.sh localhost 5432 evergreen postgres postgres 1"
         working-directory: ./Open-ILS/src/sql/Pg
 
 
