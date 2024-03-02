@@ -7,7 +7,7 @@ on: push
 #   pull_request:
 #     paths:
 #       - 'Open-ILS/src/sql/**'
-jobs:create_database_extensions
+jobs:
   pgtap:
     name: Run PgTap tests
     runs-on: ubuntu-22.04
