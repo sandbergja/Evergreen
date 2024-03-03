@@ -31,10 +31,10 @@ jobs:
           ref: v1.2.0
       - name: apt get lib dbi
         run: sudo apt update && sudo apt install -y libdbi-perl
-      - name: chown the postgres data directory
-        run: sudo chown -R "$(whoami)" /etc/postgresql/${{ matrix.pg-version }}/main
-      - name: start postgres
-        run: /usr/lib/postgresql/${{ matrix.pg-version }}/bin/pg_ctl start -D /etc/postgresql/${{ matrix.pg-version }}/main
+      - name: what is in postgresql dir
+        run: ls /usr/lib/postgresql/
+      - name: how was the start working anyway
+        run: cat /etc/init.d/postgresql
       - name: change postgres to a known password
         run: sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres'"
       - name: What bins do we have available?
