@@ -39,48 +39,48 @@ jobs:
         if: matrix.pg-version != 14
 
       # Next, let's install dependencies
-      - name: install postgres extensions and dependencies
+      - name: Install postgres and dependencies
         run: sudo make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-jammy-${{ matrix.pg-version }}
-      - name: apt get lib dbi
+      - name: Install libdbi-perl
         run: sudo apt update && sudo apt install -y libdbi-perl
-      - name: install pg_prove
+      - name: Install pg_prove
         run: sudo cpan -T TAP::Parser::SourceHandler::pgTAP
         env:
           SHELL: /bin/bash
-      - name: Checkout pgtap
+      - name: Checkout the pgtap repository
         uses: actions/checkout@v4
         with:
           repository: theory/pgtap
           path: pgtap
-          ref: v1.2.0
+          ref: v1.3.2
 
       # Start up postgres      
       - name: start postgres cluster
         run: sudo pg_ctlcluster ${{ matrix.pg-version }} main start
       - name: change postgres to a known password
-        run: sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres'"
+        run: sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD '$PGPASSWORD'"
 
       # Create the needed database, extensions, schema, and data
-      - name: install database extensions
-        run: psql --host localhost --username postgres --file create_database_extensions.sql -v db_name=evergreen
+      - name: Install database extensions
+        run: psql --file create_database_extensions.sql -v db_name=evergreen
         working-directory: Open-ILS/src/sql/Pg
-      - name: install pgtap extension
+      - name: Install pgtap extension
         working-directory: pgtap
         run: make && psql --dbname evergreen --file sql/pgtap.sql
-      - name: build database
+      - name: Build database
         run: "./build-db.sh $PGHOST $PGPORT evergreen $PGUSER $PGPASSWORD 1"
         working-directory: Open-ILS/src/sql/Pg
-      - name: load sample data
+      - name: Load sample data
         run: psql --dbname evergreen --file load_all.sql
         working-directory: Open-ILS/tests/datasets/sql/concerto
 
       # Now, let's run the tests!
-      - name: run pgtap tests
+      - name: Run pgtap tests
         run: pg_prove --dbname evergreen t
         working-directory: Open-ILS/src/sql/Pg
-      - name: run pgtap regression tests
+      - name: Run pgtap regression tests
         run: pg_prove --dbname evergreen t/regress
         working-directory: Open-ILS/src/sql/Pg
-      - name: run pgtap live tests
+      - name: Run pgtap live tests
         run: pg_prove --dbname evergreen live_t
         working-directory: Open-ILS/src/sql/Pg
