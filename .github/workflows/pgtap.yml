@@ -10,6 +10,7 @@ on:
       - '.github/workflows/**'
       - 'Open-ILS/src/sql/**'
       - 'Open-ILS/tests/datasets/**'
+  workflow_dispatch:
 
 env:
   PGHOST: localhost
