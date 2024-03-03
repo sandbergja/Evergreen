@@ -17,10 +17,10 @@ jobs:
       fail-fast: false
     steps:
       - uses: actions/checkout@v4
+      - name: Delete the postgres cluster that comes with the github actions ubuntu image
+        run: sudo pg_dropcluster --stop 14 main
       - name: Remove any postgres that is already installed in the github actions ubuntu image
         run: sudo apt remove -y postgres*
-      - name: Delete the postgres cluster that comes with the github actions ubuntu image
-        run: sudo pg_dropcluster 14 main
       - name: install postgres extensions and dependencies
         run: sudo make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-jammy-${{ matrix.pg-version }}
       - name: apt get lib dbi
