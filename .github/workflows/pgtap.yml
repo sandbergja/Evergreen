@@ -17,36 +17,38 @@ jobs:
       fail-fast: false
     steps:
       - uses: actions/checkout@v4
-      - name: install pg_prove
-        run: sudo cpan -T TAP::Parser::SourceHandler::pgTAP
-        env:
-          SHELL: /bin/bash
       - name: Remove any postgres that is already installed
         run: sudo apt remove -y postgres*
       - name: install postgres extensions and dependencies
         run: sudo make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-jammy-${{ matrix.pg-version }}
-      - name: Checkout pgtap
-        uses: actions/checkout@v3
-        with:
-          repository: theory/pgtap
-          path: pgtap
-          ref: v1.2.0
       - name: apt get lib dbi
         run: sudo apt update && sudo apt install -y libdbi-perl
       - name: what is in postgresql dir
         run: ls /usr/lib/postgresql/
-      - name: start postgres
-        run: sudo service postgresql start
-      - name: change postgres to a known password
-        run: sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres'"
       - name: What bins do we have available?
         run: sudo ls /usr/lib/postgresql/${{ matrix.pg-version }}/bin
       - name: what is installed?
-        run: sudo apt list --installed
+        run: sudo apt list --installed | grep postg
       - name: Which postgres version is there?
         run: psql --host localhost --username postgres -c 'SELECT version();'
         env:
           PGPASSWORD: postgres
+      - name: start postgres
+        run: sudo service postgresql start
+      - name: change postgres to a known password
+        run: sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres'"
+
+      - name: install pg_prove
+        run: sudo cpan -T TAP::Parser::SourceHandler::pgTAP
+        env:
+          SHELL: /bin/bash
+      - name: Checkout pgtap
+        uses: actions/checkout@v4
+        with:
+          repository: theory/pgtap
+          path: pgtap
+          ref: v1.2.0
+
       - name: install database extensions
         run: psql --host localhost --username postgres --file create_database_extensions.sql -v db_name=evergreen
         env:
