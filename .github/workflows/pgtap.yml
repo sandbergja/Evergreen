@@ -34,7 +34,7 @@ jobs:
       - name: what is in postgresql dir
         run: ls /usr/lib/postgresql/
       - name: start postgres
-        run: /etc/init.d/postgresql start ${{ matrix.pg-version }}
+        run: sudo /etc/init.d/postgresql start ${{ matrix.pg-version }}
       - name: change postgres to a known password
         run: sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres'"
       - name: What bins do we have available?
