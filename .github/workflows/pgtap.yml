@@ -39,6 +39,8 @@ jobs:
         run: sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres'"
       - name: What bins do we have available?
         run: sudo ls /usr/lib/postgresql/${{ matrix.pg-version }}/bin
+      - name: what is installed?
+        run: sudo apt list --installed
       - name: Which postgres version is there?
         run: psql --host localhost --username postgres -c 'SELECT version();'
         env:
