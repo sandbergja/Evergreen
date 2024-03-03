@@ -7,6 +7,10 @@ on: push
 #   pull_request:
 #     paths:
 #       - 'Open-ILS/src/sql/**'
+
+env:
+  PGPASSWORD: postgres
+
 jobs:
   pgtap:
     name: Run PgTap tests
@@ -17,25 +21,21 @@ jobs:
       fail-fast: false
     steps:
       - uses: actions/checkout@v4
-      - name: Delete the postgres cluster that comes with the github actions ubuntu image
+
+      # The Github actions jammy image comes with postgres 14 installed.  To test other postgres
+      # versions, we need to remove 14 first
+      - name: Delete the postgres 14 cluster that comes with the github actions ubuntu image
         run: sudo pg_dropcluster --stop 14 main
+        if: matrix.pg-version != 14
       - name: Remove any postgres that is already installed in the github actions ubuntu image
         run: sudo apt remove -y postgres*
+        if: matrix.pg-version != 14
+
+      # Next, let's install dependencies
       - name: install postgres extensions and dependencies
         run: sudo make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-jammy-${{ matrix.pg-version }}
       - name: apt get lib dbi
         run: sudo apt update && sudo apt install -y libdbi-perl
-      - name: start postgres cluster
-        run: sudo pg_ctlcluster ${{ matrix.pg-version }} main start
-      # - name: restart postgres, making sure that we are using the most recently installed version
-      #   run: sudo systemctl daemon-reload && sudo systemctl restart postgresql
-      - name: change postgres to a known password
-        run: sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres'"
-      - name: Which postgres version is there?
-        run: psql --host localhost --username postgres -c 'SELECT version();'
-        env:
-          PGPASSWORD: postgres
-
       - name: install pg_prove
         run: sudo cpan -T TAP::Parser::SourceHandler::pgTAP
         env:
@@ -47,50 +47,43 @@ jobs:
           path: pgtap
           ref: v1.2.0
 
+      # Start up postgres      
+      - name: start postgres cluster
+        run: sudo pg_ctlcluster ${{ matrix.pg-version }} main start
+      - name: change postgres to a known password
+        run: sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres'"
+
+      # Create the needed database, extensions, schema, and data
       - name: install database extensions
         run: psql --host localhost --username postgres --file create_database_extensions.sql -v db_name=evergreen
-        env:
-          PGPASSWORD: postgres
         working-directory: Open-ILS/src/sql/Pg
       - name: install pgtap
         working-directory: pgtap
         run: make && psql --host localhost --username postgres --dbname postgres --file sql/pgtap.sql
-        env:
-          PGPASSWORD: postgres
       - name: build database
-        run: "./build-db.sh localhost 5432 evergreen postgres postgres 1"
+        run: "./build-db.sh localhost 5432 evergreen postgres $PGPASSWORD 1"
         working-directory: Open-ILS/src/sql/Pg
       - name: load sample data
         run: psql --host localhost --username postgres --dbname evergreen --file load_all.sql
         working-directory: Open-ILS/tests/datasets/sql/concerto
-        env:
-          PGPASSWORD: postgres
       - name: install pgtap extension
         working-directory: pgtap
         run: make && psql --host localhost --username postgres --dbname evergreen --file sql/pgtap.sql
-        env:
-          PGPASSWORD: postgres
+
+      # Now, let's run the tests!
       - name: run pgtap tests
         run: pg_prove --host localhost --username postgres --dbname evergreen t
         working-directory: Open-ILS/src/sql/Pg
-        env:
-          PGPASSWORD: postgres
       - name: run pgtap regression tests
         run: pg_prove --host localhost --username postgres --dbname evergreen t/regress
         working-directory: Open-ILS/src/sql/Pg
-        env:
-          PGPASSWORD: postgres
       - name: run pgtap live tests
         run: pg_prove --host localhost --username postgres --dbname evergreen live_t
         working-directory: Open-ILS/src/sql/Pg
-        env:
-          PGPASSWORD: postgres
 
 
 # TODO:
-# group into logical sections
 # one way to simplify: create a script to setup and run pgtap tests, and call that
 # another way to simplify: allow eg_db_config to be called without running opensrf
 # refactor to use some kind of variable for db connection info, dirs
-# matrix of postgres versions
-# setup to run only on changes to the db directory, sample data, or db script (or its dependencies, if it has some?)
+# setup to run only on changes to the db directory, sample data, or db script (or its dependencies, if it has some?), or github actions dir
