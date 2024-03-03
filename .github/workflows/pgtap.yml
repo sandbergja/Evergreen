@@ -36,7 +36,7 @@ jobs:
       - name: what is in postgresql dir
         run: ls /usr/lib/postgresql/
       - name: start postgres
-        run: sudo systemctl start postgresql
+        run: sudo service postgresql start
       - name: change postgres to a known password
         run: sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres'"
       - name: What bins do we have available?
