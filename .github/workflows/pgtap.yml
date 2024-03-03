@@ -22,7 +22,7 @@ jobs:
         env:
           SHELL: /bin/bash
       - name: Remove any postgres that is already installed
-        run: sudo apt remove postgres*
+        run: sudo apt remove -y postgres*
       - name: install postgres extensions and dependencies
         run: sudo make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-jammy-${{ matrix.pg-version }}
       - name: Checkout pgtap
