@@ -31,10 +31,8 @@ jobs:
           ref: v1.2.0
       - name: apt get lib dbi
         run: sudo apt update && sudo apt install -y libdbi-perl
-      - name: create a data directory for postgres
-        run: sudo mkdir -p /usr/local/pgsql/data && sudo chown -R $(whoami) /usr/local/pgsql/data
       - name: start postgres
-        run: /usr/lib/postgresql/${{ matrix.pg-version }}/bin/pg_ctl start -D /usr/local/pgsql/data
+        run: /usr/lib/postgresql/${{ matrix.pg-version }}/bin/pg_ctl start -D /etc/postgresql/${{ matrix.pg-version }}/main
       - name: change postgres to a known password
         run: sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres'"
       - name: What bins do we have available?
