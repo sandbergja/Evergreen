@@ -23,20 +23,10 @@ jobs:
         run: sudo make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-jammy-${{ matrix.pg-version }}
       - name: apt get lib dbi
         run: sudo apt update && sudo apt install -y libdbi-perl
-      - name: what is in postgresql dir
-        run: ls /usr/lib/postgresql/
-      - name: What bins do we have available?
-        run: sudo ls /usr/lib/postgresql/${{ matrix.pg-version }}/bin
-      - name: what is installed?
-        run: sudo apt list --installed | grep postg
-      - name: which clusters?
-        run: pg_lsclusters
-      - name: specify the cluster we want
-        run: echo "${{ matrix.pg-version }}" main postgres >> ~/.postgresqlrc
-      - name: cat the postgresqlrc
-        run: cat ~/.postgresqlrc
-      - name: restart postgres, making sure that we are using the most recently installed version
-        run: sudo systemctl daemon-reload && sudo systemctl restart postgresql
+      - name: start postgres cluster
+        run: sudo pg_ctlcluster ${{ matrix.pg-version }} main start
+      # - name: restart postgres, making sure that we are using the most recently installed version
+      #   run: sudo systemctl daemon-reload && sudo systemctl restart postgresql
       - name: change postgres to a known password
         run: sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres'"
       - name: Which postgres version is there?
