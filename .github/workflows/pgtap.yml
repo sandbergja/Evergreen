@@ -85,6 +85,8 @@ jobs:
 
 # TODO:
 # group into logical sections
+# one way to simplify: create a script to setup and run pgtap tests, and call that
+# another way to simplify: allow eg_db_config to be called without running opensrf
 # refactor to use some kind of variable for db connection info, dirs
 # matrix of postgres versions
 # setup to run only on changes to the db directory, sample data, or db script (or its dependencies, if it has some?)
