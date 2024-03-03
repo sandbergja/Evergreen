@@ -9,7 +9,10 @@ on: push
 #       - 'Open-ILS/src/sql/**'
 
 env:
+  PGHOST: localhost
   PGPASSWORD: postgres
+  PGPORT: 5432
+  PGUSER: postgres
 
 jobs:
   pgtap:
@@ -57,28 +60,25 @@ jobs:
       - name: install database extensions
         run: psql --host localhost --username postgres --file create_database_extensions.sql -v db_name=evergreen
         working-directory: Open-ILS/src/sql/Pg
-      - name: install pgtap
-        working-directory: pgtap
-        run: make && psql --host localhost --username postgres --dbname postgres --file sql/pgtap.sql
-      - name: build database
-        run: "./build-db.sh localhost 5432 evergreen postgres $PGPASSWORD 1"
-        working-directory: Open-ILS/src/sql/Pg
-      - name: load sample data
-        run: psql --host localhost --username postgres --dbname evergreen --file load_all.sql
-        working-directory: Open-ILS/tests/datasets/sql/concerto
       - name: install pgtap extension
         working-directory: pgtap
-        run: make && psql --host localhost --username postgres --dbname evergreen --file sql/pgtap.sql
+        run: make && psql --dbname evergreen --file sql/pgtap.sql
+      - name: build database
+        run: "./build-db.sh $PGHOST $PGPORT evergreen $PGUSER $PGPASSWORD 1"
+        working-directory: Open-ILS/src/sql/Pg
+      - name: load sample data
+        run: psql --dbname evergreen --file load_all.sql
+        working-directory: Open-ILS/tests/datasets/sql/concerto
 
       # Now, let's run the tests!
       - name: run pgtap tests
-        run: pg_prove --host localhost --username postgres --dbname evergreen t
+        run: pg_prove --dbname evergreen t
         working-directory: Open-ILS/src/sql/Pg
       - name: run pgtap regression tests
-        run: pg_prove --host localhost --username postgres --dbname evergreen t/regress
+        run: pg_prove --dbname evergreen t/regress
         working-directory: Open-ILS/src/sql/Pg
       - name: run pgtap live tests
-        run: pg_prove --host localhost --username postgres --dbname evergreen live_t
+        run: pg_prove --dbname evergreen live_t
         working-directory: Open-ILS/src/sql/Pg
 
 
