@@ -31,6 +31,11 @@ jobs:
         run: sudo apt list --installed | grep postg
       - name: restart postgres, making sure that we are using the most recently installed version
         run: sudo systemctl daemon-reload && sudo systemctl restart postgresql
+      - name: wait for postgres to start
+        run: |
+          until runuser -l postgres -c '/usr/lib/postgresql/$((pg-version))/bin/pg_isready' 2>/dev/null; do
+            sleep 1
+          done
       - name: change postgres to a known password
         run: sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres'"
       - name: Which postgres version is there?
