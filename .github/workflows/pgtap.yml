@@ -1,12 +1,15 @@
 name: Run pgtap tests
-on: push
-# on:
-#   push:
-#     paths:
-#       - 'Open-ILS/src/sql/**'
-#   pull_request:
-#     paths:
-#       - 'Open-ILS/src/sql/**'
+on:
+  push:
+    paths:
+      - '.github/workflows/**'
+      - 'Open-ILS/src/sql/**'
+      - 'Open-ILS/tests/datasets/**'
+  pull_request:
+    paths:
+      - '.github/workflows/**'
+      - 'Open-ILS/src/sql/**'
+      - 'Open-ILS/tests/datasets/**'
 
 env:
   PGHOST: localhost
@@ -20,7 +23,7 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        pg-version: [10, 11, 12, 13, 14, 15]
+        pg-version: [11, 12, 13, 14, 15]
       fail-fast: false
     steps:
       - uses: actions/checkout@v4
@@ -80,10 +83,3 @@ jobs:
       - name: run pgtap live tests
         run: pg_prove --dbname evergreen live_t
         working-directory: Open-ILS/src/sql/Pg
-
-
-# TODO:
-# one way to simplify: create a script to setup and run pgtap tests, and call that
-# another way to simplify: allow eg_db_config to be called without running opensrf
-# refactor to use some kind of variable for db connection info, dirs
-# setup to run only on changes to the db directory, sample data, or db script (or its dependencies, if it has some?), or github actions dir
