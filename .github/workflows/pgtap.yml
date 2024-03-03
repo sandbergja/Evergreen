@@ -32,7 +32,7 @@ jobs:
       - name: apt get lib dbi
         run: sudo apt update && sudo apt install -y libdbi-perl
       - name: start postgres
-        run: sudo /usr/lib/postgresql/${{ matrix.pg-version }}/bin/pg_ctl start -D /usr/local/pgsql/data
+        run: /usr/lib/postgresql/${{ matrix.pg-version }}/bin/pg_ctl start -D /usr/local/pgsql/data
       - name: change postgres to a known password
         run: sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres'"
       - name: What bins do we have available?
