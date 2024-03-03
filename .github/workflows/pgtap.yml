@@ -17,7 +17,7 @@ jobs:
       fail-fast: false
     steps:
       - uses: actions/checkout@v4
-      - name: Remove any postgres that is already installed
+      - name: Remove any postgres that is already installed in the github actions ubuntu image
         run: sudo apt remove -y postgres*
       - name: install postgres extensions and dependencies
         run: sudo make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-jammy-${{ matrix.pg-version }}
@@ -29,14 +29,14 @@ jobs:
         run: sudo ls /usr/lib/postgresql/${{ matrix.pg-version }}/bin
       - name: what is installed?
         run: sudo apt list --installed | grep postg
+      - name: restart postgres, making sure that we are using the most recently installed version
+        run: sudo systemctl daemon-reload && sudo systemctl restart postgresql
+      - name: change postgres to a known password
+        run: sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres'"
       - name: Which postgres version is there?
         run: psql --host localhost --username postgres -c 'SELECT version();'
         env:
           PGPASSWORD: postgres
-      - name: start postgres
-        run: sudo service postgresql start
-      - name: change postgres to a known password
-        run: sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres'"
 
       - name: install pg_prove
         run: sudo cpan -T TAP::Parser::SourceHandler::pgTAP
