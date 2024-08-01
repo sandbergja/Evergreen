@@ -1,0 +1,13 @@
+extends: substitution
+message: "Consider using '%s' instead of '%s'."
+ignorecase: true
+level: error
+action:
+  name: replace
+swap:
+  org unit: library or organizational unit
+  organizational unit setting: library setting
+  ou setting: library setting
+  org unit setting: library setting
+  yaous: library setting
+

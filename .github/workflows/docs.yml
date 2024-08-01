@@ -4,10 +4,12 @@ on:
     paths:
       - 'docs/**'
       - .vale.ini
+      - vale-styles
   pull_request:
     paths:
       - 'docs/**'
       - .vale.ini
+      - vale-styles
 jobs:
   build_docs:
     name: Build Docs
@@ -36,4 +38,4 @@ jobs:
       - name: Download and install vale rules
         run: vale sync
       - name: Check documentation against DIG style guide
-        run: vale docs/modules
+        run: vale docs/modules --glob='!*glossary.adoc'
