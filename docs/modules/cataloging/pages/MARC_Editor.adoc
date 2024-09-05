@@ -68,7 +68,7 @@ The Evergreen database contains information from the Library of Congress’s MAR
 . Make sure that the Flat-Text Editor checkbox is not selected and that you are not using the Flat-Text Editor interface.
 . Right-click on the value control for the fixed field that needs to be edited.
 +
-image::marc_editor/ffrc1_2.12.jpg[Right click on the fixed field input labeled Form]
+image::marc_editor/ffrc1_2.12.jpg[]
 +
 . Select the appropriate value for the fixed field from the menu options.
 +
