@@ -1,21 +1,22 @@
 <ng-template #dialogContent>
-  <div class="modal-header bg-info">
+  <div class="modal-header">
     <h4 class="modal-title">{{dialogTitle}}</h4>
-    <button type="button" class="close" 
-      i18n-aria-label aria-label="Close" (click)="close()">
-      <span aria-hidden="true">&times;</span>
-    </button>
+    <button type="button" class="btn-close btn-close-white" 
+      i18n-aria-label aria-label="Close dialog" (click)="closeAndClear()"></button>
   </div>
   <div class="modal-body">
-    <p>{{dialogBody}}</p>
+    <p><label for="{{inputDomId}}" class="form-label">{{dialogBody}}</label></p>
     <div class="text-center">
-        <input class="form-control" [(ngModel)]="promptValue"/>
+      <input type="{{promptType}}" class="form-control" id="{{inputDomId}}"
+        [attr.min]="promptType === 'number' ? promptMin : ''"
+        [attr.max]="promptType === 'number' ? promptMax : ''"
+        (keyup.enter)="close(promptValue)" [(ngModel)]="promptValue" egAutoFocus />
     </div>
   </div>
   <div class="modal-footer">
     <button type="button" class="btn btn-success" 
-      (click)="close(promptValue)" i18n>Confirm</button>
-    <button type="button" class="btn btn-warning" 
-      (click)="close()" i18n>Cancel</button>
+      (click)="closeAndClear(promptValue)">{{confirmString}}</button>
+    <button type="button" class="btn btn-normal" 
+      (click)="closeAndClear()">{{cancelString}}</button>
   </div>
 </ng-template>

@@ -1,32 +1,35 @@
-import {Component, OnInit, Input, ViewChild, HostListener} from '@angular/core';
-import {NgbTabset, NgbTabChangeEvent} from '@ng-bootstrap/ng-bootstrap';
+import {Component, OnInit, ViewChild, HostListener} from '@angular/core';
+import {NgbNav, NgbNavChangeEvent} from '@ng-bootstrap/ng-bootstrap';
 import {Router, ActivatedRoute, ParamMap} from '@angular/router';
-import {PcrudService} from '@eg/core/pcrud.service';
 import {IdlObject} from '@eg/core/idl.service';
 import {AuthService} from '@eg/core/auth.service';
-import {CatalogSearchContext, CatalogSearchState} from '@eg/share/catalog/search-context';
-import {CatalogService} from '@eg/share/catalog/catalog.service';
+import {CatalogSearchContext} from '@eg/share/catalog/search-context';
 import {BibRecordService, BibRecordSummary} from '@eg/share/catalog/bib-record.service';
 import {StaffCatalogService} from '../catalog.service';
-import {BibSummaryComponent} from '@eg/staff/share/bib-summary/bib-summary.component';
+import {AddedContentComponent} from '@eg/staff/catalog/content/added-content.component';
 import {StoreService} from '@eg/core/store.service';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 import {MarcEditorComponent} from '@eg/staff/share/marc-edit/editor.component';
 import {HoldingsMaintenanceComponent} from './holdings.component';
 import {HoldingsService} from '@eg/staff/share/holdings/holdings.service';
+import { ServerStoreService } from '@eg/core/server-store.service';
 
 @Component({
-  selector: 'eg-catalog-record',
-  templateUrl: 'record.component.html'
+    selector: 'eg-catalog-record',
+    templateUrl: 'record.component.html',
+    styleUrls: ['./record.component.css']
 })
 export class RecordComponent implements OnInit {
 
     recordId: number;
     recordTab: string;
+    added_content_activated = false;
+    added_content_sources: string[] = [];
     summary: BibRecordSummary;
     searchContext: CatalogSearchContext;
-    @ViewChild('recordTabs', { static: true }) recordTabs: NgbTabset;
+    @ViewChild('recordTabs', { static: true }) recordTabs: NgbNav;
     @ViewChild('marcEditor', {static: false}) marcEditor: MarcEditorComponent;
+    @ViewChild('addedContent', { static: true }) addedContent: AddedContentComponent;
 
     @ViewChild('holdingsMaint', {static: false})
         holdingsMaint: HoldingsMaintenanceComponent;
@@ -39,13 +42,12 @@ export class RecordComponent implements OnInit {
     constructor(
         private router: Router,
         private route: ActivatedRoute,
-        private pcrud: PcrudService,
         private auth: AuthService,
         private bib: BibRecordService,
-        private cat: CatalogService,
         private staffCat: StaffCatalogService,
         private holdings: HoldingsService,
-        private store: StoreService
+        private store: StoreService,
+        private serverStore: ServerStoreService,
     ) {}
 
     ngOnInit() {
@@ -83,7 +85,7 @@ export class RecordComponent implements OnInit {
 
     // Changing a tab in the UI means changing the route.
     // Changing the route ultimately results in changing the tab.
-    beforeTabChange(evt: NgbTabChangeEvent) {
+    beforeNavChange(evt: NgbNavChangeEvent) {
 
         // prevent tab changing until after route navigation
         evt.preventDefault();
@@ -147,6 +149,7 @@ export class RecordComponent implements OnInit {
         if (this.staffCat.currentDetailRecordSummary &&
             this.recordId === this.staffCat.currentDetailRecordSummary.id) {
             this.summary = this.staffCat.currentDetailRecordSummary;
+            this.activateAddedContent();
             return;
         }
 
@@ -154,11 +157,12 @@ export class RecordComponent implements OnInit {
         this.bib.getBibSummary(
             this.recordId,
             this.searchContext.searchOrg.id(),
-            this.searchContext.searchOrg.ou_type().depth()).toPromise()
-        .then(summary => {
-            this.summary =
+            this.searchContext.isStaff).toPromise()
+            .then(summary => {
+                this.summary =
                 this.staffCat.currentDetailRecordSummary = summary;
-        });
+                this.activateAddedContent();
+            });
     }
 
     // Lets us intercept the summary object and augment it with
@@ -207,6 +211,26 @@ export class RecordComponent implements OnInit {
             this.holdings.spawnAddHoldingsUi(
                 this.recordId, null, [{owner: this.auth.user().ws_ou()}]);
         }
+    }
+
+    // This just sets the record component-level flag. choices about /if/ to
+    // gather AC should go in here and set this.added_content_activated as needed.
+    activateAddedContent(): void {
+        // NovelistSelect settings
+        this.serverStore.getItemBatch([
+            'staff.added_content.novelistselect.profile',
+            'staff.added_content.novelistselect.passwd'
+        ]).then(settings => {
+            // eslint-disable-next-line eqeqeq
+            const activate = !!(Object.values(settings).filter(v => !!v).length == 2);
+            this.added_content_activated ||= activate;
+
+            if (activate) {
+                if (!this.added_content_sources.includes('novelist')) {
+                    this.added_content_sources.push('novelist');
+                }
+            }
+        });
     }
 }
 

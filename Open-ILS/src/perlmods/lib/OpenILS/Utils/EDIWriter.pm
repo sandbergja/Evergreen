@@ -153,7 +153,8 @@ sub compile_po {
         po_name => $self->escape_edi($po->name),
         provider_id => $po->provider->id,
         vendor_san => $po->provider->san || '',
-        org_unit_san => $po->ordering_agency->mailing_address->san || '',
+        org_unit_san => $po->provider->buyer_san ||
+            defined($po->ordering_agency->mailing_address) ? ($po->ordering_agency->mailing_address->san || '') : '',
         currency_type => $po->provider->currency_type,
         edi_attrs => {},
         lineitems => []
@@ -189,7 +190,7 @@ sub set_li_order_ident {
     my $idqual = 'EN'; # ISBN13
     my $idval = '';
 
-    if ($self->{compiled}->{edi_attr}->{LINEITEM_IDENT_VENDOR_NUMBER}) {
+    if ($self->{compiled}->{edi_attrs}->{LINEITEM_IDENT_VENDOR_NUMBER}) {
         # See if we have a vendor-specific lineitem identifier value
         $idval = $self->get_li_attr($li, 'vendor_num');
     }
@@ -259,7 +260,7 @@ sub get_li_ftx {
         grep { $U->is_true($_->vendor_public) && $_->value } 
         @{$li->lineitem_notes};
 
-    if ($self->{compiled}->{edi_attr}->{COPY_SPEC_CODES}) {
+    if ($self->{compiled}->{edi_attrs}->{COPY_SPEC_CODES}) {
         for my $lid (@{$li->lineitem_details}) {
             push(@notes, $lid->note) 
                 if ($lid->note || '') =~ /spec code [a-zA-Z0-9_]/;
@@ -268,7 +269,7 @@ sub get_li_ftx {
 
     my @trimmed_notes;
 
-    if (!@notes && $self->{compiled}->{edi_attr}->{INCLUDE_EMPTY_LI_NOTE}) {
+    if (!@notes && $self->{compiled}->{edi_attrs}->{INCLUDE_EMPTY_LI_NOTE}) {
         # lineitem has no notes.  Add a blank note if needed.
         push(@trimmed_notes, '');
 

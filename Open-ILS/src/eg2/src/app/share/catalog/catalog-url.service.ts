@@ -1,9 +1,8 @@
+/* eslint-disable no-cond-assign */
 import {Injectable} from '@angular/core';
 import {ParamMap} from '@angular/router';
 import {OrgService} from '@eg/core/org.service';
-import {CatalogSearchContext, CatalogBrowseContext, CatalogMarcContext,
-   CatalogTermContext, FacetFilter} from './search-context';
-import {CATALOG_CCVM_FILTERS} from './search-context';
+import {CatalogSearchContext, FacetFilter, CATALOG_CCVM_FILTERS} from './search-context';
 import {HashParams} from '@eg/share/util/hash-params';
 
 @Injectable()
@@ -37,12 +36,12 @@ export class CatalogUrlService {
 
         // These fields can be copied directly into place
         ['limit', 'offset', 'sort', 'global', 'showBasket', 'sort']
-        .forEach(field => {
-            if (context[field]) {
+            .forEach(field => {
+                if (context[field]) {
                 // Only propagate applied values to the URL.
-                params[field] = context[field];
-            }
-        });
+                    params[field] = context[field];
+                }
+            });
 
         if (context.marcSearch.isSearchable()) {
             const ms = context.marcSearch;
@@ -81,13 +80,24 @@ export class CatalogUrlService {
             params.joinOp = [];
             params.matchOp = [];
 
-            ['format', 'available', 'hasBrowseEntry', 'date1',
-                'date2', 'dateOp', 'groupByMetarecord', 'fromMetarecord']
-            .forEach(field => {
-                if (ts[field]) {
-                    params[field] = ts[field];
-                }
-            });
+            ['format', 'hasBrowseEntry', 'date1',
+                'date2', 'dateOp', 'fromMetarecord',
+                'onReserveFilter', 'onReserveFilterNegated']
+                .forEach(field => {
+                    if (ts[field]) {
+                        params[field] = ts[field];
+                    }
+                });
+
+            // Add these two to the URL if they should override their defaults
+            // eslint-disable-next-line eqeqeq
+            if (ts.defaultAvailable != ts.available) {
+                params['available'] = ts.available;
+            }
+            // eslint-disable-next-line eqeqeq
+            if (ts.defaultGroupByMetarecord != ts.groupByMetarecord) {
+                params['groupByMetarecord'] = ts.groupByMetarecord;
+            }
 
             ts.query.forEach((val, idx) => {
                 if (val !== '') {
@@ -221,11 +231,18 @@ export class CatalogUrlService {
         } else if (params.has('query')) {
 
             // Scalars
-            ['format', 'available', 'date1', 'date2',
-                'dateOp', 'groupByMetarecord', 'fromMetarecord']
-            .forEach(field => {
-                if (params.has(field)) {
-                    ts[field] = params.get(field);
+            ['format', 'date1', 'date2',
+                'dateOp',  'fromMetarecord', 'onReserve']
+                .forEach(field => {
+                    if (params.has(field)) {
+                        ts[field] = params.get(field);
+                    }
+                });
+
+            // Boolean scalars that might be false
+            ['available', 'groupByMetarecord'].forEach(field => {
+                if (params.has(field)){
+                    ts[field] = JSON.parse(params.get(field));
                 }
             });
 

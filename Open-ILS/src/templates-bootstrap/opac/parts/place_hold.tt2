@@ -46,10 +46,77 @@ function maybeToggleNumCopies(obj) {
         }
     }
 }
+
+//Doublecheck whether their default pickup library is valid. Should only be invalid if pulled from disabled home library when the page loads, but adding more checks just in case
+function checkValidPickupLib()
+{
+    let org_selector = document.getElementById('pickup_lib');
+    if (org_selector != null && org_selector[org_selector.selectedIndex].disabled == true) {
+
+        //Are they at the default message or the warning?
+        if (org_selector[org_selector.selectedIndex].value == -1){
+            document.getElementById("place_hold_submit").disabled = true;
+            org_selector.style.backgroundColor= "#FFF1A5";
+            org_selector.invalid = true;
+        }
+        else{
+            org_selector.style.backgroundColor= "#FFF1A5";
+            org_selector.invalid = true;
+            document.getElementById("pickup-lib-unavailable-warning").hidden = false;
+            document.getElementById("place_hold_submit").disabled = true;
+        }
+    }
+    else {
+        org_selector.invalid = false;
+        org_selector.style.backgroundColor = "#fff";
+        document.getElementById("pickup-lib-unavailable-warning").hidden = true;
+        document.getElementById("place_hold_submit").disabled = false;
+    }
+}
+
+//Create and add a generic option for the start of the selector
+function createDefaultOption()
+{
+    let org_selector = document.getElementById('pickup_lib');
+
+    let null_option = document.createElement("option");
+    null_option.innerText = "[% l('Choose a pickup location') %]";
+    null_option.disabled = true;
+    null_option.value = -1;
+    null_option.style.backgroundColor = "#fff";
+    org_selector.add(null_option, 0);
+}
+
+//Check if org valid once when the page loads and then every time you change it could be valid again, so check again
+document.addEventListener("DOMContentLoaded", () => {
+    let org_selector = document.getElementById('pickup_lib');
+
+    //Keep original colors of org unit dropdown for the sake of readability
+    let options = org_selector.children;
+    //We also need the list of all orgs in the list
+    let lib_ids = Array(options.length).fill(0);
+    for (let i = 0; i < options.length; i++){
+        options[i].style.backgroundColor= "#fff";
+        lib_ids[i] = options[i].value;
+    }
+
+    //If the user's default pickup library is not in the dropdown (probably due to being hidden from the OPAC)
+    let default_lib = [% GET ctx.default_pickup_lib %];
+    if (!lib_ids.includes(default_lib.toString())){
+        //Create and use the default message instead
+        createDefaultOption();
+        org_selector.selectedIndex = 0;
+    }
+
+    checkValidPickupLib(); 
+    document.getElementById('pickup_lib').addEventListener("change", checkValidPickupLib);
+
+    });
+
+
 </script>
 <div class='container'>
-<hr>
-   <h3>[% l('Place Hold') %]</h3>
+   <h2>[% l('Place Hold') %]</h2>
 
     [% some_holds_allowed = -1 %]
 
@@ -62,7 +129,7 @@ function maybeToggleNumCopies(obj) {
             IF CGI.param('hold_type') == 'M';
               IF hdata.metarecord_filters.formats.size == 0;
                 this_hold_disallowed = 1;
-                # if this is the first hold and it's disallowed,
+                # if this is the first hold and it is disallowed,
                 # assume all holds are, until we proven otherwise
                 SET some_holds_allowed = 0 IF some_holds_allowed == -1;
               ELSE; some_holds_allowed = 1; END;
@@ -116,7 +183,7 @@ function maybeToggleNumCopies(obj) {
               [% l('Patron barcode was not found') %]
             </span>
             [% IF ctx.is_browser_staff %]
-            <button id="hold_usr_search" type="button" class="opac-button" style="display: none;">[% l('Patron Search') %]</button>
+            <button id="hold_usr_search" type="button" class="btn btn-action" style="display: none;">[% l('Patron Search') %]</button>
             [% END %]
             <br />
             <input type="hidden" id="staff_barcode"
@@ -155,9 +222,8 @@ function maybeToggleNumCopies(obj) {
         [% END %]
         [% END %]
 
-        <table>
-            <tr>
-                <td>
+        <div>
+         
                     [% IF !this_hold_disallowed %]
                     <input type="hidden" name="hold_target" value="[% hdata.target.id | html %]" />
                     [% END %]
@@ -179,7 +245,7 @@ function maybeToggleNumCopies(obj) {
                              <div class='radio-parts-selection'>
                              [% IF !hdata.part_required %]
                                 <span class='parts-radio-option'>
-                                 <input type='radio' name='part' value='' onchange='maybeToggleNumCopies(this);' required>[% l('All Parts') %]</span>
+                                 <input type='radio' name='part' value='' onchange='maybeToggleNumCopies(this);' required>[% ctx.any_part_label %]</span>
                               [% END %]
                                [% FOR part IN hdata.parts %]
                                  <span class='parts-radio-option'><input type='radio' name='part' id=[% part.id %] value=[% part.id %] onchange='maybeToggleNumCopies(this);' required>
@@ -192,7 +258,7 @@ function maybeToggleNumCopies(obj) {
                             %]</label></span>
                             <select id='select_hold_part' name='part' onchange='maybeToggleNumCopies(this);'>
                                 [% IF !hdata.part_required %]
-                                <option selected='selected' value=''>[% l('- All Parts -') %]</option>
+                                <option selected='selected' value=''>[% ctx.any_part_label %]</option>
                                 [% END %]
                                 [% FOR part IN hdata.parts %]
                                 <option value='[% part.id %]'>[% part.label | html %]</option>
@@ -206,21 +272,12 @@ function maybeToggleNumCopies(obj) {
                     [% END %]
             [% INCLUDE "opac/parts/multi_hold_select.tt2" IF NOT (this_hold_disallowed AND hdata.part_required); %]
 
-                </td>
-            </tr>
-
             [% IF this_hold_disallowed %]
-              <tr><td>
                 <div class="mr_holds_no_formats">
                 [% l('This item does not have any formats available for holds placement') %]
                 </div>
-              </td></tr>
             [% END %]
-
-            [%  IF !loop.last AND ctx.hold_data.size > 1 %]
-            <tr class="holds_item_row_separator"><td> </td></tr>
-            [% END %]
-</table>
+</div>
         [% END %]
 
 
@@ -233,26 +290,26 @@ function maybeToggleNumCopies(obj) {
                 INCLUDE build_org_selector name='pickup_lib'
                     value=ctx.default_pickup_lib id=org_select_id
                     can_have_vols_only=1 hold_pickup_lib=1 %]
+            <label id="pickup-lib-unavailable-warning" for="[% org_select_id %]" class= "font-weight-bold" style= "color: #D0343A" aria-live="polite" hidden>[% l('* Pickup location unavailable. Please choose a different pickup location.') %]</label>
+            <!-- <label id="choose-pickup-lib-warning" for ="[% org_select_id %]" class="font-weight-light" aria-live="polite" hidden>[% l('* Please choose a pickup location') %]</label>             
+            -->
+            
         </p>
 
             <span class="font-weight-bold">[% l('Notify when hold is ready for pickup?') %]</span>
             <p>
              <div class="form-check m-2">
-                <input class="form-check-input" type="checkbox" value="t" id="email_notify" name="email_notify" [% IF !ctx.user.email %]disabled="true"[% ELSIF ctx.default_email_notify %]checked="checked"[% END %]>
+                <input class="form-check-input hold-alert-method" type="checkbox" value="t" id="email_notify" name="email_notify" [% IF !ctx.user.email %]disabled="true"[% ELSIF ctx.default_email_notify %]checked="checked"[% END %]>
                 <label class="form-check-label" for="email_notify">
                    [% l('Yes, by Email') %]
 
                      [% IF !ctx.user.email and !ctx.is_staff; l('<br>No configured Email address. See "My Account" for setting your Email address.'); ELSE; %] : <span id="email_address"><b name="email_address">[% ctx.user.email %]</b></span>[% END %]
                 </label>
             </div>
-
-
-                <p>
-
-                </p>
+            
                 [%- IF allow_phone_notifications == 'true' %]
                 <div class="form-check m-2">
-                    <input class="form-check-input" type="checkbox" id="phone_notify_checkbox" name="phone_notify_checkbox" [% IF ctx.default_phone_notify %]checked="checked"[% END %]>
+                    <input class="form-check-input hold-alert-method" type="checkbox" id="phone_notify_checkbox" name="phone_notify_checkbox" [% IF ctx.default_phone_notify %]checked="checked"[% END %]>
                     <label class="form-check-label" for="phone_notify_checkbox">
                     [% l('Yes, by Phone') %]
                     </label>
@@ -285,7 +342,7 @@ function maybeToggleNumCopies(obj) {
                 ELSE;
                     l('Suspend these holds?');
                 END %]
-                  <a href="#" aria-label="[% l('A suspended hold will retain its place in the queue, but will not be fulfilled until it has been activated.') %]" title="[% l('A suspended hold will retain its place in the queue, but will not be fulfilled until it has been activated.') %]" data-toggle="tooltip">
+                  <a href="#" aria-label="[% l('What is a suspended hold?') %]" title="[% l('A suspended hold will retain its place in the queue, but will not be fulfilled until it has been activated.') %]" data-toggletip>
                     <i class="fas fa-question-circle" aria-hidden="true"></i>
                 </a>
                 </label>
@@ -299,12 +356,7 @@ function maybeToggleNumCopies(obj) {
             </div>
             <blockquote id="toggled-block-suspend">
             <label for="thaw_date">[% l('Activate on') %]
-              <div class="input-group date" data-provide="datepicker">
-                <input type="text" class="form-control" name="thaw_date" id="thaw_date" value="[% thaw_date | html %]" data-date-format="mm/dd/yyyy" />
-                <div class="input-group-addon">
-                    <span class="glyphicon glyphicon-th"></span>
-                </div>
-            </div>
+            <duet-date-picker identifier="thaw_date" value="[% thaw_date | html %]"></duet-date-picker>
             </blockquote>
 
          [% IF CGI.param('from_basket') %]

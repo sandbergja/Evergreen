@@ -1,4 +1,4 @@
-import {Component, OnInit, Input, ViewChild, Renderer2} from '@angular/core';
+import {Component, Input, ViewChild, Renderer2} from '@angular/core';
 import {Observable, throwError} from 'rxjs';
 import {IdlObject} from '@eg/core/idl.service';
 import {NetService} from '@eg/core/net.service';
@@ -17,12 +17,12 @@ import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
  */
 
 @Component({
-  selector: 'eg-delete-holding-dialog',
-  templateUrl: 'delete-volcopy-dialog.component.html'
+    selector: 'eg-delete-holding-dialog',
+    templateUrl: 'delete-volcopy-dialog.component.html'
 })
 
 export class DeleteHoldingDialogComponent
-    extends DialogComponent implements OnInit {
+    extends DialogComponent {
 
     // List of "acn" objects which may contain copies.
     // Objects of either type marked "isdeleted" will be deleted.
@@ -42,13 +42,13 @@ export class DeleteHoldingDialogComponent
     deleteEventDesc: string;
 
     @ViewChild('successMsg', { static: true })
-        private successMsg: StringComponent;
+    private successMsg: StringComponent;
 
     @ViewChild('errorMsg', { static: true })
-        private errorMsg: StringComponent;
+    private errorMsg: StringComponent;
 
     @ViewChild('confirmOverride', {static: false})
-        private confirmOverride: ConfirmDialogComponent;
+    private confirmOverride: ConfirmDialogComponent;
 
     constructor(
         private modal: NgbModal, // required for passing to parent
@@ -60,8 +60,6 @@ export class DeleteHoldingDialogComponent
         private auth: AuthService) {
         super(modal); // required for subclassing
     }
-
-    ngOnInit() {}
 
     open(args: NgbModalOptions): Observable<boolean> {
         this.numCallNums = 0;

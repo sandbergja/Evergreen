@@ -24,6 +24,7 @@ set -u
 JSDIR="LOCALSTATEDIR/web/opac/common/js"
 FMDOJODIR="LOCALSTATEDIR/web/js/dojo/fieldmapper"
 SLIMPACDIR="LOCALSTATEDIR/web/opac/extras/slimpac"
+COVERDIR="LOCALSTATEDIR/web/opac/extras/ac/jacket"
 
 # ---------------------------------------------------------------------------
 # Make sure we're not root and are able to write to the destination directory
@@ -81,6 +82,15 @@ do
     check_dir_writable "$DIR"
 done
 
+# Verify we have cover image directories, creating where needed
+for DIR in "small/r" "medium/r" "large/r"
+do
+    if [ ! -d "$COVERDIR/$DIR" ]; then
+        mkdir -p "$COVERDIR/$DIR"
+    fi
+    check_dir_writable "$COVERDIR/$DIR"
+done
+
 for FILE in "$JSDIR/fmall.js" "$JSDIR/fmcore.js" "$JSDIR/*/OrgTree.js" "$SLIMPACDIR/*/lib_list.inc" "$SLIMPACDIR/locales.inc" "LOCALSTATEDIR/web/eg_cache_hash"
 do
     check_files_writable "$FILE"
@@ -95,12 +105,14 @@ cd "BINDIR"
 
 # Initialize our variables
 PROXIMITY=""
+OSRF_CORE="SYSCONFDIR/opensrf_core.xml"
 
 # ---------------------------------------------------------------------------
 # Load the command line options and set the global vars
 # ---------------------------------------------------------------------------
-while getopts  "u h" flag; do
+while getopts  "c:uh" flag; do
     case $flag in    
+        "c")        OSRF_CORE="$OPTARG";;
         "u")        PROXIMITY="REFRESH";;
         "h")        usage && exit;;
     esac
@@ -112,40 +124,40 @@ echo ""
 
 OUTFILE="$JSDIR/fmall.js"
 echo "Updating fieldmapper"
-perl -MOpenILS::Utils::Configure -e 'print OpenILS::Utils::Configure::fieldmapper();' > "$OUTFILE"
+perl -MOpenILS::Utils::Configure -e 'print OpenILS::Utils::Configure::fieldmapper();' -- --osrf-config "$OSRF_CORE" > "$OUTFILE"
 cp "$OUTFILE" "$FMDOJODIR/"
 echo " -> $OUTFILE"
 OUTFILES="$OUTFILE"
 
 OUTFILE="$JSDIR/fmcore.js"
 echo "Updating web_fieldmapper"
-perl -MOpenILS::Utils::Configure -e 'print OpenILS::Utils::Configure::fieldmapper("web_core");' > "$OUTFILE"
+perl -MOpenILS::Utils::Configure -e 'print OpenILS::Utils::Configure::fieldmapper("web_core");' -- --osrf-config "$OSRF_CORE" > "$OUTFILE"
 echo " -> $OUTFILE"
 OUTFILES="$OUTFILES $OUTFILE"
 
 OUTFILE="$JSDIR/*/OrgTree.js"
 echo "Updating OrgTree"
-perl -MOpenILS::Utils::Configure -e "OpenILS::Utils::Configure::org_tree_js('$JSDIR', 'OrgTree.js');"
+perl -MOpenILS::Utils::Configure -e "OpenILS::Utils::Configure::org_tree_js('$JSDIR', 'OrgTree.js');" -- --osrf-config "$OSRF_CORE"
 cp "$JSDIR/en-US/OrgTree.js" "$FMDOJODIR/"
 echo " -> $OUTFILE"
 OUTFILES="$OUTFILES $OUTFILE"
 
 OUTFILE="$SLIMPACDIR/*/lib_list.inc"
 echo "Updating OrgTree HTML"
-perl -MOpenILS::Utils::Configure -e "OpenILS::Utils::Configure::org_tree_html_options('$SLIMPACDIR', 'lib_list.inc');"
+perl -MOpenILS::Utils::Configure -e "OpenILS::Utils::Configure::org_tree_html_options('$SLIMPACDIR', 'lib_list.inc');" -- --osrf-config "$OSRF_CORE"
 echo " -> $OUTFILE"
 OUTFILES="$OUTFILES $OUTFILE"
 
 OUTFILE="$SLIMPACDIR/locales.inc"
 echo "Updating locales selection HTML"
-perl -MOpenILS::Utils::Configure -e "print OpenILS::Utils::Configure::locale_html_options();" > "$OUTFILE"
+perl -MOpenILS::Utils::Configure -e "print OpenILS::Utils::Configure::locale_html_options();" -- --osrf-config "$OSRF_CORE" > "$OUTFILE"
 echo " -> $OUTFILE"
 OUTFILES="$OUTFILES $OUTFILE"
 
 if [ ! -z "$PROXIMITY" ]
 then
     echo "Refreshing proximity of org units"
-    perl -MOpenILS::Utils::Configure -e "OpenILS::Utils::Configure::org_tree_proximity();"
+    perl -MOpenILS::Utils::Configure -e "OpenILS::Utils::Configure::org_tree_proximity();" -- --osrf-config "$OSRF_CORE"
 fi
 
 # Generate a hash of the generated files

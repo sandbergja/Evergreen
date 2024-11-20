@@ -3,15 +3,15 @@
 <eg-string #errorMsg
     text="Failed To Cancel Hold" i18n-text></eg-string>
 
+<eg-worklog-strings-components></eg-worklog-strings-components>
+
 <ng-template #dialogContent>
-    <div class="modal-header bg-info">
+    <div class="modal-header">
       <h4 class="modal-title">
         <span i18n>Cancel Hold</span>
       </h4>
-      <button type="button" class="close"
-        i18n-aria-label aria-label="Close" (click)="close()">
-        <span aria-hidden="true">&times;</span>
-      </button>
+      <button type="button" class="btn-close btn-close-white"
+        i18n-aria-label aria-label="Close dialog" (click)="close()"></button>
     </div>
     <div class="modal-body">
       <div class="row d-flex justify-content-center">
@@ -19,17 +19,17 @@
       </div>
       <div class="row mt-2">
         <div class="col-lg-4">
-          <label for="cance-reasons" i18n>Cancel Reason</label>
+          <label class="form-label" for="cancel-reasons" i18n>Cancel Reason</label>
         </div>
         <div class="col-lg-8">
-          <eg-combobox id='cancel-reasons' [entries]="cancelReasons"
+          <eg-combobox domId='cancel-reasons' [entries]="cancelReasons"
             [startId]="5" (onChange)="cancelReason = $event ? $event.id : null">
           </eg-combobox>
         </div>
       </div>
       <div class="row mt-2">
         <div class="col-lg-4">
-          <label for="cance-note" i18n>Cancel Note</label>
+          <label class="form-label" for="cancel-note" i18n>Cancel Note</label>
         </div>
         <div class="col-lg-8">
           <textarea id='cancel-note' class="form-control"
@@ -51,7 +51,7 @@
     </div>
     <div class="modal-footer">
       <ng-container *ngIf="!chargeResponse">
-        <button type="button" class="btn btn-warning"
+        <button type="button" class="btn btn-normal"
           (click)="close()" i18n>Cancel</button>
         <button type="button" class="btn btn-success"
           (click)="cancelBatch()" i18n>Cancel Hold</button>

@@ -1,3 +1,4 @@
+/* eslint-disable no-magic-numbers */
 import {Injectable, EventEmitter} from '@angular/core';
 import {NetService} from './net.service';
 import {EventService, EgEvent} from './event.service';
@@ -5,7 +6,7 @@ import {IdlService, IdlObject} from './idl.service';
 import {StoreService} from './store.service';
 
 // Not universally available.
-declare var BroadcastChannel;
+declare var BroadcastChannel; // eslint-disable-line no-var
 
 // Models a login instance.
 class AuthUser {
@@ -13,11 +14,15 @@ class AuthUser {
     workstation: string; // workstation name
     token:       string;
     authtime:    number;
+    provisional: boolean;
+    mfaAllowed:  boolean;
 
-    constructor(token: string, authtime: number, workstation?: string) {
+    constructor(token: string, authtime: number, workstation?: string, provisional?: boolean, mfaAllowed?: boolean) {
         this.token = token;
         this.workstation = workstation;
         this.authtime = authtime;
+        this.provisional = provisional;
+        this.mfaAllowed = mfaAllowed;
     }
 }
 
@@ -29,6 +34,7 @@ interface AuthLoginArgs {
     workstation?: string;
 }
 
+// eslint-disable-next-line no-shadow
 export enum AuthWsState {
     PENDING,
     NOT_USED,
@@ -40,14 +46,14 @@ export enum AuthWsState {
 @Injectable({providedIn: 'root'})
 export class AuthService {
 
+    // Override this to store authtokens, etc. in a different location
+    authDomain = 'eg.auth';
+
     private authChannel: any;
 
     private activeUser: AuthUser = null;
 
     workstationState: AuthWsState = AuthWsState.PENDING;
-
-    // Used by auth-checking resolvers
-    redirectUrl: string;
 
     // reference to active auth validity setTimeout handler.
     pollTimeout: any;
@@ -65,7 +71,7 @@ export class AuthService {
 
     // Returns true if we are currently in op-change mode.
     opChangeIsActive(): boolean {
-        return Boolean(this.store.getLoginSessionItem('eg.auth.time.oc'));
+        return Boolean(this.store.getLoginSessionItem(`${this.authDomain}.time.oc`));
     }
 
     // - Accessor functions always refer to the active user.
@@ -87,32 +93,66 @@ export class AuthService {
         return this.activeUser ? this.activeUser.authtime : 0;
     }
 
+    provisional(): boolean {
+        return this.activeUser ? this.activeUser.provisional : false;
+    }
+
+    mfaAllowed(): boolean {
+        return this.activeUser ? this.activeUser.mfaAllowed : false;
+    }
+
     // NOTE: NetService emits an event if the auth session has expired.
     // This only rejects when no authtoken is found.
     testAuthToken(): Promise<any> {
 
-        if (!this.activeUser) {
+        if (!this.token()) {
             // Only necessary on new page loads.  During op-change,
             // for example, we already have an activeUser.
-            this.activeUser = new AuthUser(
-                this.store.getLoginSessionItem('eg.auth.token'),
-                this.store.getLoginSessionItem('eg.auth.time')
-            );
+            const stashed_token = this.store.getLoginSessionItem(`${this.authDomain}.token`);
+            const stashed_time = this.store.getLoginSessionItem(`${this.authDomain}.time`);
+            if (stashed_token && stashed_time) {
+                this.activeUser = new AuthUser(stashed_token, stashed_time);
+            }
+        }
+
+        if (!this.token()) { // let's try to get a provisional token
+            const stashed_provisional_token = this.store.getLoginSessionItem(`${this.authDomain}.token.provisional`);
+            const stashed_provisional_time = this.store.getLoginSessionItem(`${this.authDomain}.time.provisional`);
+            if (stashed_provisional_token && stashed_provisional_time) {
+                this.activeUser = new AuthUser(
+                    stashed_provisional_token,
+                    stashed_provisional_time,
+                    null, true, true
+                );
+            }
         }
 
         if (!this.token()) {
             return Promise.reject('no authtoken');
         }
 
+        if (this.provisional()) {
+            return Promise.reject('provisional authtoken');
+        }
+
         return this.net.request(
             'open-ils.auth',
-            'open-ils.auth.session.retrieve', this.token()).toPromise()
-        .then(user => {
+            'open-ils.auth.session.retrieve', this.token()
+        ).toPromise().then(user => {
             // NetService interceps NO_SESSION events.
             // We can only get here if the session is valid.
             this.activeUser.user = user;
             this.listenForLogout();
             this.sessionPoll();
+        }).then(() => {
+            return this.net.request(
+                'open-ils.auth_mfa',
+                'open-ils.auth_mfa.allowed_for_token',
+                this.token()
+            ).toPromise().then(res => {
+                // cache MFA allowed-ness whenever we have to fetch the session
+                this.activeUser.mfaAllowed = Number(res) === 1;
+            });
         });
     }
 
@@ -120,10 +160,10 @@ export class AuthService {
         method: string, isOpChange?: boolean): Promise<void> {
 
         return this.net.request(service, method, args)
-        .toPromise().then(res => {
-            return this.handleLoginResponse(
-                args, this.egEvt.parse(res), isOpChange);
-        });
+            .toPromise().then(res => {
+                return this.handleLoginResponse(
+                    args, this.egEvt.parse(res), isOpChange);
+            });
     }
 
     login(args: AuthLoginArgs, isOpChange?: boolean): Promise<void> {
@@ -138,21 +178,21 @@ export class AuthService {
         return this.net.request(
             'open-ils.auth_proxy',
             'open-ils.auth_proxy.enabled')
-        .toPromise().then(
-            enabled => {
-                if (Number(enabled) === 1) {
-                    service = 'open-ils.auth_proxy';
-                    method = 'open-ils.auth_proxy.login';
-                }
-                return this.loginApi(args, service, method, isOpChange);
-            },
-            error => {
+            .toPromise().then(
+                enabled => {
+                    if (Number(enabled) === 1) {
+                        service = 'open-ils.auth_proxy';
+                        method = 'open-ils.auth_proxy.login';
+                    }
+                    return this.loginApi(args, service, method, isOpChange);
+                },
+                error => {
                 // auth_proxy check resulted in a low-level error.
                 // Likely the service is not running.  Fall back to
                 // standard auth login.
-                return this.loginApi(args, service, method, isOpChange);
-            }
-        );
+                    return this.loginApi(args, service, method, isOpChange);
+                }
+            );
     }
 
     handleLoginResponse(
@@ -174,22 +214,45 @@ export class AuthService {
         }
     }
 
+    provisionalTokenUpgraded(): Promise<any> {
+        if (this.provisional()) {
+            this.activeUser = new AuthUser(
+                this.store.getLoginSessionItem(`${this.authDomain}.token.provisional`),
+                this.store.getLoginSessionItem(`${this.authDomain}.time.provisional`),
+                this.activeUser.workstation, false, true
+            );
+            this.store.removeLoginSessionItem(`${this.authDomain}.token.provisional`);
+            this.store.removeLoginSessionItem(`${this.authDomain}.time.provisional`);
+            this.store.setLoginSessionItem(`${this.authDomain}.token`, this.token());
+            this.store.setLoginSessionItem(`${this.authDomain}.time`, this.authtime());
+        }
+        // Re-fetch the user.
+        return this.testAuthToken();
+    }
+
     // Stash the login data
     handleLoginOk(args: AuthLoginArgs, evt: EgEvent, isOpChange: boolean): Promise<void> {
 
         if (isOpChange) {
-            this.store.setLoginSessionItem('eg.auth.token.oc', this.token());
-            this.store.setLoginSessionItem('eg.auth.time.oc', this.authtime());
+            this.store.setLoginSessionItem(`${this.authDomain}.token.oc`, this.token());
+            this.store.setLoginSessionItem(`${this.authDomain}.time.oc`, this.authtime());
         }
 
         this.activeUser = new AuthUser(
             evt.payload.authtoken,
             evt.payload.authtime,
-            args.workstation
+            args.workstation,
+            !!evt.payload.provisional,
+            !!evt.payload.provisional
         );
 
-        this.store.setLoginSessionItem('eg.auth.token', this.token());
-        this.store.setLoginSessionItem('eg.auth.time', this.authtime());
+        if (this.provisional()) {
+            this.store.setLoginSessionItem(`${this.authDomain}.token.provisional`, this.token());
+            this.store.setLoginSessionItem(`${this.authDomain}.time.provisional`, this.authtime());
+        } else {
+            this.store.setLoginSessionItem(`${this.authDomain}.token`, this.token());
+            this.store.setLoginSessionItem(`${this.authDomain}.time`, this.authtime());
+        }
 
         return Promise.resolve();
     }
@@ -198,14 +261,14 @@ export class AuthService {
         if (this.opChangeIsActive()) {
             this.deleteSession();
             this.activeUser = new AuthUser(
-                this.store.getLoginSessionItem('eg.auth.token.oc'),
-                this.store.getLoginSessionItem('eg.auth.time.oc'),
+                this.store.getLoginSessionItem(`${this.authDomain}.token.oc`),
+                this.store.getLoginSessionItem(`${this.authDomain}.time.oc`),
                 this.activeUser.workstation
             );
-            this.store.removeLoginSessionItem('eg.auth.token.oc');
-            this.store.removeLoginSessionItem('eg.auth.time.oc');
-            this.store.setLoginSessionItem('eg.auth.token', this.token());
-            this.store.setLoginSessionItem('eg.auth.time', this.authtime());
+            this.store.removeLoginSessionItem(`${this.authDomain}.token.oc`);
+            this.store.removeLoginSessionItem(`${this.authDomain}.time.oc`);
+            this.store.setLoginSessionItem(`${this.authDomain}.token`, this.token());
+            this.store.setLoginSessionItem(`${this.authDomain}.time`, this.authtime());
         }
         // Re-fetch the user.
         return this.testAuthToken();
@@ -224,10 +287,12 @@ export class AuthService {
                 `received eg.auth broadcast ${JSON.stringify(e.data)}`);
 
             if (e.data.action === 'logout') {
-                // Logout will be handled by the originating tab.
-                // We just need to clear tab-local memory.
-                this.cleanup();
-                this.net.authExpired$.emit({viaExternal: true});
+                if (!e.data.domain || e.data.domain === this.authDomain) {
+                    // Logout will be handled by the originating tab.
+                    // We just need to clear tab-local memory.
+                    this.cleanup();
+                    this.net.authExpired$.emit({viaExternal: true});
+                }
             }
         };
     }
@@ -243,18 +308,10 @@ export class AuthService {
      */
     sessionPoll(): void {
 
-        // add a 5 second delay to give the token plenty of time
-        // to expire on the server.
-        let pollTime = this.authtime() * 1000 + 5000;
-
-        if (pollTime < 60000) {
-            // Never poll more often than once per minute.
-            pollTime = 60000;
-        } else if (pollTime > 2147483647) {
-            // Avoid integer overflow resulting in $timeout() effectively
-            // running with timeout=0 in a loop.
-            pollTime = 2147483647;
-        }
+        // Check every 3 minutes. This still won't reset the authtoken timeout
+        // but it WILL reset the memcached LRU for the authtoken so staff authtokens
+        // are less likely to be evicted.
+        const pollTime = 60 * 1000 * 3;
 
         this.pollTimeout = setTimeout(() => {
             this.net.request(
@@ -268,7 +325,7 @@ export class AuthService {
             // If the promise resolves, the session is valid.
             ).subscribe(
                 user => this.sessionPoll(),
-                err  => console.warn('auth poll error: ' + err)
+                (err: unknown)  => console.warn('auth poll error: ' + err)
             );
 
         }, pollTime);
@@ -317,7 +374,7 @@ export class AuthService {
             this.net.request(
                 'open-ils.auth',
                 'open-ils.auth.session.delete', this.token())
-            .subscribe(x => {});
+                .subscribe(x => {});
         }
     }
 
@@ -325,7 +382,7 @@ export class AuthService {
     // This should only be invoked by one tab.
     broadcastLogout(): void {
         console.debug('Notifying tabs of imminent auth token removal');
-        this.authChannel.postMessage({action : 'logout'});
+        this.authChannel.postMessage({action : 'logout', domain: this.authDomain});
     }
 
     // Remove/reset session data

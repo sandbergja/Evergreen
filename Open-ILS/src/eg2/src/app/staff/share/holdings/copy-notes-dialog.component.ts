@@ -1,9 +1,8 @@
-import {Component, OnInit, Input, ViewChild} from '@angular/core';
+import {Component, Input, ViewChild} from '@angular/core';
 import {Observable, throwError, from, empty} from 'rxjs';
-import {tap, map, switchMap} from 'rxjs/operators';
+import {switchMap} from 'rxjs/operators';
 import {NetService} from '@eg/core/net.service';
 import {IdlService, IdlObject} from '@eg/core/idl.service';
-import {EventService} from '@eg/core/event.service';
 import {ToastService} from '@eg/share/toast/toast.service';
 import {AuthService} from '@eg/core/auth.service';
 import {PcrudService} from '@eg/core/pcrud.service';
@@ -16,19 +15,24 @@ import {NgbModal, NgbModalOptions} from '@ng-bootstrap/ng-bootstrap';
  * Dialog for managing copy notes.
  */
 
+export interface CopyNotesChanges {
+    newNotes: IdlObject[];
+    delNotes: IdlObject[];
+}
+
 @Component({
-  selector: 'eg-copy-notes-dialog',
-  templateUrl: 'copy-notes-dialog.component.html'
+    selector: 'eg-copy-notes-dialog',
+    templateUrl: 'copy-notes-dialog.component.html'
 })
 
 export class CopyNotesDialogComponent
-    extends DialogComponent implements OnInit {
+    extends DialogComponent {
 
     // If there are multiple copyIds, only new notes may be applied.
     // If there is only one copyId, then notes may be applied or removed.
     @Input() copyIds: number[] = [];
 
-    mode: string; // create | manage
+    mode: string; // create | manage | edit
 
     // If true, no attempt is made to save the new notes to the
     // database.  It's assumed this takes place in the calling code.
@@ -48,6 +52,8 @@ export class CopyNotesDialogComponent
 
     autoId = -1;
 
+    idToEdit: number;
+
     @ViewChild('successMsg', { static: true }) private successMsg: StringComponent;
     @ViewChild('errorMsg', { static: true }) private errorMsg: StringComponent;
 
@@ -62,15 +68,13 @@ export class CopyNotesDialogComponent
         super(modal); // required for subclassing
     }
 
-    ngOnInit() {
-    }
-
     /**
      */
-    open(args: NgbModalOptions): Observable<IdlObject[]> {
+    open(args: NgbModalOptions): Observable<CopyNotesChanges> {
         this.copy = null;
         this.copies = [];
         this.newNotes = [];
+        this.delNotes = [];
 
         if (this.copyIds.length === 0 && !this.inPlaceCreateMode) {
             return throwError('copy ID required');
@@ -78,8 +82,8 @@ export class CopyNotesDialogComponent
 
         // In manage mode, we can only manage a single copy.
         // But in create mode, we can add notes to multiple copies.
-
-        if (this.copyIds.length === 1) {
+        // We can only manage copies that already exist in the database.
+        if (this.copyIds.length === 1 && this.copyIds[0] > 0) {
             this.mode = 'manage';
         } else {
             this.mode = 'create';
@@ -93,15 +97,32 @@ export class CopyNotesDialogComponent
     }
 
     getCopies(): Promise<any> {
+
+        // Avoid fetch if we're only adding notes to isnew copies.
+        const ids = this.copyIds.filter(id => id > 0);
+        if (ids.length === 0) { return Promise.resolve(); }
+
         return this.pcrud.search('acp', {id: this.copyIds},
             {flesh: 1, flesh_fields: {acp: ['notes']}},
             {atomic: true}
         )
-        .toPromise().then(copies => {
-            this.copies = copies;
-            if (copies.length === 1) {
-                this.copy = copies[0];
-            }
+            .toPromise().then(copies => {
+                this.copies = copies;
+                if (copies.length === 1) {
+                    this.copy = copies[0];
+                }
+            });
+    }
+
+    editNote(note: IdlObject) {
+        this.idToEdit = note.id();
+        this.mode = 'edit';
+    }
+
+    returnToManage() {
+        this.getCopies().then(() => {
+            this.idToEdit = null;
+            this.mode = 'manage';
         });
     }
 
@@ -141,7 +162,7 @@ export class CopyNotesDialogComponent
     applyChanges() {
 
         if (this.inPlaceCreateMode) {
-            this.close(this.newNotes);
+            this.close({ newNotes: this.newNotes, delNotes: this.delNotes });
             return;
         }
 
@@ -156,14 +177,14 @@ export class CopyNotesDialogComponent
         });
 
         this.pcrud.create(notes).toPromise()
-        .then(_ => {
-            if (this.delNotes.length) {
-                return this.pcrud.remove(this.delNotes).toPromise();
-            }
-        }).then(_ => {
-            this.successMsg.current().then(msg => this.toast.success(msg));
-            this.close(this.newNotes.length > 0 || this.delNotes.length > 0);
-        });
+            .then(_ => {
+                if (this.delNotes.length) {
+                    return this.pcrud.remove(this.delNotes).toPromise();
+                }
+            }).then(_ => {
+                this.successMsg.current().then(msg => this.toast.success(msg));
+                this.close({ newNotes: this.newNotes, delNotes: this.delNotes });
+            });
     }
 }
 

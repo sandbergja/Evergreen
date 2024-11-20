@@ -37,10 +37,11 @@
     }, stop_parms));
 %]
 
- <div id="btnGroupDrop1" role="button" class="btn btn-action text-left" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+ <button type="button" id="btnGroupDrop1" class="btn btn-action text-left" data-bs-toggle="dropdown" 
+    aria-haspopup="true" aria-expanded="false" aria-describedby="[% rec_anchor %]">
         <i class="fas fa-list" aria-hidden="true"></i>
           [% l("Add to my list") %]
-        </div>
+        </button>
     <!--Removal-->
     <div class="dropdown-menu" aria-labelledby="btnGroupDrop1">
     <a class="dropdown-item" href="[% href %]">[% l('Temporary List') %]</a>
@@ -79,8 +80,8 @@
         [% l('See All') %]
         </a>
     <a class="dropdown-item" href="[% opac_wrap(mkurl(ctx.opac_root _ '/myopac/lists', {
-        add_rec => ctx.bre_id, anchor => rec_anchor
+        move_cart_by_default => 1, add_rec => ctx.bre_id, anchor => rec_anchor
     }, stop_parms)) %]">
-    [% l('Add to new list') %]
+    [% l('Add [_1] to new list', esc_title) %]
     </a>
 </div>

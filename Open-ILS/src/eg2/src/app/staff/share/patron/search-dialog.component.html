@@ -1,10 +1,11 @@
 <ng-template #dialogContent>
-  <div class="modal-header bg-info">
-    <h4 class="modal-title"><span i18n>Patron Search</span></h4>
-    <button type="button" class="close" 
-      i18n-aria-label aria-label="Close" (click)="close()">
-      <span aria-hidden="true">&times;</span>
-    </button>
+  <div class="modal-header">
+    <h4 class="modal-title">
+      <span *ngIf="!dialogTitle" i18n>Patron Search</span>
+      <span *ngIf="dialogTitle">{{dialogTitle}}</span>
+    </h4>
+    <button type="button" class="btn-close btn-close-white" 
+      i18n-aria-label aria-label="Close dialog" (click)="close()"></button>
   </div>
   <div class="modal-body">
     <eg-patron-search #searchForm (patronsSelected)="patronsSelected($event)">
@@ -12,7 +13,7 @@
   </div>
   <div class="modal-footer">
     <ng-container>
-      <button type="button" class="btn btn-warning" 
+      <button type="button" class="btn btn-normal" 
         (click)="close()" i18n>Cancel</button>
       <button type="button" class="btn btn-success" 
         [disabled]="searchForm ? searchForm.getSelected().length === 0 : true"

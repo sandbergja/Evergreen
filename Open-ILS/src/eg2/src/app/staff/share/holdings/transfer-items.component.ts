@@ -1,7 +1,5 @@
-import {Component, OnInit, Input, ViewChild, Renderer2} from '@angular/core';
-import {Observable} from 'rxjs';
-import {switchMap, map, tap} from 'rxjs/operators';
-import {IdlObject, IdlService} from '@eg/core/idl.service';
+import {Component, ViewChild} from '@angular/core';
+import {IdlObject} from '@eg/core/idl.service';
 import {NetService} from '@eg/core/net.service';
 import {AuthService} from '@eg/core/auth.service';
 import {EventService} from '@eg/core/event.service';
@@ -13,37 +11,34 @@ import {StringComponent} from '@eg/share/string/string.component';
 /* Transfer items to a call number. */
 
 @Component({
-  selector: 'eg-transfer-items',
-  templateUrl: 'transfer-items.component.html'
+    selector: 'eg-transfer-items',
+    templateUrl: 'transfer-items.component.html'
 })
 
-export class TransferItemsComponent implements OnInit {
+export class TransferItemsComponent {
 
     @ViewChild('successMsg', {static: false})
-        private successMsg: StringComponent;
+    private successMsg: StringComponent;
 
     @ViewChild('errorMsg', {static: false})
-        private errorMsg: StringComponent;
+    private errorMsg: StringComponent;
 
     @ViewChild('noTargetMsg', {static: false})
-        private noTargetMsg: StringComponent;
+    private noTargetMsg: StringComponent;
 
     @ViewChild('confirmDialog', {static: false})
-        private confirmDialog: ConfirmDialogComponent;
+    private confirmDialog: ConfirmDialogComponent;
 
     @ViewChild('alertDialog', {static: false})
-        private alertDialog: AlertDialogComponent;
+    private alertDialog: AlertDialogComponent;
 
     eventDesc: string;
 
     constructor(
         private toast: ToastService,
-        private idl: IdlService,
         private net: NetService,
         private auth: AuthService,
         private evt: EventService) {}
-
-    ngOnInit() {}
 
     // Transfers a set of items/copies (by ID) to the selected call
     // number (by ID).
@@ -58,29 +53,29 @@ export class TransferItemsComponent implements OnInit {
 
         return this.net.request('open-ils.cat',
             method, this.auth.token(), cnId, itemIds)
-        .toPromise().then(resp => {
+            .toPromise().then(resp => {
 
-            const evt = this.evt.parse(resp);
+                const evt = this.evt.parse(resp);
 
-            if (evt) {
+                if (evt) {
 
-                if (override) {
+                    if (override) {
                     // Override failed, no looping please.
-                    this.toast.warning(this.errorMsg.text);
-                    return false;
+                        this.toast.warning(this.errorMsg.text);
+                        return false;
+                    }
+
+                    this.eventDesc = evt.desc;
+
+                    return this.confirmDialog.open().toPromise().then(ok =>
+                        ok ? this.transferItems(itemIds, cnId, true) : false);
+
+                } else { // success
+
+                    this.toast.success(this.successMsg.text);
+                    return true;
                 }
-
-                this.eventDesc = evt.desc;
-
-                return this.confirmDialog.open().toPromise().then(ok =>
-                    ok ? this.transferItems(itemIds, cnId, true) : false);
-
-            } else { // success
-
-                this.toast.success(this.successMsg.text);
-                return true;
-            }
-        });
+            });
     }
 
     // Transfers a set of items/copies (by object with fleshed call numbers)
@@ -143,15 +138,15 @@ export class TransferItemsComponent implements OnInit {
             }
 
             return this.transferItems(itemTransfers[cn.id()], resp.acn_id)
-            .then(ok => {
+                .then(ok => {
 
-                if (ok && Object.keys(cnTransfers).length > 0) {
+                    if (ok && Object.keys(cnTransfers).length > 0) {
                     // More call numbers to transfer.
-                    return this.transferCallNumbers(cnTransfers, itemTransfers);
-                }
+                        return this.transferCallNumbers(cnTransfers, itemTransfers);
+                    }
 
-                return ok;
-            });
+                    return ok;
+                });
         });
     }
 }

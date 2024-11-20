@@ -4,10 +4,9 @@
 <div class="row mt-3">
   <div class="col-lg-4">
     <div class="input-group">
-      <div class="input-group-prepend">
-        <div class="input-group-text" i18n>Holdings Maintenance</div>
-      </div>
+      <label for="contextOrgSelect" class="form-label input-group-text" i18n>Holdings Maintenance</label>
       <eg-org-select [initialOrg]="contextOrg"
+        domId="contextOrgSelect"
         persistKey="catalog.holdings"
         (onChange)="contextOrgChanged($event)"
         [orgClassCallback]="orgClassCallback">
@@ -19,21 +18,17 @@
 <!-- Location / Barcode cell template -->
 
 <ng-template #locationTemplate let-row="row" let-userContext="userContext">
-  <!-- pl-* is doubled for added impact -->
-  <div class="pl-{{row.locationDepth}}">
-    <span class="pl-{{row.locationDepth}}">
-      <a class="label-with-material-icon" (click)="userContext.toggleExpandRow(row)">
+  <div [ngStyle]="{'padding-left': (0.5 * getRowPaddingDepth(row)) + 'rem'}"
+    [ngClass]="{'leaf': row.copy || row.treeNode.children.length === 0}">
+      <button type="button" class="btn btn-link text-decoration-none label-with-material-icon" (click)="userContext.toggleExpandRow(row)">
         <!--  leave the icons in place for all node types, but make them
               invisible when they are not needed. -->
         <span *ngIf="row.treeNode.expanded"
-          [ngClass]="{invisible: row.copy || row.treeNode.children.length == 0}"
-          class="material-icons p-0 m-0">keyboard_arrow_down</span>
+          class="material-icons p-0 m-0" aria-hidden="true">keyboard_arrow_down</span>
         <span *ngIf="!row.treeNode.expanded"
-          [ngClass]="{invisible: row.copy || row.treeNode.children.length == 0}"
-          class="material-icons p-0 m-0">keyboard_arrow_right</span>
-        <span>{{row.locationLabel}}</span>
-      </a>
-    </span>
+          class="material-icons p-0 m-0" aria-hidden="true">keyboard_arrow_right</span>
+        <span class="locationLabel">{{row.locationLabel}}</span>
+      </button>
   </div>
 </ng-template>
 
@@ -46,7 +41,7 @@
   </ng-container>
 </ng-template>
 
-<eg-mark-damaged-dialog #markDamagedDialog></eg-mark-damaged-dialog>
+<eg-mark-damaged-dialog #markDamagedDialog [handleCheckin]="true"></eg-mark-damaged-dialog>
 <eg-mark-missing-dialog #markMissingDialog></eg-mark-missing-dialog>
 <eg-copy-alerts-dialog #copyAlertsDialog></eg-copy-alerts-dialog>
 <eg-copy-tags-dialog #copyTagsDialog></eg-copy-tags-dialog>
@@ -120,8 +115,8 @@
     </eg-grid-toolbar-action>
 
     <eg-grid-toolbar-action
-      i18n-group group="Add" i18n-label label="Add Item Alerts"
-      (onClick)="openItemAlerts($event, 'create')">
+      i18n-group group="Add" i18n-label label="Add/Manage Item Alerts"
+      (onClick)="openItemAlerts($event)">
     </eg-grid-toolbar-action>
 
     <eg-grid-toolbar-action
@@ -173,11 +168,6 @@
       (onClick)="openHoldingEdit($event, true, false)">
     </eg-grid-toolbar-action>
     
-    <eg-grid-toolbar-action
-      i18n-group group="Edit" i18n-label label="Edit Item Alerts"
-      (onClick)="openItemAlerts($event, 'manage')">
-    </eg-grid-toolbar-action>
-
     <eg-grid-toolbar-action
       i18n-group group="Edit" i18n-label label="Replace Barcodes"
       (onClick)="openReplaceBarcodeDialog($event)">
@@ -257,9 +247,9 @@
     </eg-grid-column>
     <eg-grid-column path="callNum.id" [hidden]="true" label="Call Number ID" i18n-label>
     </eg-grid-column>
-    <eg-grid-column name="owner_label" [flex]="4"
+    <eg-grid-column name="owner_label"
       [cellTemplate]="locationTemplate" [cellContext]="gridTemplateContext" 
-      label="Location/Barcode" [disableTooltip]="true" i18n-label>
+      label="Location / Barcode" i18n-label>
     </eg-grid-column>
     <eg-grid-column path="callNumCount" datatype="number" label="Call Numbers" i18n-label>
     </eg-grid-column>

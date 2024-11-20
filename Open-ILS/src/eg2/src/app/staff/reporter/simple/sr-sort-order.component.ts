@@ -1,9 +1,7 @@
-import {Component, Input, Output, EventEmitter, OnInit, ViewChild} from '@angular/core';
+import {Component, Input, Output, EventEmitter, ViewChild} from '@angular/core';
 import {NgbAccordion} from '@ng-bootstrap/ng-bootstrap';
 import {IdlService, IdlObject} from '@eg/core/idl.service';
-import {PcrudService} from '@eg/core/pcrud.service';
-import {SimpleReporterService} from './simple-reporter.service';
-import {SRFieldComponent} from './sr-field.component';
+import {ReporterService} from '../share/reporter.service';
 
 @Component({
     selector: 'eg-sr-sort-order',
@@ -11,7 +9,7 @@ import {SRFieldComponent} from './sr-field.component';
     templateUrl: './sr-sort-order.component.html'
 })
 
-export class SRSortOrderComponent implements OnInit {
+export class SRSortOrderComponent {
 
     @Input() fields: IdlObject[] = [];
     @Output() fieldsChange = new EventEmitter<IdlObject[]>();
@@ -23,11 +21,8 @@ export class SRSortOrderComponent implements OnInit {
 
     constructor(
         private idl: IdlService,
-        private srSvc: SimpleReporterService
+        private srSvc: ReporterService
     ) {
-    }
-
-    ngOnInit() {
     }
 
     updateField(field: IdlObject) {

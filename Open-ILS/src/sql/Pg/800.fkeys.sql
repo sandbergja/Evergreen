@@ -28,16 +28,52 @@ CREATE RULE protect_bib_rec_delete AS
 
 CREATE RULE protect_bre_id_neg1 AS ON UPDATE TO biblio.record_entry WHERE OLD.id = -1 DO INSTEAD NOTHING;
 
+
+-- Kill any transaction that tries to mark a copy location as 
+-- deleted if the location contains any non-deleted copies.
+CREATE OR REPLACE FUNCTION asset.check_delete_copy_location(acpl_id INTEGER) 
+    RETURNS VOID AS $FUNK$
+BEGIN
+    PERFORM TRUE FROM asset.copy WHERE location = acpl_id AND NOT deleted LIMIT 1;
+
+    IF FOUND THEN
+        RAISE EXCEPTION
+            'Copy location % contains active copies and cannot be deleted', acpl_id;
+    END IF;
+
+    IF acpl_id = 1 THEN
+        RAISE EXCEPTION
+            'Copy location 1 cannot be deleted';
+    END IF;
+END;
+$FUNK$ LANGUAGE plpgsql;
+
+
 CREATE RULE protect_copy_location_delete AS
     ON DELETE TO asset.copy_location DO INSTEAD (
+        SELECT asset.check_delete_copy_location(OLD.id); -- exception on error
         UPDATE asset.copy_location SET deleted = TRUE WHERE OLD.id = asset.copy_location.id;
         UPDATE acq.lineitem_detail SET location = NULL WHERE location = OLD.id;
         DELETE FROM asset.copy_location_order WHERE location = OLD.id;
         DELETE FROM asset.copy_location_group_map WHERE location = OLD.id;
         DELETE FROM config.circ_limit_set_copy_loc_map WHERE copy_loc = OLD.id;
     );
-    
-CREATE RULE protect_acl_id_1 AS ON UPDATE TO asset.copy_location WHERE OLD.id = 1 DO INSTEAD NOTHING;
+
+CREATE OR REPLACE FUNCTION asset.copy_location_validate_edit()
+  RETURNS trigger
+  LANGUAGE plpgsql
+AS $function$
+BEGIN
+    IF OLD.id = 1 THEN
+        IF OLD.owning_lib != NEW.owning_lib OR NEW.deleted THEN
+            RAISE EXCEPTION 'Copy location 1 cannot be moved or deleted';
+        END IF;
+    END IF;
+    RETURN NEW;
+END;
+$function$;
+
+CREATE TRIGGER acpl_validate_edit BEFORE UPDATE ON asset.copy_location FOR EACH ROW EXECUTE PROCEDURE asset.copy_location_validate_edit();
 
 CREATE RULE protect_mono_part_delete AS
     ON DELETE TO biblio.monograph_part DO INSTEAD (
@@ -260,6 +296,10 @@ ALTER TABLE asset.copy_template ADD CONSTRAINT asset_copy_template_floating_fkey
 
 ALTER TABLE config.marc_field ADD CONSTRAINT config_marc_field_owner_fkey FOREIGN KEY (owner) REFERENCES actor.org_unit(id) DEFERRABLE INITIALLY DEFERRED;
 ALTER TABLE config.marc_subfield ADD CONSTRAINT config_marc_subfield_owner_fkey FOREIGN KEY (owner) REFERENCES actor.org_unit(id) DEFERRABLE INITIALLY DEFERRED;
+
+ALTER TABLE config.openathens_identity ADD CONSTRAINT config_openathens_identity_ou_fkey
+FOREIGN KEY (org_unit) REFERENCES actor.org_unit (id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+
 
 ALTER TABLE config.copy_tag_type ADD CONSTRAINT copy_tag_type_owner_fkey FOREIGN KEY (owner) REFERENCES  actor.org_unit(id) DEFERRABLE INITIALLY DEFERRED;
 

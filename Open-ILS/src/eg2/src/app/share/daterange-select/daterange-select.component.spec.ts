@@ -6,7 +6,7 @@ import {ReactiveFormsModule} from '@angular/forms';
 import {NgbDate} from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
-    // tslint:disable-next-line:component-selector
+    // eslint-disable-next-line @angular-eslint/component-selector
     selector: 'ngb-datepicker',
     template: ''
 })
@@ -16,7 +16,7 @@ class EgMockDateSelectComponent {
     @Input() outsideDays: string;
     @Input() markDisabled:
         (date: NgbDate, current: { year: number; month: number; }) => boolean =
-        (date: NgbDate, current: { year: number; month: number; }) => false
+            (date: NgbDate, current: { year: number; month: number; }) => false;
 }
 
 describe('Component: DateRangeSelect', () => {
@@ -28,7 +28,7 @@ describe('Component: DateRangeSelect', () => {
             declarations: [
                 DateRangeSelectComponent,
                 EgMockDateSelectComponent,
-        ]});
+            ]});
 
         fixture = TestBed.createComponent(DateRangeSelectComponent);
         component = fixture.componentInstance;

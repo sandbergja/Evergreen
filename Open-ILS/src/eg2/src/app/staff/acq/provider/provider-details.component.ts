@@ -1,5 +1,5 @@
 import {Component, OnInit, Output, EventEmitter, ViewChild} from '@angular/core';
-import {empty, throwError, Observable, from} from 'rxjs';
+import {throwError, Observable, from} from 'rxjs';
 import {map} from 'rxjs/operators';
 import {Router, ActivatedRoute, ParamMap} from '@angular/router';
 import {IdlService, IdlObject} from '@eg/core/idl.service';
@@ -11,8 +11,8 @@ import {StringComponent} from '@eg/share/string/string.component';
 import {ToastService} from '@eg/share/toast/toast.service';
 
 @Component({
-  selector: 'eg-provider-details',
-  templateUrl: 'provider-details.component.html',
+    selector: 'eg-provider-details',
+    templateUrl: 'provider-details.component.html',
 })
 export class ProviderDetailsComponent implements OnInit {
 

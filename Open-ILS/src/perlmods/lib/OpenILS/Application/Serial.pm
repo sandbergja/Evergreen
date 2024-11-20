@@ -1642,6 +1642,9 @@ sub _find_or_create_call_number {
     my ($prefix,$suffix) = ('','');
     if (ref($cn_string)) {
         ($prefix,$cn_string,$suffix) = @$cn_string;
+        # the affix labels can never be NULL/undef
+        $prefix //= '';
+        $suffix //= '';
     }
 
     my $existing = $e->search_asset_call_number([{
@@ -3806,9 +3809,11 @@ sub get_items_by {
                 $_->{"id"}, {
                     "flesh" => 3,
                     "flesh_fields" => {
-                        "sitem" => [qw/stream issuance unit creator editor/],
-                        "sstr" => ["distribution"],
-                        "sdist" => ["holding_lib"]
+                        "sitem" => [qw/stream issuance notes unit creator editor/],
+                        "siss" => [qw/subscription/],
+                        "sstr" => [qw/distribution routing_list_users/],
+                        "sdist" => [qw/holding_lib notes receive_unit_template/],
+                        "ssub" => [qw/notes/]
                     }
                 }
             ])

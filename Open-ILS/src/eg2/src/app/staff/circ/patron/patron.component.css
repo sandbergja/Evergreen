@@ -1,0 +1,214 @@
+table.table.eg-grid > :not(caption) > * > *,
+table.table.eg-grid > :not(caption) > tbody > tr.eg-grid-row {
+  background-color: inherit !important;
+  color: inherit;
+}
+
+#patron-grid {
+  display: grid;
+  grid-gap: 1rem;
+  grid-template-columns: min-content 2fr;
+  grid-template-rows: minmax(0, auto);
+  grid-template-areas:
+    "nav summary"
+    "nav data";
+}
+
+#patron-grid.show-nav {
+  grid-gap: 2rem;
+  grid-template-columns: 1fr 5fr;
+}
+
+@media screen and (min-width: 768px) {
+  /* if the button toggle is all that's showing */
+  #patron-grid:not(.show-nav) {
+    grid-template-columns: 2.4rem 5fr;
+  }
+
+  /* if the nav is not showing, it should not take up space */
+  #patron-grid:has(.patron-search-form) {
+    grid-template-columns: 0 5fr;
+    column-gap: 1rem;
+  }
+
+  #patron-grid.show-nav {
+    grid-gap: 0 2rem;
+    grid-template-columns: 1fr 5fr;
+  }
+}
+
+#patron-summary {
+  grid-area: summary;
+  position: relative;
+}
+
+#patron-tabs {
+  grid-area: data;
+}
+
+#patron-nav {
+  grid-area: nav;
+}
+
+.patron-nav-toggle {
+  padding: 0.375rem 0.125rem;
+}
+
+.svg-icon-button svg {
+  fill: var(--bs-dark);
+  height: var(--bs-body-line-height);
+  width: var(--bs-body-line-height);
+}
+
+.svg-icon-button:hover svg,
+.svg-icon-button:focus svg {
+  fill: var(--primary);
+}
+
+.show-nav #patron-nav .nav-tabs {
+  position: static;
+}
+
+#patron-nav .nav-tabs {
+  border-bottom: none;
+  position: absolute;
+  left: -9999px;
+}
+
+/* set up borders on the bills grid, just in case some have alerts */
+::ng-deep .grid-key-circ_patron_bills .eg-grid-row .eg-grid-cell:first-of-type {
+  border-left: 5px solid transparent;
+}
+
+/* low-level red alerts */
+::ng-deep .eg-grid-row.less-intense-alert:not(.selected) {
+  color: var(--bs-body-color);
+  background-color: revert;
+  --bs-table-bg: light-dark(rgba(var(--bs-red-rgb), 0.10), rgba(var(--bs-red-rgb), 0.05));
+  border-color: rgba(var(--bs-red-rgb), 0.15);
+}
+
+::ng-deep .eg-grid-row.less-intense-alert:not(.selected) .eg-grid-cell:first-of-type {
+  border-left: 5px solid var(--bs-red);
+}
+
+::ng-deep .eg-grid-row.less-intense-alert.selected {
+  color: var(--bs-body-color);
+  background-color: revert;
+  --bs-table-bg: light-dark(rgba(var(--bs-red-rgb), 0.15), rgba(var(--bs-red-rgb), 0.08));
+  border-color: rgba(var(--bs-red-rgb), 0.20);
+}
+
+::ng-deep .eg-grid-row.less-intense-alert.selected .eg-grid-cell:first-of-type {
+  border-left: 5px solid var(--bs-red);
+}
+
+/* icon color for low-level red alerts */
+::ng-deep .eg-grid-row.less-intense-alert .eg-grid-flair-cell {
+  color: var(--bs-red-600);
+}
+
+/* high-level red alerts */
+::ng-deep .eg-grid-row.lost-row {
+  color: var(--bs-body-color);
+  background-color: revert;
+  --bs-table-bg: light-dark(rgba(var(--bs-red-rgb), 0.25), rgba(var(--bs-red-rgb), 0.12));
+  border-color: rgba(var(--bs-red-rgb), 0.30);
+}
+
+::ng-deep .eg-grid-row.lost-row .eg-grid-cell:first-of-type {
+  border-left: 5px solid var(--bs-red-600);
+}
+
+::ng-deep .eg-grid-row.lost-row.selected {
+  color: var(--bs-body-color);
+  background-color: revert;
+  --grid-row-selected-bg: light-dark(rgba(var(--bs-red-rgb), 0.30), rgba(var(--bs-red-rgb), 0.15));
+  border-color: rgba(var(--bs-red-rgb), 0.35);
+}
+
+::ng-deep .eg-grid-row.lost-row.selected .eg-grid-cell:first-of-type {
+  border-left: 5px solid var(--bs-red-600);
+}
+
+/* icon color for high-level red alerts and link color for both reds */
+::ng-deep .eg-grid-row.less-intense-alert a,
+::ng-deep .eg-grid-row.lost-row a,
+::ng-deep .eg-grid-row.lost-row .eg-grid-flair-cell {
+  color: var(--danger-color);
+  border-color: var(--bs-red-700);
+}
+
+::ng-deep .eg-grid-row.lost-row .eg-grid-flair-cell {
+  color: var(--bs-red-700);
+}
+
+/* orange alerts */
+::ng-deep .eg-grid-row.overdue-row {
+  color: var(--bs-body-color);
+  background-color: revert;
+  --bs-table-bg: light-dark(rgba(var(--bs-orange-rgb), 0.10), rgba(var(--bs-orange-rgb), 0.05));
+  border-color: rgba(var(--bs-orange-rgb), 0.15);
+}
+
+::ng-deep .eg-grid-row.overdue-row .eg-grid-cell:first-of-type {
+  border-left: 5px solid var(--bs-orange);
+}
+
+::ng-deep .eg-grid-row.overdue-row.selected {
+  color: var(--bs-body-color);
+  background-color: revert;
+  --grid-row-selected-bg: light-dark(rgba(var(--bs-orange-rgb), 0.15), rgba(var(--bs-orange-rgb), 0.08));
+  border-color: rgba(var(--bs-orange-rgb), 0.20);
+}
+
+::ng-deep .eg-grid-row.overdue-row.selected .eg-grid-cell:first-of-type {
+  border-left: 5px solid var(--bs-orange);
+}
+
+::ng-deep .eg-grid-row.longoverdue-row {
+  color: var(--bs-body-color);
+  background-color: revert;
+  --bs-table-bg: light-dark(rgba(var(--bs-orange-rgb), 0.25), rgba(var(--bs-orange-rgb), 0.12));
+  border-color: rgba(var(--bs-orange-rgb), 0.30);
+}
+
+::ng-deep .eg-grid-row.longoverdue-row .eg-grid-cell:first-of-type {
+  border-left: 5px solid var(--bs-orange-600);
+}
+
+::ng-deep .eg-grid-row.longoverdue-row.selected {
+  color: var(--bs-body-color);
+  background-color: revert;
+  --grid-row-selected-bg: light-dark(rgba(var(--bs-orange-rgb), 0.30), rgba(var(--bs-orange-rgb), 0.15));
+  border-color: rgba(var(--bs-orange-rgb), 0.35);
+}
+
+::ng-deep .eg-grid-row.longoverdue-row.selected .eg-grid-cell:first-of-type {
+  border-left: 5px solid var(--bs-orange-600);
+}
+
+/* link color for orange alerts */
+::ng-deep .eg-grid-row.overdue-row a,
+::ng-deep .eg-grid-row.longoverdue-row a {
+  color: light-dark(var(--bs-orange-700), var(--bs-yellow-300));
+  border-color: var(--bs-orange-700);
+}
+
+/* icon color for orange alerts */
+::ng-deep .eg-grid-row.overdue-row .eg-grid-flair-cell {
+  color: var(--bs-orange-600);
+}
+
+::ng-deep .eg-grid-row.longoverdue-row .eg-grid-flair-cell {
+  color: var(--bs-orange-700);
+}
+
+/* reset tooltip colors */
+::ng-deep .eg-grid-row.less-intense-alert .tooltip .tooltip-inner a,
+::ng-deep .eg-grid-row.lost-row .tooltip .tooltip-inner a,
+::ng-deep .eg-grid-row.overdue-row .tooltip .tooltip-inner a,
+::ng-deep .eg-grid-row.longoverdue-row .tooltip .tooltip-inner a {
+  color: var(--bs-white);
+  text-decoration: none;
+}

@@ -404,6 +404,14 @@ vim:et:ts=4:sw=4:
         <!-- no apps are enabled globally by default -->
         <activeapps/> 
 
+        <!-- 
+            If this setting is "true", Evergreen "authoritative" APIs
+            will be enabled, forcing select API calls to wrap read calls
+            in a database BEGIN/ROLLBACK so they read from the primary
+            database.
+        -->
+        <uses_pooled_read_replica_dbs>false</uses_pooled_read_replica_dbs>
+
         <cache>
             <!-- memcache servers -->
             <global>
@@ -510,9 +518,47 @@ vim:et:ts=4:sw=4:
                 </app_settings>
             </open-ils.auth_internal>
 
+            <!-- Authentication MFA server -->
+            <open-ils.auth_mfa>
+                <keepalive>5</keepalive>
+                <stateless>1</stateless>
+                <language>perl</language>
+                <implementation>OpenILS::Application::MultiFactorAuth</implementation>
+                <max_requests>1000</max_requests>
 
+                <unix_config>
+                    <max_requests>1000</max_requests>
+                    <unix_log>open-ils.auth_mfa.log</unix_log>
+                    <unix_sock>open-ils.auth_mfa.sock</unix_sock>
+                    <unix_pid>open-ils.auth_mfa.pid</unix_pid>
+                    <min_children>1</min_children>
+                    <max_children>15</max_children>
+                    <min_spare_children>1</min_spare_children>
+                    <max_spare_children>5</max_spare_children>
+                </unix_config>
 
-            <!-- Authentication proxy server -->
+                <app_settings>
+                    <!-- 'enabled' is the master switch; set to 'true' to enable MFA -->
+                    <enabled>false</enabled>
+                    <factors>
+                        <totp>
+                            <enabled>true</enabled>
+                            <fuzziness>1</fuzziness>
+                        </totp>
+                        <sms>
+                            <enabled>false</enabled>
+                        </sms>
+                        <email>
+                            <enabled>false</enabled>
+                        </email>
+                        <webauthn>
+                            <enabled>true</enabled>
+                        </webauthn>
+                    </factors>
+                </app_settings>
+            </open-ils.auth_mfa>
+
+             <!-- Authentication proxy server -->
             <open-ils.auth_proxy>
                 <keepalive>5</keepalive>
                 <stateless>1</stateless>
@@ -1405,6 +1451,26 @@ vim:et:ts=4:sw=4:
                 </unix_config>
             </open-ils.courses>
 
+            <open-ils.sip2>
+                <keepalive>5</keepalive>
+                <stateless>1</stateless>
+                <language>perl</language>
+                <implementation>OpenILS::Application::SIP2</implementation>
+                <max_requests>100</max_requests>
+                <unix_config>
+                    <unix_sock>sip2_unix.sock</unix_sock>
+                    <unix_pid>sip2_unix.pid</unix_pid>
+                    <unix_log>sip2_unix.log</unix_log>
+                    <max_requests>1000</max_requests>
+                    <min_children>1</min_children>
+                    <max_children>15</max_children>
+                    <min_spare_children>1</min_spare_children>
+                    <max_spare_children>5</max_spare_children>
+                </unix_config>
+                <app_settings>
+                </app_settings>
+            </open-ils.sip2>
+
             <open-ils.curbside>
                 <keepalive>5</keepalive>
                 <stateless>1</stateless>
@@ -1424,6 +1490,7 @@ vim:et:ts=4:sw=4:
                 <app_settings>
                 </app_settings>
             </open-ils.curbside>
+
         </apps>
     </default>
 
@@ -1454,6 +1521,7 @@ vim:et:ts=4:sw=4:
                 <appname>open-ils.auth</appname> 
                 <appname>open-ils.auth_internal</appname>
                 <appname>open-ils.auth_proxy</appname> 
+                <appname>open-ils.auth_mfa</appname> 
                 <appname>open-ils.storage</appname>  
                 <appname>open-ils.justintime</appname>  
                 <appname>open-ils.cstore</appname>  
@@ -1474,6 +1542,7 @@ vim:et:ts=4:sw=4:
                 <appname>open-ils.courses</appname>
                 <appname>open-ils.curbside</appname>
                 <appname>open-ils.geo</appname>
+                <appname>open-ils.sip2</appname>
             </activeapps>
         </localhost>
     </hosts>

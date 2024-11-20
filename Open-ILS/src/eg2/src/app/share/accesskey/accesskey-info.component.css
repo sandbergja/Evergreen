@@ -1,0 +1,35 @@
+.accesskey-info .row {
+    margin: 0;
+}
+
+.accesskey-info .row:nth-of-type(odd) {
+    background: var(--keyboard-info-row-odd);
+}
+
+.accesskey-info .row.shortcut-info {
+    background: var(--keyboard-info-row-even);
+    font-style: italic;
+}
+
+.accesskey-info .row-header {
+    font-weight: bold;
+}
+
+.shortcut-keycombo {
+    text-align: center;
+}
+
+kbd {
+    background-color: var(--bs-light);
+    border-radius:.2rem;
+    border: none;
+    box-shadow: 1px 1px 1px rgba(var(--box-shadow), 0.5);
+    color: var(--bs-body-color);
+    margin: 0 .2em;
+    /* :first-letter requires a block-level element */
+    display: inline-block;
+}
+
+kbd:first-letter {
+    text-transform: uppercase;
+}

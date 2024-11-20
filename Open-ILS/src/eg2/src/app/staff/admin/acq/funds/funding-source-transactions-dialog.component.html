@@ -3,7 +3,7 @@
 
 <ng-template #summaryField let-field="field" let-value="value">
   <div class="col-2">
-    <label style="font-weight: bold" for="fund-{{field}}">{{idlDef.field_map[field].label}}</label>
+    <label class="form-label fw-bold" for="fund-{{field}}">{{idlDef.field_map[field].label}}</label>
   </div>
   <div class="col-2">
     <span id="fund-{{field}}">
@@ -12,17 +12,15 @@
   </div>
 </ng-template>
 <ng-template #dialogContent>
-  <div class="modal-header bg-info">
+  <div class="modal-header">
     <h3 class="modal-title" i18n>Funding Source: {{fundingSource?.name()}}</h3>
-    <button type="button" class="close"
-      i18n-aria-label aria-label="Close" (click)="close()">
-      <span aria-hidden="true">&times;</span>
-    </button>
+    <button type="button" class="btn-close btn-close-white"
+      i18n-aria-label aria-label="Close dialog" (click)="close()"></button>
   </div>
   <div class="modal-body" *ngIf="fundingSource">
-    <ul ngbNav #fundingSourceTransactionsNav="ngbNav" [(activeId)]="activeTab" class="nav-tabs">
-      <li [ngbNavItem]="'credits'">
-        <a ngbNavLink i18n>Credits</a>
+    <ul ngbNav #fundingSourceTransactionsNav="ngbNav" [(activeId)]="activeTab" class="nav-tabs" [keyboard]="true" [roles]="false" role="tablist">
+      <li role="presentation" [ngbNavItem]="'credits'">
+        <a role="tab" ngbNavLink i18n>Credits</a>
         <ng-template ngbNavContent>
            <div class="mt-2">
             <eg-grid #creditsGrid idlClass="acqfscred" [dataSource]="acqfscredDataSource"
@@ -42,8 +40,8 @@
           </div>
         </ng-template>
       </li>
-      <li [ngbNavItem]="'allocations'">
-        <a ngbNavLink i18n>Allocations</a>
+      <li role="presentation" [ngbNavItem]="'allocations'">
+        <a role="tab" ngbNavLink i18n>Allocations</a>
         <ng-template ngbNavContent>
           <div class="mt-2">
             <eg-grid #allocationsGrid idlClass="acqfa" [dataSource]="acqfaDataSource"
@@ -73,7 +71,7 @@
     <div [ngbNavOutlet]="fundingSourceTransactionsNav"></div>
   </div>
   <div class="modal-footer">
-    <button type="button" class="btn btn-warning"
+    <button type="button" class="btn btn-normal"
       (click)="close()" i18n>Close</button>
   </div>
 </ng-template>

@@ -1,0 +1,46 @@
+/* see also combobox.component.css */
+
+.fund-balance-state-stop:not(:in(button)),
+.fund-balance-state-warning:not(:in(button)) {
+    padding-left: .2rem;
+}
+
+.fund-balance-state-stop,
+button.dropdown-item:has(.fund-balance-state-stop) {
+    background-color: var(--badge-danger-bg);
+    color: var(--badge-danger-color);
+    font-weight: bold;
+}
+
+button.dropdown-item.active:has(.fund-balance-state-stop) {
+    background-color: var(--badge-danger-selected-bg);
+}
+
+/* show octagon/stop ! ("report") icon */
+.fund-balance-state-stop:before {
+    content: "\e160";
+    font-family: "Material Icons";
+    font-weight: normal;
+    margin-right: .3ch;
+    vertical-align: bottom;
+}
+
+.fund-balance-state-warning,
+button.dropdown-item:has(.fund-balance-state-warning) {
+    background-color: var(--badge-warning-bg);
+    color: var(--badge-warning-color);
+    font-weight: bold;
+}
+
+button.dropdown-item.active:has(.fund-balance-state-warning) {
+    background-color: var(--badge-warning-selected-bg);
+}
+
+/* show triangle ! ("warning") icon */
+.fund-balance-state-warning:before {
+    content: "\e002";
+    font-family: "Material Icons";
+    font-weight: normal;
+    margin-right: .3ch;
+    vertical-align: bottom;
+}

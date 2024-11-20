@@ -35,50 +35,58 @@ import {MarcEditModule} from '@eg/staff/share/marc-edit/marc-edit.module';
 import {PreferencesComponent} from './prefs.component';
 import {BrowsePagerComponent} from './result/browse-pager.component';
 import {HttpClientModule} from '@angular/common/http';
+import {BarcodesModule} from '@eg/staff/share/barcodes/barcodes.module';
+import {WorkLogModule} from '@eg/staff/share/worklog/worklog.module';
+import {VolCopyModule} from '@eg/staff/cat/volcopy/volcopy.module';
+import { SortOrderSelectComponent } from './sort-order-select/sort-order-select.component';
 
 @NgModule({
-  declarations: [
-    CatalogComponent,
-    ResultsComponent,
-    RecordComponent,
-    CopiesComponent,
-    SearchFormComponent,
-    ResultRecordComponent,
-    ResultFacetsComponent,
-    ResultPaginationComponent,
-    RecordPaginationComponent,
-    RecordActionsComponent,
-    BasketActionsComponent,
-    HoldComponent,
-    PartsComponent,
-    NotesComponent,
-    AddToCarouselDialogComponent,
-    UploadJacketImageDialogComponent,
-    PartMergeDialogComponent,
-    BrowseComponent,
-    BrowseResultsComponent,
-    ConjoinedComponent,
-    HoldingsMaintenanceComponent,
-    SearchTemplatesComponent,
-    CnBrowseComponent,
-    PreferencesComponent,
-    CnBrowseResultsComponent,
-    BrowsePagerComponent
-  ],
-  imports: [
-    StaffCommonModule,
-    FmRecordEditorModule,
-    CatalogRoutingModule,
-    HoldsModule,
-    HoldingsModule,
-    BookingModule,
-    PatronModule,
-    MarcEditModule,
-    HttpClientModule
-  ],
-  providers: [
-    StaffCatalogService
-  ]
+    declarations: [
+        CatalogComponent,
+        ResultsComponent,
+        RecordComponent,
+        CopiesComponent,
+        SearchFormComponent,
+        ResultRecordComponent,
+        ResultFacetsComponent,
+        ResultPaginationComponent,
+        RecordPaginationComponent,
+        RecordActionsComponent,
+        BasketActionsComponent,
+        HoldComponent,
+        PartsComponent,
+        NotesComponent,
+        AddToCarouselDialogComponent,
+        UploadJacketImageDialogComponent,
+        PartMergeDialogComponent,
+        BrowseComponent,
+        BrowseResultsComponent,
+        ConjoinedComponent,
+        HoldingsMaintenanceComponent,
+        SearchTemplatesComponent,
+        CnBrowseComponent,
+        PreferencesComponent,
+        CnBrowseResultsComponent,
+        BrowsePagerComponent,
+        SortOrderSelectComponent
+    ],
+    imports: [
+        StaffCommonModule,
+        FmRecordEditorModule,
+        CatalogRoutingModule,
+        HoldsModule,
+        HoldingsModule,
+        BookingModule,
+        PatronModule,
+        MarcEditModule,
+        HttpClientModule,
+        BarcodesModule,
+        WorkLogModule,
+        VolCopyModule
+    ],
+    providers: [
+        StaffCatalogService
+    ]
 })
 
 export class CatalogModule {

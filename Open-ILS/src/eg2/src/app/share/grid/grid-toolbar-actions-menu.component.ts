@@ -5,8 +5,8 @@ import {ClipboardDialogComponent} from '@eg/share/clipboard/clipboard-dialog.com
 /** Models a list of toolbar action menu entries */
 
 @Component({
-  selector: 'eg-grid-toolbar-actions-menu',
-  templateUrl: 'grid-toolbar-actions-menu.component.html'
+    selector: 'eg-grid-toolbar-actions-menu',
+    templateUrl: 'grid-toolbar-actions-menu.component.html'
 })
 
 export class GridToolbarActionsMenuComponent {
@@ -27,6 +27,9 @@ export class GridToolbarActionsMenuComponent {
     }
 
     shouldDisable(action: GridToolbarAction): boolean {
+        if (action.disabled) {
+            return true;
+        }
         if (action.disableOnRows) {
             return action.disableOnRows(this.gridContext.getSelectedRows());
         }

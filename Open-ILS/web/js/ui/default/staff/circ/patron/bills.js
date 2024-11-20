@@ -173,10 +173,10 @@ function($q , egCore , egWorkLog , patronSvc) {
 .controller('PatronBillsCtrl',
        ['$scope','$q','$routeParams','egCore','egConfirmDialog','$location',
         'egGridDataProvider','billSvc','patronSvc','egPromptDialog', 'egAlertDialog',
-        'egBilling','$uibModal',
+        'egBilling','$uibModal', '$sce',
 function($scope , $q , $routeParams , egCore , egConfirmDialog , $location,
          egGridDataProvider , billSvc , patronSvc , egPromptDialog, egAlertDialog,
-         egBilling , $uibModal) {
+         egBilling , $uibModal, $sce) {
 
     $scope.initTab('bills', $routeParams.id);
     billSvc.userId = $routeParams.id;
@@ -251,16 +251,20 @@ function($scope , $q , $routeParams , egCore , egConfirmDialog , $location,
         isEnabled: true,
         template: function(item) {
             var icon = '';
+            var text = '';
             if (item['circulation.due_date'] && !item['circulation.checkin_time']) {
                 if (item['circulation.stop_fines'] == "LOST") {
                     icon = 'glyphicon-question-sign';
+                    text = egCore.strings.STOP_FINES_LOST;
                 } else if (item['circulation.stop_fines'] == "LONGOVERDUE") {
                     icon = 'glyphicon-exclamation-sign';
+                    text = egCore.strings.STOP_FINES_LONGOVERDUE;
                 } else {
                     icon = 'glyphicon-time';
+                    text = egCore.strings.CIRC_OVERDUE;
                 }
             }
-            return "<i class='glyphicon " + icon + "'></i>"
+            return $sce.trustAsHtml("<i class='glyphicon " + icon + "' title='" + text + "' aria-hidden='true'></i><span class='sr-only'>" + text + "</span>");
         }
     }
 
@@ -529,7 +533,10 @@ function($scope , $q , $routeParams , egCore , egConfirmDialog , $location,
             selectOnLoad = false;
             // if somehow the grid finishes rendering before our settings 
             // arrive, manually de-select everything.
-            $scope.gridControls.selectItems([]);
+            if (typeof $scope.gridControls.selectItems !== "undefined") {
+                // check to make sure grid is initialized before trying to clear selections.
+                $scope.gridControls.selectItems([]);
+            }
         }
         if (s['ui.circ.billing.amount_warn']) {
             $scope.warn_amount = Number(s['ui.circ.billing.amount_warn']);

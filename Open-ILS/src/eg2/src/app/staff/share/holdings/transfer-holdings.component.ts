@@ -1,6 +1,4 @@
-import {Component, OnInit, Input, ViewChild, Renderer2} from '@angular/core';
-import {Observable} from 'rxjs';
-import {switchMap, map, tap} from 'rxjs/operators';
+import {Component, Input, ViewChild} from '@angular/core';
 import {IdlObject} from '@eg/core/idl.service';
 import {NetService} from '@eg/core/net.service';
 import {AuthService} from '@eg/core/auth.service';
@@ -13,11 +11,11 @@ import {ProgressDialogComponent} from '@eg/share/dialog/progress.component';
 /* Transfer holdings (AKA asset.call_number) to a target bib record. */
 
 @Component({
-  selector: 'eg-transfer-holdings',
-  templateUrl: 'transfer-holdings.component.html'
+    selector: 'eg-transfer-holdings',
+    templateUrl: 'transfer-holdings.component.html'
 })
 
-export class TransferHoldingsComponent implements OnInit {
+export class TransferHoldingsComponent {
 
     // Array of 'acn' objects.
     // Assumes all acn's are children of the same bib record.
@@ -33,16 +31,16 @@ export class TransferHoldingsComponent implements OnInit {
     @Input() targetOrgId: number;
 
     @ViewChild('successMsg', {static: false})
-        private successMsg: StringComponent;
+    private successMsg: StringComponent;
 
     @ViewChild('noTargetMsg', {static: false})
-        private noTargetMsg: StringComponent;
+    private noTargetMsg: StringComponent;
 
     @ViewChild('alertDialog', {static: false})
-        private alertDialog: AlertDialogComponent;
+    private alertDialog: AlertDialogComponent;
 
     @ViewChild('progressDialog', {static: false})
-        private progressDialog: ProgressDialogComponent;
+    private progressDialog: ProgressDialogComponent;
 
     eventDesc: string;
 
@@ -51,8 +49,6 @@ export class TransferHoldingsComponent implements OnInit {
         private net: NetService,
         private auth: AuthService,
         private evt: EventService) {}
-
-    ngOnInit() {}
 
     // Resolves with true if transfer completed, false otherwise.
     // Assumes all volumes are transferred to the same bib record.
@@ -95,10 +91,10 @@ export class TransferHoldingsComponent implements OnInit {
         this.progressDialog.open();
 
         return this.performTransfers(transferVols)
-        .then(res => {
-            this.progressDialog.close();
-            return res;
-        });
+            .then(res => {
+                this.progressDialog.close();
+                return res;
+            });
     }
 
     performTransfers(transferVols: any): Promise<Boolean> {
@@ -124,7 +120,7 @@ export class TransferHoldingsComponent implements OnInit {
 
                 // Failure -- stop short there to avoid alert storm.
                 return this.alertDialog.open().toPromise()
-                .then(_ => { this.eventDesc = ''; return false; });
+                    .then(_ => { this.eventDesc = ''; return false; });
             }
 
             this.progressDialog.increment();

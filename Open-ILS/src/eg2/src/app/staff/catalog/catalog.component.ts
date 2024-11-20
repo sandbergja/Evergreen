@@ -1,12 +1,16 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, HostListener, OnDestroy, OnInit} from '@angular/core';
 import {IdlObject} from '@eg/core/idl.service';
 import {StaffCatalogService} from './catalog.service';
 import {BasketService} from '@eg/share/catalog/basket.service';
+import {Subject} from 'rxjs';
+import {takeUntil} from 'rxjs/operators';
 
 @Component({
-  templateUrl: 'catalog.component.html'
+    templateUrl: 'catalog.component.html'
 })
-export class CatalogComponent implements OnInit {
+export class CatalogComponent implements OnInit, OnDestroy {
+
+    private onDestroy = new Subject<null>();
 
     constructor(
         private basket: BasketService,
@@ -18,6 +22,12 @@ export class CatalogComponent implements OnInit {
         // child components.  After initial creation, the context is
         // reset and updated as needed to apply new search parameters.
         this.staffCat.createContext();
+
+        // listen for hold patron target changes from other tabs
+        // until there's a route change
+        this.staffCat.onChangeHoldPatron().pipe(
+            takeUntil(this.onDestroy)
+        ).subscribe();
 
         // Subscribe to these emissions so that we can force
         // change detection in this component even though the
@@ -33,6 +43,16 @@ export class CatalogComponent implements OnInit {
 
     clearHoldPatron() {
         this.staffCat.clearHoldPatron();
+    }
+
+    @HostListener('window:beforeunload')
+    onBeforeUnload(): void {
+        this.staffCat.onBeforeUnload();
+    }
+
+    ngOnDestroy(): void {
+        this.clearHoldPatron();
+        this.onDestroy.next(null);
     }
 }
 

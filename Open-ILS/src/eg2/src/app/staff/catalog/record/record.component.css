@@ -1,0 +1,19 @@
+#marcEditor {
+  background-color: light-dark(hsla(223, 25%, 91%, 1), var(--bs-body-bg-alt));
+}
+
+.nav-tabs li h2 {
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  margin: 0;
+  padding: 0;
+  line-height: inherit;
+}
+
+.tab-icon.material-icons {
+  font-size: 1.2rem;
+  line-height: 1;
+  vertical-align: sub;
+  margin-left: .25ch;
+}

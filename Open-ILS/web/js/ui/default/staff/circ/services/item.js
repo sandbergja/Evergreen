@@ -16,7 +16,7 @@ function(egCore , egOrg , egCirc , $uibModal , $q , $timeout , $window , ngToast
         flesh : 4,
         flesh_fields : {
             acp : ['call_number','location','status','floating','circ_modifier',
-                'age_protect','circ_lib','copy_alerts', 'creator', 'editor', 'circ_as_type', 'latest_inventory'],
+                'age_protect','circ_lib','copy_alerts', 'creator', 'editor', 'circ_as_type', 'latest_inventory', 'total_circ_count'],
             acn : ['record','prefix','suffix','label_class'],
             bre : ['simple_record','creator','editor'],
             alci : ['inventory_workstation']
@@ -118,7 +118,7 @@ function(egCore , egOrg , egCirc , $uibModal , $q , $timeout , $window , ngToast
     }
 
     // resolved with the last received copy
-    service.fetch = function(barcode, id, noListDupes) {
+    service.fetch = function(barcode, id, noListDupes, noPrepend) {
         var copy;
         var circ;
         var circ_summary;
@@ -163,7 +163,9 @@ function(egCore , egOrg , egCirc , $uibModal , $q , $timeout , $window , ngToast
                     return !aca.ack_time();
                 }).length;
 
-                service.copies.unshift(flatCopy);
+                if (!noPrepend) {
+                    service.copies.unshift(flatCopy);
+                }
             }
 
             //Get in-house use count
@@ -186,6 +188,9 @@ function(egCore , egOrg , egCirc , $uibModal , $q , $timeout , $window , ngToast
                 });
             });
 
+            if (noPrepend) {
+                return flatCopy;
+            }
             return lastRes = {
                 copy : copyData.copy,
                 index : flatCopy.index
@@ -294,6 +299,45 @@ function(egCore , egOrg , egCirc , $uibModal , $q , $timeout , $window , ngToast
         });
     }
 
+    service.create_carousel_from_items = function(list) {
+        if (list.length == 0) return;
+
+        return $uibModal.open({
+            templateUrl: './cat/catalog/t_create_carousel',
+            backdrop: 'static',
+            animation: true,
+            size: 'md',
+            controller:
+                   ['$scope','$uibModalInstance',
+            function($scope , $uibModalInstance) {
+
+                $scope.carousel_name = '';
+
+                $scope.create_carousel = function() {
+                    return egCore.net.request(
+                        'open-ils.actor',
+                        'open-ils.actor.carousel.create_carousel_from_items',
+                        egCore.auth.token(), $scope.carousel_name, list
+                    ).then(function(response) {
+                        if (response) {
+                            var evt = egCore.evt.parse(response);
+                            if (evt) {
+                                ngToast.danger(evt);
+                            } else {
+                                ngToast.success(egCore.strings.SUCCESS_CAROUSEL_CREATE);
+                                $uibModalInstance.close();
+                            }
+                        }
+                    });
+                }
+
+                $scope.cancel = function() {
+                    $uibModalInstance.dismiss();
+                }
+            }]
+        });
+    }
+
     service.make_copies_bookable = function(items) {
 
         var copies_by_record = {};
@@ -346,7 +390,7 @@ function(egCore , egOrg , egCirc , $uibModal , $q , $timeout , $window , ngToast
                         var booking_path = '/eg/conify/global/booking/resource';
 
                         $scope.booking_admin_url =
-                            $location.absUrl().replace(/\/eg\/staff.*/, booking_path);
+                            $location.absUrl().replace(/\/eg\/staff\/.*/, booking_path);
                     }]
                 });
             }
@@ -667,11 +711,11 @@ function(egCore , egOrg , egCirc , $uibModal , $q , $timeout , $window , ngToast
     service.selectedHoldingsMissing = function (items) {
         return egCirc.mark_missing(
             items.map(function(el){return {id : el.id, barcode : el.barcode};})
-        ).then(function(){
+        ).then(function(modified){
             var promise = $q.when();
-            angular.forEach(items, function(cp){
+            angular.forEach(modified, function(barcode){
                 promise = promise.then(function() {
-                    return service.add_barcode_to_list(cp.barcode, true);
+                    return service.add_barcode_to_list(barcode, true);
                 });
             });
             return promise;
@@ -751,7 +795,8 @@ function(egCore , egOrg , egCirc , $uibModal , $q , $timeout , $window , ngToast
                 }
             ).then(function(key) {
                 if (key) {
-                    var url = egCore.env.basePath + 'cat/volcopy/' + key;
+                    var tab = (hide_vols === true) ? 'attrs' : 'holdings';
+                    var url = '/eg2/staff/cat/volcopy/' + tab + '/session/ ' + key;
                     $timeout(function() { $window.open(url, '_blank') });
                 } else {
                     alert('Could not create anonymous cache key!');
@@ -783,7 +828,8 @@ function(egCore , egOrg , egCirc , $uibModal , $q , $timeout , $window , ngToast
                 hide_copies : hide_copies
             }).then(function(key) {
 		if (key) {
-		    var url = egCore.env.basePath + 'cat/volcopy/' + key;
+		    var tab = (hide_vols === true) ? 'attrs' : 'holdings';
+		    var url = '/eg2/staff/cat/volcopy/' + tab + '/session/ ' + key;
 		    $timeout(function() { $window.open(url, '_blank') });
 		} else {
 		    alert('Could not create anonymous cache key!');
@@ -819,17 +865,40 @@ function(egCore , egOrg , egCirc , $uibModal , $q , $timeout , $window , ngToast
                                     return;
                                 }
 
-                                $scope.copyId = copy.id();
-                                copy.barcode($scope.barcode2);
+                                egCore.pcrud.search('acp',
+                                    {deleted : 'f', barcode : $scope.barcode2})
+                                .then(function(newBarcodeCopy) {
 
-                                egCore.pcrud.update(copy).then(function(stat) {
-                                    $scope.updateOK = stat;
-                                    $scope.focusBarcode = true;
-                                    if (stat) service.add_barcode_to_list(copy.barcode());
+                                    if (newBarcodeCopy) {
+                                        $scope.duplicateBarcode = true;
+                                        return;
+                                    }
+
+                                    $scope.copyId = copy.id();
+
+                                    egCore.net.request(
+                                        'open-ils.cat',
+                                        'open-ils.cat.update_copy_barcode',
+                                        egCore.auth.token(), $scope.copyId, $scope.barcode2
+                                    ).then(function(resp) {
+                                        var evt = egCore.evt.parse(resp);
+                                        if (evt) {
+                                            console.log('toast 0 here 2', evt);
+                                        } else {
+                                            $scope.updateOK = true;
+                                            $scope.focusBarcode = true;
+                                            $scope.focusBarcode2 = false;
+                                            service.add_barcode_to_list($scope.barcode2);
+                                            $uibModalInstance.close();
+                                        }
+                                    });
                                 });
 
+                            },function(E) {
+                                console.log('toast 1 here 2',E);
+                            },function(E) {
+                                console.log('toast 2 here 2',E);
                             });
-                            $uibModalInstance.close();
                         }
 
                         $scope.cancel = function($event) {
@@ -989,7 +1058,7 @@ function(egCore , egOrg , egCirc , $uibModal , $q , $timeout , $window , ngToast
             // apply patron penalty
             if (payload.circ) {
                 promise.then(function() {
-                    egCirc.create_penalty(payload.circ.usr())
+                    egCirc.create_note(payload.circ.usr())
                 });
             }
 

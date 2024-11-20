@@ -20,20 +20,8 @@ angular.module('egCatalogApp', ['ui.bootstrap','ngRoute','ngLocationUpdate','egC
 .config(function($routeProvider, $locationProvider, $compileProvider) {
     $locationProvider.html5Mode(true);
     $compileProvider.aHrefSanitizationWhitelist(/^\s*(https?|mailto|blob):/); // grid export
-	
-    var resolver = {delay : ['egCore','egStartup','egUser', function(egCore, egStartup, egUser) {
-        egCore.env.classLoaders.aous = function() {
-            return egCore.org.settings([
-                'cat.marc_control_number_identifier'
-            ]).then(function(settings) {
-                // local settings are cached within egOrg.  Caching them
-                // again in egEnv just simplifies the syntax for access.
-                egCore.env.aous = settings;
-            });
-        }
-        egCore.env.loadClasses.push('aous');
-        return egStartup.go()
-    }]};
+
+    var resolver = {delay : function(egStartup) {return egStartup.go()}};
 
     $routeProvider.when('/cat/catalog/index', {
         templateUrl: './cat/catalog/t_catalog',
@@ -222,6 +210,8 @@ function($scope , $routeParams , $location , $window , $q , egCore) {
     $scope.template_name = '';
     $scope.new_bib_id = 0;
 
+    egCore.strings.setPageTitle(egCore.strings.PAGE_TITLE_CREATE_MARC);
+
     egCore.net.request(
         'open-ils.cat',
         'open-ils.cat.marc_template.types.retrieve'
@@ -269,6 +259,45 @@ function($scope , $routeParams , $location , $window , $q , egCore) {
     
 
 }])
+
+.directive('autoFocus', function($timeout) {
+    return {
+        restrict: 'AC',
+        link: function(_scope, _element) {
+            $timeout(function(){
+                _element[0].focus();
+            }, 0);
+        }
+    };
+})
+
+.directive('focusOnShow', function($timeout) {
+    return {
+        restrict: 'A',
+        link: function($scope, $element, $attr) {
+            if ($attr.ngShow){
+                $scope.$watch($attr.ngShow, function(newValue){
+                    if(newValue){
+                        $timeout(function(){
+                            $element[0].focus();
+                        }, 0);
+                    }
+                })
+            }
+            if ($attr.ngHide){
+                $scope.$watch($attr.ngHide, function(newValue){
+                    if(!newValue){
+                        $timeout(function(){
+                            $element[0].focus();
+                        }, 0);
+                    }
+                })
+            }
+
+        }
+    };
+})
+
 .controller('CatalogCtrl',
        ['$scope','$routeParams','$location','$window','$q','egCore','egHolds','egCirc','egConfirmDialog','ngToast',
         'egGridDataProvider','egHoldGridActions','egProgressDialog','$timeout','$uibModal','holdingsSvc','egUser','conjoinedSvc',
@@ -634,7 +663,7 @@ function($scope , $routeParams , $location , $window , $q , egCore , egHolds , e
     // 'catalog' tab.
     function get_default_record_tab() {
         var tab = egCore.hatch.getLocalItem('eg.cat.default_record_tab');
-        if (!tab || tab === 'item_table') { return 'catalog'; }
+        if (!tab || tab === 'item_table' || tab === 'staff_view' || tab === 'added-content' || tab === 'bibnotes' || tab === 'cnbrowse') { return 'catalog'; }
         return tab;
     }
 
@@ -696,10 +725,17 @@ function($scope , $routeParams , $location , $window , $q , egCore , egHolds , e
                     $(doc).find('#hold_usr_input').trigger($.Event('keydown', {which: 13}));
                 });
             });
+            // Add Cart to Record Bucket, in two flavors:
+            // First, the traditional TPAC, which uses a <select> menu
             $(doc).find('#select_basket_action').on('change', function() {
                 if (this.options[this.selectedIndex].value && this.options[this.selectedIndex].value == "add_cart_to_bucket") {
                     $scope.add_cart_to_record_bucket();
                 }
+            });
+            // Second, the bootstrap OPAC, which uses a bunch of <a>s styled as a dropdown
+            $(doc).find('a[href="add_cart_to_bucket"]').on('click', function (event) {
+                event.preventDefault();
+                $scope.add_cart_to_record_bucket();
             });
         }
 
@@ -937,7 +973,7 @@ function($scope , $routeParams , $location , $window , $q , egCore , egHolds , e
                         var booking_path = '/eg/conify/global/booking/resource';
 
                         $scope.booking_admin_url =
-                            $location.absUrl().replace(/\/eg\/staff.*/, booking_path);
+                            $location.absUrl().replace(/\/eg\/staff\/.*/, booking_path);
                     }]
                 });
             }
@@ -1081,16 +1117,28 @@ function($scope , $routeParams , $location , $window , $q , egCore , egHolds , e
                                 }
                 
                                 $scope.copyId = copy.id();
-                                copy.barcode($scope.barcode2);
                 
-                                egCore.pcrud.update(copy).then(function(stat) {
-                                    $scope.updateOK = stat;
-                                    $scope.focusBarcode = true;
-                                    holdingsSvc.fetchAgain().then(function (){
-                                        holdingsGridDataProviderRef.refresh();
-                                    });
+                                egCore.net.request(
+                                    'open-ils.cat',
+                                    'open-ils.cat.update_copy_barcode',
+                                    egCore.auth.token(), $scope.copyId, $scope.barcode2
+                                ).then(function(resp) {
+                                    var evt = egCore.evt.parse(resp);
+                                    if (evt) {
+                                        console.log('toast 0 here', evt);
+                                    } else {
+                                        $scope.updateOK = stat;
+                                        $scope.focusBarcode = true;
+                                        holdingsSvc.fetchAgain().then(function (){
+                                            holdingsGridDataProviderRef.refresh();
+                                        });
+                                    }
                                 });
 
+                            },function(E) {
+                                console.log('toast 1 here',E);
+                            },function(E) {
+                                console.log('toast 2 here',E);
                             });
                             $uibModalInstance.close();
                         }
@@ -1990,7 +2038,7 @@ function($scope , $routeParams , $location , $window , $q , egCore , egHolds , e
         // The URL is otherwise generated through user navigation.
         if ($scope.catalog_url) return;
 
-        var url = $location.absUrl().replace(/\/staff.*/, '/opac/advanced');
+        var url = $location.absUrl().replace(/\/staff\/.*/, '/opac/advanced');
 
         // A record ID in the path indicates a request for the record-
         // specific page.
@@ -2032,7 +2080,7 @@ function($scope , $routeParams , $location , $window , $q , egCore , egHolds , e
         $scope.parts_url = $location
             .absUrl()
             .replace(
-                /\/staff.*/,
+                /\/staff\/.*/,
                 '/conify/global/biblio/monograph_part?r='+$scope.record_id
             );
     }
@@ -2093,7 +2141,7 @@ function($scope , $routeParams , $location , $window , $q , egCore) {
 .controller('URLVerifyCtrl',
        ['$scope','$location',
 function($scope , $location) {
-    $scope.verifyurls_url = $location.absUrl().replace(/\/staff.*/, '/url_verify/sessions');
+    $scope.verifyurls_url = $location.absUrl().replace(/\/staff\/.*/, '/url_verify/sessions');
 }])
 
 .controller('VandelayCtrl',
@@ -2131,13 +2179,13 @@ function($scope , $location, egCore, $uibModal) {
 .controller('ManageAuthoritiesCtrl',
        ['$scope','$location',
 function($scope , $location) {
-    $scope.manageauthorities_url = $location.absUrl().replace(/\/staff.*/, '/cat/authority/list');
+    $scope.manageauthorities_url = $location.absUrl().replace(/\/staff\/.*/, '/cat/authority/list');
 }])
 
 .controller('BatchEditCtrl',
        ['$scope','$location','$routeParams',
 function($scope , $location , $routeParams) {
-    $scope.batchedit_url = $location.absUrl().replace(/\/eg.*/, '/opac/extras/merge_template');
+    $scope.batchedit_url = $location.absUrl().replace(/\/eg\/.*/, '/opac/extras/merge_template');
     if ($routeParams.container_type) {
         switch ($routeParams.container_type) {
             case 'bucket':

@@ -1,9 +1,11 @@
+/* eslint-disable no-unused-expressions */
 import {Component, EventEmitter, OnInit, Input, Output, ViewChildren, QueryList, forwardRef} from '@angular/core';
 import {ControlValueAccessor, FormGroup, FormControl, NG_VALUE_ACCESSOR} from '@angular/forms';
 import {AuthService} from '@eg/core/auth.service';
 import {IdlObject} from '@eg/core/idl.service';
 import {OrgService} from '@eg/core/org.service';
 import {OrgSelectComponent} from '@eg/share/org-select/org-select.component';
+import {ServerStoreService} from '@eg/core/server-store.service';
 
 export interface OrgFamily {
   primaryOrgId: number;
@@ -16,14 +18,20 @@ export interface OrgFamily {
     selector: 'eg-org-family-select',
     templateUrl: 'org-family-select.component.html',
     providers: [
-    {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => OrgFamilySelectComponent),
-      multi: true
-    }
-  ]
+        {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => OrgFamilySelectComponent),
+            multi: true
+        }
+    ]
 })
 export class OrgFamilySelectComponent implements ControlValueAccessor, OnInit {
+
+    // ARIA label for selector. Required if there is no <label> in the markup.
+    @Input() ariaLabel?: string;
+
+    // Global "disabled" flag
+    @Input() disabled = false;
 
     // The label for this input
     @Input() labelText = 'Library';
@@ -52,6 +60,8 @@ export class OrgFamilySelectComponent implements ControlValueAccessor, OnInit {
 
     @Input() domId: string;
 
+    @Input() persistKey: string;
+
     @Output() onChange = new EventEmitter<any>();
 
     @ViewChildren(OrgSelectComponent)  orgSelects: QueryList<OrgSelectComponent>;
@@ -70,7 +80,8 @@ export class OrgFamilySelectComponent implements ControlValueAccessor, OnInit {
 
     constructor(
         private auth: AuthService,
-        private org: OrgService
+        private org: OrgService,
+        private serverStore: ServerStoreService
     ) {
     }
 
@@ -91,6 +102,7 @@ export class OrgFamilySelectComponent implements ControlValueAccessor, OnInit {
         });
 
         if (!this.domId) {
+            // eslint-disable-next-line no-magic-numbers
             this.domId = 'org-family-select-' + Math.floor(Math.random() * 100000);
         }
 
@@ -99,7 +111,7 @@ export class OrgFamilySelectComponent implements ControlValueAccessor, OnInit {
         });
 
         this.orgOnChange = ($event: IdlObject) => {
-            this.options.primaryOrgId = $event.id();
+            this.options.primaryOrgId = $event?.id();
             this.disableAncestorSelector() ? this.includeAncestors.disable() : this.includeAncestors.enable();
             this.disableDescendantSelector() ? this.includeDescendants.disable() : this.includeDescendants.enable();
             this.emitArray();
@@ -130,7 +142,26 @@ export class OrgFamilySelectComponent implements ControlValueAccessor, OnInit {
 
             this.propagateChange(this.options);
             this.onChange.emit(this.options);
+
+            if (this.persistKey) {
+                const key = `eg.orgfamilyselect.${this.persistKey}`;
+                this.serverStore.setItem(key, this.options);
+            }
         };
+
+        this.loadPersistedValues();
+    }
+
+    private loadPersistedValues() {
+        if (!this.persistKey) {return;}
+
+        const key = `eg.orgfamilyselect.${this.persistKey}`;
+
+        this.serverStore.getItem(key).then(persistedOptions => {
+            if (persistedOptions) {
+                this.writeValue(persistedOptions);
+            }
+        });
     }
 
     writeValue(value: OrgFamily) {
@@ -156,12 +187,12 @@ export class OrgFamilySelectComponent implements ControlValueAccessor, OnInit {
     }
 
     disableAncestorSelector(): boolean {
-        return this.options.primaryOrgId === this.org.root().id();
+        return this.disabled || this.options.primaryOrgId === this.org.root().id();
     }
 
     disableDescendantSelector(): boolean {
         const contextOrg = this.org.get(this.options.primaryOrgId);
-        return contextOrg.children().length === 0;
+        return this.disabled || (contextOrg ? contextOrg.children().length === 0 : true);
     }
 
     get includeAncestors() {

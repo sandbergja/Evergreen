@@ -1,6 +1,5 @@
 import {Component, Input, ViewChild} from '@angular/core';
 import {Pager} from '@eg/share/util/pager';
-import {IdlObject} from '@eg/core/idl.service';
 import {NetService} from '@eg/core/net.service';
 import {PcrudService} from '@eg/core/pcrud.service';
 import {AuthService} from '@eg/core/auth.service';
@@ -9,8 +8,8 @@ import {GridDataSource} from '@eg/share/grid/grid';
 import {VandelayService} from './vandelay.service';
 
 @Component({
-  selector: 'eg-queued-record-items',
-  templateUrl: 'record-items.component.html'
+    selector: 'eg-queued-record-items',
+    templateUrl: 'record-items.component.html'
 })
 export class RecordItemsComponent {
 

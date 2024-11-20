@@ -54,6 +54,16 @@ function($q , $timeout , $rootScope , $window , $location , egNet , egHatch , $i
             return this.ws;
         },
 
+        // Is this session provisional?
+        provisional : function() {
+            return this.prov;
+        },
+
+        // Is this session provisional?
+        mfaAllowed : function() {
+            return this._mfa_allowed ? true : false;
+        },
+
         // Listen for logout events in other tabs
         // Current version of phantomjs (unit tests, etc.) does not 
         // support BroadcastChannel, so just dummy it up.
@@ -87,17 +97,25 @@ function($q , $timeout , $rootScope , $window , $location , egNet , egHatch , $i
                     'open-ils.auth.session.retrieve', token)
     
                 .then(function(user) {
-                    if (user && user.classname) {
-                        // authtoken test succeeded
-                        service.user(user);
-                        service.poll();
-                        service.check_workstation(deferred);
-    
-                    } else {
-                        // authtoken test failed
-                        egHatch.clearLoginSessionItems();
-                        deferred.reject(); 
-                    }
+                    egNet.request(
+                        'open-ils.auth_mfa',
+                        'open-ils.auth_mfa.allowed_for_token',
+                        token
+                    ).then(function(res) {
+                        // cache MFA allowed-ness whenever we have to fetch the session
+                        service._mfa_allowed = Number(res) === 1;
+                    }).then(function() {
+                        if (user && user.classname) {
+                            // authtoken test succeeded
+                            service.user(user);
+                            service.poll();
+                            service.check_workstation(deferred);
+                        } else {
+                            // authtoken test failed
+                            egHatch.clearLoginSessionItems();
+                            deferred.reject();
+                        }
+                    });
                 });
             }
 
@@ -293,11 +311,17 @@ function($q , $timeout , $rootScope , $window , $location , egNet , egHatch , $i
         if (!egLovefield) {
             egLovefield = $injector.get('egLovefield');
         }
+        service.prov = evt.payload.provisional; 
         service.ws = args.workstation; 
-        egHatch.setLoginSessionItem('eg.auth.token', evt.payload.authtoken);
-        egHatch.setLoginSessionItem('eg.auth.time', evt.payload.authtime);
+        if (service.prov) {
+            egHatch.setLoginSessionItem('eg.auth.token.provisional', evt.payload.authtoken);
+            egHatch.setLoginSessionItem('eg.auth.time.provisional', evt.payload.authtime);
+        } else {
+            egHatch.setLoginSessionItem('eg.auth.token', evt.payload.authtoken);
+            egHatch.setLoginSessionItem('eg.auth.time', evt.payload.authtime);
+            service.poll();
+        }
         egLovefield.destroySettingsCache(); // force refresh of settings cache on login (LP#1848550)
-        service.poll();
     }
 
     /**
@@ -322,18 +346,10 @@ function($q , $timeout , $rootScope , $window , $location , egNet , egHatch , $i
             }
         }
 
-        // add a 5 second delay to give the token plenty of time
-        // to expire on the server.
-        var pollTime = service.authtime() * 1000 + 5000;
-
-        if (pollTime < 60000) {
-            // Never poll more often than once per minute.
-            pollTime = 60000;
-        } else if (pollTime > 2147483647) {
-            // Avoid integer overflow resulting in $timeout() effectively
-            // running with timeout=0 in a loop.
-            pollTime = 2147483647;
-        }
+        // Check every 3 minutes. This still won't reset the authtoken timeout
+        // but it WILL reset the memcached LRU for the authtoken so staff authtokens
+        // are less likely to be evicted.
+        var pollTime = 60 * 1000 * 3;
 
         $timeout(
             function() {
@@ -396,6 +412,7 @@ function($q , egNet , egAuth , egOrg) {
      * org list for the requested perm.
      */
     service.hasPermAt = function(permList, asId) {
+        if (!egAuth.token()) { return $q.when([]) };
         var deferred = $q.defer();
         var isArray = true;
         if (!angular.isArray(permList)) {

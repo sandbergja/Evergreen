@@ -16,7 +16,7 @@ check station, a staff member must initialize the interface by logging in.
   represents the host name of your Evergreen web server.
 . Log in with a staff account with circulation permissions.
 
-image::media/self-check-admin-login.png[Self Check Admin Login]
+image::self_check/self-check-admin-login.png[Self Check Admin Login]
 
 === Setting library hours of operation ===
 When the self check prints a receipt, the default template includes the
@@ -45,6 +45,13 @@ Several library settings control the behavior of the self check:
   registered Evergreen workstation, or the staff member must register a new
   workstation when they login. The workstation parameter ensures that check outs
   are recorded as occurring at the correct library.
+* *Auto-Login with URL*: You can add the username and password of the account created
+  in the URL so it auto-logs in.  Format should be: domain.biblio.org/eg/circ/selfcheck/main?ws=[workstation]&username=[username]$password=[password] 
+  (fill in [...] with information).
+* *Editing Receipts*: These can be found in Administration > Local Administration > Notifications /
+   Action Triggers.
+* *Customizing Interface*: The files are found in Open-ILS\js\ui\default\circ\selfcheck\selfcheck.js and 
+   Open-ILS\web\css\skin\default\selfcheck.css.
 
 == Using the self check ==
 

@@ -12,8 +12,8 @@ import {CourseService} from '@eg/staff/share/course.service';
 import {PermService} from '@eg/core/perm.service';
 
 @Component({
-  selector: 'eg-catalog-copies',
-  templateUrl: 'copies.component.html'
+    selector: 'eg-catalog-copies',
+    templateUrl: 'copies.component.html'
 })
 export class CopiesComponent implements OnInit {
 
@@ -21,6 +21,7 @@ export class CopiesComponent implements OnInit {
     initDone = false;
     usingCourseModule = false;
     editableCopyLibs: number[] = [];
+    editableCNLibs: number[] = [];
     gridDataSource: GridDataSource;
     copyContext: any; // grid context
     @ViewChild('copyGrid', { static: true }) copyGrid: GridComponent;
@@ -53,9 +54,10 @@ export class CopiesComponent implements OnInit {
             this.usingCourseModule = res;
         });
 
-        this.perm.hasWorkPermAt(['UPDATE_COPY'], true)
+        this.perm.hasWorkPermAt(['UPDATE_COPY','UPDATE_VOLUME'], true)
             .then(result => {
                 this.editableCopyLibs = result.UPDATE_COPY as number[];
+                this.editableCNLibs = result.UPDATE_VOLUME as number[];
             });
 
         this.gridDataSource.getRows = (pager: Pager, sort: any[]) => {
@@ -68,6 +70,11 @@ export class CopiesComponent implements OnInit {
                 return this.editableCopyLibs.some(lib => {
                     return copy.circ_lib === lib
                         || copy.call_number_owning_lib === lib;
+                });
+            },
+            editableCN: (copy: any) => {
+                return this.editableCNLibs.some(lib => {
+                    return copy.call_number_owning_lib === lib;
                 });
             },
             holdable: (copy: any) => {
@@ -92,7 +99,7 @@ export class CopiesComponent implements OnInit {
     }
 
     orgName(orgId: number): string {
-        return this.org.get(orgId).shortname();
+        return this.org.get(orgId)?.shortname();
     }
 
     fetchCopies(pager: Pager): Observable<any> {

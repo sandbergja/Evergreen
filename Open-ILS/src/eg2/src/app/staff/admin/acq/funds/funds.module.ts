@@ -10,27 +10,29 @@ import {FundingSourceTransactionsDialogComponent} from './funding-source-transac
 import {FundTagsComponent} from './fund-tags.component';
 import {FundTransferDialogComponent} from './fund-transfer-dialog.component';
 import {FundRolloverDialogComponent} from './fund-rollover-dialog.component';
+import {AcqCommonModule} from '@eg/staff/acq/acq-common.module';
 
 @NgModule({
-  declarations: [
-    FundsComponent,
-    FundsManagerComponent,
-    FundDetailsDialogComponent,
-    FundingSourcesComponent,
-    FundingSourceTransactionsDialogComponent,
-    FundTagsComponent,
-    FundTransferDialogComponent,
-    FundRolloverDialogComponent
-  ],
-  imports: [
-    StaffCommonModule,
-    AdminCommonModule,
-    FundsRoutingModule,
-  ],
-  exports: [
-  ],
-  providers: [
-  ]
+    declarations: [
+        FundsComponent,
+        FundsManagerComponent,
+        FundDetailsDialogComponent,
+        FundingSourcesComponent,
+        FundingSourceTransactionsDialogComponent,
+        FundTagsComponent,
+        FundTransferDialogComponent,
+        FundRolloverDialogComponent
+    ],
+    imports: [
+        StaffCommonModule,
+        AdminCommonModule,
+        FundsRoutingModule,
+        AcqCommonModule,
+    ],
+    exports: [
+    ],
+    providers: [
+    ]
 })
 
 export class FundsModule {

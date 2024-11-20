@@ -16,7 +16,7 @@
 
 export STAFF_CLIENT_BUILD_ID = `/bin/cat @top_srcdir@/Open-ILS/xul/staff_client/build/BUILD_ID`
 export DEF_LDFLAGS = -L. -L$(TMP) -L$(OPENSRF_LIBS)
-export DEF_CFLAGS = -D_LARGEFILE64_SOURCE -pipe -g -Wall -O2 -fPIC -I@top_srcdir@/include -I$(LIBXML2_HEADERS) -I$(APACHE2_HEADERS) -I$(APR_HEADERS)  -I$(LIBXML2_HEADERS)/libxml  -I$(TMP) -I$(OPENSRF_HEADERS)
+export DEF_CFLAGS = -D_LARGEFILE64_SOURCE -pipe -g -Wall -O2 -fPIC -I@top_srcdir@/include -I$(LIBXML2_HEADERS) -I$(APACHE2_HEADERS) -I$(APR_HEADERS)  -I$(LIBXML2_HEADERS)/libxml  -I$(TMP) -I$(OPENSRF_HEADERS) -I$(HIREDIS_HEADERS)
 export DEF_LDLIBS = -lopensrf 
 
 
@@ -81,7 +81,13 @@ core_scripts =   $(examples)/oils_ctl.sh \
 		 $(srcdir)/extras/eg_config \
 		 $(srcdir)/extras/openurl_map.pl \
 		 $(srcdir)/extras/import/marc_add_ids \
-		 $(supportscr)/pingest.pl
+		 $(supportscr)/pingest.pl \
+		 $(supportscr)/ingest_ctl \
+		 $(supportscr)/background_import_mgr.pl \
+		 $(supportscr)/edi_fetcher.pl \
+		 $(supportscr)/edi_order_pusher.pl \
+		 $(supportscr)/edi_pusher.pl \
+		 $(supportscr)/purge_hold_reset_reason_entries.srfsh
 
 installautojs = $(autojsbinscripts)
 
@@ -125,7 +131,8 @@ gen_scripts = \
 	$(supportscr)/eg_db_config \
 	$(supportscr)/marc_export \
 	$(supportscr)/marc_stream_importer.pl \
-	$(supportscr)/offline-blocked-list.pl
+	$(supportscr)/offline-blocked-list.pl \
+	$(supportscr)/patron_loader.pl
 
 # config files that are generated from *.in files and can
 # be deleted by a make clean
@@ -234,6 +241,10 @@ $(supportscr)/offline-blocked-list.pl: Makefile $(supportscr)/offline-blocked-li
 	$(do_subst) $(supportscr)/offline-blocked-list.pl.in > "$@"
 	chmod 755 "$@"
 
+$(supportscr)/patron_loader.pl: Makefile $(supportscr)/patron_loader.pl.in
+	$(do_subst) $(supportscr)/patron_loader.pl.in > "$@"
+	chmod 755 "$@"
+
 $(examples)/apache_24/eg_startup: Makefile $(examples)/apache_24/eg_startup.in
 	$(do_subst) $(examples)/apache_24/eg_startup.in > "$@"
 
@@ -261,6 +272,9 @@ ilscore-install:
 	sed -i 's|LOCALSTATEDIR|@localstatedir@|g' '$(DESTDIR)@sysconfdir@/oils_sip.xml.example'
 	sed -i 's|SYSCONFDIR|@sysconfdir@|g' '$(DESTDIR)@sysconfdir@/oils_sip.xml.example'
 	sed -i 's|LIBDIR|@libdir@|g' '$(DESTDIR)@sysconfdir@/oils_sip.xml.example'
+	sed -i 's|OPENSRF_BUS_PASSWORD|@OPENSRF_BUS_PASSWORD@|g' '$(DESTDIR)@sysconfdir@/opensrf_core.xml.example'
+	sed -i 's|GATEWAY_BUS_PASSWORD|@GATEWAY_BUS_PASSWORD@|g' '$(DESTDIR)@sysconfdir@/opensrf_core.xml.example'
+	sed -i 's|ROUTER_BUS_PASSWORD|@ROUTER_BUS_PASSWORD@|g' '$(DESTDIR)@sysconfdir@/opensrf_core.xml.example'
 	sed -i 's|LOCALSTATEDIR|@localstatedir@|g' '$(DESTDIR)@sysconfdir@/opensrf_core.xml.example'
 	sed -i 's|SYSCONFDIR|@sysconfdir@|g' '$(DESTDIR)@sysconfdir@/opensrf_core.xml.example'
 	sed -i 's|LOCALSTATEDIR|@localstatedir@|g' '$(DESTDIR)@sysconfdir@/opensrf.xml.example'
@@ -276,6 +290,7 @@ ilscore-install:
 	sed -i 's|BINDIR|@bindir@|g' '$(DESTDIR)@bindir@/update_hard_due_dates.srfsh'
 	sed -i 's|BINDIR|@bindir@|g' '$(DESTDIR)@bindir@/refresh_carousels.srfsh'
 	sed -i 's|BINDIR|@bindir@|g' '$(DESTDIR)@bindir@/juv_to_adult.srfsh'
+	sed -i 's|BINDIR|@bindir@|g' '$(DESTDIR)@bindir@/purge_hold_reset_reason_entries.srfsh'
 	sed -i 's|BINDIR|@bindir@|g' '$(DESTDIR)@bindir@/long-overdue-status-update.pl'
 	sed -i 's|SYSCONFDIR|@sysconfdir@|g' '$(DESTDIR)@bindir@/long-overdue-status-update.pl'
 	sed -i 's|BINDIR|@bindir@|g' '$(DESTDIR)@bindir@/thaw_expired_frozen_holds.srfsh'

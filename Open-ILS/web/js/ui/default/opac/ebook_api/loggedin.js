@@ -58,6 +58,7 @@ dojo.addOnLoad(function() {
 function addTotalsToPage() {
     console.log('updating page with transaction totals');
     updateDashboard();
+    updateMyAccountNav();
     updateMyAccountSummary();
 }
 
@@ -113,6 +114,29 @@ function updateDashboard() {
     }
 }
 
+function updateMyAccountNav() {
+    console.log('updating My Account nav menu');
+    var total_checkouts = (typeof xacts.checkouts === 'undefined') ? 0 : xacts.checkouts.length;
+    var total_holds_pending = (typeof xacts.holds_pending === 'undefined') ? 0 : xacts.holds_pending.length;
+    var total_holds_ready = (typeof xacts.holds_ready === 'undefined') ? 0 : xacts.holds_ready.length;
+
+    // update totals
+    var allCheckout = parseInt( document.getElementById('my_nav_all_checked').innerHTML, 10 );
+    if (!isNaN(allCheckout))
+        document.getElementById('my_nav_all_checked').innerHTML = allCheckout + total_checkouts;
+
+    var allHolds = parseInt( document.getElementById('my_nav_all_holds').innerHTML, 10 );
+    if (!isNaN(allHolds))
+        document.getElementById('my_nav_all_holds').innerHTML = allHolds + total_holds_pending;
+
+    var allPickup = parseInt( document.getElementById('my_nav_all_pickup').innerHTML, 10 );
+    if (!isNaN(allPickup))
+        document.getElementById('my_nav_all_pickup').innerHTML = allPickup + total_holds_ready;
+
+    document.getElementById('my_nav_e_checked').innerHTML = total_checkouts;
+    document.getElementById('my_nav_e_holds').innerHTML = total_holds_pending;
+    document.getElementById('my_nav_e_ready').innerHTML = total_holds_ready;
+}
 
 function updateMyAccountSummary() {
     if (myopac_page === 'main') {
@@ -125,9 +149,11 @@ function updateMyAccountSummary() {
         dojo.byId('acct_sum_ebook_hold_total').innerHTML = total_holds_pending;
         dojo.byId('acct_sum_ebook_hold_ready_total').innerHTML = total_holds_ready;
         // unhide display elements
+        /*
         dojo.removeClass('acct_sum_ebook_circs', "hidden");
         dojo.removeClass('acct_sum_ebook_holds', "hidden");
         dojo.removeClass('acct_sum_ebook_holds_ready', "hidden");
+        */
     }
 }
 
@@ -139,10 +165,10 @@ function updateCheckoutView() {
         dojo.forEach(xacts.checkouts, function(x) {
             var ebook = new Ebook(x.vendor, x.title_id);
             var tr = dojo.create("tr", null, dojo.byId('ebook_circs_main_table_body'));
-            dojo.create("td", { innerHTML: x.title }, tr);
-            dojo.create("td", { innerHTML: x.author }, tr);
-            dojo.create("td", { innerHTML: x.due_date }, tr);
-            var dl_td = dojo.create("td", null, tr);
+            dojo.create("td", { 'mobile-title': dojo.byId('ebook_circs_main_table_header_title' ).innerHTML, innerHTML: x.title }, tr);
+            dojo.create("td", { 'mobile-title': dojo.byId('ebook_circs_main_table_header_author' ).innerHTML, innerHTML: x.author }, tr);
+            dojo.create("td", { 'mobile-title': dojo.byId('ebook_circs_main_table_header_date' ).innerHTML, innerHTML: x.due_date }, tr);
+            var dl_td = dojo.create("td", { 'mobile-title': dojo.byId('ebook_circs_main_table_header_actions' ).innerHTML, }, tr);
             if (x.download_url) {
                 dl_td.innerHTML = '<a href="' + x.download_url + '">' + l_strings.download + '</a>';
             }
@@ -211,11 +237,11 @@ function updateHoldView() {
                 });
             };
             var tr = dojo.create("tr", { id: "hold-" + h.title_id }, dojo.byId('ebook_holds_main_table_body'));
-            dojo.create("td", { innerHTML: h.title }, tr);
-            dojo.create("td", { innerHTML: h.author }, tr);
-            dojo.create("td", { innerHTML: h.expire_date }, tr);
-            dojo.create("td", { innerHTML: hold_status }, tr);
-            var actions_td = dojo.create("td", null, tr);
+            dojo.create("td", { 'mobile-title': dojo.byId('ebook_holds_main_table_header_title' ).innerHTML, innerHTML: h.title }, tr);
+            dojo.create("td", { 'mobile-title': dojo.byId('ebook_holds_main_table_header_author').innerHTML, innerHTML: h.author }, tr);
+            dojo.create("td", { 'mobile-title': dojo.byId('ebook_holds_main_table_header_date'  ).innerHTML, innerHTML: h.expire_date }, tr);
+            dojo.create("td", { 'mobile-title': dojo.byId('ebook_holds_main_table_header_status').innerHTML, innerHTML: hold_status }, tr);
+            var actions_td = dojo.create("td", { 'mobile-title': dojo.byId('ebook_holds_main_table_header_actions').innerHTML }, tr);
             var button = dojo.create("input", { id: "cancel-hold-" + h.title_id, type: "button", value: l_strings.cancel_hold }, actions_td);
             dojo.connect(button, 'onclick', h, "doCancelHold");
         });
@@ -235,8 +261,8 @@ function getReadyForCheckout() {
         active_ebook.getDetails( function(ebook) {
             dojo.empty('ebook_circs_main_table_body');
             var tr = dojo.create("tr", null, dojo.byId('ebook_circs_main_table_body'));
-            dojo.create("td", { innerHTML: ebook.title }, tr);
-            dojo.create("td", { innerHTML: ebook.author }, tr);
+            dojo.create("td", { 'mobile-title': dojo.byId('ebook_circs_main_table_header_title' ).innerHTML, innerHTML: ebook.title }, tr);
+            dojo.create("td", { 'mobile-title': dojo.byId('ebook_circs_main_table_header_author').innerHTML, innerHTML: ebook.author }, tr);
             dojo.create("td", null, tr);
             dojo.create("td", { id: "checkout-button-td" }, tr);
             if (typeof active_ebook.formats !== 'undefined') {

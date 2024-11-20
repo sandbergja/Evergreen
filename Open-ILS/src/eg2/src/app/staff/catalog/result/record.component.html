@@ -1,76 +1,80 @@
+<eg-bucket-dialog #addRecordToBucketDialog bucketClass="biblio" [itemIds]="recordIds">
+</eg-bucket-dialog>
 
-<div class="col-lg-12 card tight-card mb-2 bg-light">
+<div class="col-lg-12 card tight-card mb-2 p-2 bg-light">
   <div class="card-body">
     <div class="row">
       <!-- Checkbox, jacket image, and title blob live in a flex row
            because there's no way to give them col-lg-* columns that
            don't waste a lot of space. -->
       <div class="col-lg-7 d-flex">
-        <label class="checkbox">
-          <span class="font-weight-bold font-italic">
+        <label  class="form-label checkbox">
+          <span class="fw-bold fst-italic">
             {{index + 1 + searchContext.pager.offset}}.
           </span>
-          <input class="pl-1" type='checkbox' [(ngModel)]="isRecordSelected"
+          <input class="ps-1" type='checkbox' [(ngModel)]="isRecordSelected"
             (change)="toggleBasketEntry()"/>
         </label>
-        <div class="pl-2 record-jacket-div" >
+        <div class="ps-2 record-jacket-div" >
           <ng-container *ngIf="hasMrConstituentRecords(summary)">
             <a routerLink="/staff/catalog/search"
               [queryParams]="appendFromMrParam(summary)">
-              <img src="/opac/extras/ac/jacket/medium/r/{{summary.id}}"/>
+              <img src="/opac/extras/ac/jacket/medium/r/{{summary.id}}" alt=""/>
             </a>
           </ng-container>
           <ng-container *ngIf="!hasMrConstituentRecords(summary)">
               <a routerLink="/staff/catalog/record/{{summary.id}}"
                 [queryParams]="currentParams()">
-                <img src="/opac/extras/ac/jacket/medium/r/{{summary.id}}"/>
+                <img src="/opac/extras/ac/jacket/medium/r/{{summary.id}}" alt=""/>
               </a>
           </ng-container>
         </div>
         <!-- for call number browse display -->
         <ng-container *ngIf="callNumber">
-          <div class="pl-2 font-weight-bold">
+          <div class="ps-2 fw-bold">
             {{callNumber.prefix().label()}}
             {{callNumber.label()}}
             {{callNumber.suffix().label()}}
-            @ {{orgName(callNumber.owning_lib())}}
+            &#64; {{orgName(callNumber.owning_lib())}}
           </div>
         </ng-container>
-        <div class="flex-1 pl-2">
+        <div class="flex-1 ps-2">
           <div class="row">
-            <div class="col-lg-12 font-weight-bold">
+            <div class="col-lg-12 fw-bold">
+              <h3 class="bib-field-title">
               <ng-container *ngIf="hasMrConstituentRecords(summary)">
-                  <a routerLink="/staff/catalog/search"
+                  <a routerLink="/staff/catalog/search" class="bib-title-link"
                     [queryParams]="appendFromMrParam(summary)">
                     <eg-bib-display-field [summary]="summary" field="title"
                       [usePlaceholder]="true"></eg-bib-display-field>
                   </a>
               </ng-container>
+              
               <ng-container *ngIf="!hasMrConstituentRecords(summary)">
                 <a routerLink="/staff/catalog/record/{{summary.id}}"
-                  [queryParams]="currentParams()">
+                  [queryParams]="currentParams()" class="bib-title-link">
                   <eg-bib-display-field [summary]="summary" field="title"
                     [usePlaceholder]="true"></eg-bib-display-field>
                 </a>
               </ng-container>
-            </div>
-          </div>
-          <div class="row pt-2">
-            <div class="col-lg-12">
-              <a routerLink="/staff/catalog/search"
-                [queryParams]="getAuthorSearchParams(summary)">
-                <eg-bib-display-field [summary]="summary" field="author"
-                  [usePlaceholder]="true"></eg-bib-display-field>
-              </a>
+              
+              <ng-container *ngIf="getAuthorSearchParams(summary) as authorParams">
+                <ng-container *ngIf="authorParams.query && authorParams.query[0] !== undefined">
+                  <a routerLink="/staff/catalog/search" class="bib-author-link pt-2" [queryParams]="authorParams">
+                    <eg-bib-display-field [summary]="summary" field="author" [usePlaceholder]="true"></eg-bib-display-field>
+                  </a>
+                </ng-container>
+              </ng-container>
+              </h3>
             </div>
           </div>
           <div class="row pt-2">
             <div class="col-lg-12">
               <ng-container *ngIf="summary.attributes.icon_format && summary.attributes.icon_format[0]">
                 <ng-container *ngFor="let icon of summary.attributes.icon_format">
-                <span class="pr-1">
-                  <img class="pr-1"
-                    src="/images/format_icons/icon_format/{{icon}}.png"/>
+                <span class="pe-1">
+                  <img class="pe-1"
+                    src="/images/format_icons/icon_format/{{icon}}.png" alt=""/>
                   <span>{{iconFormatLabel(icon)}}</span>
                 </span>
                 </ng-container>
@@ -79,6 +83,13 @@
           </div>
           <div class="row pt-2">
             <div class="col-lg-12">
+              <ng-container *ngIf="summary.display.series_title">
+                <!-- [].concat() to avoid modifying the summary arrays -->
+                <div class="pb-1" i18n>Series:
+                  <eg-bib-display-field [summary]="summary"
+                    field="series_title" joiner=","></eg-bib-display-field>
+                </div>
+              </ng-container>
               <ng-container *ngIf="summary.firstCallNumber">
                 <div class="pb-1" i18n>Call Number:
                   {{summary.firstCallNumber.call_number_prefix_label}}
@@ -147,14 +158,18 @@
       </div>
       <div class="col-lg-2">
         <div class="row" [ngClass]="{'pt-2':copyIndex > 0}"
-          *ngFor="let copyCount of getHoldingsSummaries(); let copyIdx = index">
-          <div class="float-left text-left w-50">
-            <span class="pr-1">
-            {{copyCount.available}} / {{copyCount.count}} items
+          *ngFor="let copyCount of getHoldingsSummaries(); let copyIdx = index"
+		  [ngClass]="{
+            'no-copies-transcendant' : copyCount.count === 0 && (copyCount.transcendant === 0 || !copyCount.transcendant),
+			      'no-copies' : copyCount.count === 0
+            }">
+          <div class="float-start text-left w-50">
+            <span class="pe-1">
+            {{copyCount.available}} / {{copyCount.count}} <span i18n>items</span>
             </span>
           </div>
-          <div class="float-left w-50">
-            @ {{orgName(copyCount.org_unit)}}
+          <div class="float-start w-50">
+            &#64; {{orgName(copyCount.org_unit)}}
           </div>
         </div>
       </div>
@@ -166,15 +181,15 @@
         </div>
         <div class="row">
           <div class="w-100">
-            Holds: {{summary.holdCount}}
+            <span i18n>Holds:</span> {{summary.holdCount}}
           </div>
         </div>
       </div>
       <div class="col-lg-2">
         <div class="row">
           <div class="col-lg-12">
-            <div class="float-right small-text-1">
-              Created {{summary.record.create_date() | date:'shortDate'}} by
+            <div class="float-end small-text-1">
+              <span i18n>Created</span> {{summary.record.create_date() | date:'shortDate'}} <span i18n>by</span>
               <!-- creator if fleshed after the initial data set is loaded -->
               <a *ngIf="summary.record.creator().usrname" target="_self"
                 href="/eg/staff/circ/patron/{{summary.record.creator().id()}}/checkout">
@@ -187,7 +202,7 @@
         </div>
         <div class="row pt-2">
           <div class="col-lg-12">
-            <div class="float-right small-text-1" i18n>
+            <div class="float-end small-text-1" i18n>
               Edited {{summary.record.edit_date() | date:'shortDate'}} by
               <a *ngIf="summary.record.editor().usrname" target="_self"
                 href="/eg/staff/circ/patron/{{summary.record.editor().id()}}/checkout">
@@ -199,18 +214,39 @@
         </div>
         <div class="row pt-2">
           <div class="col-lg-12">
-            <div class="float-right">
-              <ng-container *ngIf="summary.record.deleted() == 't'">
-                <span class="text-danger" i18n>(Deleted)</span>
-              </ng-container>
-              <span>
-                <button (click)="placeHold()" [disabled]="!summary.isHoldable"
+            <div class="float-end">
+              <div class="text-end my-1" *ngIf="summary.record.deleted() === 't'">
+                <span class="badge badge-danger border-1" i18n>(Deleted)</span>
+              </div>
+              <div class="vstack">
+                <button type="button" (click)="placeHold()" [disabled]="!summary.isHoldable"
                   [ngClass]="summary.isHoldable ? 'btn-success' : 'btn-secondary'"
                   class="btn btn-sm label-with-material-icon small-text-1">
-                  <span class="material-icons">check</span>
+                  <span class="material-icons" aria-hidden="true">check</span>
                   <span i18n>Place Hold</span>
                 </button>
-              </span>
+
+                <div class="btn-group my-1" ngbDropdown>
+                  <button type="button" class="btn btn-normal text-start small-text-1"
+                    (click)="chooseBucket(summary.id)" i18n>Add to Bucket</button>
+                  <button type="button" class="btn btn-normal dropdown-toggle-split" ngbDropdownToggle>
+                    <span class="visually-hidden" i18n="Catalog search result 'Add to Bucket' dropdown toggle">Toggle Bucket List</span>
+                  </button>
+                  <div ngbDropdownMenu>
+                    <h4 i18n="Add to Bucket dropdown subheading">Favorites</h4>
+                    <button *ngFor="let bundle of (favoriteBuckets$ | async)" ngbDropdownItem
+                      type="button" (click)="addRecordToBucket(summary.id, bundle.bucket.id)">
+                      {{bundle.bucket.name}}
+                    </button>
+                    <hr class="dropdown-divider">
+                    <h4 i18n="Add to Bucket dropdown subheading">Recent</h4>
+                    <button *ngFor="let bundle of (recentBuckets$ | async)" ngbDropdownItem
+                      type="button" (click)="addRecordToBucket(summary.id, bundle.bucket.id)">
+                      {{bundle.bucket.name}}
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -218,10 +254,10 @@
     </div><!-- row -->
     <div class="row" *ngIf="searchContext.showResultExtras && summary.eResourceUrls.length">
       <div class="col-lg-12 mt-2">
-        <div class="w-auto ml-2 mr-2">
+        <div class="w-auto ms-2 me-2">
           <div class="row p-1 mt-1 mb-1 border-top" *ngFor="let url of summary.eResourceUrls">
             <div class="col-lg-2">
-              <span class="font-weight-bold">
+              <span class="fw-bold">
                 <ng-container [ngSwitch]="url.ind2">
                   <ng-container *ngSwitchCase="'0'" i18n>Electronic Resource:</ng-container>
                   <ng-container *ngSwitchCase="'1'" i18n>Version of Resource:</ng-container>
@@ -236,35 +272,47 @@
       </div>
     </div><!-- row -->
     <div class="row" *ngIf="searchContext.showResultExtras && summary.copies">
-      <div class="col-lg-12 mt-2">
-        <div class="w-auto ml-2 mr-2">
-          <ng-container *ngIf="summary.copies.length">
-            <div class="row p-1 font-weight-bold border-top">
-              <div class="col-lg-2" i18n>Library</div>
-              <div class="col-lg-3" i18n>Shelving location</div>
-              <div class="col-lg-3" i18n>Call number</div>
-              <div class="col-lg-2" i18n>Status</div>
-              <div class="col-lg-2" i18n>Due date</div>
-            </div>
-            <div class="row p-1 mt-1 mb-1 border-top" *ngFor="let copy of summary.copies">
-              <div class="col-lg-2" i18n>{{copy.circ_lib_sn}}</div>
-              <div class="col-lg-3" i18n>{{copy.copy_location}}</div>
-              <div class="col-lg-3" i18n>
+      <div class="shelving-locations" role="region" [attr.aria-describedby]="'caption'+index" tabindex="0">
+        <table class="table" role="table" *ngIf="summary.copies.length">
+          <caption id="caption{{index}}" *ngIf="summary.copies.length">
+              <span i18n="Shelving locations table heading">Shelving Locations</span>
+              <span i18n="Shelving locations table heading preposition and separators">&nbsp;for&nbsp;</span> 
+              <eg-bib-display-field [summary]="summary" field="title" [usePlaceholder]="true"></eg-bib-display-field>
+              <span i18n="Shelving locations table heading separator">&nbsp;-&nbsp;</span>
+              <eg-bib-display-field [summary]="summary" field="author" [usePlaceholder]="true"></eg-bib-display-field>
+          </caption>
+          <thead role="rowgroup">
+            <tr>
+              <th scope="col" role="columnheader" class="shelving-library org-unit" i18n>Library</th>
+              <th scope="col" role="columnheader" class="copy-location" i18n>Shelving location</th>
+              <th scope="col" role="columnheader" class="callnumber" i18n>Call number</th>
+              <th scope="col" role="columnheader" class="status" i18n>Status</th>
+              <th scope="col" role="columnheader" class="due-date timestamp" i18n>Due date</th>
+            </tr>
+          </thead>
+          <tbody role="rowgroup">
+            <tr role="row" *ngFor="let copy of summary.copies">
+              <th role="rowheader" class="shelving-library org-unit" i18n>{{copy.circ_lib_sn}}</th>
+              <td role="cell" class="copy-location" i18n>{{copy.copy_location}}</td>
+              <td role="cell" class="callnumber" i18n>
                 {{copy.call_number_prefix_label}} 
                 {{copy.call_number_label}}
                 {{copy.call_number_suffix_label}}
-              </div>
-              <div class="col-lg-2" i18n>{{copy.copy_status}}</div>
-              <div class="col-lg-2" *ngIf="copy.due_date">
-                {{copy.due_date | date:'shortDate'}}
-              </div>
-            </div>
-          </ng-container>
-          <ng-container *ngIf="!summary.copies.length && !summary.eResourceUrls.length">
-            <span class="font-italic" i18n>No Items To Display</span>
-          </ng-container>
-        </div>
+              </td>
+              <td role="cell" class="status" i18n>{{copy.copy_status}}</td>
+              <td role="cell" class="due-date timestamp" i18n>
+                <ng-container *ngIf="copy.due_date">
+                  <span title="Due:" i18n-title>{{copy.due_date | date:'shortDate'}}</span>
+                </ng-container>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
+
+      <ng-container *ngIf="!summary.copies.length && !summary.eResourceUrls.length">
+        <p class="fst-italic" i18n>No Items To Display</p>
+      </ng-container>
     </div>
   </div><!-- card-body -->
 </div><!-- card -->

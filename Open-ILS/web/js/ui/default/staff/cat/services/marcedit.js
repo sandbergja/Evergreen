@@ -697,9 +697,9 @@ angular.module('egMarcMod', ['egCoreMod', 'ui.bootstrap'])
 
         },
         controller : ['$timeout','$scope','$q','$window','egCore', 'egTagTable',
-                      'egConfirmDialog','egAlertDialog','ngToast','egStrings',
+                      'egConfirmDialog','egAlertDialog','ngToast','egStrings','hotkeys',
             function ( $timeout , $scope , $q,  $window , egCore ,  egTagTable , 
-                       egConfirmDialog , egAlertDialog , ngToast , egStrings) {
+                       egConfirmDialog , egAlertDialog , ngToast , egStrings, hotkeys) {
 
 
                 $scope.onSaveCallback = $scope.onSave;
@@ -718,6 +718,37 @@ angular.module('egMarcMod', ['egCoreMod', 'ui.bootstrap'])
                         }
                     }
                 );
+
+                hotkeys.add({
+                    combo: 'ctrl+s',
+                    description: egCore.strings.HOTKEY_SAVE_RECORD,
+                    callback: function(event, hotkey) {
+
+                        event.preventDefault();
+                        if($scope.flatEditor.isEnabled){
+                            $scope.saveFlatTextMARC();
+                        }
+                        $scope.saveRecord();
+                    },
+                    allowIn : ['INPUT','SELECT','TEXTAREA']
+                });
+
+                hotkeys.add({
+                    combo: 'ctrl+e',
+                    description: egCore.strings.HOTKEY_FOCUS_EDITOR,
+                    callback: function(event, hotkey) {
+                        event.preventDefault();
+                        if($scope.flatEditor.isEnabled){
+                            var editor = $window.document.getElementsByTagName('textarea');
+                            editor[0].focus();
+                        }
+                        else {
+                            console.log('Jump focus to non-flattext editor not implemented.');
+                        }
+                    },
+                    allowIn : ['INPUT','SELECT','TEXTAREA']
+                });
+
 
                 MARC21.Record.delimiter = '$';
 
@@ -1320,7 +1351,7 @@ angular.module('egMarcMod', ['egCoreMod', 'ui.bootstrap'])
                                         { id : $scope.recordId, desc : evt.desc }
                                     );
                                 } else {
-                                    loadRecord().then(processOnSaveCallbacks);
+                                    loadRecord().then($scope.processOnSaveCallbacks);
                                 }
                             });
                         } else {
@@ -1345,7 +1376,7 @@ angular.module('egMarcMod', ['egCoreMod', 'ui.bootstrap'])
                                 );
                             } else {
                                 ngToast.create(egCore.strings.SUCCESS_UNDELETE_RECORD);
-                                loadRecord().then(processOnSaveCallbacks);
+                                loadRecord().then($scope.processOnSaveCallbacks);
                             }
                         });
                     }
@@ -1390,7 +1421,7 @@ angular.module('egMarcMod', ['egCoreMod', 'ui.bootstrap'])
                     });
                 }
 
-                processOnSaveCallbacks = function() {
+                $scope.processOnSaveCallbacks = function() {
                     var deferred = $q.defer();
                     if (typeof $scope.onSaveCallback !== 'undefined') {
                         var promise = deferred.promise;
@@ -1475,7 +1506,7 @@ angular.module('egMarcMod', ['egCoreMod', 'ui.bootstrap'])
                             $scope.bibSource = $scope.bib_source.id;
                         }
 
-                        return $timeout(processOnSaveCallbacks);
+                        return $timeout($scope.processOnSaveCallbacks);
                     }
 
                     $scope.mangle_005();
@@ -1514,7 +1545,7 @@ angular.module('egMarcMod', ['egCoreMod', 'ui.bootstrap'])
                                 alert('Could not create anonymous cache key!');
                             }
                         });
-                    }).then(loadRecord).then(processOnSaveCallbacks);
+                    }).then(loadRecord).then($scope.processOnSaveCallbacks);
                 };
 
                 $scope.seeBreaker = function () {
@@ -1632,8 +1663,14 @@ angular.module('egMarcMod', ['egCoreMod', 'ui.bootstrap'])
             function ($scope , $uibModal,  egCore,  egAuth) {
 
                 $scope.searchStr = '';
-                var cni = egCore.env.aous['cat.marc_control_number_identifier'] ||
-                  'Set cat.marc_control_number_identifier in Library Settings';
+                var cni = 'Set cat.marc_control_number_identifier in Library Settings';
+                egCore.org.settings([
+                    'cat.marc_control_number_identifier'
+                ]).then(function(settings) {
+                    if (settings['cat.marc_control_number_identifier']) {
+                        cni = settings['cat.marc_control_number_identifier'];
+                    }
+                });
 
                 var axis_list = $scope.controlSet.bibFieldBrowseAxes($scope.bibField.tag);
                 $scope.axis = axis_list[0];

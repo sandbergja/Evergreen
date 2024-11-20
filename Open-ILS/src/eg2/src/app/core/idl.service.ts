@@ -1,7 +1,7 @@
 import {Injectable} from '@angular/core';
 
 // Added globally by /IDL2js
-declare var _preload_fieldmapper_IDL: Object;
+declare var _preload_fieldmapper_IDL: Object; // eslint-disable-line no-var
 
 /**
  * Every IDL object class implements this interface.
@@ -137,7 +137,7 @@ export class IdlService {
     // Given a field on an IDL class, returns the name of the field
     // on the linked class that acts as the selector for the linked class.
     // Returns null if no selector is found or the field is not a link.
-    getLinkSelector(fmClass: string, field: string): string {
+    getLinkSelector(fmClass: string, field: string, strict = false): string {
         let fieldDef = this.classes[fmClass].field_map[field];
 
         if (!fieldDef) {
@@ -155,14 +155,16 @@ export class IdlService {
         }
 
         if (fieldDef.class) {
-            return this.getClassSelector(fieldDef.class);
+            return this.getClassSelector(fieldDef.class, strict);
         }
         return null;
     }
 
     // Return the selector field for the class.  If no selector is
-    // defined, use 'name' if it exists as a field on the class.
-    getClassSelector(idlClass: string): string {
+    // defined, use 'name' if it exists as a field on the class. As
+    // a last ditch fallback, if there's no selector but the primary
+    // key is a text field, use that.
+    getClassSelector(idlClass: string, strict = false): string {
 
         if (idlClass) {
             const classDef = this.classes[idlClass];
@@ -171,8 +173,19 @@ export class IdlService {
                 const selector = classDef.field_map[classDef.pkey].selector;
                 if (selector) { return selector; }
 
+                // If strict mode was requested, return null when there's
+                // no selector defined.  This is a simple "safe table" test.
+                if (strict) { return null; }
+
                 // No selector defined in the IDL, try 'name'.
                 if ('name' in classDef.field_map) { return 'name'; }
+
+                // last ditch - if the primary key is a text field,
+                // treat it as the selector
+                if (classDef.field_map[classDef.pkey].datatype === 'text') {
+                    return classDef.pkey;
+                }
+
             }
         }
 
@@ -228,6 +241,26 @@ export class IdlService {
         return obj1[pkeyField]() === obj2[pkeyField]();
     }
 
+    pkeyValue(obj: IdlObject | number | string): any {
+        if (!obj || typeof obj === 'number' || typeof obj === 'string') {
+            return obj;
+        }
+
+        try {
+            const idlClass = obj.classname;
+            const pkeyField = this.classes[idlClass]?.pkey || 'id'; // default to 'id' if pkey is not defined
+            if (typeof obj[pkeyField] === 'function') {
+                return obj[pkeyField]();
+            } else {
+                console.error(`Expected a function for pkey but got ${typeof obj[pkeyField]}. pkeyField, obj`,pkeyField,obj);
+                return undefined;
+            }
+        } catch (E) {
+            console.error('Error returning pkey value', obj, E);
+            return undefined;
+        }
+    }
+
     // Sort an array of fields from the IDL (like you might get from calling
     // this.idlClasses[classname][fields])
 
@@ -256,6 +289,19 @@ export class IdlService {
         });
         newList = newList.concat(remainder);
         return newList;
+    }
+
+    toBoolean(value) {
+        if (typeof value === 'string') {
+            if (value === 't') { return true; }
+            if (value === 'f') { return false; }
+        }
+        // back to normal Javascript truthy, but "cast" to boolean
+        if (value) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }
 

@@ -9,14 +9,12 @@
 </eg-patron-search-dialog>
 
 <ng-template #dialogContent>
-<div class="modal-header bg-info"
+<div class="modal-header"
   [ngClass]="isDialog() ? 'modal-header' : 'alert mt-3'">
   <h4 class="modal-title" i18n>Course Users</h4>
   <ng-container *ngIf="isDialog()">
-  <button type="button" class="close"
-    i18n-aria-label aria-label="Close" (click)="close()">
-    <span aria-hidden="true">&times;</span>
-  </button>
+  <button type="button" class="btn-close btn-close-white"
+    i18n-aria-label aria-label="Close dialog" (click)="close()"></button>
   </ng-container>
 </div>
 <div [ngClass]="isDialog() ? 'modal-body' : ''">
@@ -25,35 +23,32 @@
       <div class="row" [ngClass]="isDialog() ? '' : 'mt-3'">
         <div class="d-flex"  [ngClass]="isDialog() ? 'col-md-6' : 'col-md-12'">
           <div class="input-group">
-            <div class="input-group-prepend">
-              <label for="associate-user-barcode" class="input-group-text" i18n>Patron Barcode</label>
-            </div>
+              <label for="associate-user-barcode"  class="form-label input-group-text" i18n>Patron Barcode</label>
             <input type="text" class="flex-grow-1" id="associate-user-barcode"
               [(ngModel)]="userBarcode" (click)="$event.target.select()"
-              [disabled]="currentCourse && currentCourse.is_archived() == 't'"
-              (keyup.enter)="associateUser(userBarcode)" />
-            <button class="btn btn-outline-dark btn-sm" (click)="searchPatrons()">
+              [disabled]="currentCourse && (courseIsArchived || currentCourse.is_archived()) === 't'"
+              />
+            <button type="button" class="btn btn-outline-dark btn-sm" (click)="searchPatrons()">
               <span class="material-icons mat-icon-in-button align-middle"
-              i18n-title title="Search for Patron">search</span>
+              aria-hidden="true">search</span>
               <span class="align-middle" i18n>Search for Patron</span>
             </button>
           </div>
         </div>
         <div class="d-flex" [ngClass]="isDialog() ? 'col-md-6' : 'col-md-12 mt-3'">
           <div class="input-group">
-            <div class="input-group-prepend">
-              <label for="associate-user-role" class="input-group-text" i18n>Role</label>
-            </div>
+              <label for="associate-user-role input-group-text"  class="form-label input-group-text" i18n>Role</label>
             <eg-combobox idlClass="acmr" [(ngModel)]="userRoleInput"
-            [disabled]="currentCourse && currentCourse.is_archived() == 't'">
+            [asyncSupportsEmptyTermClick]="true"
+            [disabled]="currentCourse && (courseIsArchived || currentCourse.is_archived()) === 't'">
             </eg-combobox>
           </div>
         </div>
       </div>
       <div class="row mt-3">
-        <div class="text-right" [ngClass]="isDialog() ? 'col-md-2' : 'col-md-6'">
-          <button class="btn btn-primary"
-            [disabled]="currentCourse && currentCourse.is_archived() == 't'"
+        <div class="text-end" [ngClass]="isDialog() ? 'col-md-2' : 'col-md-6'">
+          <button type="button" class="btn btn-primary"
+            [disabled]="currentCourse && (courseIsArchived || currentCourse.is_archived()) === 't'"
             i18n [disabled]="!userBarcode" (click)="associateUser(userBarcode)">
             Add User
           </button>

@@ -11,8 +11,10 @@ import {OrgService} from '@eg/core/org.service';
     template: ''
 })
 class MockOrgSelectComponent {
+    @Input() disabled?: boolean;
     @Input() domId: string;
     @Input() limitPerms: string;
+    @Input() ariaLabel?: string;
     @Input() applyOrgId(id: number) {}
 }
 
@@ -54,7 +56,7 @@ describe('Component: OrgFamilySelect', () => {
             ], declarations: [
                 OrgFamilySelectComponent,
                 MockOrgSelectComponent,
-        ]});
+            ]});
         fixture = TestBed.createComponent(OrgFamilySelectComponent);
         component = fixture.componentInstance;
         component.domId = 'family-test';

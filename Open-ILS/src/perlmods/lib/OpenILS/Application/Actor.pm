@@ -40,6 +40,7 @@ use OpenILS::Utils::BadContact;
 use List::Util qw/max reduce/;
 
 use UUID::Tiny qw/:std/;
+use HTML::Defang;
 
 sub initialize {
     OpenILS::Application::Actor::Container->initialize();
@@ -186,6 +187,33 @@ sub update_privacy_waiver {
     return 1;
 }
 
+__PACKAGE__->register_method(
+    method    => "get_ou_setting_history",
+    api_name  => "open-ils.actor.org_unit.settings.history.retrieve",
+    signature => {
+        desc => "Retrieves the history of an Org Unit Setting.  The permission to retrieve "          .
+                "an org unit setting's history is dependant on a specific permission specified "       .
+                "in the view_perm column of the config.org_unit_setting_type " .
+                "table's row corresponding to the setting being changed." ,
+        params => [
+            {desc => 'Authentication token',        type => 'string'},
+            {desc => 'Org Unit ID',                 type => 'number'},
+            {desc => 'Setting Type Name',           type => 'string'}
+        ],
+        return => {desc => 'History IDL Object'}
+    }
+);
+
+sub get_ou_setting_history {
+    my( $self, $client, $auth, $setting, $orgid ) = @_;
+    my $e = new_editor(authtoken => $auth, xact => 1);
+    return $e->die_event unless $e->checkauth;
+
+    return $U->ou_ancestor_setting_log(
+        $orgid, $setting, $e, $auth
+    );
+
+}
 
 __PACKAGE__->register_method(
     method    => "set_ou_settings",
@@ -209,11 +237,13 @@ sub set_ou_settings {
 
     my $e = new_editor(authtoken => $auth, xact => 1);
     return $e->die_event unless $e->checkauth;
+    my $defang = HTML::Defang->new;
 
     my $all_allowed = $e->allowed("UPDATE_ORG_UNIT_SETTING_ALL", $org_id);
 
     for my $name (keys %$settings) {
         my $val = $$settings{$name};
+        if ($name eq 'opac.patron.custom_css') { $val = $defang->defang($val); }
 
         my $type = $e->retrieve_config_org_unit_setting_type([
             $name,
@@ -482,6 +512,11 @@ __PACKAGE__->register_method(
             attached object, indicate if the object should be created,
             updated, or deleted using the built-in 'isnew', 'ischanged',
             and 'isdeleted' fields on the object.
+            This method intentionally does not handle updates to patron
+            notes, user activity, and standing penalties; if any values
+            are supplied for those fields in the patron data object,
+            they will be ignored. Please refer to bug 1976126 before
+            changing this.
         /,
         params => [
             { desc => 'Authentication token', type => 'string' },
@@ -1668,6 +1703,20 @@ __PACKAGE__->register_method(
     }
 );
 
+__PACKAGE__->register_method(
+    method    => "update_passwd",
+    api_name  => "open-ils.actor.user.preferred_name.update",
+    signature => {
+        desc   => "Update the operator's preferred name",
+        params => [
+            { desc => 'Authentication token', type => 'string' },
+            { desc => 'User',                 type => 'hash' },
+            { desc => 'Current password',     type => 'string' }
+        ],
+        return => {desc => '1 on success, Event on error or incorrect current password'}
+    }
+);
+
 sub update_passwd {
     my( $self, $conn, $auth, $new_val, $orig_pw ) = @_;
     my $e = new_editor(xact=>1, authtoken=>$auth);
@@ -1714,6 +1763,17 @@ sub update_passwd {
         } elsif( $api =~ /locale/o ) {
             $db_user->locale($new_val);
             $at_event++;
+        } elsif( $api =~ /preferred_name/o ) {
+            if(ref($new_val) eq 'HASH'){
+                foreach(qw/ pref_prefix pref_first_given_name pref_second_given_name pref_family_name pref_suffix/){
+                    $db_user->$_($new_val->{$_});
+                    # Set the value to NULL when no data is submitted.
+                    eval '$db_user->clear_' . $_ . '();' if($new_val->{$_} eq '' );
+                }
+                $at_event++;
+            }else {
+                return new OpenILS::Event('BAD_PARAMS');
+            }
         }
     }
 
@@ -2996,13 +3056,19 @@ __PACKAGE__->register_method(
     api_name => "open-ils.actor.user.penalties.update"
 );
 
+__PACKAGE__->register_method(
+    method   => "update_penalties",
+    api_name => "open-ils.actor.user.penalties.update_at_home"
+);
+
 sub update_penalties {
-    my($self, $conn, $auth, $user_id) = @_;
+    my($self, $conn, $auth, $user_id, @penalties) = @_;
     my $e = new_editor(authtoken=>$auth, xact => 1);
     return $e->die_event unless $e->checkauth;
     my $user = $e->retrieve_actor_user($user_id) or return $e->die_event;
     return $e->die_event unless $e->allowed('UPDATE_USER', $user->home_ou);
-    my $evt = OpenILS::Utils::Penalty->calculate_penalties($e, $user_id, $e->requestor->ws_ou);
+    my $context_org = ($self->api_name =~ /_at_home$/) ? $user->home_ou : $e->requestor->ws_ou;
+    my $evt = OpenILS::Utils::Penalty->calculate_penalties($e, $user_id, $context_org, @penalties);
     return $evt if $evt;
     $e->commit;
     return 1;
@@ -3010,11 +3076,16 @@ sub update_penalties {
 
 
 __PACKAGE__->register_method(
-    method   => "apply_penalty",
+    method   => "apply_note",
     api_name => "open-ils.actor.user.penalty.apply"
 );
 
-sub apply_penalty {
+__PACKAGE__->register_method(
+    method   => "apply_note",
+    api_name => "open-ils.actor.user.note.apply"
+);
+
+sub apply_note {
     my($self, $conn, $auth, $penalty, $msg) = @_;
 
     $msg ||= {};
@@ -3058,6 +3129,11 @@ __PACKAGE__->register_method(
     api_name => "open-ils.actor.user.penalty.modify"
 );
 
+__PACKAGE__->register_method(
+    method   => "modify_penalty",
+    api_name => "open-ils.actor.user.note.modify"
+);
+
 sub modify_penalty {
     my($self, $conn, $auth, $penalty, $usr_msg) = @_;
 
@@ -3096,6 +3172,11 @@ __PACKAGE__->register_method(
     api_name => "open-ils.actor.user.penalty.remove"
 );
 
+__PACKAGE__->register_method(
+    method   => "remove_penalty",
+    api_name => "open-ils.actor.user.note.remove"
+);
+
 sub remove_penalty {
     my($self, $conn, $auth, $penalty) = @_;
     my $e = new_editor(authtoken=>$auth, xact => 1);
@@ -3110,7 +3191,7 @@ sub remove_penalty {
 
 __PACKAGE__->register_method(
     method   => "update_penalty_note",
-    api_name => "open-ils.actor.user.penalty.note.update"
+    api_name => "open-ils.actor.user.note.note.update"
 );
 
 sub update_penalty_note {
@@ -3490,12 +3571,13 @@ __PACKAGE__->register_method (
     api_name    => 'open-ils.actor.verify_user_password',
     signature   => q/
         Given a barcode or username and the MD5 encoded password,
+        The password can also be passed without the MD5 hashing.
         returns 1 if the password is correct.  Returns 0 otherwise.
     /
 );
 
 sub verify_user_password {
-    my($self, $conn, $auth, $barcode, $username, $password) = @_;
+    my($self, $conn, $auth, $barcode, $username, $password, $pass_nohash) = @_;
     my $e = new_editor(authtoken => $auth);
     return $e->die_event unless $e->checkauth;
     my $user;
@@ -3515,7 +3597,12 @@ sub verify_user_password {
     return 0 if (!$user || $U->is_true($user->deleted));
     return 0 if ($user_by_username && $user_by_barcode && $user_by_username->id != $user_by_barcode->id);
     return $e->event unless $e->allowed('VIEW_USER', $user->home_ou);
-    return $U->verify_migrated_user_password($e, $user->id, $password, 1);
+
+    if ($pass_nohash) {
+        return $U->verify_migrated_user_password($e, $user->id, $pass_nohash);
+    } else {
+        return $U->verify_migrated_user_password($e, $user->id, $password, 1);
+    }
 }
 
 __PACKAGE__->register_method (
@@ -4182,7 +4269,11 @@ __PACKAGE__->register_method (
 );
 
 sub negative_balance_users {
-    my($self, $conn, $auth, $org_id) = @_;
+    my($self, $conn, $auth, $org_id, $options) = @_;
+
+    $options ||= {};
+    $options->{limit} = 1000 unless $options->{limit};
+    $options->{offset} = 0 unless $options->{offset};
 
     my $e = new_editor(authtoken => $auth);
     return $e->die_event unless $e->checkauth;
@@ -4211,8 +4302,13 @@ sub negative_balance_users {
                 }
             }
         },
-        where => {'+mous' => {balance_owed => {'<' => 0}}}
+        where => {'+mous' => {balance_owed => {'<' => 0}}, '+au' => {deleted => 'f'}},
+        offset => $options->{offset},
+        limit => $options->{limit},
+        order_by => [{class => 'mous', field => 'usr'}]
     };
+
+    $org_id = $U->get_org_descendants($org_id) if $options->{org_descendants};
 
     $query->{from}->{mous}->{au}->{filter}->{home_ou} = $org_id if $org_id;
 

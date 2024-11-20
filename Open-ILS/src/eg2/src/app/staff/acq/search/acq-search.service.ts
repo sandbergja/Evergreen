@@ -1,12 +1,12 @@
+/* eslint-disable @typescript-eslint/no-throw-literal */
 import {Injectable} from '@angular/core';
-import {empty, throwError} from 'rxjs';
+import {EMPTY, throwError} from 'rxjs';
 import {map} from 'rxjs/operators';
 import {NetService} from '@eg/core/net.service';
 import {AuthService} from '@eg/core/auth.service';
 import {GridDataSource} from '@eg/share/grid/grid';
 import {PcrudService} from '@eg/core/pcrud.service';
 import {Pager} from '@eg/share/util/pager';
-import {IdlObject} from '@eg/core/idl.service';
 import {EventService} from '@eg/core/event.service';
 import {AttrDefsService} from './attr-defs.service';
 
@@ -57,6 +57,7 @@ const searchOptions = {
         flesh_selector: true,
         flesh_po: true,
         flesh_pl: true,
+        flesh_li_details: true,
     },
     purchase_order: {
         flesh_cancel_reason: true,
@@ -205,11 +206,11 @@ export class AcqSearchService {
                 }
                 if ((['title', 'author'].indexOf(filterField) > -1) &&
                      (filterField in this.attrDefs.attrDefs)) {
-                        if (!('acqlia' in andTerms)) {
-                            andTerms['acqlia'] = [];
-                        }
-                        searchTerm[this.attrDefs.attrDefs[filterField].id()] = filterVal;
-                        andTerms['acqlia'].push(searchTerm);
+                    if (!('acqlia' in andTerms)) {
+                        andTerms['acqlia'] = [];
+                    }
+                    searchTerm[this.attrDefs.attrDefs[filterField].id()] = filterVal;
+                    andTerms['acqlia'].push(searchTerm);
                 } else {
                     searchTerm[filterField] = filterVal;
                     andTerms[coreRecType].push(searchTerm);
@@ -230,7 +231,7 @@ export class AcqSearchService {
             // to submit a search
             if (this.firstRun) {
                 this.firstRun = false;
-                return empty();
+                return EMPTY;
             }
 
             const currentSearch = this.generateAcqSearch(searchType, gridSource.filters);
@@ -264,11 +265,11 @@ export class AcqSearchService {
             return this.net.request(
                 'open-ils.acq',
                 'open-ils.acq.' + searchType + '.unified_search',
-                    this.auth.token(),
-                    currentSearch.andTerms,
-                    currentSearch.orTerms,
+                this.auth.token(),
+                currentSearch.andTerms,
+                currentSearch.orTerms,
                 null,
-                    opts
+                opts
             ).pipe(
                 map(res => {
                     if (this.evt.parse(res)) {
@@ -281,4 +282,5 @@ export class AcqSearchService {
         };
         return gridSource;
     }
+
 }

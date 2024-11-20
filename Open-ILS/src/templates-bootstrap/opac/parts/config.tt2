@@ -149,7 +149,7 @@ search.adv_config = [
     {adv_label => l("Literary Form"), adv_attr => "lit_form", id => 'adv_selector_lit_form'},
     {adv_label => l("Shelving Location"), adv_special => "copy_location", id => 'adv_copy_location_selector', js_only => 101, adv_break => 1},
     {adv_label => l("Search Library"), adv_special => "lib_selector", id => 'adv_org_selector'},
-    {adv_label => l("Where"), adv_special => "scope_selector", id => 'adv_scope_selector'},
+    #{adv_label => l("Where"), adv_special => "scope_selector", id => 'adv_scope_selector'},
     {adv_label => l("Publication Year"), adv_special => "pub_year", id => 'adv_selector_pub_year'},
     {adv_label => l("Sort Results"), adv_special => "sort_selector", id => 'adv_selector_sort_results'},
 ];
@@ -183,8 +183,9 @@ search.basic_config = {
 # Make metarecord search the default.
 #search.metarecord_default = 1;
 
-# Disable search term highlighting
-#search.no_highlight = 1;
+# Whether to show highlighting by default or hide it by default (overwritten when the user has a non-null setting and is logged in or searches with the url parameters
+# 0 to hide highlighting by default, 1 to show it. Defaults to 1 when null.
+search.default_highlight = 1;
 
 ##############################################################################
 # Show Google Book Previews
@@ -208,7 +209,7 @@ ctx.depth_sel_checkbox = 1; # Results Page Checkbox Toggle
 ctx.depth_sel_button = 1; # Basic Search Submit Button
 ctx.depth_sel_depth = 0; # Depth to set to
 ctx.depth_sel_button_label = l('All Libraries');
-ctx.depth_sel_button_class = 'opac-button';
+ctx.depth_sel_button_class = 'btn-opac';
 ctx.depth_sel_checkbox_label = l('Show Results from All Libraries');
 ctx.depth_sel_tooltip = l('Select this option to expand your results to all libraries while retaining the priority of your selected librarys holdings.');
 ctx.depth_sel_resultshint = l('Showing results from all libraries');
@@ -279,5 +280,10 @@ ctx.max_cart_size = 500;
 # Display booking reservations tab in myopac
 ##############################################################################
 ctx.show_reservations_tab = 'false';
+
+##############################################################################
+# Display carousels in OPAC
+##############################################################################
+ctx.show_carousels = 'true';
 
 %]

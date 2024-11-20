@@ -1,17 +1,15 @@
 <ng-template #dialogContent>
-  <div class="modal-header bg-info">
+  <div class="modal-header">
     <h3 *ngIf="mode === 'create'" class="modal-title" i18n>New Distribution Formula</h3>
     <h3 *ngIf="mode === 'update'" class="modal-title" i18n>Modify Distribution Formula</h3>
     <h3 *ngIf="mode === 'clone'" class="modal-title" i18n>Clone Distribution Formula (from {{clonedLabel}})</h3>
-    <button type="button" class="close"
-      i18n-aria-label aria-label="Close" (click)="close()">
-      <span aria-hidden="true">&times;</span>
-    </button>
+    <button type="button" class="btn-close btn-close-white"
+      i18n-aria-label aria-label="Close dialog" (click)="close()"></button>
   </div>
   <div class="modal-body">
-    <form #myForm="ngForm" role="form" class="form-validated">
+    <form #myForm="ngForm" class="form-validated">
       <div class="form-group row mt-2" *ngIf="formula">
-        <label for="formula-name" class="col-sm-1 col-form-label" i18n>Formula Name
+        <label for="formula-name" class="form-label col-sm-1 col-form-label" i18n>Formula Name
         </label>
         <div class="col-sm-2">
           <input class="form-control" type="text" id="formula-name"
@@ -19,7 +17,7 @@
             [ngModel]="formula.name()" name="name"
             (ngModelChange)="formula.name($event)">
         </div>
-        <label for="formula-owner" class="col-sm-1 col-form-owner" i18n>Formula Owner
+        <label for="formula-owner" class="form-label col-sm-1 col-form-owner" i18n>Formula Owner
         </label>
         <div class="col-sm-2">
           <eg-org-select
@@ -45,8 +43,8 @@
       <div class="form-group row mt-2" *ngFor="let entry of formula?.entries(); index as idx; last as isLast; first as isFirst; count as count">
         <div class="col-sm-1">
           <button *ngIf="!isLast" class="btn btn-sm material-icon-button" type="button"
-            (click)="removeRow(idx)"
-            i18n-title title="Remove Entry"><span class="sr-only">Remove Entry</span>
+            (click)="removeRow(idx)" i18n-aria-label aria-label="Remove Entry"
+            i18n-title title="Remove Entry">
             <span class="material-icons" aria-hidden="true">delete</span>
           </button>
         </div>
@@ -54,6 +52,8 @@
           <eg-org-select
             placeholder="Owning Library..."
             i18n-placeholder
+            ariaLabel="Owning Library..."
+            i18n-ariaLabel
             domId="entry-owning-lib-{{idx}}"
             [applyOrgId]="entry.owning_lib()"
             [limitPerms]="['ADMIN_ACQ_DISTRIB_FORMULA']"
@@ -102,13 +102,15 @@
           <button *ngIf="!isLast" class="btn btn-sm material-icon-button" type="button"
             [disabled]="isFirst"
             (click)="moveUp(idx)"
-            i18n-title title="Move Up"><span class="sr-only">Move Up</span>
+            i18n-aria-label aria-label="Move Up"
+            i18n-title title="Move Up">
             <span class="material-icons" aria-hidden="true">keyboard_arrow_up</span>
           </button>
           <button *ngIf="!isLast" class="btn btn-sm material-icon-button" type="button"
             (click)="moveDown(idx)"
             [disabled]="count < 3 || idx === count - 2"
-            i18n-title title="Move Down"><span class="sr-only">Move Down</span>
+            i18n-aria-label aria-label="Move Down"
+            i18n-title title="Move Down">
             <span class="material-icons" aria-hidden="true">keyboard_arrow_down</span>
           </button>
           <button *ngIf="isLast" type="button" class="btn btn-info" (click)="addRow()" i18n>Add</button>
@@ -119,7 +121,7 @@
   <div class="modal-footer">
     <button type="button" class="btn btn-info" [disabled]="!myForm?.valid || !(myForm?.dirty)"
       (click)="save()" i18n>Save</button>
-    <button type="button" class="btn btn-warning"
+    <button type="button" class="btn btn-normal"
       (click)="close()" i18n>Cancel</button>
   </div>
 </ng-template>

@@ -25,12 +25,13 @@
         <div class="label label-danger" ng-if="duplicate_barcode">{{duplicate_barcode_string}}</div>
       </div>
       <button type="submit" class="btn btn-default" ng-disabled="duplicate_barcode">[% l('Submit') %]</button>
-      <button ng-if="isModal" class="btn btn-warning" ng-click="cancel($event)">[% l('Cancel') %]</button>
+      <button ng-if="isModal" class="btn btn-normal" ng-click="cancel($event)">[% l('Cancel') %]</button>
     </form>
   </div>
 </div>
 
 <div class="row pad-vert">
+  <div class="col-md-1"></div>
   <div class="col-md-6">
     <div class="alert alert-danger" ng-if="copyNotFound">
       [% l('Item Not Found') %]

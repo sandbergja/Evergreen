@@ -13,19 +13,36 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 # ---------------------------------------------------------------
-
+#
+# To run this script on Windows:
+# 1. Install Strawberry Perl from https://strawberryperl.com/
+# 2. Install Node from https://nodejs.org
+# 3. Open a new cmd window
+# 4. Clone the Evergreen git repository if you don't have it already.  Instructions
+#    can be found at https://wiki.evergreen-ils.org/doku.php?id=newdevs:git:install
+# 5. In your cmd window, `cd` into the Evergreen docs directory.  For example, if
+#    your local copy of the Evergreen repo is at C:\Users\me\projects\Evergreen, type
+#    `cd \Users\me\projects\Evergreen\docs` (without the backticks) into the cmd window.
+# 6. In your cmd window, type: perl generate_docs.pl --base-url http://example.com
+# 7. In a browser, open the docs/output/index.html file.  For examle, if your local
+#    copy of the Evergreen repo is at C:\Users\me\projects\Evergreen, type
+#    file:///C:/Users/me/projects/Evergreen/docs/output/index.html
+#    into your browser's URL bar.
+# 8. If you click on the "Evergreen Documentation" phrase at the top, you will get an
+#    error because it will link you to "example.com". Don't click on that :)
 
 use Getopt::Long;
 use Cwd;
 use File::Path;
 use Data::Dumper;
+use File::Copy;
 
 my $base_url;
 my $tmp_space = './build';
 my $html_output = './output';
 my $antoraui_git = 'git://git.evergreen-ils.org/eg-antora.git';
-my $antoraui_git_branch = 'master';
-my $antora_version = '2.3';
+my $antoraui_git_branch = 'main';
+my $antora_version = '3.1.7';
 my $help;
 
 
@@ -48,15 +65,15 @@ sub help
     --tmp-space ../../tmp
     --html-output /var/www/html
     --antora-ui-repo git://git.evergreen-ils.org/eg-antora.git
-    --antora-version 2.3
+    --antora-version 3.1.7
 
     You must specify
     --base-url                                    [URL where html output is expected to be available eg: http//examplesite.org/docs]
     --tmp-space                                   [Writable path for staging the antora UI repo and build files, defaults to ./build]
     --html-output                                 [Path for the generated HTML files, defaults to ./output]
     --antora-ui-repo                              [Antora-UI repository for the built UI, defaults to git://git.evergreen-ils.org/eg-antora.git]
-    --antora-ui-repo-branch                       [OPTIONAL: Antora-UI repository checkout branch, Defaults to "master"]
-    --antora-version                              [Target version of antora, defaults to 2.3]
+    --antora-ui-repo-branch                       [OPTIONAL: Antora-UI repository checkout branch, Defaults to "main"]
+    --antora-version                              [Target version of antora, defaults to 3.1.7]
 
 HELP
     exit;
@@ -104,21 +121,32 @@ exec_system_cmd("cd $tmp_space/antora-ui && npm install gulp-cli");
 
 exec_system_cmd("cd $tmp_space/antora-ui && npm install");
 
-exec_system_cmd("cd $tmp_space/antora-ui && ./node_modules/.bin/gulp build && ./node_modules/.bin/gulp pack");
+exec_system_cmd("cd $tmp_space/antora-ui && npx gulp build && npx gulp pack");
 
 
-exec_system_cmd("cp site.yml site-working.yml");
+copy('site.yml', 'site-working.yml');
 
 # Deal with root URL Antora configuration
 rewrite_yml($base_url,"site/url","site-working.yml");
 rewrite_yml("$html_output","output/dir","site-working.yml");
 rewrite_yml("$tmp_space/antora-ui/build/ui-bundle.zip","ui/bundle/url","site-working.yml");
 
+# clean up before installing Antora - it was observed during the
+# upgrade from 2.3 to 3.1.7 that a package.json node_modules
+# from 2.3 could cause the older version of the CLI to be
+# used instead of the new one
+if (-d 'node_modules') {
+    rmtree('node_modules');
+}
+unlink('package.json');
+unlink('package-lock.json');
+
 #npm install antora
-exec_system_cmd('npm install @antora/cli@' . $antora_version . ' @antora/site-generator-default@' . $antora_version . ' antora-lunr antora-site-generator-lunr');
+exec_system_cmd('npm install antora@' . $antora_version . ' @antora/lunr-extension@^1.0.0-alpha.8');
 
 # Now, finally, let's build the site
-exec_system_cmd('DOCSEARCH_INDEX_VERSION=latest DOCSEARCH_ENABLED=true DOCSEARCH_ENGINE=lunr NODE_PATH="$(npm root)" ./node_modules/@antora/cli/bin/antora --generator antora-site-generator-lunr site-working.yml');
+local $ENV{NODE_PATH} = `npm root`;
+exec_system_cmd('npx antora site-working.yml');
 
 print "Success: your site files are available at " . $html_output . " and can be moved into place for access at " . $base_url . "\n";
 

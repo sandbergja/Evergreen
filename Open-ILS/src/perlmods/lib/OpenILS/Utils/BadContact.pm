@@ -98,10 +98,23 @@ sub mark_users_contact_invalid {
         $usr_penalty->org_unit($penalty_ou);
         $usr_penalty->standing_penalty($penalty->id);
         $usr_penalty->staff($staff_id);
-        $usr_penalty->note($_->$contact_type);
 
-        $editor->create_actor_user_standing_penalty($usr_penalty) or
-            return $editor->die_event;
+        my $message = $_->$contact_type;
+        if (defined($addl_note) && $addl_note !~ /^\s*$/) {
+            $message .= ' ' . $addl_note;
+        }
+
+        my ($result) = $U->simplereq('open-ils.actor', 'open-ils.actor.user.note.apply',
+            $editor->authtoken,
+            $usr_penalty,
+            { message => $message }
+        );
+
+        # FIXME: this perpetuates a bug; the patron editor UI doesn't handle these error states well
+        if ($result && ref $result eq 'HASH') {
+            $editor->rollback;
+            return $result;
+        }
 
         $_->$clear_meth;
         $editor->update_actor_user($_) or return $editor->die_event;

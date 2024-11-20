@@ -1,8 +1,8 @@
-<!-- 
+<!--
   main navigation bar
-    
+
   note the use of target="_self" for navigation links.
-  this tells angular to treat the href as a new page 
+  this tells angular to treat the href as a new page
   and not an intra-app route.  This is necessary when
   moving between applications.
 
@@ -12,9 +12,11 @@
 <div id="top-navbar" role="navigation"
   class="navbar navbar-default navbar-fixed-top" role="navigation">
 
+  <a i18n class="skip-nav" href="#top-content-container">[% l('Skip to main content') %]</a>
+
   <!-- navbar-header here needed for supporting angular-ui-bootstrap -->
   <div class="navbar-header">
-    <button type="button" class="navbar-toggle" 
+    <button type="button" class="navbar-toggle"
         ng-init="navCollapsed = true" ng-click="navCollapsed = !navCollapsed">
       <span class="sr-only">[% l('Toggle navigation') %]</span>
       <span class="icon-bar" aria-hidden="true"></span>
@@ -36,18 +38,20 @@
         <ul uib-dropdown-menu>
           <li>
             <a href="./circ/patron/search" target="_self"
-              eg-accesskey="[% l('alt+s') %] [% l('f4') %]" 
+              eg-accesskey="[% l('alt+s') %] [% l('f4') %]"
               eg-accesskey-desc="[% l('Patron search by name, address, etc.') %]">
               <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
               <span eg-accesskey-label>[% l('Search for Patrons') %]</span>
+              <kbd>[% l('F4') %]</kbd>
             </a>
           </li>
           <li>
             <a href="./cat/item/search" target="_self"
-              eg-accesskey="[% l('f5') %]" 
+              eg-accesskey="[% l('f5') %]"
               eg-accesskey-desc="[% l('Item Status') %]">
               <span class="glyphicon glyphicon-barcode" aria-hidden="true"></span>
               <span>[% l('Search for Items by Barcode') %]</span>
+              <kbd>[% l('F5') %]</kbd>
             </a>
           </li>
           <li>
@@ -56,57 +60,62 @@
               eg-accesskey-desc="[% l('Catalog') %]">
               <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
               <span>[% l('Search the Catalog') %]</span>
+              <kbd>[% l('F3') %]</kbd>
             </a>
           </li>
         </ul>
       </li>
 
-
-      <!-- circulation -->
+<!-- circulation -->
       <li class="dropdown" uib-dropdown>
         <a href uib-dropdown-toggle>[% l('Circulation') %]<b class="caret" 
           aria-hidden="true"></b>
         </a>
-
-        <ul uib-dropdown-menu>
+	
+	<ul uib-dropdown-menu>
           <li ng-if="username">
             <a href="./circ/patron/bcsearch" target="_self"
-              eg-accesskey="[% l('f1') %]" 
+              eg-accesskey="[% l('f1') %]"
               eg-accesskey-desc="[% l('Check Out') %]">
               <span class="glyphicon glyphicon-export" aria-hidden="true"></span>
-              [% l('Check Out') %]
+              <span>[% l('Check Out') %]</span>
+              <kbd>[% l('F1') %]</kbd>
             </a>
           </li>
           <li ng-if="!username">
             <a href="" ng-click="rs.active_tab('checkout')" target="_self"
-              eg-accesskey="[% l('f1') %]" 
+              eg-accesskey="[% l('f1') %]"
               eg-accesskey-desc="[% l('Check Out') %]">
               <span class="glyphicon glyphicon-export" aria-hidden="true"></span>
-              [% l('Check Out') %]
+              <span>[% l('Check Out') %]</span>
+              <kbd>[% l('F1') %]</kbd>
             </a>
           </li>
           <li ng-if="username">
             <a href="./circ/checkin/checkin" target="_self"
-              eg-accesskey="[% l('f2') %]" 
+              eg-accesskey="[% l('f2') %]"
               eg-accesskey-desc="[% l('Check In') %]">
               <span class="glyphicon glyphicon-import" aria-hidden="true"></span>
-              [% l('Check In') %]
+              <span>[% l('Check In') %]</span>
+              <kbd>[% l('F2') %]</kbd>
             </a>
           </li>
-          <li ng-if="!username">
+ 	  <li ng-if="!username">
             <a href="" ng-click="rs.active_tab('checkin')" target="_self"
-              eg-accesskey="[% l('f2') %]" 
+              eg-accesskey="[% l('f2') %]"
               eg-accesskey-desc="[% l('Check In') %]">
               <span class="glyphicon glyphicon-import" aria-hidden="true"></span>
-              [% l('Check In') %]
+              <span>[% l('Check In') %]</span>
+              <kbd>[% l('F2') %]</kbd>
             </a>
-          </li>
-          <li>
+           </li>
+           <li>
             <a href="./circ/checkin/capture" target="_self"
-              eg-accesskey="[% l('shift+f2') %]" 
+              eg-accesskey="[% l('shift+f2') %]"
               eg-accesskey-desc="[% l('Capture Holds') %]">
               <span class="glyphicon glyphicon-pushpin" aria-hidden="true"></span>
-              [% l('Capture Holds') %]
+              <span>[% l('Capture Holds') %]</span>
+              <kbd>[% l('Shift+F2') %]</kbd>
             </a>
           </li>
           <li>
@@ -114,52 +123,58 @@
               <span class="glyphicon glyphicon-th-list" aria-hidden="true"></span>
               [% l('Pull List for Hold Requests') %]
             </a>
-          </li>
-          <li ng-if="username">
+           </li>
+           <li ng-if="username">
             <a href="./circ/renew/renew" target="_self"
-              eg-accesskey="[% l('ctrl+f2') %]" 
+              eg-accesskey="[% l('ctrl+f2') %]"
               eg-accesskey-desc="[% l('Renew items') %]">
               <span class="glyphicon glyphicon-refresh" aria-hidden="true"></span>
-              [% l('Renew Items') %]
+              <span>[% l('Renew Items') %]</span>
+              <kbd>[% l('Ctrl+F2') %]</kbd>
             </a>
           </li>
+
           <li ng-if="!username">
             <a href="" ng-click="rs.active_tab('renew')" target="_self"
-              eg-accesskey="[% l('ctrl+f2') %]" 
+              eg-accesskey="[% l('ctrl+f2') %]"
               eg-accesskey-desc="[% l('Renew items') %]">
               <span class="glyphicon glyphicon-refresh" aria-hidden="true"></span>
-              [% l('Renew Items') %]
+              <span>[% l('Renew Items') %]</span>
+              <kbd>[% l('Ctrl+F2') %]</kbd>
             </a>
-          </li>
-          <li ng-if="username">
+           </li>
+           <li ng-if="username">
             <a href="./circ/patron/register" target="_self"
-              eg-accesskey="[% l('shift+f1') %]" 
+              eg-accesskey="[% l('shift+f1') %]"
               eg-accesskey-desc="[% l('Register Patron') %]">
               <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
-              [% l('Register Patron') %]
+              <span>[% l('Register Patron') %]</span>
+              <kbd>[% l('Shift+F1') %]</kbd>
             </a>
-          </li>
-          <li ng-if="!username">
+           </li>
+           <li ng-if="!username">
             <a href="" ng-click="rs.active_tab('register')" target="_self"
-              eg-accesskey="[% l('shift+f1') %]" 
+              eg-accesskey="[% l('shift+f1') %]"
               eg-accesskey-desc="[% l('Register Patron') %]">
               <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
-              [% l('Register Patron') %]
+              <span>[% l('Register Patron') %]</span>
+              <kbd>[% l('Shift+F1') %]</kbd>
             </a>
-          </li>
-          <li ng-if="showRecentPatron">
+           </li>
+	<li ng-if="showRecentPatron">
             <a href="./circ/patron/last" target="_self"
-              eg-accesskey="[% l('f8') %]" 
+              eg-accesskey="[% l('f8') %]"
               eg-accesskey-desc="[% l('Retrieve Last Patron') %]">
               <span class="glyphicon glyphicon-share-alt" aria-hidden="true"></span>
-              [% l('Retrieve Last Patron') %]
+              <span>[% l('Retrieve Last Patron') %]</span>
+              <kbd>[% l('F8') %]</kbd>
             </a>
           </li>
           <li ng-if="showRecentPatrons">
             <a href="./circ/patron/search?show_recent=1" target="_self"
               eg-accesskey-desc="[% l('Retrieve Recent Patrons') %]">
               <span class="glyphicon glyphicon-share-alt" aria-hidden="true"></span>
-              [% l('Retrieve Recent Patrons') %]
+              [% l('Retrieve Last Patron') %][% l('- F8') %]
             </a>
           </li>
           <li>
@@ -181,7 +196,7 @@
             </a>
           </li>
           <li class="divider"></li>
-          <li>
+	<li>
             <a href="./circ/patron/credentials" target="_self">
               <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
               <span>[% l('Verify Credentials') %]</span>
@@ -189,18 +204,20 @@
           </li>
           <li ng-if="username">
             <a href="./circ/in_house_use/index" target="_self"
-              eg-accesskey="[% l('f6') %]" 
+              eg-accesskey="[% l('f6') %]"
               eg-accesskey-desc="[% l('Record In-House Use') %]">
               <span class="glyphicon glyphicon-pencil" aria-hidden="true"></span>
               <span>[% l('Record In-House Use') %]</span>
+              <kbd>[% l('F6') %]</kbd>
             </a>
           </li>
           <li ng-if="!username">
             <a href="" ng-click="rs.active_tab('in_house_use')" target="_self"
-              eg-accesskey="[% l('f6') %]" 
+              eg-accesskey="[% l('f6') %]"
               eg-accesskey-desc="[% l('Record In-House Use') %]">
               <span class="glyphicon glyphicon-pencil" aria-hidden="true"></span>
               <span>[% l('Record In-House Use') %]</span>
+              <kbd>[% l('F6') %]</kbd>
             </a>
           </li>
           <li>
@@ -209,7 +226,7 @@
               <span>[% l('Holds Shelf') %]</span>
             </a>
           </li>
-          <li class="divider"></li>
+	<li class="divider"></li>
           <li>
             <a href="./cat/item/replace_barcode/index" target="_self">
               <span class="glyphicon glyphicon-barcode" aria-hidden="true"></span>
@@ -217,9 +234,12 @@
             </a>
           </li>
           <li>
-            <a href="./cat/item/search" target="_self">
+            <a href="./cat/item/search" target="_self"
+              eg-accesskey="[% l('f5') %]" 
+              eg-accesskey-desc="[% l('Item Status') %]">
               <span class="glyphicon glyphicon-saved" aria-hidden="true"></span>
               <span>[% l('Item Status') %]</span>
+              <kbd>[% l('F5') %]</kbd>
             </a>
           </li>
           <li>
@@ -229,12 +249,13 @@
             </a>
           </li>
           <li class="divider"></li>
-          <li>
+	<li>
             <a href="" ng-click="reprintLast($event)"
-              eg-accesskey="[% l('f9') %]" 
+              eg-accesskey="[% l('f9') %]"
               eg-accesskey-desc="[% l('Reprint Last Receipt') %]">
               <span class="glyphicon glyphicon-print" aria-hidden="true"></span>
               <span>[% l('Reprint Last Receipt') %]</span>
+              <kbd>[% l('F9') %]</kbd>
             </a>
           </li>
           <li class="divider"></li>
@@ -254,6 +275,79 @@
         </ul>
       </li><!-- circ -->
 
+
+      <!-- circulation experimental -->
+      <li class="dropdown" uib-dropdown ng-if="showAngularCirc">
+        <a href uib-dropdown-toggle>[% l('Circulation (Experimental)') %]
+          <b class="caret" aria-hidden="true"></b>
+        </a>
+
+        <ul uib-dropdown-menu>
+          <li>
+            <a href="/eg2/staff/circ/patron/search"
+              eg-accesskey="[% l('alt+s') %] [% l('f4') %]" 
+              eg-accesskey-desc="[% l('Patron search by name, address, etc.') %]">
+              <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
+              <span>[% l('Search for Patrons') %]</span>
+            </a>
+          </li>
+          <li>
+            <a href="/eg2/staff/circ/patron/bcsearch">
+              <span class="glyphicon glyphicon-export" aria-hidden="true"></span>
+              <span>[% l('Check Out') %]</span>
+            </a>
+          </li>
+          <li>
+            <a href="/eg2/staff/circ/checkin">
+              <span class="glyphicon glyphicon-import" aria-hidden="true"></span>
+              <span>[% l('Check In') %]</span>
+            </a>
+          </li>
+          <li>
+            <a href="/eg2/staff/circ/checkin/capture">
+              <span class="glyphicon glyphicon-pushpin" aria-hidden="true"></span>
+              <span>[% l('Capture Holds') %]</span>
+            </a>
+          </li>
+          <li>
+            <a href="/eg2/staff/circ/holds/pull-list">
+              <span class="glyphicon glyphicon-th-list" aria-hidden="true"></span>
+              <span>[% l('Pull List for Hold Requests') %]</span>
+            </a>
+          </li>
+          <li>
+            <a href="/eg2/staff/circ/renew">
+              <span class="glyphicon glyphicon-refresh" aria-hidden="true"></span>
+              <span>[% l('Renew Items') %]</span>
+            </a>
+          </li>
+          <li>
+            <a href="/eg2/staff/circ/patron/register">
+              <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
+              <span>[% l('Register Patron') %]</span>
+            </a>
+          </li>
+          <li ng-if="showRecentPatron">
+            <a href="/eg2/staff/circ/patron/last">
+              <span class="glyphicon glyphicon-share-alt" aria-hidden="true"></span>
+              <span>[% l('Retrieve Last Patron') %]</span>
+            </a>
+          </li>
+          <li ng-if="showRecentPatrons">
+            <a href="/eg2/staff/circ/patron/search/recents">
+              <span class="glyphicon glyphicon-share-alt" aria-hidden="true"></span>
+              <span>[% l('Retrieve Recent Patrons') %]</span>
+            </a>
+          </li>
+          <li>
+            <a href="/eg2/staff/circ/patron/credentials" >
+              <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+              <span>[% l('Verify Credentials') %]</span>
+            </a>
+          </li>
+        </ul>
+      </li>
+
       <!-- cataloging -->
       <li class="dropdown" uib-dropdown>
         <a href uib-dropdown-toggle>[% l('Cataloging') %]<b class="caret" 
@@ -261,41 +355,47 @@
         </a>
         <ul uib-dropdown-menu>
           <li> 
-            <a href="/eg2/staff/catalog/search">
+            <a href="/eg2/staff/catalog/search"
+              eg-accesskey="[% l('f3') %]" 
+              eg-accesskey-desc="[% l('Catalog') %]">
               <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
               <span>[% l('Search the Catalog') %]</span>
+              <kbd>[% l('F3') %]</kbd>
             </a>
           </li>
-          <li>
+          <li ng-if="showTraditionalCatalog">
             <a href="./cat/catalog/index" target="_self">
               <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
-              [% l('Search the Catalog (Traditional)') %]
+              <span>[% l('Search the Catalog (Traditional)') %]</span>
             </a>
           </li>
           <li>
-            <a href="./cat/item/search" target="_self">
+            <a href="./cat/item/search" target="_self"
+              eg-accesskey="[% l('f5') %]" 
+              eg-accesskey-desc="[% l('Item Status') %]">
               <span class="glyphicon glyphicon-saved" aria-hidden="true"></span>
               <span>[% l('Item Status') %]</span>
+              <kbd>[% l('F5') %]</kbd>
             </a>
           </li>
           <li class="divider"></li>
           <li>
-            <a href="./cat/bucket/record/view" target="_self">
+            <a href="/eg2/staff/cat/bucket/record/view" target="_self">
               <span class="glyphicon glyphicon-list-alt" aria-hidden="true"></span>
-              [% l('Record Buckets') %]
+              <span>[% l('Record Buckets') %]</span>
             </a>
           </li>
           <li>
             <a href="./cat/bucket/copy/view" target="_self">
               <span class="glyphicon glyphicon-list-alt" aria-hidden="true"></span>
-              [% l('Item Buckets') %]
+              <span>[% l('Item Buckets') %]</span>
             </a>
           </li>
           <li class="divider"></li>
           <li>
             <a href="/eg2/staff/cat/bib-from/id">
               <span class="glyphicon glyphicon-file" aria-hidden="true"></span>
-              [% l('Retrieve Bib Record by ID') %]
+              <span>[% l('Retrieve Bib Record by ID') %]</span>
             </a>
           </li>
           <li>
@@ -304,66 +404,71 @@
               eg-accesskey="[% l('shift+f3') %]" 
               eg-accesskey-desc="[% l('Retrieve Last Bib Record') %]">
               <span class="glyphicon glyphicon-tag" aria-hidden="true"></span>
-              [% l('Retrieve Bib Record by TCN') %]
+              <span>[% l('Retrieve Bib Record by TCN') %]</span>
+              <kbd>[% l('Shift+F3') %]</kbd>
             </a>
           </li>
-          <li>
+	  <li>
             <a href="" ng-click="retrieveLastRecord()" target="_self"
-              eg-accesskey="[% l('shift+f8') %]" 
+              eg-accesskey="[% l('shift+f8') %]"
               eg-accesskey-desc="[% l('Retrieve Last Bib Record') %]">
               <span class="glyphicon glyphicon-share-alt" aria-hidden="true"></span>
-              [% l('Retrieve Last Bib Record') %]
+              <span>[% l('Retrieve Last Bib Record') %]</span>
+              <kbd>[% l('Shift+F8') %]</kbd>
             </a>
           </li>
           <li class="divider"></li>
           <li>
-            <a href="./cat/catalog/new_bib" target="_self">
+            <a href="./cat/catalog/new_bib" target="_self"
+              eg-accesskey="[% l('ctrl+f3') %]"
+              eg-accesskey-desc="[% l('Create New MARC Record') %]">
               <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
-              [% l('Create New MARC Record') %]
+              <span>[% l('Create New MARC Record') %]</span>
+              <kbd>[% l('Ctrl+F3') %]</kbd>
             </a>
           </li>
           <li>
-            <a href="./cat/z3950/index" target="_self">
+            <a href="/eg2/staff/cat/z3950/search" target="_self">
               <span class="glyphicon glyphicon-cloud-download" aria-hidden="true"></span>
-              [% l('Import Record from Z39.50') %]
+              <span>[% l('Import Record from Z39.50') %]</span>
             </a>
           </li>
           <li>
             <a href="/eg2/staff/cat/vandelay/import">
               <span class="glyphicon glyphicon-transfer" aria-hidden="true"></span>
-              [% l('MARC Batch Import/Export') %]
+              <span>[% l('MARC Batch Import/Export') %]</span>
             </a>
           </li>
-          <li>
+	  <li>
             <a href="/eg2/staff/cat/marcbatch">
               <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
-              [% l('MARC Batch Edit') %]
+              <span>[% l('MARC Batch Edit') %]</span>
             </a>
           </li>
           <li class="divider"></li>
           <li>
             <a href="./cat/catalog/verifyURLs" target="_self">
               <span class="glyphicon glyphicon-link" aria-hidden="true"></span>
-              [% l('Link Checker') %]
+              <span>[% l('Link Checker') %]</span>
             </a>
           </li>
           <li class="divider"></li>
           <li>
             <a href="/eg2/staff/cat/authority/browse">
               <span class="glyphicon glyphicon-lock" aria-hidden="true"></span>
-              [% l('Manage Authorities') %]
+              <span>[% l('Manage Authorities') %]</span>
             </a>
           </li>
           <li>
             <a href="/eg2/staff/cat/authority/edit" target="_self">
               <span class="glyphicon glyphicon-file" aria-hidden="true"></span>
-              [% l('Retrieve Authority Record by ID') %]
+              <span>[% l('Retrieve Authority Record by ID') %]</span>
             </a>
           </li>
        </ul>
       </li>
-
-      <!-- acquisitions -->
+	
+	      <!-- acquisitions -->
       <li class="dropdown" uib-dropdown>
         <a href uib-dropdown-toggle>[% l('Acquisitions') %]<b class="caret" 
           aria-hidden="true"></b>
@@ -372,88 +477,112 @@
           <li>
             <a href="/eg2/staff/acq/search" target="_self">
               <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
-              [% l('General Search') %]
+              <span>[% l('General Search') %]</span>
             </a>
           <li class="divider"></li>
           <li>
             <a href="/eg2/staff/acq/provider" target="_self">
               <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
-              [% l('Provider Search') %]
+              <span>[% l('Provider Search') %]</span>
             </a>
           </li>
           <li class="divider"></li>
           <li>
             <a href="/eg2/staff/acq/search/selectionlists" target="_self">
               <span class="glyphicon glyphicon-list" aria-hidden="true"></span>
-              [% l('Selection Lists') %]
+              <span>[% l('Selection Lists') %]</span>
             </a>
           </li>
           <li>
-            <a href="./acq/legacy/picklist/brief_record" target="_self">
+            <a href="/eg2/staff/acq/picklist/brief-record" target="_self">
               <span class="glyphicon glyphicon-pencil" aria-hidden="true"></span>
-              [% l('New Brief Record') %]
+              <span>[% l('New Brief Record') %]</span>
             </a>
           </li>
           <li>
             <a href="./acq/requests/list" target="_self">
               <span class="glyphicon glyphicon-thumbs-up" aria-hidden="true"></span>
-              [% l('Patron Requests') %]
+              <span>[% l('Patron Requests') %]</span>
             </a>
           </li>
           <li>
-            <a href="./acq/legacy/picklist/bib_search" target="_self">
+            <a href="/eg2/staff/acq/picklist/z3950-search" target="_self">
               <span class="glyphicon glyphicon-cloud-download" aria-hidden="true"></span>
-              [% l('MARC Federated Search') %]
+              <span>[% l('MARC Federated Search') %]</span>
             </a>
           </li>
           <li>
-            <a href="./acq/legacy/picklist/from_bib" target="_self">
+            <a href="/eg2/staff/acq/picklist/from-bib-ids" target="_self">
               <span class="glyphicon glyphicon-import" aria-hidden="true"></span>
-              [% l('Load Catalog Record IDs') %]
+              <span>[% l('Load Catalog Record IDs') %]</span>
             </a>
           </li>
           <li class="divider"></li>
           <li>
-            <a href="./acq/legacy/picklist/upload" target="_self">
+            <a href="/eg2/staff/acq/picklist/upload" target="_self">
               <span class="glyphicon glyphicon-cloud-upload" aria-hidden="true"></span>
-              [% l('Load MARC Order Records') %]
+              <span>[% l('Load MARC Order Records') %]</span>
             </a>
           </li>
+          <li>
+            <a href="/eg2/staff/cat/vandelay/background-import?type=acq" target="_self">
+              <span class="glyphicon glyphicon-cloud-download" aria-hidden="true"></span>
+              <span>[% l('Background Imports') %]</span>
+            </a>
           <li>
             <a href="/eg2/staff/acq/search/purchaseorders" target="_self">
               <span class="glyphicon glyphicon-shopping-cart" aria-hidden="true"></span>
-              [% l('Purchase Orders') %]
+              <span>[% l('Purchase Orders') %]</span>
             </a>
           </li>
           <li>
-            <a href="./acq/legacy/po/create" target="_self">
+            <a href="/eg2/staff/acq/po/create">
               <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
-              [% l('Create Purchase Order') %]
+              <span>[% l('Create Purchase Order') %]</span>
             </a>
           </li>
           <li class="divider"></li>
           <li>
+            <a href="/eg2/staff/acq/claim" target="_self">
+              <span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span>
+              <span>[% l('Claim-Ready Items') %]</span>
+            </a>
+          </li>
+          <li>
             <a href="./acq/legacy/financial/claim_eligible" target="_self">
               <span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span>
-              [% l('Claim-Ready Items') %]
+              <span>[% l('Claim-Ready Items (Legacy)') %]</span>
+            </a>
+          </li>
+          <li>
+          <li>
+            <a href="/eg2/staff/acq/asn/receive">
+              <span class="glyphicon glyphicon-usd" aria-hidden="true"></span>
+              <span>[% l('Receive Shipment') %]</span>
             </a>
           </li>
           <li>
             <a href="/eg2/staff/acq/search/invoices" target="_self">
               <span class="glyphicon glyphicon-usd" aria-hidden="true"></span>
-              [% l('Invoices') %]
+              <span>[% l('Invoices') %]</span>
+            </a>
+          </li>
+          <li>
+            <a href="/eg2/staff/acq/invoice/create" target="_self">
+              <span class="glyphicon glyphicon-credit-card" aria-hidden="true"></span>
+              <span>[% l('Create Invoice') %]</span>
             </a>
           </li>
           <li>
             <a href="./acq/legacy/invoice/view?create=1" target="_self">
               <span class="glyphicon glyphicon-credit-card" aria-hidden="true"></span>
-              [% l('Create Invoice') %]
+              <span>[% l('Create Invoice (Legacy)') %]</span>
             </a>
           </li>
        </ul>
       </li>
 
-      <!-- booking -->
+	<!-- booking -->
       <li class="dropdown" uib-dropdown>
         <a href uib-dropdown-toggle>[% l('Booking') %]<b class="caret" 
           aria-hidden="true"></b>
@@ -462,42 +591,43 @@
           <li>
             <a href="/eg2/staff/booking/create_reservation" target="_self">
               <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
-              [% l('Create Reservations') %]
+              <span>[% l('Create Reservations') %]</span>
             </a>
           </li>
           <li>
             <a href="/eg2/staff/booking/pull_list" target="_self">
               <span class="glyphicon glyphicon-th-list" aria-hidden="true"></span>
-              [% l('Pull List') %]
+              <span>[% l('Pull List') %]</span>
             </a>
           </li>
           <li>
             <a href="/eg2/staff/booking/capture" target="_self">
               <span class="glyphicon glyphicon-pushpin" aria-hidden="true"></span>
-              [% l('Capture Resources') %]
+              <span>[% l('Capture Resources') %]</span>
             </a>
           </li>
           <li>
             <a href="/eg2/staff/booking/pickup" target="_self">
               <span class="glyphicon glyphicon-export" aria-hidden="true"></span>
-              [% l('Pick Up Reservations') %]
+              <span>[% l('Pick Up Reservations') %]</span>p>
             </a>
           </li>
           <li>
             <a href="/eg2/staff/booking/return" target="_self">
               <span class="glyphicon glyphicon-import" aria-hidden="true"></span>
-              [% l('Return Reservations') %]
+              <span>[% l('Return Reservations') %]</span>
             </a>
           </li>
           <li>
             <a href="/eg2/staff/booking/manage_reservations" target="_self">
               <span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
-              [% l('Manage Reservations') %]
+              <span>[% l('Manage Reservations') %]</span>
             </a>
           </li>
         </ul>
       </li>
 
+	
       <!-- admin -->
       <li class="dropdown" uib-dropdown>
         <a href uib-dropdown-toggle>[% l('Administration') %]<b class="caret" 
@@ -507,57 +637,57 @@
           <li>
             <a href="./admin/workstation/index" target="_self">
               <span class="glyphicon glyphicon-hdd" aria-hidden="true"></span>
-              [% l('Workstation') %]
+              <span>[% l('Workstation') %]</span>
             </a>
           </li>
           <li>
             <a href="./admin/user_perms" target="_self">
               <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
-              [% l('User Permission Editor') %]
+              <span>[% l('User Permission Editor') %]</span>
             </a>
           </li>
           <li>
             <a href="/eg2/staff/admin/server/splash">
               <span class="glyphicon glyphicon-briefcase" aria-hidden="true"></span>
-              [% l('Server Administration') %]
+              <span>[% l('Server Administration') %]</span>
             </a>
           </li>
           <li>
             <a href="/eg2/staff/admin/local/splash">
               <span class="glyphicon glyphicon-picture" aria-hidden="true"></span>
-              [% l('Local Administration') %]
+              <span>[% l('Local Administration') %]</span>
             </a>
           </li>
           <li>
             <a href="/eg2/staff/admin/acq/splash">
               <span class="glyphicon glyphicon-usd" aria-hidden="true"></span>
-              [% l('Acquisitions Administration') %]
+              <span>[% l('Acquisitions Administration') %]</span>
             </a>
           </li>
           <li>
             <a href="./admin/serials/index" target="_self">
               <span class="glyphicon glyphicon-paperclip" aria-hidden="true"></span>
-              [% l('Serials Administration') %]
+              <span>[% l('Serials Administration') %]</span>
             </a>
           </li>
           <li>
             <a href="/eg2/staff/admin/booking/splash" target="_self">
               <span class="glyphicon glyphicon-calendar" aria-hidden="true"></span>
-              [% l('Booking Administration') %]
+              <span>[% l('Booking Administration') %]</span>
             </a>
           </li>
           <li>
-            <a href="./reporter/legacy/main" target="_self">
+            <a href="/eg2/staff/reporter/full" target="_self">
               <span class="glyphicon glyphicon-object-align-bottom" 
                 aria-hidden="true"></span>
-              [% l('Reports') %]
+              <span>[% l('Reports') %]</span>
             </a>
           </li>
           <li>
             <a href="/eg2/staff/reporter/simple" target="_self">
               <span class="glyphicon glyphicon-object-align-bottom" 
                 aria-hidden="true"></span>
-              [% l('Simple Reports') %]
+              <span>[% l('Simple Reports') %]</span>
             </a>
           </li>
         </ul> <!-- admin dropdown -->
@@ -569,11 +699,10 @@
       <li class="hidden-sm">
         <a ng-cloak ng-show="username" title="{{currentToken()}}"
           ng-init="workstation = '[% l('<no workstation>') %]'">
-            {{username}} @ {{workstation}}
+            <span>{{username}} @ {{workstation}}</span>
         </a>
       </li>
-
-      <!-- locale selector.  
+      <!-- locale selector.
         only shown if multiple locales are registered -->
       [% IF ctx.locales.keys.size > 1 %]
       <li class="dropdown" uib-dropdown>
@@ -586,13 +715,65 @@
           <!-- disable the selected locale -->
           <li ng-class="{disabled : '[% ctx.locale %]'=='[% locale %]'}">
             <a href="" ng-click="applyLocale('[% locale %]')">
-                [% ctx.locales.$locale %]
+                <span>[% ctx.locales.$locale %]</span>
             </a>
           </li>
         [% END %]
         </ul>
       </li>
       [% END %]
+
+      <li class="dropdown" uib-dropdown>
+        <a href uib-dropdown-toggle>
+          <!-- SVGs are Material Icons to match Angular -->
+          <span class="sr-only">[% l('Current color mode:') %]</span>
+          <span ng-if="color_mode == 'light'">
+            <span class="svg-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" role="img" alt="" fill="currentColor" height="24" viewBox="0 -960 960 960" width="24"><path d="M480-360q50 0 85-35t35-85q0-50-35-85t-85-35q-50 0-85 35t-35 85q0 50 35 85t85 35Zm0 80q-83 0-141.5-58.5T280-480q0-83 58.5-141.5T480-680q83 0 141.5 58.5T680-480q0 83-58.5 141.5T480-280ZM200-440H40v-80h160v80Zm720 0H760v-80h160v80ZM440-760v-160h80v160h-80Zm0 720v-160h80v160h-80ZM256-650l-101-97 57-59 96 100-52 56Zm492 496-97-101 53-55 101 97-57 59Zm-98-550 97-101 59 57-100 96-56-52ZM154-212l101-97 55 53-97 101-59-57Zm326-268Z"/></svg>
+            </span>
+            <span class="sr-only">[% l('Light') %]</span>
+          </span>
+          <span ng-if="color_mode == 'dark'">
+            <span class="svg-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" role="img" alt="" fill="currentColor" height="24" viewBox="0 -960 960 960" width="24"><path d="M524-40q-84 0-157.5-32t-128-86.5Q184-213 152-286.5T120-444q0-146 93-257.5T450-840q-18 99 11 193.5T561-481q71 71 165.5 100T920-370q-26 144-138 237T524-40Zm0-80q88 0 163-44t118-121q-86-8-163-43.5T504-425q-61-61-97-138t-43-163q-77 43-120.5 118.5T200-444q0 135 94.5 229.5T524-120Zm-20-305Z"/></svg>
+            </span>
+            <span class="sr-only">[% l('Dark') %]</span>
+          </span>
+          <span ng-if="!color_mode || color_mode == 'auto'">
+            <span class="svg-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" role="img" alt="" fill="currentColor" height="24" viewBox="0 -960 960 960" width="24"><path d="M480-28 346-160H160v-186L28-480l132-134v-186h186l134-132 134 132h186v186l132 134-132 134v186H614L480-28Zm0-252q83 0 141.5-58.5T680-480q0-83-58.5-141.5T480-680v400Zm0 140 100-100h140v-140l100-100-100-100v-140H580L480-820 380-720H240v140L140-480l100 100v140h140l100 100Zm0-340Z"/></svg>
+            </span>
+            <span class="sr-only">[% l('Auto') %]</span>
+          </span>
+          <b class="caret" aria-hidden="true"></b>
+        </a>
+        <ul uib-dropdown-menu>
+          <li>
+            <a href="" ng-click="changeColorMode('light')">
+              <span class="svg-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" role="img" alt="" fill="currentColor" height="24" viewBox="0 -960 960 960" width="24"><path d="M480-360q50 0 85-35t35-85q0-50-35-85t-85-35q-50 0-85 35t-35 85q0 50 35 85t85 35Zm0 80q-83 0-141.5-58.5T280-480q0-83 58.5-141.5T480-680q83 0 141.5 58.5T680-480q0 83-58.5 141.5T480-280ZM200-440H40v-80h160v80Zm720 0H760v-80h160v80ZM440-760v-160h80v160h-80Zm0 720v-160h80v160h-80ZM256-650l-101-97 57-59 96 100-52 56Zm492 496-97-101 53-55 101 97-57 59Zm-98-550 97-101 59 57-100 96-56-52ZM154-212l101-97 55 53-97 101-59-57Zm326-268Z"/></svg>
+                [% l('Light') %]
+              </span>
+            </a>
+          </li>
+          <li>
+            <a href="" ng-click="changeColorMode('dark')">
+              <span class="svg-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" role="img" alt="" fill="currentColor" height="24" viewBox="0 -960 960 960" width="24"><path d="M524-40q-84 0-157.5-32t-128-86.5Q184-213 152-286.5T120-444q0-146 93-257.5T450-840q-18 99 11 193.5T561-481q71 71 165.5 100T920-370q-26 144-138 237T524-40Zm0-80q88 0 163-44t118-121q-86-8-163-43.5T504-425q-61-61-97-138t-43-163q-77 43-120.5 118.5T200-444q0 135 94.5 229.5T524-120Zm-20-305Z"/></svg>
+                [% l('Dark') %]
+              </span>
+            </a>
+          </li>
+          <li>
+            <a href="" ng-click="changeColorMode('auto')">
+              <span class="svg-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" role="img" alt="" fill="currentColor" height="24" viewBox="0 -960 960 960" width="24"><path d="M480-28 346-160H160v-186L28-480l132-134v-186h186l134-132 134 132h186v186l132 134-132 134v186H614L480-28Zm0-252q83 0 141.5-58.5T680-480q0-83-58.5-141.5T480-680v400Zm0 140 100-100h140v-140l100-100-100-100v-140H580L480-820 380-720H240v140L140-480l100 100v140h140l100 100Zm0-340Z"/></svg>
+                [% l('Auto') %]
+              </span>
+            </a>
+          </li>
+        </ul>
+      </li>
 
       <li class="dropdown" ng-show="username" uib-dropdown title="Logout and more...">
         <a href class="glyphicon glyphicon-list" 
@@ -601,28 +782,34 @@
           <li ng-if="!op_changed">
             <a href="" ng-click="changeOperator()">
               <span class="glyphicon glyphicon-random" aria-hidden="true"></span>
-              [% l('Change Operator') %]
+              <span>[% l('Change Operator') %]</span>
             </a>
           </li>
           <li ng-if="op_changed">
             <a href="" ng-click="changeOperatorUndo()">
               <span class="glyphicon glyphicon-random" aria-hidden="true"></span>
-              [% l('Restore Operator') %]
+              <span>[% l('Restore Operator') %]</span>
             </a>
           </li>
           <li>
             <a href="./login" ng-click="logout()" target="_self">
               <span class="glyphicon glyphicon-log-out" aria-hidden="true"></span>
-              [% l('Log Out') %]
+              <span>[% l('Log Out') %]</span>
+            </a>
+          </li>
+          <li ng-if="mfaAllowed">
+            <a href="/eg2/staff/mfa">
+              <span class="glyphicon glyphicon-bell" aria-hidden="true"></span>
+              [% l('Multi-factor Authentication') %]
             </a>
           </li>
           <li>
             <a href="./about" target="_self">
               <span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span>
-              [% l('About') %]
+              <span>[% l('About') %]</span>
             </a>
           </li>
-          <li class="divider"></li>
+	<li class="divider"></li>
           <li class="disabled">
             <a href disabled="disabled">
               <span
@@ -631,7 +818,7 @@
                 ng-class="{'connect-status-ok' : hatchConnected()}"
                 aria-hidden="true">
               </span>
-              [% l('Hatch') %]
+              <span>[% l('Hatch') %]</span>
             </a>
           </li>
         </ul>

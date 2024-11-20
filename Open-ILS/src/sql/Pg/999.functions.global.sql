@@ -219,6 +219,7 @@ BEGIN
     UPDATE action.hold_request SET usr = dest_usr WHERE usr = src_usr;
     UPDATE action.hold_request SET fulfillment_staff = dest_usr WHERE fulfillment_staff = src_usr;
     UPDATE action.hold_request SET requestor = dest_usr WHERE requestor = src_usr;
+    UPDATE action.hold_request SET canceled_by = dest_usr WHERE canceled_by = src_usr;
     UPDATE action.hold_notification SET notify_staff = dest_usr WHERE notify_staff = src_usr;
 
     UPDATE action.in_house_use SET staff = dest_usr WHERE staff = src_usr;
@@ -389,7 +390,7 @@ BEGIN
                     COALESCE((SELECT name_keywords FROM dusr), ''),  E'\\s+'
                 )
             ) AS parts
-        ) SELECT ARRAY_TO_STRING(ARRAY_AGG(kw.parts), ' ') FROM keywords kw
+        ) SELECT STRING_AGG(kw.parts, ' ') FROM keywords kw
     ) WHERE id = dest_usr;
 
     -- Finally, delete the source user
@@ -432,7 +433,7 @@ BEGIN
 	UPDATE acq.lineitem SET selector = dest_usr WHERE selector = src_usr;
 	UPDATE acq.lineitem_note SET creator = dest_usr WHERE creator = src_usr;
 	UPDATE acq.lineitem_note SET editor = dest_usr WHERE editor = src_usr;
-    UPDATE acq.invoice SET closed_by = dest_usr WHERE closed_by = src_usr;
+	UPDATE acq.invoice SET closed_by = dest_usr WHERE closed_by = src_usr;
 	DELETE FROM acq.lineitem_usr_attr_definition WHERE usr = src_usr;
 
 	-- Update with a rename to avoid collisions
@@ -471,6 +472,7 @@ BEGIN
 	UPDATE action.hold_notification SET notify_staff = dest_usr WHERE notify_staff = src_usr;
 	UPDATE action.hold_request SET fulfillment_staff = dest_usr WHERE fulfillment_staff = src_usr;
 	UPDATE action.hold_request SET requestor = dest_usr WHERE requestor = src_usr;
+	UPDATE action.hold_request SET canceled_by = dest_usr WHERE canceled_by = src_usr;
 	DELETE FROM action.hold_request WHERE usr = src_usr;
 	UPDATE action.in_house_use SET staff = dest_usr WHERE staff = src_usr;
 	UPDATE action.non_cat_in_house_use SET staff = dest_usr WHERE staff = src_usr;
@@ -479,11 +481,13 @@ BEGIN
 	DELETE FROM action.survey_response WHERE usr = src_usr;
 	UPDATE action.fieldset SET owner = dest_usr WHERE owner = src_usr;
 	DELETE FROM action.usr_circ_history WHERE usr = src_usr;
+	UPDATE action.curbside SET notes = NULL WHERE patron = src_usr;
 
 	-- actor.*
 	DELETE FROM actor.card WHERE usr = src_usr;
 	DELETE FROM actor.stat_cat_entry_usr_map WHERE target_usr = src_usr;
 	DELETE FROM actor.usr_privacy_waiver WHERE usr = src_usr;
+	DELETE FROM actor.usr_message WHERE usr = src_usr;
 
 	-- The following update is intended to avoid transient violations of a foreign
 	-- key constraint, whereby actor.usr_address references itself.  It may not be
@@ -1311,6 +1315,16 @@ BEGIN
         WHERE bucket IN (SELECT id FROM container.biblio_record_entry_bucket WHERE btype = 'bookbag')
         AND target_biblio_record_entry = source_record;
 
+    -- move over record notes 
+    UPDATE biblio.record_note 
+        SET record = target_record, value = CONCAT(value,'; note merged from ',source_record::TEXT) 
+        WHERE record = source_record
+        AND NOT deleted;
+
+    -- add note to record merge 
+    INSERT INTO biblio.record_note (record, value) 
+        VALUES (target_record,CONCAT('record ',source_record::TEXT,' merged on ',NOW()::TEXT));
+
     -- Finally, "delete" the source record
     UPDATE biblio.record_entry SET active = FALSE WHERE id = source_record;
     DELETE FROM biblio.record_entry WHERE id = source_record;
@@ -1321,45 +1335,6 @@ END;
 $func$ LANGUAGE plpgsql;
 
 -- Authority ingest routines
-CREATE OR REPLACE FUNCTION authority.propagate_changes 
-    (aid BIGINT, bid BIGINT) RETURNS BIGINT AS $func$
-DECLARE
-    bib_rec biblio.record_entry%ROWTYPE;
-    new_marc TEXT;
-BEGIN
-
-    SELECT INTO bib_rec * FROM biblio.record_entry WHERE id = bid;
-
-    new_marc := vandelay.merge_record_xml(
-        bib_rec.marc, authority.generate_overlay_template(aid));
-
-    IF new_marc = bib_rec.marc THEN
-        -- Authority record change had no impact on this bib record.
-        -- Nothing left to do.
-        RETURN aid;
-    END IF;
-
-    PERFORM 1 FROM config.global_flag 
-        WHERE name = 'ingest.disable_authority_auto_update_bib_meta' 
-            AND enabled;
-
-    IF NOT FOUND THEN 
-        -- update the bib record editor and edit_date
-        bib_rec.editor := (
-            SELECT editor FROM authority.record_entry WHERE id = aid);
-        bib_rec.edit_date = NOW();
-    END IF;
-
-    UPDATE biblio.record_entry SET
-        marc = new_marc,
-        editor = bib_rec.editor,
-        edit_date = bib_rec.edit_date
-    WHERE id = bid;
-
-    RETURN aid;
-
-END;
-$func$ LANGUAGE PLPGSQL;
 
 CREATE OR REPLACE FUNCTION authority.propagate_changes (aid BIGINT) RETURNS SETOF BIGINT AS $func$
     SELECT authority.propagate_changes( authority, bib ) FROM authority.bib_linking WHERE authority = $1;
@@ -1466,96 +1441,11 @@ BEGIN
 END;
 $func$ LANGUAGE PLPGSQL;
 
--- AFTER UPDATE OR INSERT trigger for authority.record_entry
-CREATE OR REPLACE FUNCTION authority.indexing_ingest_or_delete () RETURNS TRIGGER AS $func$
-DECLARE
-    ashs    authority.simple_heading%ROWTYPE;
-    mbe_row metabib.browse_entry%ROWTYPE;
-    mbe_id  BIGINT;
-    ash_id  BIGINT;
-BEGIN
-
-    IF NEW.deleted IS TRUE THEN -- If this authority is deleted
-        DELETE FROM authority.bib_linking WHERE authority = NEW.id; -- Avoid updating fields in bibs that are no longer visible
-        DELETE FROM authority.full_rec WHERE record = NEW.id; -- Avoid validating fields against deleted authority records
-        DELETE FROM authority.simple_heading WHERE record = NEW.id;
-          -- Should remove matching $0 from controlled fields at the same time?
-
-        -- XXX What do we about the actual linking subfields present in
-        -- authority records that target this one when this happens?
-        DELETE FROM authority.authority_linking
-            WHERE source = NEW.id OR target = NEW.id;
-
-        RETURN NEW; -- and we're done
-    END IF;
-
-    IF TG_OP = 'UPDATE' THEN -- re-ingest?
-        PERFORM * FROM config.internal_flag WHERE name = 'ingest.reingest.force_on_same_marc' AND enabled;
-
-        IF NOT FOUND AND OLD.marc = NEW.marc THEN -- don't do anything if the MARC didn't change
-            RETURN NEW;
-        END IF;
-
-        -- Unless there's a setting stopping us, propagate these updates to any linked bib records when the heading changes
-        PERFORM * FROM config.internal_flag WHERE name = 'ingest.disable_authority_auto_update' AND enabled;
-
-        IF NOT FOUND AND NEW.heading <> OLD.heading THEN
-            PERFORM authority.propagate_changes(NEW.id);
-        END IF;
-	
-        DELETE FROM authority.simple_heading WHERE record = NEW.id;
-        DELETE FROM authority.authority_linking WHERE source = NEW.id;
-    END IF;
-
-    INSERT INTO authority.authority_linking (source, target, field)
-        SELECT source, target, field FROM authority.calculate_authority_linking(
-            NEW.id, NEW.control_set, NEW.marc::XML
-        );
-
-    FOR ashs IN SELECT * FROM authority.simple_heading_set(NEW.marc) LOOP
-
-        INSERT INTO authority.simple_heading (record,atag,value,sort_value,thesaurus)
-            VALUES (ashs.record, ashs.atag, ashs.value, ashs.sort_value, ashs.thesaurus);
-            ash_id := CURRVAL('authority.simple_heading_id_seq'::REGCLASS);
-
-        SELECT INTO mbe_row * FROM metabib.browse_entry
-            WHERE value = ashs.value AND sort_value = ashs.sort_value;
-
-        IF FOUND THEN
-            mbe_id := mbe_row.id;
-        ELSE
-            INSERT INTO metabib.browse_entry
-                ( value, sort_value ) VALUES
-                ( ashs.value, ashs.sort_value );
-
-            mbe_id := CURRVAL('metabib.browse_entry_id_seq'::REGCLASS);
-        END IF;
-
-        INSERT INTO metabib.browse_entry_simple_heading_map (entry,simple_heading) VALUES (mbe_id,ash_id);
-
-    END LOOP;
-
-    -- Flatten and insert the afr data
-    PERFORM * FROM config.internal_flag WHERE name = 'ingest.disable_authority_full_rec' AND enabled;
-    IF NOT FOUND THEN
-        PERFORM authority.reingest_authority_full_rec(NEW.id);
-        PERFORM * FROM config.internal_flag WHERE name = 'ingest.disable_authority_rec_descriptor' AND enabled;
-        IF NOT FOUND THEN
-            PERFORM authority.reingest_authority_rec_descriptor(NEW.id);
-        END IF;
-    END IF;
-
-    RETURN NEW;
-END;
-$func$ LANGUAGE PLPGSQL;
-
 -- Ingest triggers
 CREATE TRIGGER fingerprint_tgr BEFORE INSERT OR UPDATE ON biblio.record_entry FOR EACH ROW EXECUTE PROCEDURE biblio.fingerprint_trigger ('eng','BKS');
-CREATE TRIGGER aaa_indexing_ingest_or_delete AFTER INSERT OR UPDATE ON biblio.record_entry FOR EACH ROW EXECUTE PROCEDURE biblio.indexing_ingest_or_delete ();
 CREATE TRIGGER bbb_simple_rec_trigger AFTER INSERT OR UPDATE OR DELETE ON biblio.record_entry FOR EACH ROW EXECUTE PROCEDURE reporter.simple_rec_trigger ();
 
 CREATE TRIGGER map_thesaurus_to_control_set BEFORE INSERT OR UPDATE ON authority.record_entry FOR EACH ROW EXECUTE PROCEDURE authority.map_thesaurus_to_control_set ();
-CREATE TRIGGER aaa_auth_ingest_or_delete AFTER INSERT OR UPDATE ON authority.record_entry FOR EACH ROW EXECUTE PROCEDURE authority.indexing_ingest_or_delete ();
 
 -- Utility routines, callable via cstore
 
@@ -2180,11 +2070,12 @@ $$ LANGUAGE SQL;
 
 -- given a set of activity criteria, finds the best
 -- activity type and inserts the activity entry
-CREATE OR REPLACE FUNCTION actor.insert_usr_activity (
+CREATE OR REPLACE FUNCTION actor.insert_usr_activity(
         usr INT,
-        ewho TEXT, 
-        ewhat TEXT, 
-        ehow TEXT
+        ewho TEXT,
+        ewhat TEXT,
+        ehow TEXT,
+        edata TEXT DEFAULT NULL
     ) RETURNS SETOF actor.usr_activity AS $$
 DECLARE
     new_row actor.usr_activity%ROWTYPE;
@@ -2192,8 +2083,9 @@ BEGIN
     SELECT id INTO new_row.etype FROM actor.usr_activity_get_type(ewho, ewhat, ehow);
     IF FOUND THEN
         new_row.usr := usr;
-        INSERT INTO actor.usr_activity (usr, etype) 
-            VALUES (usr, new_row.etype)
+        new_row.event_data := edata;
+        INSERT INTO actor.usr_activity (usr, etype, event_data)
+            VALUES (usr, new_row.etype, new_row.event_data)
             RETURNING * INTO new_row;
         RETURN NEXT new_row;
     END IF;

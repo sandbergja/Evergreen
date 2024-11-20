@@ -12,29 +12,31 @@ import {MarcSimplifiedEditorModule} from '@eg/staff/share/marc-edit/simplified-e
 import {PatronModule} from '@eg/staff/share/patron/patron.module';
 import {CourseTermMapComponent} from './course-term-map.component';
 import {CourseTermMapGridComponent} from './course-term-map-grid.component';
+import {TermListComponent} from './course-term-grid.component';
 
 @NgModule({
-  declarations: [
-    CourseListComponent,
-    CoursePageComponent,
-    CourseAssociateMaterialComponent,
-    CourseAssociateUsersComponent,
-    CourseTermMapComponent,
-    CourseTermMapGridComponent
-  ],
-  imports: [
-    StaffCommonModule,
-    AdminCommonModule,
-    CourseReservesRoutingModule,
-    ItemLocationSelectModule,
-    MarcSimplifiedEditorModule,
-    PatronModule,
-    TreeModule
-  ],
-  exports: [
-  ],
-  providers: [
-  ]
+    declarations: [
+        CourseListComponent,
+        CoursePageComponent,
+        CourseAssociateMaterialComponent,
+        CourseAssociateUsersComponent,
+        CourseTermMapComponent,
+        CourseTermMapGridComponent,
+        TermListComponent
+    ],
+    imports: [
+        StaffCommonModule,
+        AdminCommonModule,
+        CourseReservesRoutingModule,
+        ItemLocationSelectModule,
+        MarcSimplifiedEditorModule,
+        PatronModule,
+        TreeModule
+    ],
+    exports: [
+    ],
+    providers: [
+    ]
 })
 
 export class CourseReservesModule {

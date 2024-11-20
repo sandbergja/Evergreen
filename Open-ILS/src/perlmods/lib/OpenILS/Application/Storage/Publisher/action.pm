@@ -28,7 +28,7 @@ my %HOLD_SORT_ORDER_BY = (
     approx => 'action.hold_copy_calculated_proximity(h.id, %d, %d)', # $cp,$here
     priority => 'pgt.hold_priority',
     cut => 'CASE WHEN h.cut_in_line IS TRUE THEN 0 ELSE 1 END',
-    depth => 'h.selection_depth',
+    depth => 'h.selection_depth DESC',
     rtime => 'h.request_time',
     htime => q!
         CASE WHEN
@@ -793,7 +793,8 @@ sub hold_pull_list {
     my $count = 1 if ($self->api_name =~/count$/o);
 
     my $status_filter = '';
-    $status_filter = 'AND a.status IN (0,7)' if ($self->api_name =~/status_filtered/o);
+    $status_filter = 'AND a.status IN (SELECT id FROM config.copy_status WHERE holdable AND is_available)'
+        if ($self->api_name =~/status_filtered/);
 
     my $select = <<"    SQL";
         SELECT  h.*
@@ -801,6 +802,7 @@ sub hold_pull_list {
             JOIN $a_table a ON (h.current_copy = a.id)
             LEFT JOIN $ord_table ord ON (a.location = ord.location AND a.circ_lib = ord.org)
           WHERE a.circ_lib = ?
+            AND a.deleted IS FALSE
             AND h.capture_time IS NULL
             AND h.cancel_time IS NULL
             AND (h.expire_time IS NULL OR h.expire_time > NOW())
@@ -826,6 +828,7 @@ sub hold_pull_list {
               FROM    $h_table h
                   JOIN $a_table a ON (h.current_copy = a.id)
               WHERE    a.circ_lib = ?
+                  AND a.deleted is FALSE
                   AND h.capture_time IS NULL
                   AND h.cancel_time IS NULL
                   AND (h.expire_time IS NULL OR h.expire_time > NOW())
@@ -2197,7 +2200,8 @@ sub wide_hold_data {
 WITH
     t_field AS (SELECT field FROM config.display_field_map WHERE name = 'title'),
     a_field AS (SELECT field FROM config.display_field_map WHERE name = 'author'),
-    s_field AS (SELECT field FROM config.display_field_map WHERE name = 'series_title')
+    s_field AS (SELECT field FROM config.display_field_map WHERE name = 'series_title'),
+    y_field AS (SELECT field FROM config.display_field_map WHERE name = 'pubdate')
 SELECT  h.id, h.request_time, h.capture_time, h.fulfillment_time, h.checkin_time,
         h.return_time, h.prev_check_time, h.expire_time, h.cancel_time, h.cancel_cause,
         h.cancel_note, h.target, h.current_copy, h.fulfillment_staff, h.fulfillment_lib,
@@ -2206,6 +2210,7 @@ SELECT  h.id, h.request_time, h.capture_time, h.fulfillment_time, h.checkin_time
         (SELECT name FROM config.sms_carrier WHERE id = h.sms_carrier) AS "sms_carrier",
         h.frozen, h.thaw_date, h.shelf_time, h.cut_in_line, h.mint_condition,
         h.shelf_expire_time, h.current_shelf_lib, h.behind_desk, h.hopeless_date,
+        h.canceled_by, h.canceling_ws,
 
         CASE WHEN h.cancel_time IS NOT NULL THEN 6
              WHEN h.frozen AND h.capture_time IS NULL THEN 7
@@ -2230,6 +2235,12 @@ SELECT  h.id, h.request_time, h.capture_time, h.fulfillment_time, h.checkin_time
         pl.mailing_address AS pl_mailing_address, pl.billing_address AS pl_billing_address,
         pl.shortname AS pl_shortname, pl.name AS pl_name, pl.email AS pl_email,
         pl.phone AS pl_phone, pl.opac_visible AS pl_opac_visible, pl.fiscal_calendar AS pl_fiscal_calendar,
+
+        cl.shortname AS cl_shortname,
+        rl.shortname AS rl_shortname,
+        sl.shortname AS sl_shortname,
+        tl.shortname AS tl_shortname,
+        ul.shortname AS ul_shortname,
 
         tr.id AS tr_id, tr.source_send_time AS tr_source_send_time, tr.dest_recv_time AS tr_dest_recv_time,
         tr.target_copy AS tr_target_copy, tr.source AS tr_source, tr.dest AS tr_dest, tr.prev_hop AS tr_prev_hop,
@@ -2256,32 +2267,34 @@ SELECT  h.id, h.request_time, h.capture_time, h.fulfillment_time, h.checkin_time
         u.expire_date AS usr_expire_date, u.claims_never_checked_out_count AS usr_claims_never_checked_out_count,
         u.last_update_time AS usr_last_update_time,
 
-        CASE WHEN u.alias IS NOT NULL THEN
+        pgt.name as pgt_name,
+
+        CASE WHEN NULLIF(u.alias,'') IS NOT NULL THEN
             u.alias
         ELSE
             u.first_given_name
         END AS usr_alias_or_first_given_name,
 
-        CASE WHEN u.alias IS NOT NULL THEN
+        CASE WHEN NULLIF(u.alias,'') IS NOT NULL THEN
             u.alias
         ELSE
             REGEXP_REPLACE(ARRAY_TO_STRING(ARRAY[
-                COALESCE(u.family_name, ''),
-                COALESCE(u.suffix, ''),
+                COALESCE(NULLIF(u.pref_family_name,''), u.family_name, ''),
+                COALESCE(NULLIF(u.pref_suffix,''), u.suffix, ''),
                 ', ',
-                COALESCE(u.prefix, ''),
-                COALESCE(u.first_given_name, ''),
-                COALESCE(u.second_given_name, '')
+                COALESCE(NULLIF(u.pref_prefix,''), u.prefix, ''),
+                COALESCE(NULLIF(u.pref_first_given_name,''), u.first_given_name, ''),
+                COALESCE(NULLIF(u.pref_second_given_name,''), u.second_given_name, '')
             ], ' '), E'\\s+,', ',')
         END AS usr_alias_or_display_name,
 
         REGEXP_REPLACE(ARRAY_TO_STRING(ARRAY[
-            COALESCE(u.family_name, ''),
-            COALESCE(u.suffix, ''),
+            COALESCE(NULLIF(u.pref_family_name,''), u.family_name, ''),
+            COALESCE(NULLIF(u.pref_suffix,''), u.suffix, ''),
             ', ',
-            COALESCE(u.prefix, ''),
-            COALESCE(u.first_given_name, ''),
-            COALESCE(u.second_given_name, '')
+            COALESCE(NULLIF(u.pref_prefix,''), u.prefix, ''),
+            COALESCE(NULLIF(u.pref_first_given_name,''), u.first_given_name, ''),
+            COALESCE(NULLIF(u.pref_second_given_name,''), u.second_given_name, '')
         ], ' '), E'\\s+,', ',') AS usr_display_name,
 
         uc.id AS ucard_id, uc.barcode AS ucard_barcode, uc.usr AS ucard_usr, uc.active AS ucard_active,
@@ -2305,6 +2318,8 @@ SELECT  h.id, h.request_time, h.capture_time, h.fulfillment_time, h.checkin_time
         ru.last_update_time AS rusr_last_update_time,
 
         ruc.id AS rucard_id, ruc.barcode AS rucard_barcode, ruc.usr AS rucard_usr, ruc.active AS rucard_active,
+        cuc.barcode AS canceled_by_barcode, cu.usrname AS canceled_by_usrname,
+        caw.name as canceling_ws_name,
 
         cp.id AS cp_id, cp.circ_lib AS cp_circ_lib, cp.creator AS cp_creator, cp.call_number AS cp_call_number,
         cp.editor AS cp_editor, cp.create_date AS cp_create_date, cp.edit_date AS cp_edit_date,
@@ -2339,6 +2354,7 @@ SELECT  h.id, h.request_time, h.capture_time, h.fulfillment_time, h.checkin_time
         t.value AS title,
         a.value AS author,
         s.value AS series_title,
+        y.value AS pubdate,
 
         acpl.id AS acpl_id, acpl.name AS acpl_name, acpl.owning_lib AS acpl_owning_lib, acpl.holdable AS acpl_holdable,
         acpl.hold_verify AS acpl_hold_verify, acpl.opac_visible AS acpl_opac_visible, acpl.circulate AS acpl_circulate,
@@ -2372,17 +2388,26 @@ SELECT  h.id, h.request_time, h.capture_time, h.fulfillment_time, h.checkin_time
   FROM  action.hold_request h
         JOIN reporter.hold_request_record r ON (r.id = h.id)
         JOIN actor.usr u ON (u.id = h.usr)
+        JOIN permission.grp_tree pgt ON (u.profile = pgt.id)
         JOIN actor.card uc ON (uc.id = u.card)
         JOIN actor.usr ru ON (ru.id = h.requestor)
         JOIN actor.card ruc ON (ruc.id = ru.card)
         JOIN actor.org_unit pl ON (h.pickup_lib = pl.id)
+        JOIN actor.org_unit rl ON (h.request_lib = rl.id)
+        JOIN actor.org_unit sl ON (h.selection_ou = sl.id)
+        JOIN actor.org_unit ul ON (u.home_ou = ul.id)
         JOIN t_field ON TRUE
         JOIN a_field ON TRUE
         JOIN s_field ON TRUE
+        JOIN y_field ON TRUE
+        LEFT JOIN actor.usr cu ON (h.canceled_by = cu.id)
+        LEFT JOIN actor.card cuc ON (cu.card = cuc.id)
+        LEFT JOIN actor.workstation caw ON (h.canceling_ws = caw.id)
         LEFT JOIN action.hold_request_cancel_cause cc ON (h.cancel_cause = cc.id)
         LEFT JOIN biblio.monograph_part p ON (h.hold_type = 'P' AND p.id = h.target)
         LEFT JOIN serial.issuance siss ON (h.hold_type = 'I' AND siss.id = h.target)
         LEFT JOIN asset.copy cp ON (h.current_copy = cp.id OR (h.hold_type IN ('C','F','R') AND cp.id = h.target))
+        LEFT JOIN actor.org_unit cl ON (cp.circ_lib = cl.id)
         LEFT JOIN config.copy_status cs ON (cp.status = cs.id)
         LEFT JOIN asset.copy_location acpl ON (cp.location = acpl.id)
         LEFT JOIN asset.copy_location_order acplo ON (cp.location = acplo.location AND cp.circ_lib = acplo.org)
@@ -2390,15 +2415,17 @@ SELECT  h.id, h.request_time, h.capture_time, h.fulfillment_time, h.checkin_time
             SELECT *, (ROW_NUMBER() OVER (ORDER BY name) + 1000000) AS fallback_position
             FROM asset.copy_location
         ) acpl_ordered ON (acpl_ordered.id = cp.location)
-        LEFT JOIN asset.call_number cn ON (cn.id = cp.call_number OR (h.hold_type = 'V' AND cn.id = h.target))
+        LEFT JOIN asset.call_number cn ON ((cn.id = cp.call_number AND h.hold_type != 'V' ) OR (h.hold_type = 'V' AND cn.id = h.target))
         LEFT JOIN asset.call_number_prefix acnp ON (cn.prefix = acnp.id)
         LEFT JOIN asset.call_number_suffix acns ON (cn.suffix = acns.id)
         LEFT JOIN LATERAL (SELECT * FROM action.hold_transit_copy WHERE h.id = hold ORDER BY id DESC LIMIT 1) tr ON TRUE
+        LEFT JOIN actor.org_unit tl ON (tr.source = tl.id)
         LEFT JOIN LATERAL (SELECT COUNT(*) FROM action.hold_request_note WHERE h.id = hold AND (pub = TRUE OR staff = $is_staff_request)) notes ON TRUE
         LEFT JOIN LATERAL (SELECT COUNT(*), MAX(notify_time) FROM action.hold_notification WHERE h.id = hold) n ON TRUE
         LEFT JOIN LATERAL (SELECT FIRST(value) AS value FROM metabib.display_entry WHERE source = r.bib_record AND field = t_field.field) t ON TRUE
         LEFT JOIN LATERAL (SELECT FIRST(value) AS value FROM metabib.display_entry WHERE source = r.bib_record AND field = a_field.field) a ON TRUE
         LEFT JOIN LATERAL (SELECT FIRST(value) AS value FROM metabib.display_entry WHERE source = r.bib_record AND field = s_field.field) s ON TRUE
+        LEFT JOIN LATERAL (SELECT FIRST(value) AS value FROM metabib.display_entry WHERE source = r.bib_record AND field = y_field.field) y ON TRUE
         LEFT JOIN LATERAL actor.org_unit_ancestor_setting('circ.holds.default_estimated_wait_interval',u.home_ou) AS default_estimated_wait_interval ON TRUE
         LEFT JOIN LATERAL actor.org_unit_ancestor_setting('circ.holds.min_estimated_wait_interval',u.home_ou) AS min_estimated_wait_interval ON TRUE
         LEFT JOIN LATERAL actor.org_unit_ancestor_setting('circ.hold_shelf_status_delay',h.pickup_lib) AS hold_wait_time ON TRUE,
@@ -2490,6 +2517,38 @@ __PACKAGE__->register_method(
     method          => 'wide_hold_data',
 );
 
+
+sub purge_hold_reset_entries {
+    my $self = shift;
+    my $client = shift;
+    my $age = shift;
+
+    local $OpenILS::Application::Storage::WRITE = 1;
+
+    my $sql = <<"    SQL";
+        DELETE FROM action.hold_request_reset_reason_entry r
+            USING action.hold_request h, actor.usr u
+            WHERE
+                h.id = r.hold AND
+                u.id = h.usr AND
+                AGE(reset_time) > COALESCE( BTRIM( (
+                    SELECT value FROM actor.org_unit_ancestor_setting(
+                    'circ.hold_reset_reason_entry_age_threshold', u.home_ou)),'"' ), '$age')::INTERVAL
+    SQL
+
+    my $sth = action::hold_request->db_Main->prepare($sql);
+    $sth->execute();
+
+    return 1;
+
+}
+__PACKAGE__->register_method(
+    api_name        => 'open-ils.storage.action.hold_request.purge_hold_reset_entries',
+    api_level       => 1,
+    stream      => 0,
+    argc        => 0,
+    method          => 'purge_hold_reset_entries',
+);
 
 1;
 

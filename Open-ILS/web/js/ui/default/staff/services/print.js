@@ -101,6 +101,15 @@ function($q , $window , $timeout , $http , egHatch , egAuth , egIDL , egOrg , eg
         return service.fleshPrintScope(args.scope)
         .then(function() { return egHatch.usePrinting(); })
         .then(function(useHatch) {
+            if (!useHatch) { return false; }
+            return egHatch.getPrintConfig(args.context || 'default') 
+            .then(function(config) {
+                // Avoid using Hatch if the print context calls
+                // for native browser printing.
+                return config.printer != 'hatch_browser_printing';
+            });
+        })
+        .then(function(useHatch) {
             var promise = useHatch ?
                 service.print_via_hatch(args) :
                 service.print_via_browser(args);
@@ -282,8 +291,8 @@ function($q , $window , $timeout , $http , egHatch , egAuth , egIDL , egOrg , eg
             scope.elm = element;
         },
         controller : 
-                   ['$scope','$q','$window','$timeout','egHatch','egPrint','egEnv',
-            function($scope , $q , $window , $timeout , egHatch , egPrint , egEnv) {
+                   ['$scope','$q','$window','$timeout','egHatch','egPrint','egEnv', 'ngToast',
+            function($scope , $q , $window , $timeout , egHatch , egPrint , egEnv, ngToast) {
 
                 egPrint.clear_print_content = function() {
                     $scope.elm.html('');
@@ -320,10 +329,45 @@ function($q , $window , $timeout , $http , egHatch , egAuth , egIDL , egOrg , eg
 
 
                     var deferred = $q.defer();
+                    var imgPromises = [];
+
+                    // First we wait for the $digest complete
                     $timeout(function(){
-                        // give the $digest a chance to complete then resolve
-                        // with the compiled HTML from our print container
-                        deferred.resolve($scope.elm.html());
+
+                        // We can't resolve yet because images that load after being compiled may not be loaded
+                        // So we find everything that is going to be printed
+                        var printedNodes = document.querySelectorAll("#print-div *");      
+                        angular.forEach(printedNodes, function(node){
+                            // Keep track of all the images that haven't been loaded yet
+                            if (node.nodeName && node.nodeName == "IMG" && !node.complete){
+                                // And whether each image is done loading
+                                var imgPromise = $q.defer();
+                                imgPromises.push(imgPromise.promise);
+                                node.onload = (function() {
+                                    imgPromise.resolve();
+                                });
+                                node.onerror = function(event) {
+                                    imgPromise.reject("Error loading image in print template");
+                                }
+                            }
+                        });
+
+                        var imageLoadingDeadline = $q.defer();
+                        var timeoutDuration = 5000;
+                        $timeout(function(){
+                            imageLoadingDeadline.reject("Image in print template failed to load within " + (timeoutDuration / 1000) + " second(s).")
+                        }, timeoutDuration);
+
+                        // And once all of them are finished loading,
+                        // resolve with the compiled HTML from our print container
+                        $q.race([$q.all(imgPromises), imageLoadingDeadline.promise]).catch(function (error) {
+                            deferred.resolve($scope.elm.html());
+                            ngToast.danger(error);
+                        }).then(function(){
+                            deferred.resolve($scope.elm.html());
+                        });
+                        
+
                     });
 
                     return deferred.promise;

@@ -6,7 +6,9 @@ import {HatchService, HatchMessage} from '@eg/core/hatch.service';
 import {ToastService} from '@eg/share/toast/toast.service';
 import {StringService} from '@eg/share/string/string.service';
 import {HtmlToTxtService} from '@eg/share/util/htmltotxt.service';
+
 const HATCH_FILE_WRITER_PRINTER = 'hatch_file_writer';
+const HATCH_BROWSER_PRINTING_PRINTER = 'hatch_browser_printing';
 
 @Component({
     selector: 'eg-print',
@@ -66,6 +68,22 @@ export class PrintComponent implements OnInit {
             .then(use => this.useHatchPrinting = (use && this.hatch.connect()));
     }
 
+    // Resolves to true if a) Hatch is usable and b) the requested print
+    // context is not using the 'native brower printing' printer.
+    checkHatchEnabledForRequest(printReq: PrintRequest): Promise<boolean> {
+        return this.checkHatchEnabled().then(enabled => {
+            if (!enabled) { return false; }
+
+            return this.serverStore.getItem(`eg.print.config.${printReq.printContext}`)
+                .then(config => {
+                    return (
+                        !config ||
+                    config.printer !== HATCH_BROWSER_PRINTING_PRINTER
+                    );
+                });
+        });
+    }
+
     handlePrintRequest(printReq: PrintRequest) {
 
         if (this.isPrinting) {
@@ -79,11 +97,11 @@ export class PrintComponent implements OnInit {
         if (printReq.templateName) {
             promise = this.serverStore.getItem(
                 'eg.print.template_context.' + printReq.templateName)
-            .then(setting => {
-                if (setting) {
-                    printReq.printContext = setting;
-                }
-            });
+                .then(setting => {
+                    if (setting) {
+                        printReq.printContext = setting;
+                    }
+                });
         }
 
         this.isPrinting = true;
@@ -98,7 +116,10 @@ export class PrintComponent implements OnInit {
             this.applyTemplate(printReq).then(() => {
                 // Give templates a chance to render before printing
                 setTimeout(() => {
-                    this.dispatchPrint(printReq).then(__ => this.reset());
+                    this.dispatchPrint(printReq).then(__ => {
+                        this.reset();
+                        this.printer.printJobQueued$.emit(printReq);
+                    });
                 });
             });
         });
@@ -158,7 +179,7 @@ export class PrintComponent implements OnInit {
 
         return promise.then(() => {
 
-            return this.checkHatchEnabled().then(enabled => {
+            return this.checkHatchEnabledForRequest(printReq).then(enabled => {
 
                 // Insert HTML into the browser DOM for in-browser printing.
                 if (printReq.text && !enabled) {
@@ -209,7 +230,7 @@ export class PrintComponent implements OnInit {
             show_dialog: printReq.showDialog
         });
 
-        return this.checkHatchEnabled().then(enabled => {
+        return this.checkHatchEnabledForRequest(printReq).then(enabled => {
             if (enabled) {
                 this.printViaHatch(printReq);
             } else {
@@ -231,38 +252,38 @@ export class PrintComponent implements OnInit {
         }
 
         this.serverStore.getItem(`eg.print.config.${printReq.printContext}`)
-        .then(config => {
+            .then(config => {
 
-            let msg: HatchMessage;
+                let msg: HatchMessage;
 
-            if (config && config.printer === HATCH_FILE_WRITER_PRINTER) {
+                if (config && config.printer === HATCH_FILE_WRITER_PRINTER) {
 
-                const text = printReq.contentType === 'text/plain' ?
-                    html : this.h2txt.htmlToTxt(html);
+                    const text = printReq.contentType === 'text/plain' ?
+                        html : this.h2txt.htmlToTxt(html);
 
-                msg = new HatchMessage({
-                    action: 'set',
-                    key: `receipt.${printReq.printContext}.txt`,
-                    content: text,
-                    bare: true
-                });
+                    msg = new HatchMessage({
+                        action: 'set',
+                        key: `receipt.${printReq.printContext}.txt`,
+                        content: text,
+                        bare: true
+                    });
 
-            } else {
+                } else {
 
-                msg = new HatchMessage({
-                    action: 'print',
-                    content: html,
-                    settings: config || {},
-                    contentType: 'text/html',
-                    showDialog: printReq.showDialog
-                });
-            }
+                    msg = new HatchMessage({
+                        action: 'print',
+                        content: html,
+                        settings: config || {},
+                        contentType: 'text/html',
+                        showDialog: printReq.showDialog
+                    });
+                }
 
-            this.hatch.sendRequest(msg).then(
-                ok  => console.debug('Print request succeeded'),
-                err => console.warn('Print request failed', err)
-            );
-        });
+                this.hatch.sendRequest(msg).then(
+                    ok  => console.debug('Print request succeeded'),
+                    err => console.warn('Print request failed', err)
+                );
+            });
     }
 }
 

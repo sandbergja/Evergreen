@@ -1,5 +1,5 @@
 import {Component, Input, Output, OnInit, ViewChild, EventEmitter} from '@angular/core';
-import {FormGroup, FormControl, Validators, ValidatorFn, ValidationErrors} from '@angular/forms';
+import {FormGroup, FormControl, Validators} from '@angular/forms';
 import {Router} from '@angular/router';
 import {Observable, of} from 'rxjs';
 import {switchMap, single, startWith, tap} from 'rxjs/operators';
@@ -18,19 +18,11 @@ import {ToastService} from '@eg/share/toast/toast.service';
 import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
 import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
 import * as moment from 'moment-timezone';
-
-const startTimeIsBeforeEndTimeValidator: ValidatorFn = (fg: FormGroup): ValidationErrors | null => {
-    const start = fg.get('startTime').value;
-    const end = fg.get('endTime').value;
-    return start !== null && end !== null &&
-        start.isBefore(end)
-        ? null
-        : { startTimeNotBeforeEndTime: true };
-};
+import { datesInOrderValidator } from '@eg/share/validators/dates_in_order_validator.directive';
 
 @Component({
-  selector: 'eg-create-reservation-dialog',
-  templateUrl: './create-reservation-dialog.component.html'
+    selector: 'eg-create-reservation-dialog',
+    templateUrl: './create-reservation-dialog.component.html'
 })
 
 export class CreateReservationDialogComponent
@@ -42,7 +34,7 @@ export class CreateReservationDialogComponent
     @Input() patronId: number;
     @Input() attributes: number[] = [];
     @Input() resources: IdlObject[] = [];
-    @Output() onComplete: EventEmitter<boolean>;
+    @Output() reservationRequestCompleted: EventEmitter<boolean>;
 
     create: FormGroup;
     patron$: Observable<{first_given_name: string, second_given_name: string, family_name: string}>;
@@ -52,7 +44,7 @@ export class CreateReservationDialogComponent
 
     public disableOrgs: () => number[];
     addBresv$: () => Observable<any>;
-    @ViewChild('fail', { static: true }) private fail: AlertDialogComponent;
+    @ViewChild('fail', { static: true }) fail: AlertDialogComponent;
     @ViewChild('patronSearch') patronSearch: PatronSearchDialogComponent;
 
     handlePickupLibChange: ($event: IdlObject) => void;
@@ -69,7 +61,7 @@ export class CreateReservationDialogComponent
         private toast: ToastService
     ) {
         super(modal);
-        this.onComplete = new EventEmitter<boolean>();
+        this.reservationRequestCompleted = new EventEmitter<boolean>();
     }
 
     ngOnInit() {
@@ -84,7 +76,7 @@ export class CreateReservationDialogComponent
             'endTime': new FormControl(),
             'resourceList': new FormControl(),
             'note': new FormControl(),
-        }, [startTimeIsBeforeEndTimeValidator]
+        }, [datesInOrderValidator(['startTime', 'endTime'])]
         );
         if (this.patronId) {
             this.pcrud.search('au', {id: this.patronId}, {
@@ -114,21 +106,21 @@ export class CreateReservationDialogComponent
                 this.attributes.filter(Boolean),
                 this.emailNotify,
                 this.bresvNote
-            ).pipe(tap(
-                (success) => {
-                    if (success.ilsevent) {
-                        console.warn(success);
+            ).pipe(tap({
+                next: (response) => {
+                    if ('ilsevent' in response) {
+                        console.warn(response);
                         this.fail.open();
                     } else {
                         this.toast.success('Reservation successfully created');
-                        console.debug(success);
+                        console.debug(response);
                         this.close();
-                   }
-                }, (fail) => {
-                    console.warn(fail);
+                    }
+                }, error: (response: unknown) => {
+                    console.warn(response);
                     this.fail.open();
-                }, () => this.onComplete.emit(true)
-            ));
+                }, complete: () => this.reservationRequestCompleted.emit(true)
+            }));
         };
 
         this.handlePickupLibChange = ($event) => {
@@ -151,18 +143,18 @@ export class CreateReservationDialogComponent
                         this.auth.token(),
                         this.auth.user().ws_ou(),
                         'actor', this.patronBarcode.value.trim()).pipe(
-                            single(),
-                            switchMap((result) => {
-                                return this.pcrud.retrieve('au', result[0]['id']).pipe(
-                                    switchMap((au) => {
-                                        return of({
-                                            first_given_name: au.first_given_name(),
-                                            second_given_name: au.second_given_name(),
-                                            family_name: au.family_name()});
-                                    })
-                                );
-                            })
-                        );
+                        single(),
+                        switchMap((result) => {
+                            return this.pcrud.retrieve('au', result[0]['id']).pipe(
+                                switchMap((au) => {
+                                    return of({
+                                        first_given_name: au.first_given_name(),
+                                        second_given_name: au.second_given_name(),
+                                        family_name: au.family_name()});
+                                })
+                            );
+                        })
+                    );
                 } else {
                     return of({
                         first_given_name: '',
@@ -176,7 +168,7 @@ export class CreateReservationDialogComponent
 
     setDefaultTimes(times: moment.Moment[], granularity: number) {
         this.create.patchValue({startTime: moment.min(times),
-        endTime: moment.max(times).clone().add(granularity, 'minutes')
+            endTime: moment.max(times).clone().add(granularity, 'minutes')
         });
     }
 
@@ -188,12 +180,12 @@ export class CreateReservationDialogComponent
             this.auth.user().ws_ou(),
             'actor', this.patronBarcode.value
         ).subscribe((patron) => this.router.navigate(['/staff', 'booking', 'manage_reservations', 'by_patron', patron[0]['id']]));
-    }
+    };
 
     addBresvAndOpenPatronReservations = (): void => {
         this.addBresv$()
-        .subscribe(() => this.openPatronReservations());
-    }
+            .subscribe(() => this.openPatronReservations());
+    };
 
     searchPatrons() {
         this.patronSearch.open({size: 'xl'}).toPromise().then(
@@ -218,7 +210,7 @@ export class CreateReservationDialogComponent
     }
 
     get resourceListSelection() {
-      return this.create.get('resourceList').value;
+        return this.create.get('resourceList').value;
     }
 
     get selectedTimes() {

@@ -8,7 +8,7 @@ import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 import {Pager} from '@eg/share/util/pager';
 import {GridComponent} from '@eg/share/grid/grid.component';
 import {GridDataSource, GridCellTextGenerator} from '@eg/share/grid/grid';
-import {SimpleReporterService} from './simple-reporter.service';
+import {ReporterService} from '../share/reporter.service';
 
 @Component({
     selector: 'eg-sr-outputs',
@@ -30,7 +30,7 @@ export class SROutputsComponent implements OnInit {
         private pcrud: PcrudService,
         private idl: IdlService,
         private toast: ToastService,
-        private srSvc: SimpleReporterService,
+        private srSvc: ReporterService,
     ) {
         // These values are all replaced via custom templates and cause warnings if not specified here.
         this.cellTextGenerator = {
@@ -40,7 +40,7 @@ export class SROutputsComponent implements OnInit {
     }
 
     ngOnInit() {
-        this.gridSource = this.srSvc.getOutputDatasource();
+        this.gridSource = this.srSvc.getSOutputDatasource();
 
     }
 
@@ -60,25 +60,25 @@ export class SROutputsComponent implements OnInit {
     deleteOutputs(rows: any[]) {
         if ( rows.length <= 0 ) { return; }
         this.confirmDeleteString.current({ num: rows.length })
-        .then(str => {
-            this.confirmDeleteDialog.dialogBody = str;
-            this.confirmDeleteDialog.open()
-            .subscribe(confirmed => {
-                if ( confirmed ) { this.doDeleteOutputs(rows.map(x => x._rs)); }
+            .then(str => {
+                this.confirmDeleteDialog.dialogBody = str;
+                this.confirmDeleteDialog.open()
+                    .subscribe(confirmed => {
+                        if ( confirmed ) { this.doDeleteOutputs(rows.map(x => x._rs)); }
+                    });
             });
-        });
     }
 
     doDeleteOutputs(outs: IdlObject[]) {
         const deletedCount = outs.length;
         this.pcrud.remove(outs).toPromise()
-        .then(res => {
-            this.outputsGrid.reload();
-            this.deletedString.current({num: outs.length})
-            .then(str => {
-                this.toast.success(str);
+            .then(res => {
+                this.outputsGrid.reload();
+                this.deletedString.current({num: outs.length})
+                    .then(str => {
+                        this.toast.success(str);
+                    });
             });
-        });
 
     }
 

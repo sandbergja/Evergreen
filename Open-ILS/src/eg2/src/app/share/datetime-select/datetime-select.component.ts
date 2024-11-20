@@ -1,9 +1,9 @@
-import {Component, EventEmitter, Input, Output, forwardRef, ViewChild, OnInit, Optional, Self} from '@angular/core';
+import {Component, EventEmitter, Input, Output, ViewChild, OnInit, Optional, Self} from '@angular/core';
 import {FormatService} from '@eg/core/format.service';
 import {AbstractControl, ControlValueAccessor, FormControl, FormGroup, NgControl} from '@angular/forms';
-import {NgbDatepicker, NgbTimeStruct, NgbDateStruct} from '@ng-bootstrap/ng-bootstrap';
 import {DatetimeValidator} from '@eg/share/validators/datetime_validator.directive';
 import * as moment from 'moment-timezone';
+import {DateUtil} from '@eg/share/util/date';
 
 @Component({
     selector: 'eg-datetime-select',
@@ -14,10 +14,14 @@ export class DateTimeSelectComponent implements OnInit, ControlValueAccessor {
     @Input() fieldName: string;
     @Input() initialIso: string;
     @Input() required: boolean;
-    @Input() minuteStep = 15;
+    @Input() minuteStep = 15; // eslint-disable-line no-magic-numbers
     @Input() showTZ = true;
     @Input() timezone: string = this.format.wsOrgTimezone;
     @Input() readOnly = false;
+    @Input() noPast = false;
+    @Input() noFuture = false;
+    @Input() minDate: any;
+    @Input() maxDate: any;
     @Output() onChangeAsIso: EventEmitter<string>;
 
     dateTimeForm: FormGroup;
@@ -53,6 +57,12 @@ export class DateTimeSelectComponent implements OnInit, ControlValueAccessor {
     }
 
     ngOnInit() {
+        if (this.noPast) {
+            this.minDate = DateUtil.localYmdPartsFromDate();
+        }
+        if (this.noFuture) {
+            this.maxDate = DateUtil.localYmdPartsFromDate();
+        }
         if (!this.timezone) {
             this.timezone = this.format.wsOrgTimezone;
         }
@@ -85,7 +95,7 @@ export class DateTimeSelectComponent implements OnInit, ControlValueAccessor {
                 this.time.value.hour, this.time.value.minute, 0], this.timezone);
             this.dateTimeForm.patchValue({stringVersion:
                 this.format.transform({value: newDate, datatype: 'timestamp', datePlusTime: true})},
-                {emitEvent: false, onlySelf: true});
+            {emitEvent: false, onlySelf: true});
             this.onChange(newDate);
             this.onChangeAsIso.emit(newDate.toISOString());
         });
@@ -95,11 +105,11 @@ export class DateTimeSelectComponent implements OnInit, ControlValueAccessor {
                 (this.date.value.month - 1),
                 this.date.value.day,
                 time.hour, time.minute, 0],
-                this.timezone);
+            this.timezone);
             this.dateTimeForm.patchValue({stringVersion:
                 this.format.transform({
-                value: newDate, datatype: 'timestamp', datePlusTime: true})},
-                {emitEvent: false, onlySelf: true});
+                    value: newDate, datatype: 'timestamp', datePlusTime: true})},
+            {emitEvent: false, onlySelf: true});
             this.onChange(newDate);
             this.onChangeAsIso.emit(newDate.toISOString());
         });
@@ -122,7 +132,14 @@ export class DateTimeSelectComponent implements OnInit, ControlValueAccessor {
     }
 
 
-    writeValue(value: moment.Moment) {
+    writeValue(value: moment.Moment|string) {
+        if (typeof value === 'string') {
+            if (value.length === 0) {
+                return;
+            }
+            value = this.format.momentizeIsoString(value, this.timezone);
+        }
+
         if (value !== undefined && value !== null) {
             this.dateTimeForm.patchValue({
                 stringVersion: this.format.transform({value: value, datatype: 'timestamp', datePlusTime: true})});

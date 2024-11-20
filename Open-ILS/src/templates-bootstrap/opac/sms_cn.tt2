@@ -6,6 +6,7 @@
     <div class="mobile_hide">
     [% INCLUDE "opac/parts/searchbar.tt2" %]
     </div>
+<main id="main">
     <div id="content-wrapper">
         <div id="main-content">
             <div class="common-full-pad"></div>
@@ -37,7 +38,7 @@
                                     value="[% l('Submit') %]"
                                     title="[% l('Submit') %]"
                                     alt="[% l('Submit') %]"
-                                    class="opac-button" />
+                                    class="btn btn-action" />
                                 <br/>[% l('Note: carrier charges may apply'); %]
                         </form>
                     [% END %]
@@ -49,4 +50,5 @@
             <div class="common-full-pad"></div>
         </div>
     </div>
+</main>
 [%- END %]

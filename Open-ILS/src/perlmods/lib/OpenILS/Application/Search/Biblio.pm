@@ -11,7 +11,7 @@ use OpenILS::Utils::CStoreEditor q/:funcs/;
 use OpenSRF::Utils::Cache;
 use Encode;
 use Email::Send;
-use Email::Simple;
+use Email::MIME;
 
 use OpenSRF::Utils::Logger qw/:logger/;
 
@@ -37,6 +37,7 @@ my $cache;
 my $cache_timeout;
 my $superpage_size;
 my $max_superpages;
+my $max_concurrent_search;
 
 sub initialize {
     $cache = OpenSRF::Utils::Cache->new('global');
@@ -353,6 +354,47 @@ sub biblio_search_tcn {
     return { count => scalar(@$recs), ids => $recs };
 }
 
+__PACKAGE__->register_method(
+    method   => "biblio_search_tcn_batch",
+    api_name => "open-ils.search.biblio.tcn.batch",
+    argc     => 2,
+    signature => {
+        desc   => "Retrieve related record ID(s) given a list of TCNs",
+        params => [
+            { desc => 'Authentication token', type => 'string' },
+            { desc => 'Array of TCNs', type => 'array' },
+            { desc => 'Flag indicating to include deleted records', type => 'string' }
+        ],
+        return => {
+            desc => 'Results object like: { "successful": [ { "tcn": $tcn, "ids": [...] }, ... ], "failed": [ $tcn, ... ] }',
+            type => 'object'
+        }
+    }
+);
+
+sub biblio_search_tcn_batch {
+    my( $self, $client, $auth, $tcns, $include_deleted ) = @_;
+
+    my $e = new_editor(authtoken => $auth);
+    return $e->event unless $e->checkauth;
+
+    my $results = { successful => [], failed => [] };
+
+    foreach my $tcn (@$tcns) {
+        $tcn =~ s/^\s+|\s+$//og;
+        my $search = {tcn_value => $tcn};
+        $search->{deleted} = 'f' unless $include_deleted;
+        my $recs = $e->search_biblio_record_entry( $search, {idlist => 1} );
+
+        if (@$recs) {
+            push @{$results->{successful}}, { tcn => $tcn, ids => $recs };
+        } else {
+            push @{$results->{failed}}, $tcn;
+        }
+    }
+
+    return $results;
+}
 
 # --------------------------------------------------------------------------------
 
@@ -1088,6 +1130,15 @@ sub the_quest_for_knowledge {
 
 
 __PACKAGE__->register_method(
+    method    => 'staff_location_groups_with_lassos',
+    api_name  => 'open-ils.search.staff.location_groups_with_lassos',
+);
+sub staff_location_groups_with_lassos {
+    my $flag = new_editor()->retrieve_config_global_flag('staff.search.shelving_location_groups_with_lassos');
+    return $flag ? $flag->enabled eq 't' : 0;
+}
+
+__PACKAGE__->register_method(
     method    => 'staged_search',
     api_name  => 'open-ils.search.biblio.multiclass.staged',
     signature => {
@@ -1131,6 +1182,12 @@ __PACKAGE__->register_method(
 my $estimation_strategy;
 sub staged_search {
     my($self, $conn, $search_hash, $docache, $phys_loc) = @_;
+
+    my $e = new_editor();
+    if (!$max_concurrent_search) {
+        my $mcs = $e->retrieve_config_global_flag('opac.max_concurrent_search.query');
+        $max_concurrent_search = ($mcs and $mcs->enabled eq 't') ? $mcs->value : 20;
+    }
 
     $phys_loc ||= $U->get_org_tree->id;
 
@@ -1181,6 +1238,19 @@ sub staged_search {
     # pull any existing results from the cache
     my $key = search_cache_key($method, $search_hash);
     my $facet_key = $key.'_facets';
+
+    # Let the world know that there is at least one backend that will be searching
+    my $counter_key = $key.'_counter';
+    $cache->get_cache($counter_key) || $cache->{memcache}->add($counter_key, 0, $cache_timeout);
+    my $search_peers = $cache->{memcache}->incr($counter_key);
+
+    # If the world tells us that there are more than we want to allow, we stop.
+    if ($search_peers > $max_concurrent_search) {
+        $logger->warn("Too many concurrent searches per $counter_key: $search_peers");
+        $cache->{memcache}->decr($counter_key);
+        return OpenILS::Event->new('BAD_PARAMS')
+    }
+
     my $cache_data = $cache->get_cache($key) || {};
 
     # First, we want to make sure that someone else isn't currently trying to perform exactly
@@ -1237,6 +1307,7 @@ sub staged_search {
             unless($summary) {
                 $logger->info("search timed out: duration=$search_duration: params=".
                     OpenSRF::Utils::JSON->perl2JSON($search_hash));
+                $cache->{memcache}->decr($counter_key);
                 return {count => 0};
             }
 
@@ -1280,59 +1351,66 @@ sub staged_search {
         last if($summary->{checked} < $superpage_size);
     }
 
-    # Let other backends grab our data now that we're done.
+    # Let other backends grab our data now that we're done, and flush the key if we're the last one.
     $cache_data = $cache->get_cache($key);
     if ($$cache_data{running} and $$cache_data{running} == $$) {
         delete $$cache_data{running};
         $cache->put_cache($key, $cache_data, $cache_timeout);
     }
 
-    my $setting_names = [ qw/
-             opac.did_you_mean.max_suggestions
-             opac.did_you_mean.low_result_threshold
-             search.symspell.min_suggestion_use_threshold
-             search.symspell.soundex.weight
-             search.symspell.pg_trgm.weight
-             search.symspell.keyboard_distance.weight/ ];
-    my %suggest_settings = $U->ou_ancestor_setting_batch_insecure(
-        $phys_loc, $setting_names
-    );
+    my ($class, $term, $field_list) = one_class_multi_term($global_summary->{query_struct});
+    if ($class and $term) { # we meet the current "can suggest" criteria, check for suggestions!
+        my $editor = new_editor();
+        my $class_settings = $editor->retrieve_config_metabib_class($class);
+        $field_list ||= [];
 
-    # Defaults...
-    $suggest_settings{$_} ||= {value=>undef} for @$setting_names;
+        my $term_count = split(/\s+/, $term); # count of words in the search
 
-    # Pull this one off the front, it's not used for the function call
-    my $max_suggestions_setting = shift @$setting_names;
-    my $sugg_low_thresh_setting = shift @$setting_names;
-    $max_suggestions_setting = $suggest_settings{$max_suggestions_setting}{value} // -1;
-    my $suggest_low_threshold = $suggest_settings{$sugg_low_thresh_setting}{value} || 0;
+        # longest search, in words, we will suggest for. default = 3
+        my $max_terms = $editor->search_config_global_flag({name=>'search.max_suggestion_search_terms',enabled=>'t'})->[0];
+        $max_terms = $max_terms ? $max_terms->value : 3;
 
-    if ($global_summary->{visible} <= $suggest_low_threshold and $max_suggestions_setting != 0) {
-        # For now, we're doing one-class/one-term suggestions only
-        my ($class, $term) = one_class_one_term($global_summary->{query_struct});
-        if ($class && $term) { # check for suggestions!
-            my $suggestion_verbosity = 4;
-            if ($max_suggestions_setting == -1) { # special value that means "only best suggestion, and not always"
-                $max_suggestions_setting = 1;
+        if ( # search did not provide enough hits and settings
+             # for this class want more than 0 suggestions
+             # and there are not too many words in the search
+            $global_summary->{visible} <= $class_settings->low_result_threshold
+            and $class_settings->max_suggestions != 0
+            and $term_count <= $max_terms
+        ) {
+            my $suggestion_verbosity = $class_settings->symspell_suggestion_verbosity;
+            if ($class_settings->max_suggestions == -1) { # special value that means "only best suggestion, and not always"
+                $class_settings->max_suggestions(1);
                 $suggestion_verbosity = 0;
             }
 
-            my @settings_params = map { $suggest_settings{$_}{value} } @$setting_names;
-            my $suggs = new_editor()->json_query({
+            my $suggs = $editor->json_query({
                 from  => [
-                    'search.symspell_lookup',
-                        $term, $class,
-                        $suggestion_verbosity,
-                        1, # case transfer
-                        @settings_params
-                ],
-                limit => $max_suggestions_setting
+                    'search.symspell_suggest',
+                        $term, $class, '{'.join($field_list).'}',
+                        undef, # max edit distance per word, just get the database setting
+                        $suggestion_verbosity
+                ]
             });
-            if (@$suggs and $$suggs[0]{suggestion} ne $term) {
-                $global_summary->{suggestions}{'one_class_one_term'} = {
+
+            @$suggs = sort {
+                $$a{lev_distance} <=> $$b{lev_distance}
+                || (
+                    $$b{pg_trgm_sim} * $class_settings->pg_trgm_weight
+                    + $$b{soundex_sim} * $class_settings->soundex_weight
+                    + $$b{qwerty_kb_match} * $class_settings->keyboard_distance_weight
+                        <=>
+                    $$a{pg_trgm_sim} * $class_settings->pg_trgm_weight
+                    + $$a{soundex_sim} * $class_settings->soundex_weight
+                    + $$a{qwerty_kb_match} * $class_settings->keyboard_distance_weight
+                )
+                || abs($$b{suggestion_count}) <=> abs($$a{suggestion_count})
+            } grep  { $$_{lev_distance} != 0 || $$_{suggestion_count} < 0 } @$suggs;
+
+            if (@$suggs) {
+                $global_summary->{suggestions}{'one_class_multi_term'} = {
                     class       => $class,
                     term        => $term,
-                    suggestions  => $suggs
+                    suggestions  => [ splice @$suggs, 0, $class_settings->max_suggestions ]
                 };
             }
         }
@@ -1352,34 +1430,63 @@ sub staged_search {
             ids               => \@results
         }
     );
+    $cache->{memcache}->decr($counter_key);
 
     $logger->info("Completed canonicalized search is: $$global_summary{canonicalized_query}");
 
     return cache_facets($facet_key, $new_ids, $IAmMetabib, $ignore_facet_classes) if $docache;
 }
 
-sub one_class_one_term {
+sub one_class_multi_term {
     my $qstruct = shift;
+    my $fields = shift;
     my $node = $$qstruct{children};
 
     my $class = undef;
-    my $term = undef;
-    while ($node) {
-        last if (
-            $$node{'|'}
-            or @{$$node{'&'}} != 1
-            or ($$node{'&'}[0]{fields} and @{$$node{'&'}[0]{fields}} > 0)
-        );
-
-        $class ||= $$node{'&'}[0]{class};
-        $term ||= $$node{'&'}[0]{content};
-
-        last if ($term);
-
-        $node = $$node{'&'}[0]{children};
+    my $term = '';
+    if ($fields) {
+        if ($$node{fields} and @{$$node{fields}} > 0) {
+            return (undef,undef,undef) if (join(',', @{$$node{fields}}) ne join(',', @$fields));
+        }
+    } elsif ($$node{fields}) {
+        $fields = [ @{$$node{fields}} ];
     }
 
-    return ($class, $term);
+
+    # may relax this...
+    return (undef,undef,undef) if ($$node{'|'}
+        # or ($$node{modifiers} and @{$$node{modifiers}} > 0)
+        # or ($$node{filters} and @{$$node{filters}} > 0)
+    );
+
+    for my $kid (@{$$node{'&'}}) {
+        my ($subclass, $subterm);
+        if ($$kid{type} eq 'query_plan') {
+            ($subclass, $subterm) = one_class_multi_term($kid, $fields);
+            return (undef,undef,undef) if ($class and $subclass and $class ne $subclass);
+            $class = $subclass;
+            $term .= ' ' if $term;
+            $term .= $subterm if $subterm;
+        } elsif ($$kid{type} eq 'node') {
+            $subclass = $$kid{class};
+            return (undef,undef,undef) if ($class and $subclass and $class ne $subclass);
+            $class = $subclass;
+            ($subclass, $subterm) = one_class_multi_term($kid, $fields);
+            return (undef,undef,undef) if ($subclass and $class ne $subclass);
+            $term .= ' ' if $term;
+            $term .= $subterm if $subterm;
+        } elsif ($$kid{type} eq 'atom') {
+            $term .= ' ' if $term;
+            if ($$kid{content} !~ /\s+/ and $$kid{prefix} =~ /^-/) {
+                # only quote negated multi-word phrases, not negated single words
+                $$kid{prefix} = '-';
+                $$kid{suffix} = '';
+            }
+            $term .= $$kid{prefix}.$$kid{content}.$$kid{suffix};
+        }
+    }
+
+    return ($class, $term, $fields);
 }
 
 sub fetch_display_fields {
@@ -1393,22 +1500,13 @@ sub fetch_display_fields {
         return;
     }
 
-    my $hl_map_string = "";
-    if (ref($highlight_map) =~ /HASH/) {
-        for my $tsq (keys %$highlight_map) {
-            my $field_list = join(',', @{$$highlight_map{$tsq}});
-            $hl_map_string .= ' || ' if $hl_map_string;
-            $hl_map_string .= "hstore(($tsq)\:\:TEXT,'$field_list')";
-        }
-    }
-
     my $e = new_editor();
 
     for my $record ( @records ) {
-        next unless ($record && $hl_map_string);
+        next unless ($record && $highlight_map);
         $conn->respond(
             $e->json_query(
-                {from => ['search.highlight_display_fields', $record, $hl_map_string]}
+                {from => ['search.highlight_display_fields', $record, $highlight_map]}
             )
         );
     }
@@ -1942,16 +2040,7 @@ sub send_event_email_output {
     my $stat;
     my $err;
 
-    my $email = Email::Simple->new($event->template_output->data);
-
-    for my $hfield (qw/From To Subject Bcc Cc Reply-To Sender/) {
-        my @headers = $email->header($hfield);
-        $email->header_set($hfield => map { encode("MIME-Header", $_) } @headers) if ($headers[0]);
-    }
-
-    $email->header_set('MIME-Version' => '1.0');
-    $email->header_set('Content-Type' => "text/plain; charset=UTF-8");
-    $email->header_set('Content-Transfer-Encoding' => '8bit');
+    my $email = _create_mime_email($event->template_output->data);
 
     try {
         $stat = $sender->send($email);
@@ -1967,6 +2056,23 @@ sub send_event_email_output {
         $logger->warn("send_event_email_output: unable to send email: ".Dumper($stat));
         return 0;
     }
+}
+
+sub _create_mime_email {
+    my $template_output = shift;
+    my $email = Email::MIME->new($template_output);
+    for my $hfield (qw/From To Bcc Cc Reply-To Sender/) {
+        my @headers = $email->header($hfield);
+        $email->header_str_set($hfield => join(',', @headers)) if ($headers[0]);
+    }
+
+    my @headers = $email->header('Subject');
+    $email->header_str_set('Subject' => $headers[0]) if ($headers[0]);
+
+    $email->header_set('MIME-Version' => '1.0');
+    $email->header_set('Content-Type' => "text/plain; charset=UTF-8");
+    $email->header_set('Content-Transfer-Encoding' => '8bit');
+    return $email;
 }
 
 __PACKAGE__->register_method(
@@ -2030,7 +2136,9 @@ sub format_biblio_record_entry {
     my ($auth, $captcha_pass, $email, $subject);
     if ($for_email) {
         $auth = shift @_;
-        ($captcha_pass, $email, $subject) = splice @_, -3, 3;
+        if (@_ > 5) { # the stuff below is included in the params, safe to splice
+            ($captcha_pass, $email, $subject) = splice @_, -3, 3;
+        }
     }
     my ($bib_id, $holdings_context_org, $bib_sort, $sort_dir, $group_member) = @_;
     $holdings_context_org ||= $U->get_org_tree->id;
@@ -3047,8 +3155,15 @@ __PACKAGE__->register_method(
             desc => q/
                 Stream of record summary objects including id, record,
                 hold_count, copy_counts, display (metabib display
-                fields), attributes (metabib record attrs), plus
-                metabib_id and metabib_records for the metabib variant.
+                fields), and attributes (metabib record attrs).  The
+                metabib variant of the call gets metabib_id and
+                metabib_records, and the regular record version also
+                gets some metabib information, but returns them as
+                staff_view_metabib_id, staff_view_metabib_records, and
+                staff_view_metabib_attributes.  This is to mitigate the
+                need for code changes elsewhere where assumptions are
+                made when certain fields are returned.
+                
             /
         }
     }
@@ -3104,11 +3219,70 @@ sub catalog_record_summary {
 
     $holdable_method = $self->method_lookup($holdable_method); # local method
 
+    my %MR_summary_cache;
     for my $rec_id (@$record_ids) {
 
         my $response = $is_meta ? 
             get_one_metarecord_summary($self, $e, $org_id, $rec_id) :
             get_one_record_summary($self, $e, $org_id, $rec_id);
+
+        # Let's get Formats & Editions data FIXME: consider peer bibs?
+        my @metabib_records;
+        unless ($is_meta) {
+            my $meta_search = $e->search_metabib_metarecord_source_map({source => $rec_id});
+            if (scalar(@$meta_search) > 0) {
+                $response->{staff_view_metabib_id} = $meta_search->[0]->metarecord;
+                my $maps = $e->search_metabib_metarecord_source_map({metarecord => $response->{staff_view_metabib_id}});
+                @metabib_records = map { $_->source } @$maps;
+            } else {
+                # XXX ugly hack for bibs without metarecord mappings, e.g. deleted bibs
+                # where ingest.metarecord_mapping.preserve_on_delete is false
+                @metabib_records = ( $rec_id );
+            }
+
+            $response->{staff_view_metabib_records} = \@metabib_records;
+
+            my $metabib_attr = {};
+            my $attributes;
+            if ($response->{staff_view_metabib_id} and $MR_summary_cache{$response->{staff_view_metabib_id}}) {
+                $metabib_attr = $MR_summary_cache{$response->{staff_view_metabib_id}};
+            } else {
+                $attributes = $U->get_bre_attrs(\@metabib_records);
+            }
+
+            # we get "243":{
+            #       "srce":{
+            #         "code":" ",
+            #         "label":"National bibliographic agency"
+            #       }, ...}
+
+            if ($attributes) {
+                foreach my $bib_id ( keys %{ $attributes } ) {
+                    foreach my $ctype ( keys %{ $attributes->{$bib_id} } ) {
+                        # we want {
+                        #   "srce":{ " ": { "label": "National bibliographic agency", "count" : 1 } },
+                        #       ...
+                        #   }
+                        my $current_code = $attributes->{$bib_id}->{$ctype}->{code};
+                        my $code_label = $attributes->{$bib_id}->{$ctype}->{label};
+                        $metabib_attr->{$ctype} = {} unless $metabib_attr->{$ctype};
+                        if (! $metabib_attr->{$ctype}->{ $current_code }) {
+                            $metabib_attr->{$ctype}->{ $current_code } = {
+                                "label" => $code_label,
+                                "count" => 1
+                            }
+                        } else {
+                            $metabib_attr->{$ctype}->{ $current_code }->{count}++;
+                        }
+                    }
+                }
+            }
+
+            if ($response->{staff_view_metabib_id}) {
+                $MR_summary_cache{$response->{staff_view_metabib_id}} = $metabib_attr;
+            }
+            $response->{staff_view_metabib_attributes} = $metabib_attr;
+        }
 
         ($response->{copy_counts}) = $copy_method->run($org_id, $rec_id);
 
@@ -3258,6 +3432,12 @@ sub get_one_metarecord_summary {
     $response->{metabib_id} = $rec_id;
     $response->{metabib_records} = [map {$_->source} @$maps];
 
+    # Find the sum of record note counts for all mapped bib records
+    my @record_ids = map {$_->source} @$maps;
+    my $notes = $e->search_biblio_record_note({ record => \@record_ids });
+    my $record_note_count = scalar(@{ $notes });
+    $response->{record_note_count} = $record_note_count;
+
     my @other_bibs = map {$_->source} grep {$_->source != $bre_id} @$maps;
 
     # Augment the record attributes with those of all of the records
@@ -3287,7 +3467,7 @@ sub get_one_record_summary {
         }
     }]) or return {};
 
-    # Compressed display fields are pachaged as JSON
+    # Compressed display fields are packaged as JSON
     my $display = {};
     $display->{$_->name} = OpenSRF::Utils::JSON->JSON2perl($_->value)
         foreach @{$bre->compressed_display_entries};
@@ -3301,6 +3481,10 @@ sub get_one_record_summary {
     }
     $attributes->{$_} = [keys %{$attributes->{$_}}] for keys %$attributes;
 
+    # Find the count of record notes on this record
+    my $notes = $e->search_biblio_record_note({ record => $rec_id });
+    my $record_note_count = scalar(@{ $notes });
+
     # clear bulk
     $bre->clear_marc;
     $bre->clear_mattrs;
@@ -3311,7 +3495,8 @@ sub get_one_record_summary {
         record => $bre,
         display => $display,
         attributes => $attributes,
-        urls => get_one_rec_urls($self, $e, $org_id, $rec_id)
+        urls => get_one_rec_urls($self, $e, $org_id, $rec_id),
+        record_note_count => $record_note_count
     };
 }
 
@@ -3387,6 +3572,42 @@ sub record_copy_counts_global {
     return $hash;
 }
 
+__PACKAGE__->register_method(
+    method        => "fetch_in_scope_lassos",
+    api_name      => "open-ils.search.fetch_context_library_groups",
+    stream        => 1,
+    signature     => {
+        desc   => "Fetch global and in-scope library groups (lassos)",
+        params => [
+            { desc => 'Optional org unit id for context scoping' }
+        ],
+        return => {
+            desc => 'Stream (or array, in atomic mode) of library groups (lassos)'
+        }
+    }
+);
+
+sub fetch_in_scope_lassos {
+    my( $self, $client, $org ) = @_;
+    my $e = new_editor();
+
+    my $direct_lassos = [];
+
+    # this supports a scalar org id, or an array of them
+    if ($org and (!ref($org) or ref($org) eq 'ARRAY')) {
+        $direct_lassos = $e->search_actor_org_lasso_map(
+            { org_unit => $org }
+        );
+        $direct_lassos = [ map { $_->lasso } @$direct_lassos];
+    }
+
+    my $lassos = $e->search_actor_org_lasso(
+        { '-or' => { global => 't', @$direct_lassos ? (id => { in => $direct_lassos}) : () } }
+    );
+
+    $client->respond($_) for sort { $a->name cmp $b->name } @$lassos;
+    return undef;
+}
 
 1;
 

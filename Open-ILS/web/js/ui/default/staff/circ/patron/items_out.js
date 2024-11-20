@@ -354,11 +354,12 @@ function($scope , $q , $routeParams , $timeout , egCore , egUser , patronSvc ,
                     $scope.ok = function(args) {
                         var due = $scope.args.due_date.toISOString();
                         console.debug("applying due date of " + due);
+                        egProgressDialog.open();
 
-                        var promises = [];
+                        var promise = $q.when();
                         angular.forEach(items, function(circ) {
-                            promises.push(
-                                egCore.net.request(
+                            promise = promise.then(function() {
+                                return egCore.net.request(
                                     'open-ils.circ',
                                     'open-ils.circ.circulation.due_date.update',
                                     egCore.auth.token(), circ.id(), due
@@ -368,10 +369,11 @@ function($scope , $q , $routeParams , $timeout , egCore , egUser , patronSvc ,
                                     // date from the modified circulation.
                                     circ.due_date(new_circ.due_date());
                                 })
-                            );
+                            });
                         });
 
-                        $q.all(promises).then(function() {
+                        promise.finally(function() {
+                            egProgressDialog.close();
                             $uibModalInstance.close();
                             provider.refresh();
                         });
@@ -450,9 +452,6 @@ function($scope , $q , $routeParams , $timeout , egCore , egUser , patronSvc ,
             }).then(() => $timeout(reset_page,1000)) // reset after each, because rejecting one stops the $q.all() chain
         });
     }
-    $scope.mark_missing = function(items) {
-        batch_action_with_flat_copies(items, egCirc.mark_missing);
-    }
     $scope.mark_lost = function(items) {
         batch_action_with_barcodes(items, egCirc.mark_lost);
     }
@@ -501,9 +500,11 @@ function($scope , $q , $routeParams , $timeout , egCore , egUser , patronSvc ,
                 }
                 window.oils_inside_batch = false;
                 window.oils_op_change_within_batch = false;
+                egProgressDialog.close();
                 reset_page();
             }
             function do_one() {
+                egProgressDialog.increment();
                 var bc = barcodes.pop();
                 if (!bc) {
                     batch_cleanup();
@@ -523,6 +524,7 @@ function($scope , $q , $routeParams , $timeout , egCore , egUser , patronSvc ,
                     }
                 });
             }
+            egProgressDialog.open({value : 1});
             do_one();
         });
     }

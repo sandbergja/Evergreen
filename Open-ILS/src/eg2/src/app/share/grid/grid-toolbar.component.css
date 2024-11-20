@@ -1,0 +1,81 @@
+.eg-grid-toolbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin: 0;
+}
+
+.eg-grid-toolbar .dropdown-menu {
+  width: max-content;
+}
+
+.eg-grid-toolbar .material-icons {
+  line-height: 1.25;
+  vertical-align: top;
+}
+
+.eg-grid-toolbar .label-with-material-icon {
+  align-items: flex-start;
+  display: flex;
+  flex-wrap: nowrap;
+  white-space: wrap;
+}
+
+/* make buttons and links match when focused */
+.eg-grid-toolbar .dropdown-item:focus,
+.eg-grid-toolbar .dropdown-item:hover,
+.eg-grid-column-config-dialog button:focus,
+.eg-grid-column-width-config button:focus {
+  outline: 2px solid var(--primary);
+}
+
+.button-adjacent-label {
+    vertical-align: inherit;
+    cursor: auto;
+}
+
+.button-adjacent-label.disabled {
+    opacity: .65;
+}
+
+.eg-grid-filters-toolbar > .btn-toolbar {
+  gap: 0.25rem;
+}
+
+.eg-grid-selection-count {
+  align-self: flex-end;
+  font-style: italic;
+  margin-inline-start: 0.75rem;
+  margin-inline-end: 0.5rem;
+}
+
+.btn-group > .btn-group.eg-grid-settings {
+  margin: 0;
+}
+
+.eg-grid-toolbar-utilities {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.eg-grid-toolbar-utilities .btn-outline-dark,
+.eg-grid-toolbar-utilities .btn-outline-dark:hover {
+  border-color: light-dark(rgba(33, 37, 41, 0.35), rgba(255, 255, 255, 0.35));
+}
+
+/* reduce opacity of text/icons, not borders */
+.eg-grid-toolbar-utilities .btn-outline-dark.disabled,
+.eg-grid-toolbar-utilities .btn-outline-dark:disabled {
+  color: light-dark(rgba(33, 37, 41, 0.5), rgba(255, 255, 255, 0.5));
+  opacity: 1;
+}
+
+.eg-grid-toolbar .dropdown h2,
+.eg-grid-toolbar .dropdown h3 {
+  color: inherit;
+  font-size: inherit;
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+  padding: 0;
+  line-height: inherit;
+}

@@ -12,6 +12,7 @@ import {OrgService} from '@eg/core/org.service';
 import {PermService} from '@eg/core/perm.service';
 import {AuthService} from '@eg/core/auth.service';
 import {AdminPageComponent} from '../../../share/admin-page/admin-page.component';
+import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 
 @Component({
     templateUrl: './floating-group.component.html'
@@ -24,6 +25,7 @@ export class FloatingGroupComponent extends AdminPageComponent implements OnInit
     gridDataSource: GridDataSource = new GridDataSource();
 
     @ViewChild('grid', {static: true}) grid: GridComponent;
+    @ViewChild('delConfirm', { static: true }) delConfirm: ConfirmDialogComponent;
 
     constructor(
         route: ActivatedRoute,
@@ -69,11 +71,14 @@ export class FloatingGroupComponent extends AdminPageComponent implements OnInit
     editSelected = (floatingGroups: IdlObject[]) => {
         const idToEdit = floatingGroups[0].id();
         this.navigateToEditPage(idToEdit);
-    }
+    };
 
-    deleteSelected = (floatingGroups: IdlObject[]) => {
-        super.deleteSelected(floatingGroups);
-    }
+    deleteSelected = (idlThings: IdlObject[]) => {
+        this.delConfirm.open().subscribe(confirmed => {
+            if (!confirmed) { return; }
+            super.doDelete(idlThings);
+        });
+    };
 
     navigateToEditPage(id: any) {
         this.router.navigate(['/staff/admin/server/config/floating_group/' + id]);
@@ -84,4 +89,4 @@ export class FloatingGroupComponent extends AdminPageComponent implements OnInit
         return;
     }
 
- }
+}

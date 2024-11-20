@@ -1026,6 +1026,11 @@ sub retrieve_purchase_order_impl {
     }
 
     push (@{$flesh->{flesh_fields}->{acqpo}}, 'po_items') if $options->{flesh_po_items};
+    if ($options->{flesh_po_items_further}) {
+        push (@{$flesh->{flesh_fields}->{acqpoi}}, 'fund_debit');
+        push (@{$flesh->{flesh_fields}->{acqfdeb}}, 'invoice_items');
+        $flesh->{'flesh'} = 3;
+    }
 
     my $args = (@{$flesh->{"flesh_fields"}->{"acqpo"}}) ?
         [$po_id, $flesh] : $po_id;
@@ -1033,7 +1038,8 @@ sub retrieve_purchase_order_impl {
     my $po = $e->retrieve_acq_purchase_order($args)
         or return $e->event;
 
-    return $e->event unless $e->allowed(['VIEW_INVOICE', 'CREATE_INVOICE'], $po->ordering_agency);
+    my $context_org = (ref $po->ordering_agency) ? $po->ordering_agency->id : $po->ordering_agency;
+    return $e->event unless $e->allowed(['VIEW_INVOICE', 'CREATE_INVOICE'], $context_org);
 
     if($$options{flesh_lineitems}) {
 
@@ -1078,6 +1084,22 @@ sub retrieve_purchase_order_impl {
     return $po;
 }
 
+__PACKAGE__->register_method(
+    method => 'format_invoice',
+    api_name    => 'open-ils.acq.invoice.format'
+);
+
+sub format_invoice {
+    my($self, $conn, $auth, $inv_id, $format) = @_;
+    my $e = new_editor(authtoken=>$auth);
+    return $e->event unless $e->checkauth;
+
+    my $invoice = $e->retrieve_acq_invoice($inv_id) or return $e->event;
+    return $e->event unless $e->allowed('VIEW_INVOICE', $invoice->receiver);
+
+    my $hook = "format.acqinv.$format";
+    return $U->fire_object_event(undef, $hook, $invoice, $invoice->receiver);
+}
 
 __PACKAGE__->register_method(
     method => 'format_po',
@@ -1373,7 +1395,7 @@ sub process_fiscal_rollover {
 
     my $e = new_editor(xact=>1, authtoken=>$auth);
     return $e->die_event unless $e->checkauth;
-    return $e->die_event unless $e->allowed('ADMIN_FUND', $org_id);
+    return $e->die_event unless $e->allowed('ADMIN_FUND_ROLLOVER', $org_id);
     $options ||= {};
 
     my $combined = ($self->api_name =~ /combined/); 

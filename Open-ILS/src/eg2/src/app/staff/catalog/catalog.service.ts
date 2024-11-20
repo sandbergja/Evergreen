@@ -1,12 +1,17 @@
-import {Injectable, EventEmitter} from '@angular/core';
+import {Injectable, EventEmitter, NgZone} from '@angular/core';
 import {Router, ActivatedRoute} from '@angular/router';
 import {IdlObject} from '@eg/core/idl.service';
 import {OrgService} from '@eg/core/org.service';
-import {CatalogService} from '@eg/share/catalog/catalog.service';
 import {CatalogUrlService} from '@eg/share/catalog/catalog-url.service';
 import {CatalogSearchContext} from '@eg/share/catalog/search-context';
 import {BibRecordSummary} from '@eg/share/catalog/bib-record.service';
 import {PatronService} from '@eg/staff/share/patron/patron.service';
+import {StoreService} from '@eg/core/store.service';
+import {BroadcastService} from '@eg/share/util/broadcast.service';
+import {Observable} from 'rxjs';
+import {tap} from 'rxjs/operators';
+
+const HOLD_FOR_PATRON_KEY = 'eg.circ.patron_hold_target';
 
 /**
  * Shared bits needed by the staff version of the catalog.
@@ -19,6 +24,9 @@ export class StaffCatalogService {
     routeIndex = 0;
     defaultSearchOrg: IdlObject;
     defaultSearchLimit: number;
+    defaultSortOrder : string;
+    defaultAvailableOnly : boolean;
+    defaultGroupFormats : boolean;
     // Track the current template through route changes.
     selectedTemplate: string;
 
@@ -60,13 +68,18 @@ export class StaffCatalogService {
     // result
     jumpOnSingleHit = false;
 
+    // discovery layer URL to display an item in "patron view"
+    patronViewUrl = '';
+
     constructor(
         private router: Router,
         private route: ActivatedRoute,
+        private store: StoreService,
         private org: OrgService,
-        private cat: CatalogService,
         private patron: PatronService,
-        private catUrl: CatalogUrlService
+        private catUrl: CatalogUrlService,
+        private broadcaster: BroadcastService,
+        private zone: NgZone
     ) { }
 
     createContext(): void {
@@ -77,14 +90,17 @@ export class StaffCatalogService {
         this.searchContext =
             this.catUrl.fromUrlParams(this.route.snapshot.queryParamMap);
 
-        this.holdForBarcode = this.route.snapshot.queryParams['holdForBarcode'];
+        this.holdForBarcode = this.store.getLoginSessionItem(HOLD_FOR_PATRON_KEY);
 
         if (this.holdForBarcode) {
             this.patron.getByBarcode(this.holdForBarcode)
-            .then(user => {
-                this.holdForUser = user;
-                this.holdForChange.emit();
-            });
+                .then(user => {
+                    this.holdForUser = user;
+                    this.holdForChange.emit();
+                });
+        } else {
+            // In case the session item was cleared from another component.
+            this.clearHoldPatron();
         }
 
         this.searchContext.org = this.org; // service, not searchOrg
@@ -92,10 +108,50 @@ export class StaffCatalogService {
         this.applySearchDefaults();
     }
 
-    clearHoldPatron() {
+    clearHoldPatron(broadcast = true) {
+        const removedTarget = this.holdForBarcode;
+
         this.holdForUser = null;
         this.holdForBarcode = null;
+        this.store.removeLoginSessionItem(HOLD_FOR_PATRON_KEY);
         this.holdForChange.emit();
+        if (!broadcast) {return;}
+
+        // clear hold patron on other tabs
+        this.broadcaster.broadcast(
+            HOLD_FOR_PATRON_KEY, { removedTarget }
+        );
+    }
+
+    onBeforeUnload(): void {
+        const closedTarget = this.holdForBarcode;
+        if (closedTarget) {
+            this.clearHoldPatron(false);
+            this.broadcaster.broadcast(HOLD_FOR_PATRON_KEY,
+                { closedTarget }
+            );
+        }
+    }
+
+    onChangeHoldPatron(): Observable<any> {
+        return this.broadcaster.listen(HOLD_FOR_PATRON_KEY).pipe(
+            tap(({ removedTarget, closedTarget }) => {
+                if (removedTarget && this.holdForBarcode) {
+                    // broadcaster doesn't trigger change detection,
+                    // so trigger it manually
+                    this.zone.run(() => this.clearHoldPatron(false));
+
+                } else if (closedTarget) {
+                    // if hold target was unset by another tab,
+                    // restore the hold target
+                    if (closedTarget === this.holdForBarcode) {
+                        this.store.setLoginSessionItem(
+                            HOLD_FOR_PATRON_KEY, closedTarget
+                        );
+                    }
+                }
+            })
+        );
     }
 
     cloneContext(context: CatalogSearchContext): CatalogSearchContext {
@@ -114,6 +170,21 @@ export class StaffCatalogService {
         if (!this.searchContext.pager.limit) {
             this.searchContext.pager.limit = this.defaultSearchLimit || 10;
         }
+
+        if (!this.searchContext.sort) {
+            this.searchContext.sort = this.defaultSortOrder;
+        }
+        this.searchContext.defaultSort = this.defaultSortOrder;
+
+        if (this.defaultAvailableOnly && this.searchContext.termSearch.available === undefined) {
+            this.searchContext.termSearch.available = this.defaultAvailableOnly;
+        }
+        this.searchContext.termSearch.defaultAvailable = this.defaultAvailableOnly;
+
+        if (this.defaultGroupFormats && this.searchContext.termSearch.groupByMetarecord === undefined){
+            this.searchContext.termSearch.groupByMetarecord = this.defaultGroupFormats;
+        }
+        this.searchContext.termSearch.defaultGroupByMetarecord = this.defaultGroupFormats;
     }
 
     /**
@@ -140,7 +211,7 @@ export class StaffCatalogService {
         params.ridx = '' + this.routeIndex++;
 
         this.router.navigate(
-          ['/staff/catalog/search'], {queryParams: params});
+            ['/staff/catalog/search'], {queryParams: params});
     }
 
     /**

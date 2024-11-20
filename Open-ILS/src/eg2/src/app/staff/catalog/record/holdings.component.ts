@@ -1,7 +1,7 @@
 import {Component, OnInit, Input, ViewChild, ViewEncapsulation
-    } from '@angular/core';
+} from '@angular/core';
 import {Router} from '@angular/router';
-import {Observable, Observer, of, empty} from 'rxjs';
+import {Observable, Observer, of, EMPTY} from 'rxjs';
 import {map, tap, concatMap} from 'rxjs/operators';
 import {Pager} from '@eg/share/util/pager';
 import {IdlObject, IdlService} from '@eg/core/idl.service';
@@ -10,38 +10,38 @@ import {OrgService} from '@eg/core/org.service';
 import {NetService} from '@eg/core/net.service';
 import {PcrudService} from '@eg/core/pcrud.service';
 import {AuthService} from '@eg/core/auth.service';
-import {GridDataSource, GridColumn, GridCellTextGenerator} from '@eg/share/grid/grid';
+import {GridDataSource, GridCellTextGenerator} from '@eg/share/grid/grid';
 import {GridComponent} from '@eg/share/grid/grid.component';
 import {GridToolbarCheckboxComponent
-    } from '@eg/share/grid/grid-toolbar-checkbox.component';
+} from '@eg/share/grid/grid-toolbar-checkbox.component';
 import {StoreService} from '@eg/core/store.service';
 import {ServerStoreService} from '@eg/core/server-store.service';
 import {MarkDamagedDialogComponent
-    } from '@eg/staff/share/holdings/mark-damaged-dialog.component';
+} from '@eg/staff/share/holdings/mark-damaged-dialog.component';
 import {MarkMissingDialogComponent
-    } from '@eg/staff/share/holdings/mark-missing-dialog.component';
+} from '@eg/staff/share/holdings/mark-missing-dialog.component';
 import {AnonCacheService} from '@eg/share/util/anon-cache.service';
 import {HoldingsService} from '@eg/staff/share/holdings/holdings.service';
 import {CopyAlertsDialogComponent
-    } from '@eg/staff/share/holdings/copy-alerts-dialog.component';
+} from '@eg/staff/share/holdings/copy-alerts-dialog.component';
 import {CopyTagsDialogComponent
-    } from '@eg/staff/share/holdings/copy-tags-dialog.component';
+} from '@eg/staff/share/holdings/copy-tags-dialog.component';
 import {CopyNotesDialogComponent
-    } from '@eg/staff/share/holdings/copy-notes-dialog.component';
+} from '@eg/staff/share/holdings/copy-notes-dialog.component';
 import {ReplaceBarcodeDialogComponent
-    } from '@eg/staff/share/holdings/replace-barcode-dialog.component';
+} from '@eg/staff/share/holdings/replace-barcode-dialog.component';
 import {DeleteHoldingDialogComponent
-    } from '@eg/staff/share/holdings/delete-volcopy-dialog.component';
+} from '@eg/staff/share/holdings/delete-volcopy-dialog.component';
 import {BucketDialogComponent
-    } from '@eg/staff/share/buckets/bucket-dialog.component';
+} from '@eg/staff/share/buckets/bucket-dialog.component';
 import {ConjoinedItemsDialogComponent
-    } from '@eg/staff/share/holdings/conjoined-items-dialog.component';
+} from '@eg/staff/share/holdings/conjoined-items-dialog.component';
 import {MakeBookableDialogComponent
-    } from '@eg/staff/share/booking/make-bookable-dialog.component';
+} from '@eg/staff/share/booking/make-bookable-dialog.component';
 import {TransferItemsComponent
-    } from '@eg/staff/share/holdings/transfer-items.component';
+} from '@eg/staff/share/holdings/transfer-items.component';
 import {TransferHoldingsComponent
-    } from '@eg/staff/share/holdings/transfer-holdings.component';
+} from '@eg/staff/share/holdings/transfer-holdings.component';
 import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
 import {BroadcastService} from '@eg/share/util/broadcast.service';
 
@@ -84,10 +84,10 @@ export class HoldingsEntry {
 }
 
 @Component({
-  selector: 'eg-holdings-maintenance',
-  templateUrl: 'holdings.component.html',
-  styleUrls: ['holdings.component.css'],
-  encapsulation: ViewEncapsulation.None
+    selector: 'eg-holdings-maintenance',
+    templateUrl: 'holdings.component.html',
+    styleUrls: ['holdings.component.css'],
+    encapsulation: ViewEncapsulation.None
 })
 export class HoldingsMaintenanceComponent implements OnInit {
 
@@ -98,39 +98,39 @@ export class HoldingsMaintenanceComponent implements OnInit {
 
     // Manage visibility of various sub-sections
     @ViewChild('callNumsCheckbox', { static: true })
-        private callNumsCheckbox: GridToolbarCheckboxComponent;
+    private callNumsCheckbox: GridToolbarCheckboxComponent;
     @ViewChild('copiesCheckbox', { static: true })
-        private copiesCheckbox: GridToolbarCheckboxComponent;
+    private copiesCheckbox: GridToolbarCheckboxComponent;
     @ViewChild('emptyCallNumsCheckbox', { static: true })
-        private emptyCallNumsCheckbox: GridToolbarCheckboxComponent;
+    private emptyCallNumsCheckbox: GridToolbarCheckboxComponent;
     @ViewChild('emptyLibsCheckbox', { static: true })
-        private emptyLibsCheckbox: GridToolbarCheckboxComponent;
+    private emptyLibsCheckbox: GridToolbarCheckboxComponent;
     @ViewChild('markDamagedDialog', { static: true })
-        private markDamagedDialog: MarkDamagedDialogComponent;
+    private markDamagedDialog: MarkDamagedDialogComponent;
     @ViewChild('markMissingDialog', { static: true })
-        private markMissingDialog: MarkMissingDialogComponent;
+    private markMissingDialog: MarkMissingDialogComponent;
     @ViewChild('copyAlertsDialog', { static: true })
-        private copyAlertsDialog: CopyAlertsDialogComponent;
+    private copyAlertsDialog: CopyAlertsDialogComponent;
     @ViewChild('copyTagsDialog', {static: false})
-        private copyTagsDialog: CopyTagsDialogComponent;
+    private copyTagsDialog: CopyTagsDialogComponent;
     @ViewChild('copyNotesDialog', {static: false})
-        private copyNotesDialog: CopyNotesDialogComponent;
+    private copyNotesDialog: CopyNotesDialogComponent;
     @ViewChild('replaceBarcode', { static: true })
-        private replaceBarcode: ReplaceBarcodeDialogComponent;
+    private replaceBarcode: ReplaceBarcodeDialogComponent;
     @ViewChild('deleteHolding', { static: true })
-        private deleteHolding: DeleteHoldingDialogComponent;
+    private deleteHolding: DeleteHoldingDialogComponent;
     @ViewChild('bucketDialog', { static: true })
-        private bucketDialog: BucketDialogComponent;
+    private bucketDialog: BucketDialogComponent;
     @ViewChild('conjoinedDialog', { static: true })
-        private conjoinedDialog: ConjoinedItemsDialogComponent;
+    private conjoinedDialog: ConjoinedItemsDialogComponent;
     @ViewChild('makeBookableDialog', { static: true })
-        private makeBookableDialog: MakeBookableDialogComponent;
+    private makeBookableDialog: MakeBookableDialogComponent;
     @ViewChild('transferItems', {static: false})
-        private transferItems: TransferItemsComponent;
+    private transferItems: TransferItemsComponent;
     @ViewChild('transferHoldings', {static: false})
-        private transferHoldings: TransferHoldingsComponent;
+    private transferHoldings: TransferHoldingsComponent;
     @ViewChild('transferAlert', {static: false})
-        private transferAlert: AlertDialogComponent;
+    private transferAlert: AlertDialogComponent;
 
     holdingsTree: HoldingsTree;
 
@@ -289,7 +289,7 @@ export class HoldingsMaintenanceComponent implements OnInit {
         this.emptyLibsCheckbox.checked(settings['cat.holdings_show_empty_org']);
 
         this.gridDataSource.getRows = (pager: Pager, sort: any[]) => {
-            if (!this.contextOrgLoaded) { return empty(); }
+            if (!this.contextOrgLoaded) { return EMPTY; }
             return this.fetchHoldings(pager);
         };
 
@@ -354,9 +354,18 @@ export class HoldingsMaintenanceComponent implements OnInit {
         this.holdingsGrid.reload();
     }
 
+    getRowPaddingDepth(row) {
+        let depth = row.locationDepth;
+        // let leaf nodes line up with their parents
+        if (row.copy || row.treeNode.children.length === 0) {
+            depth = depth - 1;
+        }
+        return depth;
+    }
+
     onRowActivate(row: any) {
         if (row.copy) {
-            // Launch copy editor?
+            this.openHoldingEdit([row], true, false);
         } else {
             this.gridTemplateContext.toggleExpandRow(row);
         }
@@ -527,7 +536,7 @@ export class HoldingsMaintenanceComponent implements OnInit {
 
     // Grab call numbers, copies, and related data.
     fetchHoldings(pager: Pager): Observable<any> {
-        if (!this.recordId) { return of([]); }
+        if (!this.recordId || this.recordId === -1) { return of([]); }
 
         return new Observable<any>(observer => {
 
@@ -558,8 +567,8 @@ export class HoldingsMaintenanceComponent implements OnInit {
                             flesh: 3,
                             flesh_fields: {
                                 acp: ['status', 'location', 'circ_lib', 'parts', 'notes',
-                                     'tags', 'age_protect', 'copy_alerts', 'latest_inventory',
-                                     'total_circ_count', 'last_circ'],
+                                    'tags', 'age_protect', 'copy_alerts', 'latest_inventory',
+                                    'total_circ_count', 'last_circ'],
                                 acn: ['prefix', 'suffix', 'copies'],
                                 acli: ['inventory_workstation']
                             }
@@ -572,7 +581,7 @@ export class HoldingsMaintenanceComponent implements OnInit {
                     this.appendCallNum(callNum);
                     volsFetched.push(callNum.id());
                 },
-                err => {},
+                (err: unknown) => {},
                 ()  => {
                     this.refreshHoldings = false;
                     this.pruneVols(volsFetched);
@@ -580,7 +589,7 @@ export class HoldingsMaintenanceComponent implements OnInit {
                         ok => this.flattenHoldingsTree(observer)
                     );
                 }
-             );
+            );
         });
     }
 
@@ -704,6 +713,12 @@ export class HoldingsMaintenanceComponent implements OnInit {
                 copy.parts().map(p => p.label()).join(',');
         }
 
+        // Ignore alerts that have already been ACK'ed
+        // Over a long enough time, this list could grow large, so
+        // consider fetching non-ack'ed copy alerts separately.
+        copy.copy_alerts(copy.copy_alerts().filter(a => !a.ack_time()));
+
+        // eslint-disable-next-line no-magic-numbers
         if (stat === 1 /* checked out */ || stat === 16 /* long overdue */) {
             // Avoid looking up circs on items that are not checked out.
             this.itemCircsNeeded.push(copy);
@@ -742,6 +757,7 @@ export class HoldingsMaintenanceComponent implements OnInit {
 
 
     async showMarkDamagedDialog(rows: HoldingsEntry[]) {
+        // eslint-disable-next-line no-magic-numbers
         const copyIds = this.selectedCopyIds(rows, 14 /* ignore damaged */);
 
         if (copyIds.length === 0) { return; }
@@ -759,7 +775,7 @@ export class HoldingsMaintenanceComponent implements OnInit {
                     if (ok) { rowsModified = true; }
                     return markNext(ids);
                 },
-                dismiss => markNext(ids)
+                (dismiss: unknown) => markNext(ids)
             );
         };
 
@@ -771,6 +787,7 @@ export class HoldingsMaintenanceComponent implements OnInit {
     }
 
     showMarkMissingDialog(rows: any[]) {
+        // eslint-disable-next-line no-magic-numbers
         const copyIds = this.selectedCopyIds(rows, 4 /* ignore missing */);
         if (copyIds.length > 0) {
             this.markMissingDialog.copyIds = copyIds;
@@ -781,7 +798,7 @@ export class HoldingsMaintenanceComponent implements OnInit {
                         this.holdingsGrid.reload();
                     }
                 },
-                dismissed => {} // avoid console errors
+                (dismissed: unknown) => {} // avoid console errors
             );
         }
     }
@@ -842,14 +859,14 @@ export class HoldingsMaintenanceComponent implements OnInit {
 
     openItemStatus(rows: HoldingsEntry[]) {
         if (rows.length > 0 && rows[0].copy) {
-           return this.openAngJsWindow(`cat/item/${rows[0].copy.id()}`);
+            return this.openAngJsWindow(`cat/item/${rows[0].copy.id()}`);
         }
     }
 
     openItemTriggeredEvents(rows: HoldingsEntry[]) {
         if (rows.length > 0 && rows[0].copy) {
-           return this.openAngJsWindow(
-               `cat/item/${rows[0].copy.id()}/triggered_events`);
+            return this.openAngJsWindow(
+                `cat/item/${rows[0].copy.id()}/triggered_events`);
         }
     }
 
@@ -858,7 +875,7 @@ export class HoldingsMaintenanceComponent implements OnInit {
         if (ids.length === 0) { return; }
 
         this.anonCache.setItem(null, 'print-labels-these-copies', {copies: ids})
-        .then(key => this.openAngJsWindow(`cat/printlabels/${key}`));
+            .then(key => this.openAngJsWindow(`cat/printlabels/${key}`));
     }
 
     openHoldingEdit(rows: HoldingsEntry[], hideVols: boolean, hideCopies: boolean) {
@@ -935,15 +952,15 @@ export class HoldingsMaintenanceComponent implements OnInit {
         }
     }
 
-    openItemAlerts(rows: HoldingsEntry[], mode: string) {
+    openItemAlerts(rows: HoldingsEntry[]) {
         const copyIds = this.selectedCopyIds(rows);
         if (copyIds.length === 0) { return; }
 
         this.copyAlertsDialog.copyIds = copyIds;
-        this.copyAlertsDialog.mode = mode;
         this.copyAlertsDialog.open({size: 'lg'}).subscribe(
-            modified => {
-                if (modified) {
+            changes => {
+                if (!changes) { return; }
+                if (changes.newAlerts.length > 0 || changes.changedAlerts.length > 0) {
                     this.hardRefresh();
                 }
             }
@@ -956,8 +973,8 @@ export class HoldingsMaintenanceComponent implements OnInit {
 
         this.copyTagsDialog.copyIds = copyIds;
         this.copyTagsDialog.open({size: 'lg'}).subscribe(
-            modified => {
-                if (modified) {
+            changes => {
+                if (changes.newTags.length > 0 || changes.deletedMaps.length > 0) {
                     this.hardRefresh();
                 }
             }
@@ -970,8 +987,9 @@ export class HoldingsMaintenanceComponent implements OnInit {
 
         this.copyNotesDialog.copyIds = copyIds;
         this.copyNotesDialog.open({size: 'lg'}).subscribe(
-            modified => {
-                if (modified) {
+            changes => {
+                if (!changes) { return; }
+                if (changes.newNotes.length > 0 || changes.delNotes.length > 0) {
                     this.hardRefresh();
                 }
             }
@@ -1161,7 +1179,7 @@ export class HoldingsMaintenanceComponent implements OnInit {
         this.transferHoldings.callNums = callNums;
 
         this.transferHoldings.transferHoldings()
-        .then(success => success ?  this.hardRefresh() : null);
+            .then(success => success ?  this.hardRefresh() : null);
     }
 }
 

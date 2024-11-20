@@ -4,8 +4,8 @@ import {PrintService} from '@eg/share/print/print.service';
 import {GridContext} from '@eg/share/grid/grid';
 
 @Component({
-  selector: 'eg-grid-print',
-  templateUrl: './grid-print.component.html'
+    selector: 'eg-grid-print',
+    templateUrl: './grid-print.component.html'
 })
 
 /**
@@ -15,7 +15,7 @@ export class GridPrintComponent {
     @Input() gridContext: GridContext;
     @ViewChild('printTemplate', { static: true }) private printTemplate: TemplateRef<any>;
     @ViewChild('progressDialog', { static: true })
-        private progressDialog: ProgressDialogComponent;
+    private progressDialog: ProgressDialogComponent;
 
     constructor(private printer: PrintService) {}
 
@@ -26,10 +26,10 @@ export class GridPrintComponent {
 
         this.gridContext.getAllRowsAsText().subscribe(
             row => {
-              this.progressDialog.increment();
-              textItems.rows.push(row);
+                this.progressDialog.increment();
+                textItems.rows.push(row);
             },
-            err => this.progressDialog.close(),
+            (err: unknown) => this.progressDialog.close(),
             ()  => {
                 this.progressDialog.close();
                 this.printer.print({
@@ -39,6 +39,29 @@ export class GridPrintComponent {
                 });
             }
         );
+    }
+
+    printSelectedRows(): void {
+        const columns = this.gridContext.columnSet.displayColumns();
+        const rows = this.gridContext.rowSelector.selected()
+            .reduce<{text: any; pos: number}[]>((pairs, index) => {
+                const pos = this.gridContext.getRowPosition(index);
+                if (pos === undefined) {return pairs;}
+
+                const row = this.gridContext.dataSource.data[pos];
+                if (row === undefined) {return pairs;}
+
+                const text = this.gridContext.getRowAsFlatText(row);
+                return pairs.concat({text, pos});
+            }, [])
+            .sort(({pos: a}, {pos: b}) => a - b)
+            .map(({text}) => text);
+
+        this.printer.print({
+            template: this.printTemplate,
+            contextData: {columns, rows},
+            printContext: 'default'
+        });
     }
 }
 

@@ -7,19 +7,19 @@
 
 1) To check out an item click *Check Out Items* from the Circulation and Patrons toolbar, or select *Circulation* -> *Check Out*.
 
-image::media/checkout_menu_web_client.png[]
+image::circulating_items_web_client/checkout_menu_web_client.png[Check Out Items menu in the Circulation and Patrons toolbar.]
 
 2) Scan or enter patron's barcode and click *Submit* if entering barcode manually. If scanning, number is submitted automatically.
 
-image::media/retrieve_patron_web_client.png[]
+image::circulating_items_web_client/retrieve_patron_web_client.png[Patron barcode entry screen with a submit button.]
 
 3) Scan or enter item barcode manually, clicking *Submit* if manual.
 
-image::media/checkout_item_barcode_web_client.png[] 
+image::circulating_items_web_client/checkout_item_barcode_web_client.png[Item barcode entry screen with a submit button.] 
 
 4) Due date is now displayed.
 
-image::media/due_date_display_web_client.png[]
+image::circulating_items_web_client/due_date_display_web_client.png[Display showing the due date for a checked-out item.]
  
 5) When all items are scanned, click the *Done* button to generate slip receipt or to exit patron record if not printing slip receipts. 
 
@@ -31,7 +31,7 @@ image::media/due_date_display_web_client.png[]
 
 3) At prompt, enter the required information click *Precat Checkout*. 
 
-image::media/precat_web_client.png[]
+image::circulating_items_web_client/precat_web_client.png[Pre-cataloged item checkout screen with fields for item information.]
  
 [TIP]
 On check-in, Evergreen will prompt staff to re-route the item to cataloging.
@@ -53,8 +53,18 @@ Circulation periods are pre-set. When items are checked out, due dates are autom
 
 Before you scan the item, select the *Specific Due Date* checkbox. Enter the date in yyyy-mm-dd format. This date applies to all items until you change the date, de-select the *Specific Due Date* checkbox, or quit the patron record.
 
-image::media/specify_due_date1_web_client.png[]
+image::circulating_items_web_client/specify_due_date1_web_client.png[Specific Due Date checkbox with date entry field.]
 
+=== Strict Barcode ===
+
+The 'Strict Barcode' checkbox can appear next to barcode inputs on the checkout, checkin, renewal, and offline circulation pages.
+
+If checked, it will examine the barcode value to see if it contains only digits and meets the "Mod10" checkdigit algorithm. This checkdigit algorithm is often used by library barcodes that use the "Codabar" symbology.
+
+If the barcode does not meet the conditions, a "bad barcode" alert will be displayed. Staff are given the option to accept and continue using the barcode as input.
+"Strict Barcode" is only useful for libraries whose barcodes use the Mod10 checkdigit algorithm. However, several other checkdigit algorithms and symbologies are in use by libraries.
+
+image::circulating_items_web_client/strict_barcode.png[Example of Strict Barcode Checkbox]
 
 === Email Checkout Receipts ===
 
@@ -64,7 +74,7 @@ This feature allows patrons to receive checkout receipts through email at the ci
 
 When a patron has opted to receive email checkout receipts by default, an envelope icon representing email will appear next to the receipt options in the Check Out screen.  A printer icon representing a physical receipt appears if the patron has not opted in to the default email receipts.
 
-image::media/ereceipts5_web_client.PNG[]
+image::circulating_items_web_client/ereceipts5_web_client.PNG[Envelope icon indicating the option to email checkout receipts.]
 
 Staff can click *Quick Receipt* and the default checkout receipt option will be triggered—an email will be sent or the receipt will print out.  The Quick Receipt option allows staff to stay in the patron account after completing the transaction.  Alternatively, staff can click *Done* to trigger the default checkout receipt and close out the patron account.  By clicking on the arrow next to the Quick Receipt or Done buttons, staff can select which receipt option to use, regardless of the selected default.  The email receipt option will be disabled if the patron account does not have an email address.
 
@@ -72,7 +82,7 @@ Staff can click *Quick Receipt* and the default checkout receipt option will be 
 
 In the Self Checkout interface, patrons will have the option to select a print or email checkout receipt, or no receipt.  The radio button for the patron's default receipt option will be selected automatically in the interface.  Patrons can select a different receipt option if desired.  The email receipt radio button will be disabled if there is no email address associated with the patron's account.
 
-image::media/ereceipts6_web_client.PNG[]
+image::circulating_items_web_client/ereceipts6_web_client.PNG[Self Checkout interface with options for print or email receipts.]
 
 ==== Opt In ====
 
@@ -80,25 +90,25 @@ image::media/ereceipts6_web_client.PNG[]
 
 Patrons can be opted in to receive email checkout receipts by default by library staff upon the creation of their library account.  Within the patron registration form, there is a new option below the Email Address field to select _Email checkout receipts by default?_.  Select this option if the patron wants email checkout receipts to be their default.  Save any changes.
 
-image::media/ereceipts1_web_client.PNG[]
+image::circulating_items_web_client/ereceipts1_web_client.PNG[Email checkout receipts opt-in option in the patron registration form.]
 
 *Staff Mediated Opt In After Registration*
 
 Staff can also select email checkout receipts as the default option in a patron account after initial registration.  Within the patron account go to *Edit* and select _Email checkout receipts by default?_.  Make sure the patron also has an email address associated with their account.  Save any changes.
 
-image::media/ereceipts2_web_client.PNG[]
+image::circulating_items_web_client/ereceipts2_web_client.PNG[Email checkout receipts default option in the patron account edit screen.]
 
 *Patron Opt In – Self-Registration Form*
 
 If your library offers patrons the ability to request a library card through the patron self-registration form, they can select email checkout receipts by default in the initial self-registration form:
 
-image::media/ereceipts3_web_client.PNG[]
+image::circulating_items_web_client/ereceipts3_web_client.PNG[Self-registration form with the option to select email checkout receipts by default.]
 
 *Patron Opt In - OPAC Account*
 
 Patrons can also opt in to receive email checkout receipts by default directly in their OPAC account.  After logging in, patrons can go to *Account Preferences->Notification Preferences* and enable _Email checkout receipts by default?_ and click *Save*.
 
-image::media/ereceipts4_web_client.PNG[]
+image::circulating_items_web_client/ereceipts4_web_client.PNG[Notification Preferences section in the OPAC account with the option to enable email checkout receipts.]
 
 
 ==== Email Checkout Receipt Configuration ====
@@ -112,15 +122,15 @@ Email checkout receipts will be sent out through a Notifications/Action Trigger 
 
 1) To check in an item click *Check In Items* from the Circulation and Patrons toolbar, or select *Circulation* -> *Check In*.
 
-image::media/check_in_menu_web_client.png[]
+image::circulating_items_web_client/check_in_menu_web_client.png[Check In Items menu in the Circulation and Patrons toolbar.]
 
 2) Scan item barcode or enter manually and click *Submit*.
 
-image::media/checkin_barcode_web_client.png[]
+image::circulating_items_web_client/checkin_barcode_web_client.png[Item barcode entry screen with a submit button.]
  
 3) If there is an overdue fine associated with the checkin, an alert will appear at the top of the screen with a fine tally for the current checkin session. To immediately handle fine payment, click the alert to jump to the patron's bill record.
 
-image::media/overdue_checkin_web_client.png[]
+image::circulating_items_web_client/overdue_checkin_web_client.png[Overdue check-in alert with a fine tally.]
 
 4) If the checkin is an item that can fill a hold, a pop-up box will appear with patron contact information or routing information for the hold.
 
@@ -128,7 +138,7 @@ image::media/overdue_checkin_web_client.png[]
 
 6) If the item is not in a state acceptable for hold/transit (for instance, it is damaged), select the line of the item, and choose *Actions* -> *Cancel Transit*.  The item will then have a status of _Canceled Transit_ rather than _In Transit_.
 
-image::media/Check_In-Cancel_Transit.png[Actions Menu - Cancel Transit]
+image::circulating_items_web_client/Check_In-Cancel_Transit.png[Actions Menu - Cancel Transit]
 
 === Backdated check in ===
 
@@ -136,11 +146,11 @@ This is useful for clearing a book drop.
 
 1) To change effective check-in date, select *Circulation* -> *Check In Items*. In *Effective Date* field enter the date in yyyy-mm-dd format.
 
-image::media/backdate_checkin_web_client.png[]
+image::circulating_items_web_client/backdate_checkin_web_client.png[Effective Date field for backdated check-ins.]
 
 2) The new effective date is now displayed in the red bar above the Barcode field.
 
-image::media/backdate_red_web_client.png[]
+image::circulating_items_web_client/backdate_red_web_client.png[Effective date displayed in red bar above the barcode field.]
 
 3) Move the cursor to the *Barcode* field. Scan the items. When finishing backdated check-in, change the *Effective Date* back to today's date.
 
@@ -150,11 +160,11 @@ After an item has been checked in, you may use the Backdate Post-Checkin functio
 
 1) Select the item on the Check In screen, click *Actions* -> *Backdate Post-Checkin*.
 
-image::media/backdate_post_checkin_web_client.png[]
+image::circulating_items_web_client/backdate_post_checkin_web_client.png[Backdate Post-Checkin action in the Actions menu.]
 
 2) In *Effective Date* field enter the date in yyyy-mm-dd format.  The check-in date will be adjusted according to the new effective check-in date.
 
-image::media/backdate_post_date_web_client.png[]
+image::circulating_items_web_client/backdate_post_date_web_client.png[Effective Date field for backdating post-checkin.]
 
 [#checkin_modifiers]
 .Checkin Modifiers
@@ -184,7 +194,7 @@ At the right bottom corner there is a *Checkin Modifiers* pop-up list. The optio
 
 These options may be selected simultaneously. The selected option is displayed in the header area.
 
-image::media/checkinmodifiers-with-inventory2.png[Web client check-in modifiers]
+image::circulating_items_web_client/checkinmodifiers-with-inventory2.png[Web client check-in modifiers]
 ===================================================
   
 == Renewal and Editing the Item's Due Date ==
@@ -195,15 +205,19 @@ Checked-out items can be renewed if your library's policy allows it. The new due
 
 1) Retrieve the patron record and go to the *Items Out* screen.
 
-image::media/items_out_click_web_client.png[]
+image::circulating_items_web_client/items_out_click_web_client.png[Items Out screen in the patron record.]
 
 2) Select the item you want to renew. Click on *Actions* -> *Renew*. If you want to renew all items in the account, click *Renew All* instead.
 
-image::media/renew_action_web_client.png[]
+image::circulating_items_web_client/renew_action_web_client.png[Renew action in the Items Out screen.]
 
-3) If you want to specify the due date, click *Renew with Specific Due Date*. You will be prompted to select a due date. Once done, click *Apply*.
+3) If you want to specify the due date, click *Renew with Specific Due Date*.
 
-//image::media/renew_specific_date_web_client.png[]
+image::circulating_items_web_client/renew_specific_date_web_client.png[Renew items with a specific due date action in Items Out screen.]
+
+You will be prompted to select a due date. Once done, click *Submit*.
+
+image::circulating_items_web_client/renew_specific_date_submit.png[Renew items with a specific due date]
  
 
 === Renewing by Item Barcode ===
@@ -211,11 +225,11 @@ image::media/renew_action_web_client.png[]
 
 2) Scan or manually entire the item barcode.
 
-image::media/renew_item_web_client.png[]
+image::circulating_items_web_client/renew_item_web_client.png[Renew Items screen with item barcode entry.]
 
 3) If you want to specify the due date, click *Specific Due Date* and enter a new due date in yyyy-mm-dd format.
 
-image::media/renew_item_calendar_web_client.png[]
+image::circulating_items_web_client/renew_item_calendar_web_client.png[Specific Due Date entry field for renewing items.]
 
 === Editing Due Date ===
 
@@ -223,7 +237,7 @@ image::media/renew_item_calendar_web_client.png[]
 
 2) Select the item you want to renew. Click on *Actions* -> *Edit Due Date*.
 
-image::media/edit_due_date_action_web_client.png[]
+image::circulating_items_web_client/edit_due_date_action_web_client.png[Edit Due Date action in the Items Out screen.]
 
 3) Enter a new due date in yyyy-mm-dd format in the pop-up window, then click *OK*.
 
@@ -258,7 +272,7 @@ There are three possible actions in the new Override modal:
 
 An example of the new Override modal is shown below. In this example, the `PATRON_EXCEEDS_FINES` exception has been set to automatically override for subsequent items. This means that the next time Evergreen encounters this exception in this specific patron session, Evergreen will automatically attempt to override it. The `MAX_RENEWALS_REACHED` exception has NOT been set to automatically override for subsequent items. This means that the next time Evergreen encounters this exception in this specific patron session, it will ask again about an override.
 
-image::media/new_override_modal.png[New Override Modal]
+image::circulating_items_web_client/new_override_modal.png[New Override Modal]
 
 In stock Evergreen, the following states will present an exception (i.e. ask for an override) on checkout and/or renew:
 
@@ -271,22 +285,229 @@ Certain events are not able to be batch-overridden, such as when an item with an
 Stock penalty codes (`STAFF_C`, `STAFF_CH`, `STAFF_CHR`, `STAFF_H`, `STAFF_HR`, `STAFF_R`) that can be encountered as events are auto-overrideable by default, and may present an Action Override modal.
 
 
-== Marking Items Lost and Claimed Returned ==
+== Mark Items ==
+
+Items can have their status changed via the _Mark_ functions on the Actions menus. 
+
+=== Claims Never Checked Out ===
+
+
+If a patron believes an item was erroneously checked out on their account and staff cannot locate it 
+to check it in the item can be marked as claims never checked out.
+
+. Go to the _Items Out_ tab in the patron account.
+. Select the item and click *Actions -> Mark Claims Never Checked Out*.
++
+image::circulating_items_web_client/mark-claims-never-checked-out-1.png[Mark Claims Never Checked Out action in the Items Out screen.]
++
+. A pop-up appears where staff can confirm that they wish to mark the item by clicking *OK/Continue*.
+. The item is checked in and set to _Missing_. The item is no longer associated with the patron's account.
+
+[NOTE]
+====
+Libraries may wish to routinely run reports on items with the status of _Missing_ so they can be searched for
+and replaced/deleted as appropriate.
+====
+
+=== Claims Returned ===
+
+
+If a patron believes an item out on their account was returned and staff cannot locate it to check it in
+the item can be marked as claims returned. 
+
+. Go to the _Items Out_ tab in the patron account.
+. Select the item and click *Actions -> Mark Claims Returned*.
++
+image::circulating_items_web_client/mark-claims-returned-1.png[Mark Claims Returned action in the Items Out screen.]
++
+. Enter the date on which the patron claims they returned the item and click *Submit*.  If the chosen date is 
+in the past any overdue fines will be adjusted accordingly.
++
+image::circulating_items_web_client/mark-claims-returned-2.png[Field for entering the date the item was claimed returned.]
++
+. The item's status is updated to _Claimed Returned_. It remains associated with the patron's account and 
+is now displayed on the _Other/Special Circulations_ tab. The value in the *Claims-returned Count* field 
+in the patron record is automatically increased.
++
+[NOTE]
+======
+Some libraries prefer to use the status _Missing_.  This can be set using the library setting 
+_Claim Return: Mark copy as missing_.
+====== 
++
+image::circulating_items_web_client/mark-claims-returned-3.png[View of a claims returned item in a patron's Other/Special Circulations tab.]
++
+. The patron's *Claims-returned Count* is automatically increased. This can be viewed in the patron summary
+and the _Edit_ tab.
++
+[NOTE]
+======
+Libraries can use the library setting _Max Patron Claims Returned Count_ to set a maximum number of items
+a patron can claim as returned before a staff override is required.
+====== 
+
+A claimed returned items is resolved when it is checked in or when the status is updated to _Missing_ or _Lost_
+following local library policy.  An alert displays on check in to let staff know a claimed returned
+item has been found. If there is an outstanding bill associated with it, the item will not disappear 
+from the *Items Out* screen. It will disappear when the outstanding bills are resolved. When an 
+item is located staff may wish to adjust the patron's *Claims-returned Count* accordingly on the _Edit_ tab.
+
+=== Damaged ===
+
+If a patron damages an item it can be marked as damaged at check in, via the Item Status interface, or
+from within a patron's account.
+
+. On the appropriate interface select the item and click *Actions -> Mark Damaged*
++
+image::circulating_items_web_client/mark-damaged-1.png[Mark Damaged action in the Item Status interface.]
++
+. A pop-up appears indicating that the item will be marked damaged.  Click *Submit*.
+. If your library has the library setting _Charge item price when marked damaged_ set to True a second
+pop-up will appear.
+.. If needed, adjust the amount being billed.  The processing fee from the library setting 
+_Charge processing fee for damaged items_ is included in the total. 
+.. Select the bill type from the drop down menu.
+.. If needed, add a note.
+.. If you are not charging the patron in this particular case, click *No Charge*.
+.. Click *Submit*.
++
+image::circulating_items_web_client/mark-damaged-2.png["Damaged item billing dialog with fields for adjusting the amount, selecting bill type, adding a note, and submitting."]
++
+. The item's status is updated to _Damaged_ and removed from the patron's account. If the patron has 
+been billed for the damage the bill will display in the _Bills_ tab.  The bill displays as a single charge
+which includes the processing fee. 
+
+A damaged item is resolved when it is checked in to return it to circulation, when the status is updated to 
+_Discard/Weed_, or when the item is deleted.  An alert displays on check in to let staff know a damaged
+item has been checked in.
+
+[NOTE]
+======
+Checking in a damaged item does not affect any bills that were generated when the item was set to _Damaged_.
+======
+
+=== Discard/Weed ===
+
+If an item is slated to be removed from the collection it can be marked as discard/weed at check in
+or via the Item Status interface.  Libraries may wish to use the _Discard/Weed_ status when items to be
+discarded need to be reviewed before being deleted.
+
+. On the appropriate interface select the item and click *Actions -> Mark as Discard/Weed*.
++
+image::circulating_items_web_client/mark-discard-1.png[Mark as Discard/Weed action in the Item Status interface.]
++
+. A pop-up appears where staff can confirm that they wish to mark the item by clicking *OK/Continue*.
+. The item is set to _Discard/Weed_.
+
+A discarded item is resolved when it is checked in to return it to circulation or deleted from Evergreen.
+
+[NOTE]
+======
+Staff may wish to put discarded items into item buckets to make it easier for subsequent staff to view
+and work with the items. 
+======
+
+=== Missing ===
+
+
+If an item cannot be located it can be marked as missing via the Item Status interface or from within a 
+patron's account.
+
+. On the appropriate interface select the item and click *Actions -> Mark Missing*
++
+image::circulating_items_web_client/mark-missing-1.png[Mark Missing action in the Item Status interface.]
++
+. A pop-up appears where staff can confirm that they wish to mark the item by clicking *OK/Continue*.
+. If the item is currently checked out a second pop-up will ask staff to confirm that they wish to check
+in the item.
+. The item is set to _Missing_ and, if previously checked out, is no longer associated with the patron's
+account.
+
+A missing item is resolved when it is found and checked in or when it is deleted from Evergreen.
+
+=== Missing Pieces ===
+
+
+If an item is returned with pieces missing it can be marked as missing pieces from Check In or
+the Scan Item as Missing Pieces interface. The feature currently functions slightly different depending
+on which interface it is accessed through.
+
+==== Mark Missing Pieces via Check In ====
+
+
+. Go to *Circulation -> Check In*.
+. Check the item in.
+. Select the item and click *Actions -> Mark Missing Pieces*.
++
+image::circulating_items_web_client/mark-missing-pieces-1.png[Mark Missing Pieces action in the Check In interface.]
++
+. A pop-up appears where staff can confirm that they wish to mark the item by clicking *OK/Continue*.
++
+. A print dialog will appear.  Staff can print the slip to keep with the item.
+. The _Create Note_ pop-up will appear.  Use the pop-up to create a note, 
+alert, or block on the patron's account.  This note can be set as patron visible so it displays to the 
+patron in My Account.
+. Click *OK*.
+. The note is applied to the last borrower's account and the item is set to _Damaged_ and checked back out
+to the patron's account.
++
+[NOTE]
+======
+This method of setting an item as missing pieces is missing the letter that is generated at the end of the 
+process.  If that letter is important to your workflow you should always mark items missing pieces
+via the Scan Item as Missing Pieces interface.
+======
+
+==== Scan Item as Missing Pieces ====
+
+. Go to *Circulation -> Scan Item as Missing Pieces*.
+. Scan the item's barcode.
+. Click *Mark Item as Missing Pieces?*.
++
+image::circulating_items_web_client/mark-missing-pieces-2.png[Mark Item as Missing Pieces button in the Scan Item as Missing Pieces interface.]
++
+. A print dialog will appear.  Staff can print the slip to keep with the item.
+. The _Create Note_ pop-up will appear.  Use the pop-up to create a note, 
+alert, or block on the patron's account.  
++
+[NOTE]
+======
+This pop-up is the old Notes pop-up and is missing the functionality that allows staff to select the display
+depth and set a note as patron visible so it displays to the patron in My Account.
+======
++
+. Click *OK*.
++
+image::circulating_items_web_client/mark-missing-pieces-3.png[Create Note pop-up for marking an item as Missing Pieces.]
++
+. The note is applied to the last borrower's account and the item is set to _Damaged_ and renewed on the
+patron's account, if there are remaining renewals.
+. A letter is generated that can be edited and then printed and mailed to the patron.
+
+A missing pieces item is resolved when the pieces are returned and the item is checked in or the pieces 
+are never returned and the item is deleted.  Notes related to the item must be manually removed from
+the patron's account.
+
+[NOTE]
+======
+Libraries can choose to use a different item status for missing pieces instead of _Damaged_.  The 
+library setting _Item Status for Missing Pieces_ is used to set this.
+======
 
 === Lost Items ===
 1) To mark items Lost, retrieve patron record and click *Items Out*.
 
 2) Select the item. Click on *Actions* -> *Mark Lost (by Patron)*.
 
-image::media/mark_lost_web_client.png[]
+image::circulating_items_web_client/mark_lost_web_client.png[Mark Lost (by Patron) action in the Items Out screen.]
 
 3) The lost item now displays as lost in the *Items Checked Out* section of the patron record.
 
-image::media/lost_section_web_client.png[]
+image::circulating_items_web_client/lost_section_web_client.png[Lost item displayed in the Items Checked Out section of the patron record.]
 
 4) The lost item also adds to the count of *Lost* items in the patron summary on the left (or top) of the screen. 
 
-image::media/patron_summary_checkouts_web_client.png[]
+image::circulating_items_web_client/patron_summary_checkouts_web_client.png[Lost items displayed in the patron summary.]
 
 [NOTE]
 Lost Item Billing
@@ -302,43 +523,16 @@ If an item is returned after a lost bill has been paid and the library's policy 
 
 If you need to balance a bill with a negative amount, you need to add two dummy bills to the existing bills. The first one can be of any amount (e.g. $0.01), while the second should be of the absolute value of the negative amount. Then you need to void the first dummy bill. The reason for using a dummy bill is that Evergreen will check and close the circulation record only when payment is applied or bills are voided.
 
-=== Claimed Returned Items ===
-
-1) To mark an item Claimed Returned, retrieve the patron record and go to the *Items Out* screen.
-
-2) Select the item, then select *Actions* -> *Mark Claimed Returned* from the dropdown menu.
-
-image::media/mark_claims_returned_web_client.png[]
-
-3) Enter date in yyyy-mm-dd format and click *Submit*.
-
-image::media/claimed_date_web_client.png[]
-
-4) The Claimed Returned item now displays in the *Other/Special Circulations* section of the patron record.
-
-image::media/cr_section_web_client.png[]
-
-5) The Claimed Returned item adds to the count of items that are Claimed Returned in the patron summary on the left (or top) of the screen. It also adds to the total *Other/Special Circulations* that is displayed when editing the patron's record. 
-
-image::media/patron_summary_checkouts_web_client.png[]
-
-[NOTE]
-More on Claimed Returned Items
-====================================
-- The date entered for a Claimed Returned item establishes the fine. If the date given has passed, bills will be adjusted accordingly.
-- When a Claimed Returned item is returned, if there is an outstanding bill associated with it, the item will not disappear from the *Items Out* screen. It will disappear when the outstanding bills are resolved.
-- When an item is marked Claimed Returned, the value in *Claims-returned Count* field in the patron record is automatically increased. Staff can manually adjust this count by editing the patron record.
-====================================
 
 == In-house Use (F6) ==
 1) To record in-house use, select *Circulation* -> *Record-In House Use*, click *Check Out* -> *Record In-House Use* on the circulation toolbar , or press *F6*. 
  
-image::media/record_in_house_action_web_client.png[]
+image::circulating_items_web_client/record_in_house_action_web_client.png[Record In-House Use option in the Circulation toolbar.]
  
 2) To record in-house use for cataloged items, enter number of uses, scan 
  barcode or type barcode and click *Submit*.
  
-image::media/in_house_use_web_client.png[]
+image::circulating_items_web_client/in_house_use_web_client.png[In-House Use entry screen for cataloged items.]
  
 [NOTE]
 ====================================
@@ -349,12 +543,250 @@ There are two independent library settings that will allow copy alerts to displa
  
 3) To record in-house use for non-cataloged items, enter number of uses, choose non-cataloged type from drop-down menu, and click *Submit*.
 
-image::media/in_house_use_non_cat.png[]
+image::circulating_items_web_client/in_house_use_non_cat.png[In-House Use entry screen for non-cataloged items.]
  
 [NOTE] 
 The statistics of in-house use are separated from circulation statistics. The in-house use count of cataloged items is not included in the items' total use count.
 
 [[itemstatus_web_client]]
+
+== How Item Statuses Work ==
+
+This section goes over all item statuses and their relationship to the system.
+
+=== List of Item Statuses ===
+
+-*Available*: Item is available for checkout.
+
+-*Checked out*: Item is checked out to a patron account.  This status does not indicate whether or not the item is overdue.
+
+-*Claims Returned*: item has been claimed as returned by the patron. This option as an item status is controlled by a library setting.
+
+-*Bindery*: Manually set for items that are being sent out to be re-bound.
+
+-*Lost*: Item has been checked out past a due date threshold or is no longer in a patron’s possession while they’re still responsible for the item. Can be automated based on due date, or manually set by staff.
+
+-*Missing*: Item cannot be found on the shelves - either manually set, or applied upon “claims returned” (as well as claims never checked out?)
+
+-*In process*: An item is newly cataloged and waiting to be checked in.
+
+-*In transit*: Item has been checked in and is being sent to a different library, whether as a return to its home library, or to fulfill a hold.
+
+-*Reshelving*: A transitional status for items that have been checked in, and need reshelving.
+
+-*On holds shelf*: Item is captured for a hold of a patron at their pickup location and waiting to be checked out.
+
+-*On order*: A title has been ordered, but the physical copy has not yet been processed and added to the catalog. Can allow patrons to discover forthcoming acquisitions, and to place holds prior to the library receiving the item in question.
+
+-*ILL*: Inter-library loan.
+
+-*Cataloging*: An item has been pulled to be edited by a cataloger.
+
+-*Reserves*: In reserves collection.
+
+-*Discard/Weed*: Item has been manually flagged for removal from the collection, but has not yet been deleted.
+
+-*Damaged*: Item is damaged and the patron was billed.
+
+-*On reservation shelf*: Used with room/booking module. When an item has been booked/reserved, it is placed in a unique location, ready for pick-up.
+
+-*Long Overdue*: Item has been checked out past a due date threshold.
+
+-*Lost and Paid*: Item was marked lost and the patron paid the replacement cost.
+
+-*Canceled Transit*: Item that was in transit status but was then canceled.
+
+=== Actions that Change Item Statuses ===
+
+-*Available*: checking in an item that isn’t eligible for a hold
+
+-*Claims Returned*: item is marked as claimed returned via the patron account
+
+-*In Transit*: item is captured for a transit to another location at check in
+
+-*On reservation shelf*: Item is captured for reservation through the Booking module.
+
+-*On order*: Items is created via activating a purchase order in Acquisitions.
+
+-*In process*: An item is newly cataloged and waiting to be checked in. Also, item is received in acquisitions.
+
+-*Damaged*: Marked Damaged needs to be executed on a screen 
+
+== Item Status Properties ==
+
+|===
+|Name |Holdable? |OPAC Visible? |Sets copy active? |Is available? |Assignable?
+
+|Available
+|Yes
+|Yes
+|Yes
+|Yes
+|System controller
+
+|Bindery
+|No
+|No
+|No
+|No
+|Yes
+
+|Canceled Transit
+|Yes
+|Yes
+|No
+|No
+|System controlled
+
+|Cataloging
+|No
+|No
+|No
+|No
+|Yes
+
+|Checked out
+|Yes
+|Yes
+|Yes
+|No
+|System controlled
+
+|Damaged
+|No
+|No
+|No
+|No
+|Yes
+
+|Discard/weed
+|No
+|No
+|No
+|No
+|Yes
+
+|ILL
+|No
+|No
+|Yes
+|No
+|Yes
+
+|In process
+|Yes
+|Yes
+|No
+|No
+|Yes
+
+|In receiving
+|Yes
+|Yes
+|No
+|No
+|System controlled
+
+|In transit
+|Yes
+|Yes
+|No
+|No
+|System controlled
+
+|Long Overdue
+|No
+|No
+|No
+|No
+|System controlled
+
+|Long Overdue (Legacy)
+|No
+|No
+|No
+|No
+|Yes
+
+|Lost
+|No
+|No
+|No
+|No
+|Yes
+
+|Lost and paid
+|No
+|No
+|No
+|No
+|Yes
+
+|Missing
+|No
+|No
+|No
+|No
+|Yes
+
+|On holds shelf
+|Yes
+|Yes
+|Yes
+|No
+|System controlled
+
+|On order
+|No
+|No
+|No
+|No
+|Yes
+
+|On reservation shelf
+|No
+|No
+|Yes
+|No
+|Yes
+
+|Reserves
+|No
+|No
+|Yes
+|No
+|Yes
+
+|Reshelving
+|Yes
+|Yes
+|Yes
+|Yes
+|System controlled
+
+|Temporarily unavailable
+|No
+|No
+|No
+|No
+|Yes
+|===
+
+The following properties can be set for each status:
+
+-*Holdable* - If checked, users can place holds on copies in this status, provided nothing else prevents holds. If unchecked, users cannot place holds on copies in this status.
+
+-*OPAC Visible* - If checked, copies in this status will be visible in the public catalog. If unchecked, copies in this status will Not be visible in the public catalog, but they will be visible when using the catalog in the staff client.
+Sets copy active - If checked, moving a copy that does not yet have an active date to this status will set the active date. If the copy already has an active date, then no changes will be made to the active date. If “No”, this status will never set the copy’s active date.
+
+-*Is Available* - If checked, copies with this status will appear in catalog searches where “limit to available” is selected as a search filter. Also, copies with this status will check out without status warnings. By default, the “Available” and “Reshelving” statuses have the “Is Available” flag set as true/yes.
+
+-*Hopeless Holds* (as of ver. 3.6): _need info_
+
+Default Evergreen statuses have a further property:
+
+-*Assignable* – Status is system controlled and editing to either assign or change in the Holdings editor is not always possible.
+
 == Item Status ==
 
 The Item Status screen is very useful. Many actions can be taken by either circulation staff or catalogers on this screen. Here we will cover some circulation-related functions, namely checking item status, viewing past circulations, inserting item alert messages, marking items missing or damaged, etc.
@@ -363,19 +795,19 @@ The Item Status screen is very useful. Many actions can be taken by either circu
 
 1) To check the status of an item, select *Search* -> *Search for copies by Barcode*.
 
-image::media/item_status_menu_web_client.png[]
+image::circulating_items_web_client/item_status_menu_web_client.png[Search for copies by Barcode option in the Search menu.]
 
 2) Scan the barcode or type it and click *Submit*. The current status of the item is displayed with selected other fields. You can use the column picker to select more fields to view.
 
-image::media/item_status_barcode_web_client.png[]
+image::circulating_items_web_client/item_status_barcode_web_client.png[Item status display with selected fields after barcode submission.]
 
 3) Click the *Detail View* button and the item summary and circulation history will be displayed.
 
-image::media/item_status_altview_web_client.png[]
+image::circulating_items_web_client/item_status_altview_web_client.png[Detail View button showing item summary and circulation history.]
 
 4) Click *List View* to go back.
 
-image::media/item_status_list_view_web_client.png[]
+image::circulating_items_web_client/item_status_list_view_web_client.png[List view in Item Status.]
 
 [NOTE]
 If the item's status is "Available", the displayed due date refers to the previous circulation's due date.
@@ -388,11 +820,11 @@ Upload From File allows you to load multiple items saved in a file on your local
 
 2) Select *Detail view*.
 
-image::media/last_few_circs_action_web_client.png[]
+image::circulating_items_web_client/last_few_circs_action_web_client.png[Recent Circ History option in the Detail view.]
 
 3) Choose *Recent Circ History*.  The item’s recent circulation history is displayed.
 
-image::media/last_few_circs_display_web_client.png[]
+image::circulating_items_web_client/last_few_circs_display_web_client.png[Recent circulation history display for an item.]
 
 4) To retrieve the patron(s) of the last circulations, click on the name of the patron.  The patron record will be displayed.
 
@@ -405,9 +837,9 @@ You can also retrieve the past circulations on the patron's Items Out screen and
 === Marking items damaged or missing and other functions ===
 1) To mark items damaged or missing, retrieve the item on the *Item Status* screen.
 
-2) Select the item. Click on *Actions for Selected Items* -> *Mark Item Damaged* or *Mark Item Missing*.
+2) Select the item. Click on *Actions* -> *Mark Item Damaged* or *Mark Item Missing*.
 
-// image::media/mark_missing_damaged_web_client.png[]
+image::circulating_items_web_client/mark_missing_damaged_web_client.png[Mark items as missing or damaged from actions menu in Item Status screen.]
 
 [NOTE]
 Depending on the library's policy, when marking an item damaged, bills (cost and/or processing fee) may be inserted into the last borrower's account. 
@@ -416,21 +848,25 @@ Depending on the library's policy, when marking an item damaged, bills (cost and
 
 === Item alerts ===
 
-The *Edit Item Attributes* function on the *Actions for Selected Items* dropdown list allows you to edit item records. Here, we will show you how to insert item alert messages by this function. See cataloging instructions for more information on item editing.
+The *Edit Item* function on the *Actions* dropdown list allows you to edit item records. Here, we will show you how to insert item alert messages by this function. See cataloging instructions for more information on item editing.
+
 1) Retrieve record on *Item Status* screen.
 
-2) Once item is displayed, highlight it and select *Actions for Selected Items* -> *Edit Item Attributes*.
+2) Once item is displayed, highlight it and select *Actions* -> *Edit* -> *Item*.
 
-3) The item record is displayed in the *Copy Editor*.
+3) The item record is displayed in the *Holdings Editor*.
 
-//image::media/copy_edit_alert_web_client.png[]
+4) Click the *Item Alerts* button in the *Add Item Alerts* box under the *Miscellaneous* column.
 
-4) Click *Alert Message* in the *Miscellaneous* column. The background color of the box changes. Type in the message then click *Apply*. 
+image::circulating_items_web_client/holdings_editor_add_item_alert.png[Item Alerts button in the Holdings Editor.]
 
-//image::media/copy_alert_message_web_client.png[]
+5) A window appears, where you can select the alert type, i.e., when the alert should appear for staff. Select the *Temporary* checkbox if you would like the alert to be removed after that specific action for the item is complete. Type in the message then click *Apply Changes*. 
 
-5) Click *Modify Copies*, then confirm the action.
+image::circulating_items_web_client/item_alert_window.png[Managing item alerts window with examples of alert types shown in dropdown.]
 
+6) Back in the Holdings Editor, click *Apply All & Save* or *Apply, Save & Exit*.
+
+image::circulating_items_web_client/holdings_editor_save_options.png[Item Alerts button in the Holdings Editor.]
 
 == Long Overdue Items ==
 
@@ -449,14 +885,14 @@ long-overdue items can be included on the "Items Checked Out" or "Other/Special
 Circulations" tabs of the "Items Out" view of a patron's record. These are all
 controlled by <<longoverdue_library_settings,library settings>>.
  
-image::media/long_overdue1.png[Patron Account-Long Overdue]
+image::circulating_items_web_client/long_overdue1.png[Patron Account-Long Overdue]
 
 
 *Checking in a Long Overdue item*
 
 If an item that has been marked long overdue is checked in, an alert will appear on the screen informing the staff member that the item was long overdue.  Once checked in, the item will go into the status of “In process”.  Optionally, the item price and long overdue processing fee can be voided and overdue fines can be reinstated on the patron’s account.  If the item is checked in at a library other than its home library, a library setting controls whether the item can immediately fill a hold or circulate, or if it needs to be sent to its home library for processing.
  
-image::media/long_overdue2.png[Long Overdue Checkin]
+image::circulating_items_web_client/long_overdue2.png[Long Overdue Checkin]
  
 *Notification/Action Triggers*
 

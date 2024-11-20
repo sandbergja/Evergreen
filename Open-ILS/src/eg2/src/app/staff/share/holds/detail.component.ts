@@ -1,5 +1,4 @@
 import {Component, OnInit, Input, Output, ViewChild, EventEmitter} from '@angular/core';
-import {Observable, Observer, of} from 'rxjs';
 import {tap} from 'rxjs/operators';
 import {IdlObject} from '@eg/core/idl.service';
 import {NetService} from '@eg/core/net.service';
@@ -12,8 +11,8 @@ import {HoldNotifyDialogComponent} from './notify-dialog.component';
 /** Hold details read-only view */
 
 @Component({
-  selector: 'eg-hold-detail',
-  templateUrl: 'detail.component.html'
+    selector: 'eg-hold-detail',
+    templateUrl: 'detail.component.html'
 })
 export class HoldDetailComponent implements OnInit {
     detailTab = 'notes';
@@ -81,14 +80,14 @@ export class HoldDetailComponent implements OnInit {
             // avoid this.holdId = since it re-fires this fetch.
             this._holdId = wideHold.id;
         })
-        .then(_ => this.getNotes())
-        .then(_ => this.getNotifies());
+            .then(_ => this.getNotes())
+            .then(_ => this.getNotifies());
     }
 
     getNotes(): Promise<any> {
         this.notes = [];
         return this.pcrud.search('ahrn', {hold: this.holdId})
-        .pipe(tap(note => this.notes.push(note))).toPromise();
+            .pipe(tap(note => this.notes.push(note))).toPromise();
     }
 
     getNotifies(): Promise<any> {
@@ -113,7 +112,7 @@ export class HoldDetailComponent implements OnInit {
 
     deleteNote(note: IdlObject) {
         this.pcrud.remove(note).toPromise()
-        .then(ok => { if (ok) { this.getNotes(); } });
+            .then(ok => { if (ok) { this.getNotes(); } });
     }
 
     newNote() {

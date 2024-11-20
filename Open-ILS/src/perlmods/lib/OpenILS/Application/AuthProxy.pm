@@ -293,6 +293,8 @@ sub login {
                     workstation => $args->{workstation},
                     org_unit => $args->{org}
                 };
+                $trimmed_args->{provisional} = need_mfa($trimmed_args);
+
                 $event = &_auth_internal('user.validate', $trimmed_args);
                 if ($U->event_code($event)) { # non-zero = we didn't succeed
                     # can't recover from invalid user, return right away
@@ -313,6 +315,11 @@ sub login {
     return OpenILS::Event->new( 'LOGIN_FAILED' );
 }
 
+sub need_mfa {
+    my $auth_params = shift;
+    return 0; # TODO ask open-ils.auth_mfa if we need a second factor
+}
+
 sub _auth_internal {
     my ($method, $args) = @_;
 
@@ -329,23 +336,10 @@ sub _auth_internal {
 
 sub _do_login {
     my $args = shift;
-    my $authenticated = shift;
-
-    my $seeder = $args->{'username'} ? $args->{'username'} : $args->{'barcode'};
-    my $seed =
-      OpenSRF::AppSession->create("open-ils.auth")
-      ->request( 'open-ils.auth.authenticate.init', $seeder )->gather(1);
-
-    return OpenILS::Event->new( 'LOGIN_FAILED' )
-      unless $seed;
-
-    my $real_password = $args->{'password'};
-    $args->{'password'} = md5_hex( $seed . md5_hex($real_password) );
     my $response = OpenSRF::AppSession->create("open-ils.auth")->request(
-        'open-ils.auth.authenticate.complete',
+        'open-ils.auth.login',
         $args
     )->gather(1);
-    $args->{'password'} = $real_password;
 
     return OpenILS::Event->new( 'LOGIN_FAILED' )
       unless $response;

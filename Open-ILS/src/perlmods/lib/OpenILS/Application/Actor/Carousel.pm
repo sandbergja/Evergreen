@@ -11,6 +11,7 @@ use OpenSRF::Utils::SettingsClient;
 use OpenSRF::Utils::Cache;
 use Digest::MD5 qw(md5_hex);
 use OpenSRF::Utils::JSON;
+use List::MoreUtils qw(uniq);
 
 my $apputils = "OpenILS::Application::AppUtils";
 my $U = $apputils;
@@ -37,23 +38,20 @@ sub get_carousel_contents {
         name => $carousel->name
     };
     my $q = {
-        select => { bre => ['id'], mfde => [{ column => 'value', alias => 'title' }] },
+        select => { bre => ['id'], rmsr => ['title','author'] },
         from   => {
-            bre => {
-                cbrebi => {
-                    join => {
-                        cbreb => {
-                            join => { cc => {} }
-                        }
-                    }
+            cbrebi => {
+                cbreb => {
+                    join => { cc => {} }
                 },
-                mfde => {}
+                bre => {
+                    join => { rmsr => { fkey => 'id', field => 'id' } }
+                }
             }
         },
         where  => {
             '+cc' => { id => $id },
-            '+bre' => { deleted => 'f' },
-            '+mfde' => { name => 'title' }
+            '+bre' => { deleted => 'f' }
         },
         order_by => {cbrebi => ['pos','create_time']}
     };
@@ -78,7 +76,7 @@ sub retrieve_carousels_at_org {
     my $e = new_editor();
 
     my $carousels = $e->json_query({
-        select => { ccou => ['carousel','override_name','seq'] },
+        select => { ccou => ['carousel','override_name','seq'], cc => ['name'] },
         distinct => 'true',
         from => { ccou => 'cc' } ,
         where => {
@@ -230,25 +228,68 @@ sub add_carousel_from_bucket {
     $carousel->creator($e->requestor->id);
     $carousel->editor($e->requestor->id);
     $carousel->max_items(scalar(@$entries));
+    $carousel->bucket($bucket_id);
     $e->create_container_carousel($carousel) or return $e->event;
 
-    # and the bucket
+    $e->xact_commit or return $e->event;
+
+    return $carousel->id;
+}
+
+__PACKAGE__->register_method(
+    method => "create_carousel_from_items",
+    api_name => "open-ils.actor.carousel.create_carousel_from_items",
+    signature => {
+        desc => q/Create a new carousel populated with the records connected to the requested items/,
+        params => [
+            { name => 'authtoken',
+              desc => 'A user authtoken',
+              type => 'string' },
+            { name => 'carousel_name',
+              desc => 'A name for the new carousel',
+              type => 'string' },
+            { name => 'items',
+              desc => 'Array of item ids.',
+              type => 'array' }
+        ],
+        return => {
+            type => 'int',
+            desc => q/The id of the new carousel/
+        }
+    }
+);
+
+sub create_carousel_from_items {
+    my ($self, $client, $auth, $carousel_name, $item_ids) = @_;
+
+    my $e = new_editor(authtoken => $auth);
+    return $e->event unless $e->checkauth;
+    return $e->event unless $e->allowed('ADMIN_CAROUSEL');
+
+    $e->xact_begin;
     my $bucket = Fieldmapper::container::biblio_record_entry_bucket->new;
     $bucket->owner($e->requestor->id);
-    $bucket->name('System-created bucket for carousel ' . $carousel->id . ' copied from bucket ' . $bucket_id);
+    $bucket->name('New bucket created from items by ' . $e->requestor->id . ' on ' . localtime());
     $bucket->btype('carousel');
     $bucket->pub('t');
     $bucket->owning_lib($e->requestor->ws_ou);
     $e->create_container_biblio_record_entry_bucket($bucket) or return $e->event;
 
-    # link it to the container;
-    $carousel = $e->retrieve_container_carousel($carousel->id) or return $e->event;
-    $carousel->bucket($bucket->id);
-    $e->update_container_carousel($carousel) or return $e->event;
+    my $bre_ids = _acp_ids_to_bre_ids($e, $item_ids);
 
-    # and fill it
-    foreach my $entry (@$entries) {
-        $entry->clear_id;
+    my $carousel = Fieldmapper::container::carousel->new;
+    $carousel->name($carousel_name);
+    $carousel->type(1); # manual
+    $carousel->owner($e->requestor->ws_ou);
+    $carousel->creator($e->requestor->id);
+    $carousel->editor($e->requestor->id);
+    $carousel->max_items(scalar(@$bre_ids));
+    $carousel->bucket($bucket->id);
+    $e->create_container_carousel($carousel) or return $e->event;
+
+    foreach my $bre_id (@$bre_ids) {
+        my $entry = Fieldmapper::container::biblio_record_entry_bucket_item->new;
+        $entry->target_biblio_record_entry($bre_id);
         $entry->bucket($bucket->id);
         $entry->create_time('now');
         $e->create_container_biblio_record_entry_bucket_item($entry) or return $e->event;
@@ -257,6 +298,16 @@ sub add_carousel_from_bucket {
     $e->xact_commit or return $e->event;
 
     return $carousel->id;
+}
+
+sub _acp_ids_to_bre_ids {
+    my ($e, $item_ids) = @_;
+    my $items = $e->search_asset_copy([
+        {id => $item_ids},
+        {flesh => 1, flesh_fields => {acp => ['call_number']}}
+    ]);
+    my @bre_ids = uniq( map { $_->call_number->record } @$items );
+    return \@bre_ids;
 }
 
 1;

@@ -1,8 +1,8 @@
 import {Component, OnInit, AfterViewInit, ViewChild, ChangeDetectorRef, OnDestroy} from '@angular/core';
 import {filter, takeUntil} from 'rxjs/operators';
 import {Subject, Observable, of} from 'rxjs';
-import {NgbTabChangeEvent} from '@ng-bootstrap/ng-bootstrap';
-import {Router, ActivatedRoute, ParamMap, RouterEvent, NavigationEnd} from '@angular/router';
+import {NgbNavChangeEvent} from '@ng-bootstrap/ng-bootstrap';
+import {Router, ActivatedRoute, RouterEvent, NavigationEnd} from '@angular/router';
 import {IdlService} from '@eg/core/idl.service';
 import {AcqProviderSummaryPaneComponent} from './summary-pane.component';
 import {ProviderDetailsComponent} from './provider-details.component';
@@ -17,7 +17,7 @@ import {StoreService} from '@eg/core/store.service';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 
 @Component({
-  templateUrl: './acq-provider.component.html'
+    templateUrl: './acq-provider.component.html'
 })
 
 export class AcqProviderComponent implements OnInit, AfterViewInit, OnDestroy {
@@ -36,7 +36,7 @@ export class AcqProviderComponent implements OnInit, AfterViewInit, OnDestroy {
     @ViewChild('createErrString', { static: false }) createErrString: StringComponent;
     @ViewChild('leaveConfirm', { static: true }) leaveConfirm: ConfirmDialogComponent;
 
-    onTabChange: ($event: NgbTabChangeEvent) => void;
+    onNavChange: ($event: NgbNavChangeEvent) => void;
 
     onDesireSummarize: ($event: number, updateSummaryOnly?: boolean, hideSearchForm?: boolean) => void;
     onSummaryToggled: ($event: boolean) => void;
@@ -60,6 +60,7 @@ export class AcqProviderComponent implements OnInit, AfterViewInit, OnDestroy {
             takeUntil(this.destroyed)
         ).subscribe(routeEvent => {
             if (routeEvent instanceof NavigationEnd) {
+                // eslint-disable-next-line eqeqeq
                 if (this.previousUrl != null &&
                     routeEvent.url === '/staff/acq/provider') {
                     this.acqProviderResults.resetSearch();
@@ -80,9 +81,10 @@ export class AcqProviderComponent implements OnInit, AfterViewInit, OnDestroy {
         this.defaultTabType =
             this.store.getLocalItem('eg.acq.provider.default_tab') || 'details';
 
+        // eslint-disable-next-line no-prototype-builtins
         const keepSearchForm = history.state.hasOwnProperty('keepSearchForm') ?
-                                  history.state.keepSearchForm :
-                                  false;
+            history.state.keepSearchForm :
+            false;
         if (keepSearchForm) {
             this.showSearchForm = true;
         }
@@ -112,7 +114,7 @@ export class AcqProviderComponent implements OnInit, AfterViewInit, OnDestroy {
             this.showSearchForm = true;
         }
 
-        this.onTabChange = ($event) => {
+        this.onNavChange = ($event) => {
             $event.preventDefault();
             this.canDeactivate().subscribe(canLeave => {
                 if (!canLeave) { return; }
@@ -158,7 +160,7 @@ export class AcqProviderComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     ngOnDestroy(): void {
-        this.destroyed.next();
+        this.destroyed.next(null);
         this.destroyed.complete();
     }
 
@@ -181,7 +183,8 @@ export class AcqProviderComponent implements OnInit, AfterViewInit, OnDestroy {
                     .then(str => this.toast.success(str));
                 this.onDesireSummarize(ok.id());
             },
-            rejection => {
+            // eslint-disable-next-line rxjs/no-implicit-any-catch
+            (rejection: any) => {
                 if (!rejection.dismissed) {
                     this.createErrString.current()
                         .then(str => this.toast.danger(str));

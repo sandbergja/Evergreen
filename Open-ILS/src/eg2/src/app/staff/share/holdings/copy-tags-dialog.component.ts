@@ -1,5 +1,5 @@
 import {Component, OnInit, Input, ViewChild} from '@angular/core';
-import {Observable, throwError, from, empty} from 'rxjs';
+import {Observable, throwError, from, EMPTY} from 'rxjs';
 import {tap, map, switchMap} from 'rxjs/operators';
 import {NetService} from '@eg/core/net.service';
 import {IdlService, IdlObject} from '@eg/core/idl.service';
@@ -17,9 +17,14 @@ import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
  * Dialog for managing copy tags.
  */
 
+export interface CopyTagChanges {
+    newTags: IdlObject[];
+    deletedMaps: IdlObject[];
+}
+
 @Component({
-  selector: 'eg-copy-tags-dialog',
-  templateUrl: 'copy-tags-dialog.component.html'
+    selector: 'eg-copy-tags-dialog',
+    templateUrl: 'copy-tags-dialog.component.html'
 })
 
 export class CopyTagsDialogComponent
@@ -68,8 +73,8 @@ export class CopyTagsDialogComponent
 
     ngOnInit() {
 
-       this.tagDataSource = term => {
-            if (!this.curTagType) { return empty(); }
+        this.tagDataSource = term => {
+            if (!this.curTagType) { return EMPTY; }
 
             return this.pcrud.search(
                 'acpt', {
@@ -77,7 +82,8 @@ export class CopyTagsDialogComponent
                     '-or': [
                         {value: {'ilike': `%${term}%`}},
                         {label: {'ilike': `%${term}%`}}
-                    ]
+                    ],
+                    owner: this.org.ancestors(this.auth.user().ws_ou(), true)
                 },
                 {order_by: {acpt: 'label'}}
             ).pipe(map(copyTag => {
@@ -89,7 +95,7 @@ export class CopyTagsDialogComponent
 
     /**
      */
-    open(args: NgbModalOptions): Observable<IdlObject[]> {
+    open(args: NgbModalOptions): Observable<CopyTagChanges> {
         this.copy = null;
         this.copies = [];
         this.newTags = [];
@@ -101,8 +107,8 @@ export class CopyTagsDialogComponent
 
         // In manage mode, we can only manage a single copy.
         // But in create mode, we can add tags to multiple copies.
-
-        if (this.copyIds.length === 1) {
+        // We can only manage copies that already exist in the database.
+        if (this.copyIds.length === 1 && this.copyIds[0] > 0) {
             this.mode = 'manage';
         } else {
             this.mode = 'create';
@@ -134,12 +140,12 @@ export class CopyTagsDialogComponent
                 acp: ['tags'], acptcm: ['tag'], acpt: ['tag_type']}},
             {atomic: true}
         )
-        .toPromise().then(copies => {
-            this.copies = copies;
-            if (copies.length === 1) {
-                this.copy = copies[0];
-            }
-        });
+            .toPromise().then(copies => {
+                this.copies = copies;
+                if (copies.length === 1) {
+                    this.copy = copies[0];
+                }
+            });
     }
 
     removeTag(tag: IdlObject) {
@@ -201,7 +207,7 @@ export class CopyTagsDialogComponent
     applyChanges() {
 
         if (this.inPlaceCreateMode) {
-            this.close(this.newTags);
+            this.close({ newTags: this.newTags, deletedMaps: this.deletedMaps });
             return;
         }
 
@@ -227,7 +233,7 @@ export class CopyTagsDialogComponent
 
         promise.then(_ => {
             this.successMsg.current().then(msg => this.toast.success(msg));
-            this.close(this.newTags.length > 0);
+            this.close({ newTags: this.newTags, deletedMaps: this.deletedMaps });
         });
     }
 }

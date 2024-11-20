@@ -1,16 +1,18 @@
-import {Component, OnInit, AfterViewInit, ViewChild} from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {Router, ActivatedRoute, NavigationEnd} from '@angular/router';
 import {take} from 'rxjs/operators';
 import {VandelayService} from './vandelay.service';
-import {IdlObject} from '@eg/core/idl.service';
+import {OrgService}  from '@eg/core/org.service';
 
 @Component({
-  templateUrl: 'vandelay.component.html'
+    templateUrl: 'vandelay.component.html'
 })
-export class VandelayComponent implements OnInit, AfterViewInit {
+export class VandelayComponent implements OnInit {
     tab: string;
+    importTabSetting: string;
 
     constructor(
+        private org: OrgService,
         private router: Router,
         private route: ActivatedRoute,
         private vandelay: VandelayService) {
@@ -22,13 +24,24 @@ export class VandelayComponent implements OnInit, AfterViewInit {
         this.router.events.subscribe(routeEvent => {
             if (routeEvent instanceof NavigationEnd) {
                 this.route.firstChild.url.pipe(take(1))
-                .subscribe(segments => this.tab = segments[0].path);
+                    // eslint-disable-next-line rxjs/no-nested-subscribe
+                    .subscribe(segments => this.tab = segments[0].path);
             }
         });
+
     }
 
-    ngOnInit() {}
+    ngOnInit() {
+        return this.org.settings('acq.import_tab_display')
+            .then(s => {
+                this.importTabSetting = s['acq.import_tab_display'] || 'both';
 
-    ngAfterViewInit() {}
+                if (this.importTabSetting === 'cat' && this.router.url.match(/\/acqimport$/)) {
+                    this.router.navigateByUrl(this.router.url.replace(/acqimport$/,'import'));
+                } else if (this.importTabSetting === 'acq' && this.router.url.match(/\/import$/)) {
+                    this.router.navigateByUrl(this.router.url.replace(/import$/,'acqimport'));
+                }
+            });
+    }
 }
 

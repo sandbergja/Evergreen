@@ -38,12 +38,6 @@ angular.module('egWorkstationAdmin',
         resolve : resolver
     });
 
-    $routeProvider.when('/admin/workstation/hatch', {
-        templateUrl: './admin/workstation/t_hatch',
-        controller: 'HatchCtrl',
-        resolve : resolver
-    });
-
     $routeProvider.when('/admin/workstation/tests', {
         templateUrl: './admin/workstation/t_tests',
         controller: 'testsCtrl',
@@ -182,6 +176,10 @@ function($scope , $window , $location , egCore , egConfirmDialog) {
         $scope.disable_sound = val;
     });
 
+    egCore.hatch.getItem('eg.orgselect.show_combined_names').then(function(val) {
+        $scope.orgselect_combo_names = val;
+    });
+
     egCore.hatch.getItem('eg.search.search_lib').then(function(val) {
         $scope.search_lib = egCore.org.get(val);
     });
@@ -211,6 +209,14 @@ function($scope , $window , $location , egCore , egConfirmDialog) {
             egCore.hatch.setItem('eg.audio.disable', true);
         } else {
             egCore.hatch.removeItem('eg.audio.disable');
+        }
+    }
+
+    $scope.apply_orgselect_combob_names = function() {
+        if ($scope.orgselect_combo_names) {
+            egCore.hatch.setItem('eg.orgselect.show_combined_names', true);
+        } else {
+            egCore.hatch.removeItem('eg.orgselect.show_combined_names');
         }
     }
 
@@ -279,7 +285,7 @@ function($scope , egCore) {
     }
 
     function loadPrinterOptions(name) {
-        if (name == 'hatch_file_writer') {
+        if (name == 'hatch_file_writer' || name == 'hatch_browser_printing') {
             $scope.printerOptions = {};
         } else {
             egCore.hatch.getPrinterOptions(name).then(
@@ -322,6 +328,14 @@ function($scope , egCore) {
         );
     }
 
+    $scope.useBrowserPrinting = function() {
+        return (
+            $scope.printConfig[$scope.context] &&
+            $scope.printConfig[$scope.context].printer == 'hatch_browser_printing'
+        );
+    }
+
+
     // Load startup data....
     // Don't bother talking to Hatch if it's not there.
     if (!egCore.hatch.hatchAvailable) return;
@@ -336,6 +350,8 @@ function($scope , egCore) {
             // Human-friendly label is set in the template.
             name: 'hatch_file_writer' 
         });
+
+        printers.push({name: 'hatch_browser_printing'});
 
         var def = $scope.getPrinterByAttr('is-default', true);
         if (!def && printers.length) def = printers[0];
@@ -424,6 +440,21 @@ function($scope , $q , egCore , ngToast) {
             }, {
                 stat_cat : {'name' : 'Favorite Book'},
                 'stat_cat_entry' : 'Beasts Made of Night'
+            }
+        ],
+        surveys : [
+            {
+                survey : {
+                    'id' : function() {return '1'},
+                    'description' : function() {return 'Voter Registration'},
+                },
+                responses : [
+                    {
+                        'answer_date' : function() {return '2020-12-31'},
+                        question : function() {return {'question' : function() {return 'Would you like to register to vote today?'}}},
+                        answer : function() {return {'answer' : function() {return 'Already registered'}}}
+                    }
+                ]
             }
         ]
     }
@@ -631,6 +662,8 @@ function($scope , $q , egCore , ngToast) {
         dest_location : egCore.idl.toHash(egCore.org.get(egCore.auth.user().ws_ou())),
         dest_courier_code : 'ABC 123',
         dest_address : seed_addr,
+        source_address : seed_addr,
+		source_location : egCore.idl.toHash(egCore.org.get(egCore.auth.user().ws_ou())),
         hold : one_hold,
         holds : [
             {
@@ -1013,25 +1046,6 @@ function($scope , $q , $window , $location , egCore , egAlertDialog , workstatio
             $scope.is_registering = false;
         });
     }
-}])
-
-.controller('HatchCtrl',
-       ['$scope','egCore','ngToast',
-function($scope , egCore , ngToast) {
-    var hatch = egCore.hatch;  // convenience
-
-    $scope.hatch_available = hatch.hatchAvailable;
-
-    hatch.usePrinting().then(function(answer) {
-        $scope.hatch_printing = answer;
-    });
-
-    // Apply Hatch settings as changes occur in the UI.
-    
-    $scope.$watch('hatch_printing', function(newval) {
-        if (typeof newval != 'boolean') return;
-        hatch.setItem('eg.hatch.enable.printing', newval);
-    });
 }])
 
 /*

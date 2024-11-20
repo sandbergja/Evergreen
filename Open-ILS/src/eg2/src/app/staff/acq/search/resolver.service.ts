@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
 import {Router, Resolve, RouterStateSnapshot,
-        ActivatedRouteSnapshot} from '@angular/router';
+    ActivatedRouteSnapshot} from '@angular/router';
 import {AttrDefsService} from './attr-defs.service';
 
 @Injectable()
@@ -10,7 +10,7 @@ export class AttrDefsResolver implements Resolve<Promise<any[]>> {
 
     constructor(
         private router: Router,
-        private attrDefs: AttrDefsService,
+        private attrDefs: AttrDefsService
     ) {}
 
     resolve(

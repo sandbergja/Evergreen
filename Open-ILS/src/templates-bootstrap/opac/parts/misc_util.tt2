@@ -109,8 +109,9 @@
         args.display_fields = {};
         args.hl = {};
 
+        PROCESS set_show_highlight;
         args.hl_field = 'highlight';
-        IF CGI.param('no_highlight') || search.no_highlight;
+        IF !show_highlight;
             args.hl_field = 'value';
         END;
         hl_field = args.hl_field;
@@ -468,10 +469,17 @@
 
         # Extract the 856 URLs that are not otherwise represented by asset.uri's
         args.online_res = [];
-        FOR node IN xml.findnodes('//*[@tag="856" and @ind1="4" and (@ind2="0" or @ind2="1")]');
+        FOR node IN xml.findnodes('//*[@tag="856" and @ind1="4" and (@ind2="0" or @ind2="1" or @ind2="2")]');
             IF node.findnodes('./*[@code="9" or @code="w" or @code="n"]'); NEXT; END; # asset.uri's
+            lind2 = node.getAttribute('ind2') || '';
+            ltype = '';
+            IF lind2 == '0'; ltype = l('Electronic Resource:'); END;
+            IF lind2 == '1'; ltype = l('Version of Resource:'); END;
+            IF lind2 == '2'; ltype = l('Related Resource:'); END;
             label = node.findnodes('./*[@code="y"]');
-            notes = node.findnodes('./*[@code="z" or @code="3"]');
+            notes = node.findnodes('./*[@code="z"]');
+            access = node.findnodes('./*[@code="n"]');
+            materials = node.findnodes('./*[@code="3"]');
             FOR href IN node.findnodes('./*[@code="u"]');
                 NEXT UNLESS href;
                 # it's possible for multiple $u's to exist within 1 856 tag.
@@ -482,6 +490,9 @@
                     href => href.textContent,
                     link => (loop.first AND label) ? label.textContent : href.textContent,
                     note => (loop.first) ? notes.textContent : ''
+                    materials => (loop.first) ? materials.textContent : ''
+                    access => (loop.first) ? access.textContent : ''
+                    type => ltype
                 });
             END;
         END;
@@ -561,7 +572,18 @@
                         res.link = res.note;
                         res.note = '';
                     END;
-                    args.uris.push(res);
+
+                    # Unique-ify the URI list because multiple $9's on the same link can cause dupes.
+                    found_u = 0;
+                    FOR test_u IN args.uris;
+                        IF test_u.href == res.href AND test_u.link == res.link AND test_u.note == res.note;
+                            found_u = 1;
+                            LAST;
+                        END;
+                    END;
+                    IF NOT found_u;
+                        args.uris.push(res);
+                    END;
 
                     IF ebook_api.ebook_test.enabled == 'true';
                         IF !args.ebook_test_id;
@@ -799,11 +821,15 @@
         loc_value = ctx.copy_location_group ? CGI.param(loc_name)
                   : ctx.copy_location_group_org # resolved locg
                     || CGI.param(loc_name) || CGI.param('loc') || ctx.search_ou;
+        # This value should be numeric, but users could input anything.
+        # So let's remove any non-numbers to avoid potential reflected XSS vulnerabilities.
+        loc_value = loc_value.replace('[^0-9:]', '');
     END;
 
 -%]
 
 [%- BLOCK carousels;
+    IF ctx.show_carousels == 'true';
     config = {
         animated => 0,
         animation_interval => 5,
@@ -860,8 +886,8 @@
     </ul>
   </div>
   <div class="glide__arrows" data-glide-el="controls">
-    <button class="glide__arrow glide__arrow--left btn" data-glide-dir="<"><i class="fas fa-arrow-left"></i> Prev</button>
-    <button class="glide__arrow glide__arrow--right btn" data-glide-dir=">">Next <i class="fas fa-arrow-right"></i></button>
+    <button type="button" class="glide__arrow glide__arrow--left btn" data-glide-dir="<"><i class="fas fa-arrow-left"></i> [% l('Prev') %]</button>
+    <button type="button" class="glide__arrow glide__arrow--right btn" data-glide-dir=">">[% l('Next') %] <i class="fas fa-arrow-right"></i></button>
   </div>
 </div>
 </div>
@@ -888,10 +914,10 @@
 </div>
 [% END -%]
 [% END -%]
+[% END -%]
 
-[% BLOCK show_cover %]
-    <td>
-    <span class="sr-only">[% l('Cover Image') %]</span>
+[%- BLOCK show_cover -%]
+    <td role="cell">
     [% IF obalkyknih_cz.enabled == 'true' %]
         [% IF (matches = row_isbnissn.match('^(.+?)(\s.+)$'));
             row_isbnissn = matches.0;
@@ -900,11 +926,26 @@
     [% ELSE %]
         <a href='[% ctx.media_prefix %]/opac/extras/ac/jacket/medium/r/[% row_rec_id | uri %]'>
     [% END %]
-    <img alt="[% row_title _ ' Cover Image' %]" class='my-2' style="max-width:70px;"
+    <img alt="" class='my-2' style="max-width:70px;"
             src='[% ctx.media_prefix %]/opac/extras/ac/jacket/medium/r/[% row_rec_id | uri %]'/>
     </a>
     </td>
 [% END %]
+
+[%- BLOCK set_show_highlight;
+    show_highlight = CGI.param("show_highlight");
+    IF show_highlight == "";
+        highlight_setting = 'ui.show_search_highlight';
+        show_highlight = ctx.user_setting_map.$highlight_setting;
+        IF show_highlight == "";
+            show_highlight = search.default_highlight;
+            IF show_highlight == "";
+                show_highlight = 1;
+            END;
+        END;
+    END;
+END
+-%]
 
 
 

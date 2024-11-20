@@ -73,7 +73,11 @@
                         <span ng-if="printer.name == 'hatch_file_writer'">
                           [% l('Hatch File Writer') %]
                         </span>
-                        <span ng-if="printer.name != 'hatch_file_writer'">
+                        <span ng-if="printer.name == 'hatch_browser_printing'">
+                          [% l('Browser Printing') %]
+                        </span>
+                        <span ng-if="printer.name != 'hatch_file_writer' 
+                          && printer.name != 'hatch_browser_printing'">
                           {{printer.name}}
                         </span>
                       </a>
@@ -88,14 +92,16 @@
                   value="[% l('No Printer Selected') %]">
                 <input ng-if="useFileWriter()" type="text" disabled="disabled"
                   class="form-control" value="[% l('Hatch File Writer') %]"/>
-                <input ng-if="printConfig[context].printer && !useFileWriter()" 
+                <input ng-if="useBrowserPrinting()" type="text" disabled="disabled"
+                  class="form-control" value="[% l('Browser Printing') %]"/>
+                <input ng-if="printConfig[context].printer && !useFileWriter() && !useBrowserPrinting()" 
                   type="text" class="form-control" disabled="disabled"
                   value="{{printConfig[context].printer}}">
               </div><!-- /input-group -->
             </div><!-- col -->
             <div class="col-md-4">
               <span class="pad-right-min">
-                <button class="btn btn-warning" 
+                <button class="btn btn-destroy" 
                   ng-click="resetPrinterSettings(context)">
                   [% l('Reset Form') %]
                 </button>
@@ -116,8 +122,17 @@ additional settings are required.[% END %]
             </div>
           </div>
 
+          <div class="pad-vert" 
+            ng-show="!isTestView && hatchIsOpen() && useBrowserPrinting()">
+            <div class="alert alert-info">
+              [% |l %]Hatch Browser Printing sends print requests directly
+to the browser, bypassing the external Hatch print mechanism. No additional 
+settings are required.[% END %]
+            </div>
+          </div>
+
           <div class="row" 
-            ng-show="!isTestView && hatchIsOpen() && !useFileWriter()"
+            ng-show="!isTestView && hatchIsOpen() && !useFileWriter() && !useBrowserPrinting()"
             <div class="col-md-10">
               <div class="row">
                 <div class="col-md-1"></div>
@@ -434,7 +449,7 @@ ng-init="htmlPrintContent='
   <style>p { color: blue }</style>
   <h2>[% l('Test HTML Print') %]</h2>
   <br/>
-  <img src=\'https://[% ctx.hostname %]/opac/images/main_logo.png\' width=\'140\' height=\'24\'/>
+  <img src=\'https://[% ctx.hostname %]/images/evergreen-logo.svg\' width=\'140\' height=\'24\'/>
   <p>[% l('Welcome, Stranger!') %]</p>
   <p>{{value1}}</p>
   <p>{{value2}}</p>

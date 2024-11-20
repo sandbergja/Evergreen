@@ -136,6 +136,14 @@ sub max_popularity_importance_multiplier {
     return $self->custom_data->{max_popularity_importance_multiplier};
 }
 
+sub dbh {
+    my $self = shift;
+    my $dbh = shift;
+
+    $self->custom_data->{dbh} = $dbh if defined($dbh);
+    return $self->custom_data->{dbh};
+}
+
 sub simple_plan {
     my $self = shift;
 
@@ -717,6 +725,7 @@ __PACKAGE__->add_search_filter( 'superpage' );
 __PACKAGE__->add_search_filter( 'superpage_size' );
 __PACKAGE__->add_search_filter( 'estimation_strategy' );
 __PACKAGE__->add_search_filter( 'from_metarecord' );
+__PACKAGE__->add_search_filter( 'on_reserve' );
 __PACKAGE__->add_search_modifier( 'available' );
 __PACKAGE__->add_search_modifier( 'staff' );
 __PACKAGE__->add_search_modifier( 'deleted' );
@@ -893,6 +902,36 @@ sub toSQL {
     my $nullpos = 'NULLS LAST';
     $nullpos = 'NULLS FIRST' if ($self->find_modifier('nullsfirst'));
 
+    my $course_join = q{};
+    my $course_where = q{};
+    my ($course_filter) = $self->find_filter('on_reserve');
+    if ($course_filter) {
+        my $course_org_filter = q{};
+        if (@{$course_filter->args}) {
+            my @course_orgs = grep /^\d+$/, @{$course_filter->args};
+            # Don't filter by course OU if we didn't find any good candidate IDs.
+            # This way, users can do searches like `biology on_reserve(all)` to
+            # find matches from all org units' courses
+            if (@course_orgs > 0) {
+                my $course_orgs_with_descendants = [];
+                foreach ( @course_orgs ) {
+                    push @$course_orgs_with_descendants, @{$U->get_org_descendants($_)};
+                }
+                my $course_org_string = join q{,}, @$course_orgs_with_descendants;
+                $course_org_filter .= "AND acmc.owning_lib IN ($course_org_string) ";
+            }
+        }
+        if ($course_filter->negate) {
+          $course_join .= ' LEFT JOIN (SELECT record FROM asset.course_module_course_materials acmcm';
+          $course_join .= " INNER JOIN asset.course_module_course acmc ON acmcm.course=acmc.id $course_org_filter ) cm";
+          $course_join .= ' ON cm.record=m.source';
+          $course_where .= ' AND cm.record IS NULL';
+        } else {
+          $course_join .= ' INNER JOIN asset.course_module_course_materials acmcm ON m.source = acmcm.record';
+          $course_join .= " INNER JOIN asset.course_module_course acmc ON acmcm.course=acmc.id $course_org_filter";
+        }
+    }
+
     # Do we have a badges() filter?
     my $badges = '';
     my ($badge_filter) = $self->find_filter('badges');
@@ -1052,7 +1091,7 @@ sub toSQL {
 
         # WITH-clause just generates vis test
         $$flat_plan{with} .= "\n," if $$flat_plan{with};
-        $$flat_plan{with} .= "c_attr AS (SELECT (ARRAY_TO_STRING(ARRAY[$vis_test],'&'))::query_int AS vis_test FROM asset.patron_default_visibility_mask() x)";
+        $$flat_plan{with} .= "c_attr AS (SELECT (ARRAY_TO_STRING(ARRAY[$vis_test],'&'))::query_int AS vis_test FROM asset.patron_default_visibility_mask() x OFFSET 0)";
 
         $final_c_attr_test = 'EXISTS (SELECT 1 FROM asset.copy_vis_attr_cache WHERE record = m.source AND vis_attr_vector @@ c_attr.vis_test)';
     }
@@ -1097,7 +1136,7 @@ sub toSQL {
 
         # WITH-clause just generates vis test
         $$flat_plan{with} .= "\n," if $$flat_plan{with};
-        $$flat_plan{with} .= "b_attr AS (SELECT ($vis_test)::query_int AS vis_test FROM asset.patron_default_visibility_mask() x)";
+        $$flat_plan{with} .= "b_attr AS (SELECT ($vis_test)::query_int AS vis_test FROM asset.patron_default_visibility_mask() x OFFSET 0)";
 
         # These are magic numbers... see: search.calculate_visibility_attribute() UDF
         $final_b_attr_test = '(b_attr.vis_test IS NULL OR bre.vis_attr_vector @@ b_attr.vis_test)';
@@ -1151,6 +1190,7 @@ SELECT  id,
                 $mra_join
                 $mrv_join
                 $bre_join
+                $course_join
                 $pop_join
                 $pubdate_join
                 $lang_join
@@ -1158,6 +1198,7 @@ SELECT  id,
                 $b_attr_join
           WHERE 1=1
                 $flat_where
+                $course_where
           GROUP BY 1
           ORDER BY 4 $desc $nullpos, $pop_extra_sort 5 DESC $nullpos, 3 DESC
           LIMIT $core_limit
@@ -1252,31 +1293,31 @@ sub flatten {
 
                 my $node_rank = 'COALESCE(' . $node->rank . " * ${talias}.weight * 1000, 0.0)";
 
-                $from .= "\n" . ${spc} x 4 ."LEFT JOIN (\n"
+                my $search_cte = ",\n $talias AS (\n"
                       . ${spc} x 5 . "SELECT fe.*, fe_weight.weight, ${talias}_xq.tsq, ${talias}_xq.tsq_rank /* search */\n"
                       . ${spc} x 6 . "FROM  $table AS fe\n"
                       . ${spc} x 7 . "JOIN config.metabib_field AS fe_weight ON (fe_weight.id = fe.field)";
 
-                if ($node->dummy_count < @{$node->only_atoms} ) {
+                if ($node->dummy_count < @{$node->only_atoms} or @{$node->phrases}) {
                     $with .= ",\n     " if $with;
                     $with .= "${talias}_xq AS (SELECT ". $node->tsquery ." AS tsq,". $node->tsquery_rank ." AS tsq_rank )";
                     if ($node->combined_search) {
-                        $from .= "\n" . ${spc} x 7 . "JOIN $ctable AS com ON (com.record = fe.source";
+                        $search_cte .= "\n" . ${spc} x 7 . "JOIN $ctable AS com ON (com.record = fe.source";
                         if (@field_ids) {
-                            $from .= " AND com.metabib_field IN (" . join(',',@field_ids) . "))";
+                            $search_cte .= " AND com.metabib_field IN (" . join(',',@field_ids) . "))";
                         } else {
-                            $from .= " AND com.metabib_field IS NULL)";
+                            $search_cte .= " AND com.metabib_field IS NULL)";
                         }
-                        $from .= "\n" . ${spc} x 7 . "JOIN ${talias}_xq ON (com.index_vector @@ ${talias}_xq.tsq)";
+                        $search_cte .= "\n" . ${spc} x 7 . "JOIN ${talias}_xq ON (com.index_vector @@ ${talias}_xq.tsq)";
                     } else {
-                        $from .= "\n" . ${spc} x 7 . "JOIN ${talias}_xq ON (fe.index_vector @@ ${talias}_xq.tsq)";
+                        $search_cte .= "\n" . ${spc} x 7 . "JOIN ${talias}_xq ON (fe.index_vector @@ ${talias}_xq.tsq)";
                     }
                 } else {
-                    $from .= "\n" . ${spc} x 7 . ", (SELECT NULL::tsquery AS tsq, NULL::tsquery AS tsq_rank ) AS ${talias}_xq";
+                    $search_cte .= "\n" . ${spc} x 7 . ", (SELECT NULL::tsquery AS tsq, NULL::tsquery AS tsq_rank ) AS ${talias}_xq";
                 }
 
                 if (@field_ids) {
-                    $from .= "\n" . ${spc} x 6 . "WHERE fe_weight.id IN  (" .
+                    $search_cte .= "\n" . ${spc} x 6 . "WHERE fe_weight.id IN  (" .
                         join(',', @field_ids) . ")";
                 }
 
@@ -1313,7 +1354,7 @@ sub flatten {
 
                                 # NOTE: only real fields that match the (component) tsquery will
                                 #       get to contribute to and increased rank for the record.
-                                $from .= "\n" . ${spc} x 8 . "UNION ALL\n"
+                                $search_cte .= "\n" . ${spc} x 8 . "UNION ALL\n"
                                       . ${spc} x 5 . "SELECT fe.id, fe.source, fe.field, fe.value, fe.index_vector, "
                                       . "fe_weight.weight, ${talias}_xq.tsq, ${talias}_xq.tsq_rank /* virtual field addition */\n"
                                       . ${spc} x 6 . "FROM  $vtable AS fe\n"
@@ -1328,7 +1369,8 @@ sub flatten {
                     }
                 }
 
-                $from .= "\n" . ${spc} x 4 . ") AS $talias ON (m.source = ${talias}.source)";
+                $with .= $search_cte . ')';
+                $from .= "\n" . ${spc} x 4 . "LEFT JOIN $talias ON (m.source = ${talias}.source)";
 
                 my %used_bumps;
                 my @bumps;
@@ -1357,15 +1399,9 @@ sub flatten {
                 $NOT = 'NOT ' if $node->negate;
 
                 $where .= "$NOT(" . $talias . ".id IS NOT NULL";
-                if (@{$node->phrases}) {
-                    $where .= ' AND ' . join(' AND ', map {
-                        "${talias}.value ~* ".$self->QueryParser->quote_phrase_value($_, 1)
-                    } @{$node->phrases});
-                } else {
-                    for my $atom (@{$node->only_real_atoms}) {
-                        next unless $atom->{content} && $atom->{content} =~ /(^\^|\$$)/;
-                        $where .= " AND ${talias}.value ~* ".$self->QueryParser->quote_phrase_value($atom->{content});
-                    }
+                for my $atom (@{$node->only_real_atoms}) { # left and right anchored substring match (prefix / suffix search)
+                    next unless $atom->{content} && $atom->{content} =~ /(^\^|\$$)/;
+                    $where .= " AND ${talias}.value ~* ".$self->QueryParser->quote_phrase_value($atom->{content});
                 }
                 $where .= ')';
 
@@ -1834,30 +1870,11 @@ sub buildSQL {
 
     my $classname = $self->node->classname;
 
-    return $self->sql("to_tsquery('$classname','')") if $self->{dummy};
+    return $self->sql("''::tsquery") if $self->{dummy};
 
     my $normalizers = $self->node->plan->QueryParser->query_normalizers( $classname );
+
     my $fields = $self->node->fields;
-
-    my $lang;
-    my $filter = $self->node->plan->find_filter('preferred_language');
-    $lang ||= $filter->args->[0] if ($filter && $filter->args);
-    $lang ||= $self->node->plan->QueryParser->default_preferred_language;
-    my $ts_configs = [];
-
-    if (!@$fields) {
-        $ts_configs = $self->node->plan->QueryParser->class_ts_config($classname, $lang);
-    } else {
-        for my $field (@$fields) {
-            push @$ts_configs, @{$self->node->plan->QueryParser->field_ts_config($classname, $field, $lang)};
-        }
-    }
-    $ts_configs = [keys %{{map { $_ => 1 } @$ts_configs}}];
-
-    # Assume we want exact if none otherwise provided.
-    # Because we can reasonably expect this to exist
-    $ts_configs = ['simple'] unless (scalar @$ts_configs);
-
     $fields = $self->node->plan->QueryParser->search_fields->{$classname} if (!@$fields);
 
     my %norms;
@@ -1894,9 +1911,11 @@ sub buildSQL {
     $suffix_op = ":$suffix" if $suffix;
     $suffix_after = "|| '$suffix_op'" if $suffix;
 
+    my $ts_configs = $self->node->ts_configs;
+
     my @sql_set = ();
     for my $ts_config (@$ts_configs) {
-        push @sql_set, "to_tsquery('$ts_config', COALESCE(NULLIF($prefix '(' || btrim(regexp_replace($sql,E'(?:\\\\s+|:)','$suffix_op&','g'),'&|') $suffix_after || ')', '()'), ''))";
+        push @sql_set, "to_tsquery('$ts_config', COALESCE(NULLIF($prefix '(' || btrim(regexp_replace($sql,E'(?:\\\\s+|:)','$suffix_op&','g'),'&|') $suffix_after || ')', $prefix '()'), ''))";
     }
 
     $sql = join($joiner, @sql_set);
@@ -1911,6 +1930,36 @@ use base 'QueryParser::query_plan::node';
 use List::MoreUtils qw/uniq/;
 use Data::Dumper;
 
+sub ts_configs {
+    my $self = shift;
+    my $ts_configs = $self->{ts_configs} || [];
+
+    if (!@$ts_configs) {
+        my $classname = $self->classname;
+        my $lang;
+        my $filter = $self->plan->find_filter('preferred_language');
+        $lang ||= $filter->args->[0] if ($filter && $filter->args);
+        $lang ||= $self->plan->QueryParser->default_preferred_language;
+
+        my $fields = $self->fields;
+        if (!@$fields) {
+            $ts_configs = $self->plan->QueryParser->class_ts_config($classname, $lang);
+        } else {
+            for my $field (@$fields) {
+                push @$ts_configs, @{$self->plan->QueryParser->field_ts_config($classname, $field, $lang)};
+            }
+        }
+        $ts_configs = [keys %{{map { $_ => 1 } @$ts_configs}}];
+
+        # Assume we want exact if none otherwise provided.
+        # Because we can reasonably expect this to exist
+        $ts_configs = ['simple'] unless (scalar @$ts_configs);
+        $self->{ts_configs} = $ts_configs;
+    }
+
+    return $ts_configs;
+}
+
 sub abstract_node_additions {
     my $self = shift;
     my $aq = shift;
@@ -1918,7 +1967,9 @@ sub abstract_node_additions {
     my $hm = $self->plan
                 ->QueryParser
                 ->parse_tree
-                ->get_abstract_data('highlight_map') || {};
+                ->get_abstract_data('highlight_map') // {};
+
+    return unless ref($hm);
 
     my $field_set = $self->fields;
     $field_set = $self->plan->QueryParser->search_fields->{$self->classname}
@@ -1975,10 +2026,23 @@ sub abstract_node_additions {
         }
     }
 
+    # finally, ask the database to give us an hstore literal
+    my $hl_map_string = "";
+    for my $tsq (keys %$hm) {
+        my $field_list = join(',', @{$$hm{$tsq}});
+        $hl_map_string .= ' || ' if $hl_map_string;
+        $hl_map_string .= "hstore(($tsq)\:\:TEXT,'$field_list')";
+    }
+
+    my $calculated_hm = '';
+    $calculated_hm = $self->plan->QueryParser->dbh->selectcol_arrayref(
+        "SELECT $hl_map_string AS hm"
+    )->[0] if ($hl_map_string);
+
     $self->plan
         ->QueryParser
         ->parse_tree
-        ->set_abstract_data('highlight_map', $hm);
+        ->set_abstract_data('highlight_map', $calculated_hm);
 }
 
 sub add_vfield {
@@ -2069,10 +2133,23 @@ sub tsquery {
 
     for my $atom (@{$self->query_atoms}) {
         if (ref($atom)) {
-            $self->{tsquery} .= "\n" . ${spc} x 3 . $atom->sql;
+            $self->{tsquery} .= "\n" . ${spc} x 3;
+            $self->{tsquery} .= '(' x $atom->explicit_start if $atom->explicit_start;
+            $self->{tsquery} .= $atom->sql;
+            $self->{tsquery} .= ')' x $atom->explicit_end if $atom->explicit_end;
         } else {
             $self->{tsquery} .= $atom x 2;
         }
+    }
+
+    # any phrases that are more than empty or all-whitespace
+    if (my @phrases = grep { /\S+/ } @{$self->phrases}) {
+        my $neg = $self->negate ? '!!' : '';
+        $self->{tsquery} ||= "''::tsquery";
+        $self->{tsquery} .= ' && ' . join(
+            ' && ',
+            map { "${neg}phraseto_tsquery('simple', \$_$$\$$_\$_$$\$)" } @phrases
+        );
     }
 
     return $self->{tsquery};
@@ -2088,6 +2165,19 @@ sub tsquery_rank {
     }
     $self->{tsquery_rank} = join(' ||', @atomlines);
     $self->{tsquery_rank} = "''::tsquery" unless $self->{tsquery_rank};
+
+    # any non-negated phrases that are more than empty or all-whitespace
+    if (!$self->negate) {
+        if (my @phrases = grep { /\S+/ } @{$self->phrases}) {
+            for my $tsc (@{$self->ts_configs}) {
+                $self->{tsquery_rank} .= ' || ' . join(
+                    ' || ',
+                    map { "phraseto_tsquery('$tsc', \$_$$\$$_\$_$$\$)" } @phrases
+                );
+            }
+        }
+    }
+
     return $self->{tsquery_rank};
 }
 

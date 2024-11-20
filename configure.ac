@@ -33,7 +33,7 @@ AC_SUBST([abs_top_builddir])
 #-----------------------------------
 
 
-AC_PROG_LIBTOOL
+LT_INIT
 AC_PROG_CC
 AC_PROG_INSTALL
 AC_PROG_LN_S
@@ -187,6 +187,14 @@ AC_ARG_WITH([libxml2],
 [LIBXML2_HEADERS=/usr/include/libxml2/])
 AC_SUBST([LIBXML2_HEADERS])
 
+PKG_CHECK_MODULES([DBI], [dbi])
+
+AC_ARG_WITH([hiredis],
+[  --with-hiredis=path         location of the hiredis headers (default is /usr/include/hiredis/))],
+[HIREDIS_HEADERS=${withval}],
+[HIREDIS_HEADERS=/usr/include/hiredis/])
+AC_SUBST([HIREDIS_HEADERS])
+
 AC_ARG_WITH([dbi],
 [  --with-dbi=path             location of the libdbi driver libraries (default is /usr/lib/x86_64-linux-gnu/dbd/)],
 [DBI_LIBS=${withval}],
@@ -198,17 +206,25 @@ AC_ARG_WITH([perlbase],
 [PERL_BASE=x])
 AC_SUBST([PERL_BASE])
 
-# If the passed in value doesn't work, fall back to reasonable defaults
-# Distributions are starting to package a good version of libdbi / libdbd
-if ! test -d "$DBI_LIBS"; then
-    for i in /usr/lib/dbd/ /usr/lib64/dbd /usr/local/lib/dbd/ ; do
-        if test -d "$i"; then
-            DBI_LIBS="$i"
-            break
-        fi
-    done
-fi
-AC_SUBST([DBI_LIBS])
+AC_ARG_WITH([redis-accounts],
+[  --with-redis-accounts=path  location of the redis accounts file (default is $sysconfdir/redis-accounts.txt)],
+[REDIS_ACCOUNTS=${withval}],
+[REDIS_ACCOUNTS=$sysconfdir/redis-accounts.txt])
+AC_SUBST([REDIS_ACCOUNTS])
+
+# Skip password propagation if there is no password field.
+AC_CHECK_FILE(
+    [$REDIS_ACCOUNTS],
+    [
+        OPENSRF_BUS_PASSWORD=$(grep 'ACL SETUSER opensrf on >' ${REDIS_ACCOUNTS} | cut -d'>' -f2)
+        GATEWAY_BUS_PASSWORD=$(grep 'ACL SETUSER gateway on >' ${REDIS_ACCOUNTS} | cut -d'>' -f2)
+        ROUTER_BUS_PASSWORD=$(grep 'ACL SETUSER router on >' ${REDIS_ACCOUNTS} | cut -d'>' -f2)
+        AC_SUBST([OPENSRF_BUS_PASSWORD])
+        AC_SUBST([GATEWAY_BUS_PASSWORD])
+        AC_SUBST([ROUTER_BUS_PASSWORD])
+    ],
+    [AC_MSG_RESULT(Skipping Redis accounts password propagation)]
+)
 
 AM_CONDITIONAL(CHECK_TESTS, test x$enable_tests = xyes)
 
@@ -288,9 +304,11 @@ if test "x$openils_core" = "xtrue"; then
     # /openils/lib, the compilation test will fail. Support that case.
     LDFLAGS="-L$OPENSRF_LIBS"
 
-    AC_CHECK_LIB([opensrf], [osrfMessageFree], [], AC_MSG_ERROR(*** OpenILS requires libopensrf))
+    # checking this specific function name ensures we have a "new enough" libopensrf but isn't actually checking the lib version :-/
+    AC_CHECK_LIB([opensrf], [osrf_buffer_free], [], AC_MSG_ERROR(*** OpenILS requires libopensrf))
     AC_CHECK_LIB([readline], [main], [], AC_MSG_ERROR(*** OpenILS requires libreadline))
     AC_CHECK_LIB([xml2], [main], [], AC_MSG_ERROR(*** OpenILS requires libxml2))
+    AC_CHECK_LIB([hiredis], [redisConnect], [], AC_MSG_ERROR(***OpenSRF requires libhiredis))
     AC_CHECK_LIB([xslt], [main], [], AC_MSG_ERROR(*** OpenILS requires libxslt))
     AC_CHECK_LIB([pq], [main], [], AC_MSG_ERROR(*** OpenILS requires libpq))
     PKG_CHECK_MODULES(pcre, libpcre >= 3.0.0)
@@ -300,7 +318,6 @@ if test "x$openils_core" = "xtrue"; then
     # Checks for header files.
     #------------------------------------
 
-    AC_HEADER_STDC
     AC_CHECK_HEADERS([fcntl.h langinfo.h locale.h stdlib.h string.h unistd.h])
 
     #-------------------------------------------------------------------
@@ -417,6 +434,8 @@ AC_MSG_RESULT(libxml2 headers location:                 ${LIBXML2_HEADERS})
 AC_MSG_RESULT(libdbi location:                          ${DBI_LIBS})
 AC_MSG_RESULT(OpenSRF headers location:                 ${OPENSRF_HEADERS})
 AC_MSG_RESULT(OpenSRF libraries location:               ${OPENSRF_LIBS})
+AC_MSG_RESULT(libhiredis headers location:              ${HIREDIS_HEADERS})
+AC_MSG_RESULT(Redis Accounts: ${REDIS_ACCOUNTS})
 
 AC_MSG_RESULT([----------------------------------------------------------------------])
 

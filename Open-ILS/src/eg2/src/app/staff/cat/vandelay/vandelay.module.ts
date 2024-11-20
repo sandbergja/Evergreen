@@ -1,4 +1,5 @@
 import {NgModule} from '@angular/core';
+import {AcqCommonModule} from '@eg/staff/acq/acq-common.module';
 import {FmRecordEditorModule} from '@eg/share/fm-editor/fm-editor.module';
 import {StaffCommonModule} from '@eg/staff/common.module';
 import {CatalogCommonModule} from '@eg/share/catalog/catalog-common.module';
@@ -11,6 +12,7 @@ import {VandelayComponent} from './vandelay.component';
 import {ImportComponent} from './import.component';
 import {ExportComponent} from './export.component';
 import {QueueComponent} from './queue.component';
+import {BackgroundImportComponent} from './background-import.component';
 import {QueueListComponent} from './queue-list.component';
 import {QueuedRecordComponent} from './queued-record.component';
 import {QueuedRecordMatchesComponent} from './queued-record-matches.component';
@@ -28,39 +30,41 @@ import {RecentImportsComponent} from './recent-imports.component';
 import {MarcEditModule} from '@eg/staff/share/marc-edit/marc-edit.module';
 
 @NgModule({
-  declarations: [
-    VandelayComponent,
-    ImportComponent,
-    ExportComponent,
-    QueueComponent,
-    QueueListComponent,
-    QueuedRecordComponent,
-    QueuedRecordMatchesComponent,
-    DisplayAttrsComponent,
-    MergeProfilesComponent,
-    HoldingsProfilesComponent,
-    QueueItemsComponent,
-    RecordItemsComponent,
-    MatchSetListComponent,
-    MatchSetComponent,
-    MatchSetExpressionComponent,
-    MatchSetQualityComponent,
-    MatchSetNewPointComponent,
-    RecentImportsComponent
-  ],
-  imports: [
-    TreeModule,
-    StaffCommonModule,
-    FmRecordEditorModule,
-    AdminPageModule,
-    MarcEditModule,
-    CatalogCommonModule,
-    VandelayRoutingModule,
-    HttpClientModule,
-  ],
-  providers: [
-    VandelayService
-  ]
+    declarations: [
+        VandelayComponent,
+        ImportComponent,
+        ExportComponent,
+        QueueComponent,
+        BackgroundImportComponent,
+        QueueListComponent,
+        QueuedRecordComponent,
+        QueuedRecordMatchesComponent,
+        DisplayAttrsComponent,
+        MergeProfilesComponent,
+        HoldingsProfilesComponent,
+        QueueItemsComponent,
+        RecordItemsComponent,
+        MatchSetListComponent,
+        MatchSetComponent,
+        MatchSetExpressionComponent,
+        MatchSetQualityComponent,
+        MatchSetNewPointComponent,
+        RecentImportsComponent
+    ],
+    imports: [
+        AcqCommonModule,
+        TreeModule,
+        StaffCommonModule,
+        FmRecordEditorModule,
+        AdminPageModule,
+        MarcEditModule,
+        CatalogCommonModule,
+        VandelayRoutingModule,
+        HttpClientModule,
+    ],
+    providers: [
+        VandelayService
+    ]
 })
 
 export class VandelayModule {

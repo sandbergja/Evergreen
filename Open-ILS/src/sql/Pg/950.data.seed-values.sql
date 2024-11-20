@@ -95,8 +95,8 @@ INSERT INTO config.standing_penalty (id, name, label, staff_alert, org_depth) VA
 
 SELECT SETVAL('config.standing_penalty_id_seq', 100);
 
-INSERT INTO config.metabib_class ( name, label ) VALUES ( 'identifier', oils_i18n_gettext('identifier', 'Identifier', 'cmc', 'label') );
-INSERT INTO config.metabib_class ( name, label ) VALUES ( 'keyword', oils_i18n_gettext('keyword', 'Keyword', 'cmc', 'label') );
+INSERT INTO config.metabib_class ( name, label, variant_authority_suggestion ) VALUES ( 'identifier', oils_i18n_gettext('identifier', 'Identifier', 'cmc', 'label'), FALSE );
+INSERT INTO config.metabib_class ( name, label, variant_authority_suggestion ) VALUES ( 'keyword', oils_i18n_gettext('keyword', 'Keyword', 'cmc', 'label'), FALSE );
 INSERT INTO config.metabib_class ( name, label ) VALUES ( 'title', oils_i18n_gettext('title', 'Title', 'cmc', 'label'));
 INSERT INTO config.metabib_class ( name, label ) VALUES ( 'author', oils_i18n_gettext('author', 'Author', 'cmc', 'label'));
 INSERT INTO config.metabib_class ( name, label ) VALUES ( 'subject', oils_i18n_gettext('subject', 'Subject', 'cmc', 'label') );
@@ -617,8 +617,6 @@ INSERT INTO config.z3950_attr (id, source, name, label, code, format)
 	VALUES (7, 'loc', 'publisher', oils_i18n_gettext(7, 'Publisher', 'cza', 'label'), 1018, 6);
 INSERT INTO config.z3950_attr (id, source, name, label, code, format)
 	VALUES (8, 'loc', 'pubdate', oils_i18n_gettext(8, 'Publication Date', 'cza', 'label'), 31, 1);
-INSERT INTO config.z3950_attr (id, source, name, label, code, format)
-	VALUES (9, 'loc', 'item_type', oils_i18n_gettext(9, 'Item Type', 'cza', 'label'), 1001, 1);
 INSERT INTO config.z3950_attr (id, source, name, label, code, format)
 	VALUES (19, 'loc', 'upc', oils_i18n_gettext(19, 'UPC', 'cza', 'label'), 1007, 1);
 
@@ -1970,7 +1968,81 @@ INSERT INTO permission.perm_list ( id, code, description ) VALUES
  ( 637, 'UPLOAD_COVER_IMAGE', oils_i18n_gettext(637,
     'Upload local cover images for added content.', 'ppl', 'description')),
  ( 638, 'RUN_SIMPLE_REPORTS', oils_i18n_gettext(638,
-    'Build and run simple reports', 'ppl', 'description'))
+    'Build and run simple reports', 'ppl', 'description')),
+ ( 639, 'ADMIN_OPENATHENS', oils_i18n_gettext(639,
+    'Allow a user to administer OpenAthens authentication service', 'ppl', 'description')),
+ ( 640, 'ACCESS_ANGULAR_CIRC', oils_i18n_gettext(640,
+    'Allow a user to access the experimental Angular circulation interfaces', 'ppl', 'description')),
+ ( 641, 'ADMIN_FUND_ROLLOVER', oils_i18n_gettext(641,
+    'Allow the user to perform fund propagation and rollover', 'ppl', 'description')),
+ ( 642, 'UPDATE_COPY_BARCODE', oils_i18n_gettext(642,
+    'Update the barcode for an item.', 'ppl', 'description')),
+ ( 643, 'VIEW_HOLD_PULL_LIST', oils_i18n_gettext(643,
+    'View hold pull list', 'ppl', 'description')),
+ ( 644, 'ADMIN_PROXIMITY_ADJUSTMENT', oils_i18n_gettext(644,
+    'Allow a user to administer Org Unit Proximity Adjustments', 'ppl', 'description')),
+ ( 645, 'ADMIN_USER_BUCKET', oils_i18n_gettext(645,
+    'Allow a user to administer User Buckets', 'ppl', 'description')),
+ ( 646, 'CREATE_USER_BUCKET', oils_i18n_gettext(646,
+    'Allow a user to create a User Bucket', 'ppl', 'description')),
+ ( 647, 'UPDATE_ADDED_CONTENT_URL', oils_i18n_gettext(647,
+    'Update the NoveList added-content javascript URL', 'ppl', 'description')),
+ ( 648, 'ADMIN_BIB_BUCKET', oils_i18n_gettext(648,
+    'Administer bibliographic record buckets', 'ppl', 'description')),
+ ( 649, 'CREATE_BIB_BUCKET', oils_i18n_gettext(649,
+    'Create bibliographic record buckets', 'ppl', 'description')),
+ ( 650, 'ACQ_ALLOW_OVERSPEND', oils_i18n_gettext(650,
+    'Allow a user to ignore a fund''s stop percentage.', 'ppl', 'description')),
+ ( 651, 'VIEW_BACKGROUND_IMPORT', oils_i18n_gettext(651,
+    'View background record import jobs', 'ppl', 'description')),
+ ( 652, 'CREATE_BACKGROUND_IMPORT', oils_i18n_gettext(652,
+    'Create background record import jobs', 'ppl', 'description')),
+ ( 653, 'UPDATE_BACKGROUND_IMPORT', oils_i18n_gettext(653,
+    'Update background record import jobs', 'ppl', 'description')),
+ ( 654, 'VIEW_SHIPMENT_NOTIFICATION', oils_i18n_gettext(654,
+    'View shipment notifications', 'ppl', 'description')),
+ ( 655, 'MANAGE_SHIPMENT_NOTIFICATION', oils_i18n_gettext(655,
+    'Manage shipment notifications', 'ppl', 'description')),
+ ( 656,'PATRON_BARRED.override', oils_i18n_gettext(656,
+     'Override the PATRON_BARRED event', 'ppl', 'description')),
+ ( 657, 'REMOVE_USER_MFA', oils_i18n_gettext(657,
+     'Remove configured MFA factors for another user', 'ppl', 'description')),
+ ( 658, 'ADMIN_MFA', oils_i18n_gettext(658,
+     'Configure Multi-factor Authentication', 'ppl', 'description')),
+ ( 659, 'TRANSFER_CONTAINER', oils_i18n_gettext(659,
+     'Allow for transferring ownership of a bucket.', 'ppl', 'description')),
+ ( 660, 'ADMIN_CONTAINER_BIBLIO_RECORD_ENTRY_USER_SHARE', oils_i18n_gettext(660,
+     'Allow sharing of record buckets with specific users', 'ppl', 'description')),
+ ( 661, 'ADMIN_CONTAINER_CALL_NUMBER_USER_SHARE', oils_i18n_gettext(661,
+     'Allow sharing of call number buckets with specific users', 'ppl', 'description')),
+ ( 662, 'ADMIN_CONTAINER_COPY_USER_SHARE', oils_i18n_gettext(662,
+     'Allow sharing of copy buckets with specific users', 'ppl', 'description')),
+ ( 663, 'ADMIN_CONTAINER_USER_USER_SHARE', oils_i18n_gettext(663,
+     'Allow sharing of user buckets with specific users', 'ppl', 'description')),
+ ( 664, 'VIEW_CONTAINER_BIBLIO_RECORD_ENTRY_USER_SHARE', oils_i18n_gettext(664,
+     'Allow viewing of record bucket user shares', 'ppl', 'description')),
+ ( 665, 'VIEW_CONTAINER_CALL_NUMBER_USER_SHARE', oils_i18n_gettext(665,
+     'Allow viewing of call number bucket user shares', 'ppl', 'description')),
+ ( 666, 'VIEW_CONTAINER_COPY_USER_SHARE', oils_i18n_gettext(666,
+     'Allow viewing of copy bucket user shares', 'ppl', 'description')),
+ ( 667, 'VIEW_CONTAINER_USER_USER_SHARE', oils_i18n_gettext(667,
+     'Allow viewing of user bucket user shares', 'ppl', 'description')),
+ ( 668, 'ADMIN_CONTAINER_BIBLIO_RECORD_ENTRY_ORG_SHARE', oils_i18n_gettext(668,
+     'Allow sharing of record buckets with specific orgs', 'ppl', 'description')),
+ ( 669, 'ADMIN_CONTAINER_CALL_NUMBER_ORG_SHARE', oils_i18n_gettext(669,
+     'Allow sharing of call number buckets with specific orgs', 'ppl', 'description')),
+ ( 670, 'ADMIN_CONTAINER_COPY_ORG_SHARE', oils_i18n_gettext(670,
+     'Allow sharing of copy buckets with specific orgs', 'ppl', 'description')),
+ ( 671, 'ADMIN_CONTAINER_USER_ORG_SHARE', oils_i18n_gettext(671,
+     'Allow sharing of user buckets with specific orgs', 'ppl', 'description')),
+ ( 672, 'VIEW_CONTAINER_BIBLIO_RECORD_ENTRY_ORG_SHARE', oils_i18n_gettext(672,
+     'Allow viewing of record bucket user shares', 'ppl', 'description')),
+ ( 673, 'VIEW_CONTAINER_CALL_NUMBER_ORG_SHARE', oils_i18n_gettext(673,
+     'Allow viewing of call number bucket user shares', 'ppl', 'description')),
+ ( 674, 'VIEW_CONTAINER_COPY_ORG_SHARE', oils_i18n_gettext(674,
+     'Allow viewing of copy bucket user shares', 'ppl', 'description')),
+ ( 675, 'VIEW_CONTAINER_USER_ORG_SHARE', oils_i18n_gettext(675,
+     'Allow viewing of user bucket user shares', 'ppl', 'description'))
 ;
 
 SELECT SETVAL('permission.perm_list_id_seq'::TEXT, 1000);
@@ -2068,6 +2140,7 @@ INSERT INTO permission.grp_perm_map (grp, perm, depth, grantable)
 			'VIEW_CIRCULATIONS',
 			'VIEW_COPY_NOTES',
 			'VIEW_HOLD',
+			'VIEW_HOLD_PULL_LIST',
 			'VIEW_ORG_SETTINGS',
 			'VIEW_TITLE_NOTES',
 			'VIEW_TRANSACTION',
@@ -2134,6 +2207,7 @@ INSERT INTO permission.grp_perm_map (grp, perm, depth, grantable)
 			'VIEW_HOLD',
 			'VIEW_HOLD_NOTIFICATION',
 			'VIEW_HOLD_PERMIT',
+			'VIEW_HOLD_PULL_LIST',
 			'VIEW_PERM_GROUPS',
 			'VIEW_PERMISSION',
 			'VIEW_TITLE_NOTES',
@@ -2185,6 +2259,7 @@ INSERT INTO permission.grp_perm_map (grp, perm, depth, grantable)
 			'CREATE_PAYMENT',
 			'RENEW_HOLD_OVERRIDE',
 			'UPDATE_COPY',
+			'UPDATE_COPY_BARCODE',
 			'UPDATE_VOLUME',
 			'ADMIN_TOOLBAR',
 			'VOLUME_HOLDS');
@@ -2266,6 +2341,7 @@ INSERT INTO permission.grp_perm_map (grp, perm, depth, grantable)
 			'MARK_ITEM_ON_ORDER',
 			'MARK_ITEM_RESHELVING',
 			'UPDATE_COPY',
+			'UPDATE_COPY_BARCODE',
 			'UPDATE_COPY_NOTE',
 			'UPDATE_IMPORT_ITEM',
 			'UPDATE_MFHD_RECORD',
@@ -2456,7 +2532,9 @@ INSERT INTO permission.grp_perm_map (grp, perm, depth, grantable)
 			'PATRON_EXCEEDS_OVERDUE_COUNT.override',
 			'RETRIEVE_RESERVATION_PULL_LIST',
 			'UPDATE_HOLD',
-            'UPDATE_USER_PHOTO_URL');
+                        'UPDATE_USER_PHOTO_URL',
+		        'ADMIN_USER_BUCKET',
+		        'CREATE_USER_BUCKET');
 
 
 -- Add advanced circulation permissions to the Circulation Admin group
@@ -2588,7 +2666,9 @@ INSERT INTO permission.grp_perm_map (grp, perm, depth, grantable)
 			'ITEM_DEPOSIT_PAID.override',
 			'COPY_STATUS_LOST_AND_PAID.override',
 			'ADMIN_PRINT_TEMPLATE',
-			'ITEM_NOT_HOLDABLE.override');
+			'ITEM_NOT_HOLDABLE.override',
+		        'ADMIN_USER_BUCKET',
+		        'CREATE_USER_BUCKET');
 
 
 -- Add basic sys admin permissions to the Local Administrator group
@@ -2710,6 +2790,7 @@ INSERT INTO permission.grp_perm_map (grp, perm, depth, grantable)
 			'UPDATE_BATCH_COPY',
 			'UPDATE_BIB_IMPORT_QUEUE',
 			'UPDATE_COPY',
+			'UPDATE_COPY_BARCODE',
 			'UPDATE_FUND',
 			'UPDATE_FUND_ALLOCATION',
 			'UPDATE_FUNDING_SOURCE',
@@ -2765,6 +2846,7 @@ INSERT INTO permission.grp_perm_map (grp, perm, depth, grantable)
 			'ADMIN_CLAIM_POLICY',
 			'ADMIN_CURRENCY_TYPE',
 			'ADMIN_FUND',
+			'ADMIN_FUND_ROLLOVER',
 			'ADMIN_FUNDING_SOURCE',
 			'ADMIN_INVOICE',
 			'ADMIN_INVOICE_METHOD',
@@ -2866,6 +2948,7 @@ INSERT INTO permission.grp_perm_map (grp, perm, depth, grantable)
 			'VIEW_CIRCS',
 			'VIEW_COPY_CHECKOUT',
 			'VIEW_HOLD',
+			'VIEW_HOLD_PULL_LIST',
 			'VIEW_TITLE_HOLDS',
 			'VIEW_TRANSACTION',
 			'VIEW_USER',
@@ -2921,13 +3004,15 @@ INSERT INTO asset.call_number VALUES (-1,1,NOW(),1,NOW(),-1,1,'UNCATALOGED');
 
 --090.schema.action.sql
 INSERT INTO action.hold_request_cancel_cause (id,label) VALUES (1, oils_i18n_gettext(1, 'Untargeted expiration', 'ahrcc', 'label'));
-INSERT INTO action.hold_request_cancel_cause (id,label) VALUES (2, oils_i18n_gettext(2, 'Hold Shelf expiration', 'ahrcc', 'label'));
-INSERT INTO action.hold_request_cancel_cause (id,label) VALUES (3, oils_i18n_gettext(3, 'Patron via phone', 'ahrcc', 'label'));
-INSERT INTO action.hold_request_cancel_cause (id,label) VALUES (4, oils_i18n_gettext(4, 'Patron in person', 'ahrcc', 'label'));
-INSERT INTO action.hold_request_cancel_cause (id,label) VALUES (5, oils_i18n_gettext(5, 'Staff forced', 'ahrcc', 'label'));
+INSERT INTO action.hold_request_cancel_cause (id,label,manual) VALUES (2, oils_i18n_gettext(2, 'Hold Shelf expiration', 'ahrcc', 'label'), TRUE);
+INSERT INTO action.hold_request_cancel_cause (id,label,manual) VALUES (3, oils_i18n_gettext(3, 'Patron via phone', 'ahrcc', 'label'), TRUE);
+INSERT INTO action.hold_request_cancel_cause (id,label,manual) VALUES (4, oils_i18n_gettext(4, 'Patron in person', 'ahrcc', 'label'), TRUE);
+INSERT INTO action.hold_request_cancel_cause (id,label,manual) VALUES (5, oils_i18n_gettext(5, 'Staff forced', 'ahrcc', 'label'), TRUE);
 INSERT INTO action.hold_request_cancel_cause (id,label) VALUES (6, oils_i18n_gettext(6, 'Patron via OPAC', 'ahrcc', 'label'));
 INSERT INTO action.hold_request_cancel_cause (id,label) VALUES (7, oils_i18n_gettext(7, 'Patron via SIP', 'ahrcc', 'label'));
 INSERT INTO action.hold_request_cancel_cause (id,label) VALUES (8, oils_i18n_gettext(8, 'Hold Group Event rollback', 'ahrcc', 'label'));
+INSERT INTO action.hold_request_cancel_cause (id,label,manual) VALUES (9, oils_i18n_gettext(9, 'Patron via email', 'ahrcc', 'label'), TRUE);
+INSERT INTO action.hold_request_cancel_cause (id,label,manual) VALUES (10, oils_i18n_gettext(10, 'Patron via SMS', 'ahrcc', 'label'), TRUE);
 SELECT SETVAL('action.hold_request_cancel_cause_id_seq', 100);
 
 
@@ -3144,7 +3229,23 @@ SELECT SETVAL('acq.user_request_type_id_seq'::TEXT, 7);
 INSERT into config.org_unit_setting_type
 ( name, grp, label, description, datatype, fm_class ) VALUES
 
-( 'acq.copy_creator_uses_receiver', 'acq',
+( 'acq.default_owning_lib_for_auto_lids_strategy', 'acq',
+    oils_i18n_gettext('acq.default_owning_lib_for_auto_lids_strategy',
+        'How to set default owning library for auto-created line item items',
+        'coust', 'label'),
+    oils_i18n_gettext('acq.default_owning_lib_for_auto_lids_strategy',
+        'Strategy to use when setting the default owning library for line item items that are auto-created due to the provider''s default copy count being set. Valid values are "workstation" to use the workstation library, "blank" to leave it blank, and "use_setting" to use the "Default owning library for auto-created line item items" setting. If not set, the workstation library will be used.',
+        'coust', 'description'),
+    'string', null)
+,( 'acq.default_owning_lib_for_auto_lids', 'acq',
+    oils_i18n_gettext('acq.default_owning_lib_for_auto_lids',
+        'Default owning library for auto-created line item items',
+        'coust', 'label'),
+    oils_i18n_gettext('acq.default_owning_lib_for_auto_lids',
+        'The default owning library to set when line item items are auto-created because the provider''s default copy count has been set. This applies if the "How to set default owning library for auto-created line item items" setting is set to "use_setting".',
+        'coust', 'description'),
+    'link', 'aou')
+,( 'acq.copy_creator_uses_receiver', 'acq',
     oils_i18n_gettext('acq.copy_creator_uses_receiver',
         'Set copy creator as receiver',
         'coust', 'label'),
@@ -3282,7 +3383,7 @@ INSERT into config.org_unit_setting_type
         'Default Classification Scheme',
         'coust', 'label'),
     oils_i18n_gettext('cat.default_classification_scheme',
-        'Defines the default classification scheme for new call numbers: 1 = Generic; 2 = Dewey; 3 = LC',
+        'Defines the default classification scheme for new call numbers.',
         'coust', 'description'),
     'link', 'acnc')
 
@@ -3312,6 +3413,15 @@ INSERT into config.org_unit_setting_type
         'Default Item Price',
         'coust', 'description'),
     'currency', null)
+
+,( 'cat.require_call_number_labels', 'cat',
+    oils_i18n_gettext('cat.require_call_number_labels',
+        'Require call number labels in Copy Editor',
+        'coust', 'label'),
+    oils_i18n_gettext('cat.require_call_number_labels',
+        'Define whether Copy Editor requires Call Number labels',
+        'coust', 'description'),
+    'bool', null)
 
 ,( 'circ.min_item_price', 'finance',
     oils_i18n_gettext('circ.min_item_price',
@@ -3976,7 +4086,7 @@ INSERT into config.org_unit_setting_type
         'coust', 'label'),
     oils_i18n_gettext(
         'circ.course_materials_brief_record_bib_source',
-        'The course materials module will use this bib source for any new brief bibliographic records made inside that module. For best results, use a transcendant bib source.',
+        'The course materials module will use this bib source for any new brief bibliographic records made inside that module. For best results, use a transcendent bib source.',
         'coust', 'description'),
     'link', 'cbs')
 
@@ -4337,7 +4447,7 @@ INSERT into config.org_unit_setting_type
         'Name default credit processor',
         'coust', 'label'),
     oils_i18n_gettext('credit.processor.default',
-        'This might be "AuthorizeNet", "PayPal", "PayflowPro", or "Stripe".',
+        'This might be "AuthorizeNet", "PayPal", "PayflowPro", "SmartPAY", or "Stripe".',
         'coust', 'description'),
     'string', null)
 
@@ -4440,6 +4550,78 @@ INSERT into config.org_unit_setting_type
         'coust', 'description'),
     'bool', null)
 
+,( 'credit.processor.smartpay.enabled', 'credit',
+    oils_i18n_gettext('credit.processor.smartpay.enabled',
+        'Enable SmartPAY payments',
+        'coust', 'label'),
+    oils_i18n_gettext('credit.processor.smartpay.enabled',
+        'Enable SmartPAY payments',
+        'coust', 'description'),
+    'bool', null)
+
+,( 'credit.processor.smartpay.location_id', 'credit',
+    oils_i18n_gettext('credit.processor.smartpay.location_id',
+        'SmartPAY location ID',
+        'coust', 'label'),
+    oils_i18n_gettext('credit.processor.smartpay.location_id',
+        'SmartPAY location ID',
+        'coust', 'description'),
+    'string', null)
+
+,( 'credit.processor.smartpay.customer_id', 'credit',
+    oils_i18n_gettext('credit.processor.smartpay.customer_id',
+        'SmartPAY customer ID',
+        'coust', 'label'),
+    oils_i18n_gettext('credit.processor.smartpay.customer_id',
+        'SmartPAY customer ID',
+        'coust', 'description'),
+    'string', null)
+
+,( 'credit.processor.smartpay.login', 'credit',
+    oils_i18n_gettext('credit.processor.smartpay.login',
+        'SmartPAY login name',
+        'coust', 'label'),
+    oils_i18n_gettext('credit.processor.smartpay.login',
+        'SmartPAY login name',
+        'coust', 'description'),
+    'string', null)
+
+,( 'credit.processor.smartpay.password', 'credit',
+    oils_i18n_gettext('credit.processor.smartpay.password',
+        'SmartPAY password',
+        'coust', 'label'),
+    oils_i18n_gettext('credit.processor.smartpay.password',
+        'SmartPAY password',
+        'coust', 'description'),
+    'string', null)
+
+,( 'credit.processor.smartpay.api_key', 'credit',
+    oils_i18n_gettext('credit.processor.smartpay.api_key',
+        'SmartPAY API key',
+        'coust', 'label'),
+    oils_i18n_gettext('credit.processor.smartpay.api_key',
+        'SmartPAY API key',
+        'coust', 'description'),
+    'string', null)
+
+,( 'credit.processor.smartpay.server', 'credit',
+    oils_i18n_gettext('credit.processor.smartpay.server',
+        'SmartPAY server name',
+        'coust', 'label'),
+    oils_i18n_gettext('credit.processor.smartpay.server',
+        'SmartPAY server name',
+        'coust', 'description'),
+    'string', null)
+
+,( 'credit.processor.smartpay.port', 'credit',
+    oils_i18n_gettext('credit.processor.smartpay.port',
+        'SmartPAY server port',
+        'coust', 'label'),
+    oils_i18n_gettext('credit.processor.smartpay.port',
+        'SmartPAY server port',
+        'coust', 'description'),
+    'string', null)
+
 ,( 'credit.processor.stripe.enabled', 'credit',
     oils_i18n_gettext('credit.processor.stripe.enabled',
         'Enable Stripe payments',
@@ -4464,24 +4646,6 @@ INSERT into config.org_unit_setting_type
         'coust', 'label'),
     oils_i18n_gettext('credit.processor.stripe.secretkey',
         'Stripe secret key',
-        'coust', 'description'),
-    'string', null)
-
-,( 'format.date', 'gui',
-    oils_i18n_gettext('format.date',
-        'Format Dates with this pattern.',
-        'coust', 'label'),
-    oils_i18n_gettext('format.date',
-        'Format Dates with this pattern (examples: "yyyy-MM-dd" for "2010-04-26", "MMM d, yyyy" for "Apr 26, 2010")',
-        'coust', 'description'),
-    'string', null)
-
-,( 'format.time', 'gui',
-    oils_i18n_gettext('format.time',
-        'Format Times with this pattern.',
-        'coust', 'label'),
-    oils_i18n_gettext('format.time',
-        'Format Times with this pattern (examples: "h:m:s.SSS a z" for "2:07:20.666 PM Eastern Daylight Time", "HH:mm" for "14:07")',
         'coust', 'description'),
     'string', null)
 
@@ -5772,7 +5936,31 @@ INSERT into config.org_unit_setting_type
     oils_i18n_gettext('lib.my_account_url',
         'URL for a My Account link. Use a complete URL, such as "https://example.com/eg/opac/login".',
         'coust', 'description'),
+    'string', null),
+( 'opac.uri_default_note_text', 'opac',
+    oils_i18n_gettext('opac.uri_default_note_text',
+        'Default text to appear for 856 links if none is present',
+        'coust', 'label'),
+    oils_i18n_gettext('opac.uri_default_note_text',
+        'When no value is present in the 856$z this string will be used instead',
+        'coust', 'description'),
     'string', null)
+,( 'circ.hold_retarget_previous_targets_interval', 'holds',
+    oils_i18n_gettext('circ.hold_retarget_previous_targets_interval',
+        'Retarget previous targets interval',
+        'coust', 'label'),
+    oils_i18n_gettext('circ.hold_retarget_previous_targets_interval',
+        'Hold targeter will create proximity adjustments for previously targeted copies within this time interval (in days).',
+        'coust', 'description'),
+    'integer', null)
+,( 'circ.hold_reset_reason_entry_age_threshold', 'holds',
+    oils_i18n_gettext('circ.hold_reset_reason_entry_age_threshold',
+        'Hold reset reason entry deletion interval',
+        'coust', 'label'),
+    oils_i18n_gettext('circ.hold_reset_reason_entry_age_threshold',
+        'Hold reset reason entries will be removed if older than this interval. Default 1 year if no value provided.',
+        'coust', 'description'),
+    'interval', null)
 ;
 
 UPDATE config.org_unit_setting_type
@@ -5807,6 +5995,7 @@ INSERT INTO actor.org_unit_setting (org_unit, name, value) VALUES (
     ,(1, 'cat.label.font.size', 10)
     ,(1, 'cat.label.font.weight', '"normal"')
     ,(1, 'circ.grace.extend', 'true')
+    ,(1, 'cat.require_call_number_labels', 'true')
 ;
 
 --220.schema.rating.sql (Default badge for popularity ranking)
@@ -10615,7 +10804,7 @@ INSERT INTO action_trigger.hook(key, core_type, description) values('autorenewal
 
 -- AutoRenewer A/T Def: 
 INSERT INTO action_trigger.event_definition(active, owner, name, hook, validator, reactor, delay, max_delay, delay_field, group_field)
-    values (false, 1, 'Autorenew', 'checkout.due', 'CircIsOpen', 'Circ::AutoRenew', '-23 hours'::interval,'-1 minute'::interval, 'due_date', 'usr');
+    values (false, 1, 'Autorenew', 'checkout.due', 'CircIsOpen', 'Circ::AutoRenew', '-24:01:00'::interval,'-1 minute'::interval, 'due_date', 'usr');
 
 -- AutoRenewal outcome Email notifier A/T Def:
 INSERT INTO action_trigger.event_definition(active, owner, name, hook, validator, reactor, group_field, template)
@@ -10951,6 +11140,15 @@ INSERT INTO config.metabib_field_index_norm_map (field,norm,pos)
       WHERE i.func = 'metabib.trim_trailing_punctuation'
             AND m.id IN (7,8,9,10);
 
+INSERT INTO config.metabib_field_index_norm_map (field,norm,pos)
+    SELECT  m.id,
+            i.id,
+            -1
+      FROM  config.metabib_field m,
+            config.index_normalizer i
+      WHERE i.func = 'metabib.trim_trailing_punctuation'
+            AND m.field_class='title' AND (m.browse_field OR m.facet_field OR m.display_field)
+            AND NOT EXISTS (SELECT 1 FROM config.metabib_field_index_norm_map WHERE field = m.id AND norm = i.id);
 
 INSERT INTO config.record_attr_index_norm_map (attr,norm,pos)
     SELECT  m.name, i.id, 0
@@ -11226,7 +11424,16 @@ $$
             SET udata =  user_data.$idx
         -%]
         <li>
-            <div>Title: [% udata.item_title %]</div>
+          <table>
+            <tr>
+              <td>Title:</td>
+              <td>[% hold.title %]</td>
+            </tr>
+            <tr>
+              <td>author:</td>
+              <td>[% hold.author %]</td>
+            </tr>
+
             <div>Author: [% udata.item_author %]</div>
             <div>Pickup Location: [% udata.pickup_lib %]</b></div>
             <div>Status: 
@@ -12337,10 +12544,10 @@ INSERT INTO action_trigger.environment (
 
 -- Use the ISO 4217 abbreviations for currency codes
 INSERT INTO acq.currency_type (code, label) VALUES ('USD', oils_i18n_gettext('USD', 'US Dollars', 'acqct', 'label'));
-INSERT INTO acq.currency_type (code, label) VALUES ('CAN', oils_i18n_gettext('CAN', 'Canadian Dollars', 'acqct', 'label'));
+INSERT INTO acq.currency_type (code, label) VALUES ('CAD', oils_i18n_gettext('CAD', 'Canadian Dollars', 'acqct', 'label'));
 INSERT INTO acq.currency_type (code, label) VALUES ('EUR', oils_i18n_gettext('EUR', 'Euros', 'acqct', 'label'));
 
-INSERT INTO acq.exchange_rate (from_currency,to_currency,ratio) VALUES ('USD','CAN',1.2);
+INSERT INTO acq.exchange_rate (from_currency,to_currency,ratio) VALUES ('USD','CAD',1.2);
 INSERT INTO acq.exchange_rate (from_currency,to_currency,ratio) VALUES ('USD','EUR',0.5);
 
 INSERT INTO acq.invoice_item_type (code,name) VALUES ('TAX',oils_i18n_gettext('TAX', 'Tax', 'aiit', 'name'));
@@ -12600,7 +12807,7 @@ VALUES (
     FALSE,
     oils_i18n_gettext(
         'opac.located_uri.act_as_copy',
-        'When enabled, Located URIs will provide visiblity behavior identical to copies.',
+        'When enabled, Located URIs will provide visibility behavior identical to copies.',
         'cgf',
         'label'
     )
@@ -13779,7 +13986,7 @@ $$
 FOR item IN items;
     bibxml = helpers.unapi_bre(item.target_biblio_record_entry, {flesh => '{mra}'});
     title = "";
-    FOR part IN bibxml.findnodes('//*[@tag="245"]/*[@code="a" or @code="b"]');
+    FOR part IN bibxml.findnodes('//*[@tag="245"]/*[@code="a" or @code="b" or @code="n" or @code="p"]');
         title = title _ part.textContent;
     END;
     author = bibxml.findnodes('//*[@tag="100"]/*[@code="a"]').textContent;
@@ -15781,13 +15988,13 @@ INSERT into config.org_unit_setting_type
         'acq',
         oils_i18n_gettext(
             'acq.fund.allow_rollover_without_money',
-            'Allow funds to be rolled over without bringing the money along',
+            'Rollover encumbrances only',
             'coust',
             'label'
         ),
         oils_i18n_gettext(
             'acq.fund.allow_rollover_without_money',
-            'Allow funds to be rolled over without bringing the money along.  This makes money left in the old fund disappear, modeling its return to some outside entity.',
+            'Rollover encumbrances only when doing fiscal year end.  This makes money left in the old fund disappear, modeling its return to some outside entity.',
             'coust',
             'description'
         ),
@@ -17093,6 +17300,46 @@ VALUES (
     )
 );
 
+INSERT INTO config.org_unit_setting_type
+    (name, grp, datatype, label, description)
+VALUES (
+    'opac.self_register.dob_order',
+    'opac',
+    'string',
+    oils_i18n_gettext(
+        'opac.self_register.dob_order',
+        'Patron Self-Reg. Date of Birth Order',
+        'coust',
+        'label'
+    ),
+    oils_i18n_gettext(
+        'opac.self_register.dob_order',
+        'The order in which to present the Month, Day, and Year elements for the Date of Birth field in Patron Self-Registration. Use the letter M for Month, D for Day, and Y for Year. Examples: MDY, DMY, YMD',
+        'coust',
+        'description'
+    )   
+);  
+
+INSERT INTO config.org_unit_setting_type
+    (name, grp, datatype, label, description)
+VALUES (
+    'opac.patron.edit.au.usrname.hide',
+    'opac',
+    'bool',
+    oils_i18n_gettext(
+        'opac.patron.edit.au.usrname.hide',
+        'Hide Username field in Patron Self-Reg.',
+        'coust',
+        'label'
+    ),
+    oils_i18n_gettext(
+        'opac.patron.edit.au.usrname.hide',
+        'Hides the Requested Username field in the Patron Self-Registration interface.',
+        'coust',
+        'description'
+    )
+);
+
 
 INSERT INTO config.org_unit_setting_type 
     (name, grp, datatype, label, description)
@@ -17220,6 +17467,28 @@ INSERT INTO config.global_flag (name, value, label, enabled)
         ),
         TRUE
     );
+
+INSERT INTO config.org_unit_setting_type
+    (name, label, datatype, description, grp, update_perm, view_perm)
+VALUES (
+    'circ.permit_renew_when_exceeds_fines',
+    oils_i18n_gettext(
+        'circ.permit_renew_when_exceeds_fines',
+        'Permit renewals when patron exceeds max fine threshold',
+        'coust',
+        'label'
+    ),
+    'bool',
+    oils_i18n_gettext(
+        'circ.permit_renew_when_exceeds_fines',
+        'Permit renewals even when the patron exceeds the maximum fine threshold',
+        'coust',
+        'description'
+    ),
+    'opac',
+    93,
+    NULL
+);
 
 INSERT INTO config.org_unit_setting_type
     (name, grp, label, description, datatype)
@@ -18817,6 +19086,18 @@ INSERT INTO config.i18n_core (fq_field, identity_value, translation, string )
           AND t.xlate IS NOT NULL
           AND t.name <> (xlate->value);
 
+INSERT INTO config.i18n_string (id, context, string) VALUES (1,
+    oils_i18n_gettext(
+        1, 'In the Place Hold interfaces for staff and patrons; when monographic parts are available, this string provides contextual information about whether and how parts are considered for holds that do not request a specific mongraphic part.',
+        'i18ns','context'
+    ),
+    oils_i18n_gettext(
+        1, 'All Parts',
+        'i18ns','string'
+    )
+);
+SELECT SETVAL('config.i18n_string_id_seq', 10000); -- reserve some for stock EG interfaces
+
 INSERT INTO authority.heading_field(heading_type, heading_purpose, label, heading_xpath, component_xpath, type_xpath, thesaurus_xpath, thesaurus_override_xpath) VALUES
  ( 'topical_term', 'main',    'Main Topical Term',    '/mads21:mads/mads21:authority', '//mads21:topic', NULL, '/mads21:mads/mads21:authority/mads21:topic[1]/@authority', NULL )
 ,( 'topical_term', 'variant', 'Variant Topical Term', '/mads21:mads/mads21:variant',   '//mads21:topic', '/mads21:variant/@type', '/mads21:mads/mads21:authority/mads21:topic[1]/@authority', '//mads21:topic[1]/@authority')
@@ -19516,6 +19797,13 @@ VALUES (
         'cwst', 'label'
     )
 ), (
+    'eg.grid.admin.actor.org_unit_settings', 'gui', 'object',
+    oils_i18n_gettext(
+        'eg.grid.admin.actor.org_unit_settings',
+        'Grid Config: admin.actor.org_unit_settings',
+        'cwst', 'label'
+    )
+), (
     'eg.cat.record.summary.collapse', 'gui', 'bool',
     oils_i18n_gettext(
         'eg.cat.record.summary.collapse',
@@ -19948,6 +20236,34 @@ VALUES (
     'eg.grid.reporter.simple.outputs',
     'Grid Config: eg.grid.reporter.simple.outputs',
     'cwst', 'label'
+  )
+), (
+  'eg.grid.admin.config.idl_field_doc', 'gui', 'object',
+  oils_i18n_gettext(
+    'eg.grid.admin.config.idl_field_doc',
+    'Grid Config: admin.config.idl_field_doc',
+    'cwst', 'label'
+  )
+), (
+  'eg.orgselect.admin.stat_cat.owner', 'gui', 'integer',
+  oils_i18n_gettext(
+      'eg.orgselect.admin.stat_cat.owner',
+      'Default org unit for stat cat and stat cat entry editors',
+      'cwst', 'label'
+  )
+), (
+  'eg.orgfamilyselect.admin.item_stat_cat.main_org_selector', 'gui', 'integer',
+  oils_i18n_gettext(
+      'eg.orgfamilyselect.admin.item_stat_cat.main_org_selector',
+      'Default org unit for the main org select in the item stat cat and stat cat entry admin interfaces.',
+      'cwst', 'label'
+  )
+), (
+  'eg.orgfamilyselect.admin.patron_stat_cat.main_org_selector', 'gui', 'integer',
+  oils_i18n_gettext(
+      'eg.orgfamilyselect.admin.patron_stat_cat.main_org_selector',
+      'Default org unit for the main org select in the patron stat cat and stat cat entry admin interfaces.',
+      'cwst', 'label'
   )
 );
 
@@ -21014,7 +21330,7 @@ VALUES (
     FALSE,
     oils_i18n_gettext(
         'history.money.age_with_circs',
-        'Age billings and payments when cirulcations are aged.',
+        'Age billings and payments when circulations are aged.',
         'cgf', 'label'
     )
 ), (
@@ -21427,6 +21743,33 @@ VALUES (
     'integer'
 );
 
+-- eparts
+
+INSERT INTO config.global_flag (name, value, enabled, label)
+VALUES (
+    'circ.holds.api_require_monographic_part_when_present',
+    NULL,
+    FALSE,
+    oils_i18n_gettext(
+        'circ.holds.api_require_monographic_part_when_present',
+        'Holds: Require Monographic Part When Present for hold check.',
+        'cgf', 'label'
+    )
+);
+
+INSERT INTO config.org_unit_setting_type (name, label, grp, description, datatype)
+VALUES (
+    'circ.holds.ui_require_monographic_part_when_present',
+    oils_i18n_gettext('circ.holds.ui_require_monographic_part_when_present',
+        'Require Monographic Part when Present',
+        'coust', 'label'),
+    'circ',
+    oils_i18n_gettext('circ.holds.ui_require_monographic_part_when_present',
+        'Normally the selection of a monographic part during hold placement is optional if there is at least one copy on the bib without a monographic part.  A true value for this setting will require part selection even under this condition.  A true value for this setting will also require a part to be added before saving any changes or creating a new item in the holdings editor, if there are parts on the bib.',
+        'coust', 'description'),
+    'bool'
+);
+
 ------------------- Disabled example A/T defintions ------------------------------
 
 -- Create a "dummy" slot when applicable, and trigger the "offer curbside" events
@@ -21666,6 +22009,13 @@ VALUES (
         'Staff Catalog "Exclude Electronic Resources" Option',
         'cwst', 'label'
     )
+), (
+    'eg.staffcat.course_materials_selector', 'gui', 'bool',
+    oils_i18n_gettext(
+        'eg.staffcat.course_materials_selector',
+        'Add the "Reserves material" dropdown to refine search results',
+        'cwst', 'label'
+    )
 );
 
 INSERT INTO config.workstation_setting_type (name, grp, datatype, fm_class, label)
@@ -21719,92 +22069,32 @@ VALUES (
     )
 );
 
+INSERT INTO config.global_flag (name, enabled, label)
+    VALUES (
+        'staff.search.shelving_location_groups_with_lassos', TRUE,
+        oils_i18n_gettext(
+            'staff.search.shelving_location_groups_with_lassos',
+            'Staff Catalog Search: Display shelving location groups with library groups',
+            'cgf',
+            'label'
+        )
+);
+
+INSERT INTO config.global_flag (name, enabled, value, label)
+VALUES (
+    'search.max_suggestion_search_terms',
+    TRUE,
+    3,
+    oils_i18n_gettext(
+        'search.max_suggestion_search_terms',
+        'Limit suggestion generation to searches with this many terms or less',
+        'cgf',
+        'label'
+    )
+);
+
 INSERT INTO config.internal_flag (name, value, enabled) VALUES ('symspell.prefix_length', '6', TRUE);
 INSERT INTO config.internal_flag (name, value, enabled) VALUES ('symspell.max_edit_distance', '3', TRUE);
-
-INSERT into config.org_unit_setting_type
-( name, grp, label, description, datatype )
-VALUES
-( 'opac.did_you_mean.max_suggestions', 'opac',
-   oils_i18n_gettext(
-     'opac.did_you_mean.max_suggestions',
-     'Maximum number of spelling suggestions that may be offered',
-     'coust', 'label'),
-   oils_i18n_gettext(
-     'opac.did_you_mean.max_suggestions',
-     'If set to -1, provide "best" suggestion if mispelled; if set higher than 0, the maximum suggestions that can be provided; if set to 0, disable suggestions.',
-     'coust', 'description'),
-   'integer' );
-
-INSERT into config.org_unit_setting_type
-( name, grp, label, description, datatype )
-VALUES
-( 'opac.did_you_mean.low_result_threshold', 'opac',
-   oils_i18n_gettext(
-     'opac.did_you_mean.low_result_threshold',
-     'Maximum search result count at which spelling suggestions may be offered',
-     'coust', 'label'),
-   oils_i18n_gettext(
-     'opac.did_you_mean.low_result_threshold',
-     'If a search results in this number or fewer results, and there are correctable spelling mistakes, a suggested search may be provided.',
-     'coust', 'description'),
-   'integer' );
-
-INSERT into config.org_unit_setting_type
-( name, grp, label, description, datatype )
-VALUES
-( 'search.symspell.min_suggestion_use_threshold', 'opac',
-   oils_i18n_gettext(
-     'search.symspell.min_suggestion_use_threshold',
-     'Minimum required uses of a spelling suggestions that may be offered',
-     'coust', 'label'),
-   oils_i18n_gettext(
-     'search.symspell.min_suggestion_use_threshold',
-     'The number of bibliographic records (more or less) that a spelling suggestion must appear in to be considered before offering it to a user. Defaults to 1 (must appear in the bib data).',
-     'coust', 'description'),
-   'integer' );
-
-INSERT into config.org_unit_setting_type
-( name, grp, label, description, datatype )
-VALUES
-( 'search.symspell.soundex.weight', 'opac',
-   oils_i18n_gettext(
-     'search.symspell.soundex.weight',
-     'Soundex score weighting in OPAC spelling suggestions.',
-     'coust', 'label'),
-   oils_i18n_gettext(
-     'search.symspell.soundex.weight',
-     'Soundex, trgm, and keyboard distance similarity measures can be combined to form a secondary ordering parameter for spelling suggestions. This controls the relative weight of the scaled soundex component. Defaults to 0 for "off".',
-     'coust', 'description'),
-   'integer' );
-
-INSERT into config.org_unit_setting_type
-( name, grp, label, description, datatype )
-VALUES
-( 'search.symspell.pg_trgm.weight', 'opac',
-   oils_i18n_gettext(
-     'search.symspell.pg_trgm.weight',
-     'Pg_trgm score weighting in OPAC spelling suggestions.',
-     'coust', 'label'),
-   oils_i18n_gettext(
-     'search.symspell.pg_trgm.weight',
-     'Soundex, pg_trgm, and keyboard distance similarity measures can be combined to form a secondary ordering parameter for spelling suggestions. This controls the relative weight of the scaled pg_trgm component. Defaults to 0 for "off".',
-     'coust', 'description'),
-   'integer' );
-
-INSERT into config.org_unit_setting_type
-( name, grp, label, description, datatype )
-VALUES
-( 'search.symspell.keyboard_distance.weight', 'opac',
-   oils_i18n_gettext(
-     'search.symspell.keyboard_distance.weight',
-     'Keyboard distance score weighting in OPAC spelling suggestions.',
-     'coust', 'label'),
-   oils_i18n_gettext(
-     'search.symspell.keyboard_distance.weight',
-     'Soundex, trgm, and keyboard distance similarity measures can be combined to form a secondary ordering parameter for spelling suggestions. This controls the relative weight of the scaled keyboard distance component. Defaults to 0 for "off".',
-     'coust', 'description'),
-   'integer' );
 
 INSERT INTO config.workstation_setting_type (name, grp, datatype, label)
 VALUES (
@@ -21903,6 +22193,58 @@ VALUES (
         'Grid Config: eg.grid.acq.funding_source.credit',
         'cwst', 'label'
     )
+), (
+    'eg.grid.admin.acq.fiscal_calendar', 'gui', 'object',
+    oils_i18n_gettext(
+        'eg.grid.admin.acq.fiscal_calendar',
+        'Grid Config: eg.grid.admin.acq.fiscal_calendar',
+        'cwst', 'label'
+    )
+), (
+    'eg.grid.admin.acq.fiscal_year', 'gui', 'object',
+    oils_i18n_gettext(
+        'eg.grid.admin.acq.fiscal_year',
+        'Grid Config: eg.grid.admin.acq.fiscal_year',
+        'cwst', 'label'
+    )
+);
+
+INSERT INTO config.workstation_setting_type (name, grp, datatype, label)
+VALUES (
+    'eg.grid.acq.lineitem.history', 'gui', 'object',
+    oils_i18n_gettext(
+        'eg.grid.acq.lineitem.history',
+        'Grid Config: Acq Lineitem History',
+        'cwst', 'label'
+    )
+), (
+    'eg.grid.acq.po.history', 'gui', 'object',
+    oils_i18n_gettext(
+        'eg.grid.acq.po.history',
+        'Grid Config: Acq PO History',
+        'cwst', 'label'
+    )
+), (
+    'eg.grid.acq.po.edi_messages', 'gui', 'object',
+    oils_i18n_gettext(
+        'eg.grid.acq.po.edi_messages',
+        'Grid Config: Acq PO EDI Messages',
+        'cwst', 'label'
+    )
+), (
+    'acq.lineitem.page_size', 'gui', 'integer',
+    oils_i18n_gettext(
+        'acq.lineitem.page_size',
+        'ACQ Lineitem List Page Size',
+        'cwst', 'label'
+    )
+), (
+    'ui.staff.angular_acq_search.enabled', 'gui', 'bool',
+    oils_i18n_gettext(
+        'ui.staff.angular_acq_search.enabled',
+        'Enable Experimental ACQ Selection/Purchase Search Interface Links',
+        'cwst', 'label'
+    )
 );
 
 INSERT INTO config.workstation_setting_type (name, grp, datatype, label)
@@ -21911,6 +22253,26 @@ VALUES (
     oils_i18n_gettext(
         'eg.cat.volcopy.defaults',
         'Holdings Editor Default Values and Visibility',
+        'cwst', 'label'
+    )
+);
+
+INSERT INTO config.workstation_setting_type (name, grp, datatype, label)
+VALUES (
+    'acq.lineitem.sort_order', 'gui', 'integer',
+    oils_i18n_gettext(
+        'acq.lineitem.sort_order',
+        'ACQ Lineitem List Sort Order',
+        'cwst', 'label'
+    )
+);
+
+INSERT INTO config.org_unit_setting_type (name, grp, datatype, label)
+VALUES (
+    'ui.staff.acq.show_deprecated_links', 'gui', 'bool',
+    oils_i18n_gettext(
+        'ui.staff.acq.show_deprecated_links',
+        'Display Links to Deprecated Acquisitions Interfaces',
         'cwst', 'label'
     )
 );
@@ -22155,12 +22517,12 @@ VALUES
 ,   ( 4, 1, 3, 'menuitem',      oils_i18n_gettext( 4, 'Search For Patron By Name', 'cusppe', 'label'), '/images/portal/retreivepatron.png', '/eg/staff/circ/patron/search', 1)
 ,   ( 5, 2, 0, 'header',        oils_i18n_gettext( 5, 'Item Search and Cataloging', 'cusppe', 'label'), NULL, NULL, 1)
 ,   ( 6, 2, 1, 'catalogsearch', oils_i18n_gettext( 6, 'Search Catalog', 'cusppe', 'label'), NULL, NULL, 1)
-,   ( 7, 2, 2, 'menuitem',      oils_i18n_gettext( 7, 'Record Buckets', 'cusppe', 'label'), '/images/portal/bucket.png', '/eg/staff/cat/bucket/record/', 1)
+,   ( 7, 2, 2, 'menuitem',      oils_i18n_gettext( 7, 'Record Buckets', 'cusppe', 'label'), '/images/portal/bucket.png', '/eg2/staff/cat/bucket/record/', 1)
 ,   ( 8, 2, 3, 'menuitem',      oils_i18n_gettext( 8, 'Item Buckets', 'cusppe', 'label'), '/images/portal/bucket.png', '/eg/staff/cat/bucket/copy/', 1)
 ,   ( 9, 3, 0, 'header',        oils_i18n_gettext( 9, 'Administration', 'cusppe', 'label'), NULL, NULL, 1)
 ,   (10, 3, 1, 'link',          oils_i18n_gettext(10, 'Evergreen Documentation', 'cusppe', 'label'), '/images/portal/helpdesk.png', 'https://docs.evergreen-ils.org', 1)
 ,   (11, 3, 2, 'menuitem',      oils_i18n_gettext(11, 'Workstation Administration', 'cusppe', 'label'), '/images/portal/helpdesk.png', '/eg/staff/admin/workstation/index', 1)
-,   (12, 3, 3, 'menuitem',      oils_i18n_gettext(12, 'Reports', 'cusppe', 'label'), '/images/portal/reports.png', '/eg/staff/reporter/legacy/main', 1)
+,   (12, 3, 3, 'menuitem',      oils_i18n_gettext(12, 'Reports', 'cusppe', 'label'), '/images/portal/reports.png', '/eg2/staff/reporter/full', 1)
 ;
 
 SELECT setval('config.ui_staff_portal_page_entry_id_seq', 100);
@@ -22174,5 +22536,2303 @@ VALUES (
         'Grid Config: admin.config.ui_staff_portal_page_entry',
         'cwst', 'label'
     )
+);
+
+INSERT into config.workstation_setting_type (name, grp, datatype, label)
+VALUES (
+    'eg.orgselect.show_combined_names', 'gui', 'bool',
+    oils_i18n_gettext(
+        'eg.orgselect.show_combined_names',
+        'Library Selector Show Combined Names',
+        'cwst', 'label'
+    )
+), (
+    'eg.grid.admin.local.negative_balances', 'gui', 'object', 
+    oils_i18n_gettext(
+        'eg.grid.admin.local.negative_balances',
+        'Patrons With Negative Balances Grid Settings',
+        'cwst', 'label'
+    )
+), (
+    'eg.orgselect.admin.local.negative_balances', 'gui', 'integer',
+    oils_i18n_gettext(
+        'eg.orgselect.admin.local.negative_balances',
+        'Default org unit for patron negative balances interface',
+        'cwst', 'label'
+    )
+);
+
+INSERT into config.org_unit_setting_type
+    (name, datatype, grp, label, description)
+VALUES (
+    'ui.staff.traditional_catalog.enabled', 'bool', 'gui',
+    oils_i18n_gettext(
+        'ui.staff.traditional_catalog.enabled',
+        'GUI: Enable Traditional Staff Catalog',
+        'coust', 'label'
+    ),
+    oils_i18n_gettext(
+        'ui.staff.traditional_catalog.enabled',
+        'Display an entry point in the browser client for the ' ||
+        'traditional staff catalog.',
+        'coust', 'description'
+    )
+), (
+    'ui.staff.angular_circ.enabled', 'bool', 'gui',
+    oils_i18n_gettext(
+        'ui.staff.angular_circ.enabled',
+        'Enable Angular Circulation Menu',
+        'coust', 'label'
+    ),
+    oils_i18n_gettext(
+        'ui.staff.angular_circ.enabled',
+        'Enable Angular Circulation Menu',
+        'coust', 'description'
+    )
+);
+
+INSERT INTO config.print_template
+    (id, name, label, owner, active, locale, template)
+VALUES (
+    5, 'lineitem_worksheet', 'Lineitem Worksheet', 1, TRUE, 'en-US',
+$TEMPLATE$
+[%- 
+  USE money=format('%.2f');
+  USE date;
+  SET li = template_data.lineitem;
+  SET title = '';
+  SET author = '';
+  FOREACH attr IN li.attributes;
+    IF attr.attr_type == 'lineitem_marc_attr_definition';
+      IF attr.attr_name == 'title';
+        title = attr.attr_value;
+      ELSIF attr.attr_name == 'author';
+        author = attr.attr_value;
+      END;
+    END;
+  END;
+-%]
+
+<div class="wrapper">
+    <div class="summary" style='font-size:110%; font-weight:bold;'>
+        <div>Title: [% title.substr(0, 80) %][% IF title.length > 80 %]...[% END %]</div>
+        <div>Author: [% author %]</div>
+        <div>Item Count: [% li.lineitem_details.size %]</div>
+        <div>Lineitem ID: [% li.id %]</div>
+        <div>PO # : [% li.purchase_order %]</div>
+        <div>Est. Price: [% money(li.estimated_unit_price) %]</div>
+        <div>Open Holds: [% template_data.hold_count %]</div>
+        [% IF li.cancel_reason.label %]
+        <div>[% li.cancel_reason.label %]</div>
+        [% END %]
+
+        [% IF li.distribution_formulas.size > 0 %]
+            [% SET forms = [] %]
+            [% FOREACH form IN li.distribution_formulas; forms.push(form.formula.name); END %]
+            <div>Distribution Formulas: [% forms.join(',') %]</div>
+        [% END %]
+
+        [% IF li.lineitem_notes.size > 0 %]
+            Lineitem Notes:
+            <ul>
+                [%- FOR note IN li.lineitem_notes -%]
+                    <li>
+                    [% IF note.alert_text %]
+                        [% note.alert_text.code -%] 
+                        [% IF note.value -%]
+                            : [% note.value %]
+                        [% END %]
+                    [% ELSE %]
+                        [% note.value -%] 
+                    [% END %]
+                    </li>
+                [% END %]
+            </ul>
+        [% END %]
+    </div>
+    <br/>
+    <table>
+        <thead>
+            <tr>
+                <th>Branch</th>
+                <th>Barcode</th>
+                <th>Call Number</th>
+                <th>Fund</th>
+                <th>Shelving Location</th>
+                <th>Recd.</th>
+                <th>Notes</th>
+                <th>Delayed / Canceled</th>
+            </tr>
+        </thead>
+        <tbody>
+        <!-- set detail.owning_lib from fm object to org name -->
+        [% FOREACH detail IN li.lineitem_details %]
+            [% detail.owning_lib = detail.owning_lib.shortname %]
+        [% END %]
+
+        [% FOREACH detail IN li.lineitem_details.sort('owning_lib') %]
+            [% 
+                IF detail.eg_copy_id;
+                    SET copy = detail.eg_copy_id;
+                    SET cn_label = copy.call_number.label;
+                ELSE; 
+                    SET copy = detail; 
+                    SET cn_label = detail.cn_label;
+                END 
+            %]
+            <tr>
+                <!-- acq.lineitem_detail.id = [%- detail.id -%] -->
+                <td style='padding:5px;'>[% detail.owning_lib %]</td>
+                <td style='padding:5px;'>[% IF copy.barcode   %]<span class="barcode"  >[% detail.barcode   %]</span>[% END %]</td>
+                <td style='padding:5px;'>[% IF cn_label %]<span class="cn_label" >[% cn_label  %]</span>[% END %]</td>
+                <td style='padding:5px;'>[% IF detail.fund %]<span class="fund">[% detail.fund.code %] ([% detail.fund.year %])</span>[% END %]</td>
+                <td style='padding:5px;'>[% copy.location.name %]</td>
+                <td style='padding:5px;'>[% IF detail.recv_time %]<span class="recv_time">[% date.format(helpers.format_date(detail.recv_time, staff_org_timezone), '%x %r', locale) %]</span>[% END %]</td>
+                <td style='padding:5px;'>[% detail.note %]</td>
+                <td style='padding:5px;'>[% detail.cancel_reason.label %]</td>
+            </tr>
+        [% END %]
+        </tbody>
+    </table>
+</div>
+$TEMPLATE$
+);
+
+INSERT INTO config.print_template
+    (id, name, label, owner, active, locale, template)
+VALUES (6, 'purchase_order', 'Purchase Order', 1, TRUE, 'en-US', 
+$TEMPLATE$
+
+[%- 
+  USE date;
+  USE String;
+  USE money=format('%.2f');
+  SET po = template_data.po;
+
+  # find a lineitem attribute by name and optional type
+  BLOCK get_li_attr;
+    FOR attr IN li.attributes;
+      IF attr.attr_name == attr_name;
+        IF !attr_type OR attr_type == attr.attr_type;
+          attr.attr_value;
+          LAST;
+        END;
+      END;
+    END;
+  END;
+
+  BLOCK get_li_order_attr_value;
+    FOR attr IN li.attributes;
+      IF attr.order_ident == 't';
+        attr.attr_value;
+        LAST;
+      END;
+    END;
+  END;
+-%]
+
+<table style="width:100%">
+  <thead>
+    <tr>
+      <th>PO#</th>
+      <th>Line#</th>
+      <th>ISBN / Item # / Charge Type</th>
+      <th>Title</th>
+      <th>Author</th>
+      <th>Pub Info</th>
+      <th>Quantity</th>
+      <th>Unit Price</th>
+      <th>Line Total</th>
+    </tr>
+  </thead>
+  <tbody>
+[% 
+  SET subtotal = 0;
+  FOR li IN po.lineitems;
+
+    SET idval = '';
+    IF vendnum != '';
+      idval = PROCESS get_li_attr attr_name = 'vendor_num';
+    END;
+    IF !idval;
+      idval = PROCESS get_li_order_attr_value;
+    END;
+-%]
+    <tr>
+      <td>[% po.id %]</td>
+      <td>[% li.id %]</td>
+      <td>[% idval %]</td>
+      <td>[% PROCESS get_li_attr attr_name = 'title' %]</td>
+      <td>[% PROCESS get_li_attr attr_name = 'author' %]</td>
+      <td>
+        <div>
+          [% PROCESS get_li_attr attr_name = 'publisher' %], 
+          [% PROCESS get_li_attr attr_name = 'pubdate' %]
+        </div>
+        <div>Edition: [% PROCESS get_li_attr attr_name = 'edition' %]</div>
+      </td>
+      [%- 
+        SET count = li.lineitem_details.size;
+        SET price = li.estimated_unit_price;
+        SET itotal = (price * count);
+      %]
+      <td>[% count %]</td>
+      <td>[% money(price) %]</td>
+      <td>[% money(litotal) %]</td>
+    </tr>
+  [% END %]
+
+  </tbody>
+</table>
+
+$TEMPLATE$
+);
+
+INSERT INTO config.workstation_setting_type (name, grp, datatype, label)
+VALUES (
+    'eg.acq.picklist.upload.templates', 'acq', 'object',
+    oils_i18n_gettext(
+        'eg.acq.picklist.upload.templates',
+        'Picklist Upload Form Templates',
+        'cwst', 'label'
+    )
+);
+
+INSERT INTO config.print_template 
+    (name, label, owner, active, locale, content_type, template)
+VALUES ('items_out', 'Patron Items Out', 1, TRUE, 'en-US', 'text/html', '');
+
+UPDATE config.print_template SET template = $TEMPLATE$
+[% 
+  USE date;
+  circulations = template_data.circulations;
+%]
+<div>
+  <div>Welcome to [% staff_org.name %]</div>
+  <div>You have the following items:</div>
+  <hr/>
+  <ol>
+  [% FOR checkout IN circulations %]
+    <li>
+      <div>[% checkout.title %]</div>
+      <div>
+      [% IF checkout.copy %]Barcode: [% checkout.copy.barcode %][% END %]
+    Due: [% date.format(helpers.format_date(checkout.dueDate, staff_org_timezone), '%x %r') %]
+      </div>
+    </li>
+  [% END %]
+  </ol>
+  <hr/>
+  <div>[% staff_org.name %] [% date.format(date.now, '%x %r') %]</div>
+  <div>You were helped by [% staff.first_given_name %]</div>
+  <br/>
+</div>
+$TEMPLATE$ WHERE name = 'items_out';
+
+UPDATE config.print_template SET active = TRUE WHERE name = 'patron_address';
+
+-- insert then update for easier iterative development tweaks
+INSERT INTO config.print_template 
+    (name, label, owner, active, locale, content_type, template)
+VALUES ('bills_current', 'Bills, Current', 1, TRUE, 'en-US', 'text/html', '');
+
+
+UPDATE config.print_template SET template = $TEMPLATE$
+[% 
+  USE date;
+  USE money = format('$%.2f');
+  SET xacts = template_data.xacts;
+%]
+<div>
+  <style>td { padding: 1px 3px 1px 3px; }</style>
+  <div>Welcome to [% staff_org.name %]</div>
+  <div>You have the following bills:</div>
+  <hr/>
+  <ol>
+  [% FOR xact IN xacts %]
+    <li>
+      <table>
+        <tr>
+          <td>Bill #:</td>
+          <td>[% xact.id %]</td>
+        </tr>
+        <tr>
+          <td>Date:</td>
+          <td>[% date.format(helpers.format_date(
+            xact.xact_start, staff_org_timezone), '%x %r') %]
+          </td>
+        </tr>
+        <tr>
+          <td>Last Billing:</td>
+          <td>[% xact.last_billing_type %]</td>
+        </tr>
+        <tr>
+          <td>Total Billed:</td>
+          <td>[% money(xact.total_owed) %]</td>
+        </tr>
+        <tr>
+          <td>Last Payment:</td>
+          <td>
+            [% xact.last_payment_type %]
+            [% IF xact.last_payment_ts %]
+              at [% date.format(
+                    helpers.format_date(
+                        xact.last_payment_ts, staff_org_timezone), '%x %r') %]
+            [% END %]
+          </td>
+        </tr>
+        <tr>
+          <td>Total Paid:</td>
+          <td>[% money(xact.total_paid) %]</td>
+        </tr>
+        <tr>
+          <td>Balance:</td>
+          <td>[% money(xact.balance_owed) %]</td>
+        </tr>
+      </table>
+    </li>
+  [% END %]
+  </ol>
+  <hr/>
+  <div>[% staff_org.name %] [% date.format(date.now, '%x %r') %]</div>
+  <div>You were helped by [% staff.first_given_name %]</div>
+  <br/>
+</div>
+$TEMPLATE$ WHERE name = 'bills_current';
+
+
+INSERT INTO config.print_template 
+    (name, label, owner, active, locale, content_type, template)
+VALUES ('bills_payment', 'Bills, Payment', 1, TRUE, 'en-US', 'text/html', '');
+
+UPDATE config.print_template SET template = $TEMPLATE$
+[% 
+  USE date;
+  USE money = format('$%.2f');
+  SET payments = template_data.payments;
+  SET previous_balance = template_data.previous_balance;
+  SET new_balance = template_data.new_balance;
+  SET payment_type = template_data.payment_type;
+  SET payment_total = template_data.payment_total;
+  SET payment_applied = template_data.payment_applied;
+  SET amount_voided = template_data.amount_voided;
+  SET change_given = template_data.change_given;
+  SET payment_note = template_data.payment_note;
+  SET copy_barcode = template_data.copy_barcode;
+  SET title = template_data.title;
+%]
+<div>
+  <style>td { padding: 1px 3px 1px 3px; }</style>
+  <div>Welcome to [% staff_org.name %]</div>
+  <div>A receipt of your transaction:</div>
+  <hr/>
+
+  <table style="width:100%"> 
+    <tr> 
+      <td>Original Balance:</td> 
+      <td align="right">[% money(previous_balance) %]</td> 
+    </tr> 
+    <tr> 
+      <td>Payment Method:</td> 
+      <td align="right">
+        [% SWITCH payment_type %]
+          [% CASE "cash_payment" %]Cash
+          [% CASE "check_payment" %]Check
+          [% CASE "credit_card_payment" %]Credit Card
+          [% CASE "debit_card_payment" %]Debit Card
+          [% CASE "credit_payment" %]Patron Credit
+          [% CASE "work_payment" %]Work
+          [% CASE "forgive_payment" %]Forgive
+          [% CASE "goods_payment" %]Goods
+        [% END %]
+      </td>
+    </tr> 
+    <tr> 
+      <td>Payment Received:</td> 
+      <td align="right">[% money(payment_total) %]</td> 
+    </tr> 
+    <tr> 
+      <td>Payment Applied:</td> 
+      <td align="right">[% money(payment_applied) %]</td> 
+    </tr> 
+    <tr> 
+      <td>Billings Voided:</td> 
+      <td align="right">[% money(amount_voided) %]</td> 
+    </tr> 
+    <tr> 
+      <td>Change Given:</td> 
+      <td align="right">[% money(change_given) %]</td> 
+    </tr> 
+    <tr> 
+      <td>New Balance:</td> 
+      <td align="right">[% money(new_balance) %]</td> 
+    </tr> 
+  </table> 
+  <p>Note: [% payment_note %]</p>
+  <p>
+    Specific Bills
+    <blockquote>
+      [% FOR payment IN payments %]
+        <table style="width:100%">
+          <tr>
+            <td>Bill # [% payment.xact.id %]</td>
+            <td>[% payment.xact.summary.last_billing_type %]</td>
+            <td>Received: [% money(payment.amount) %]</td>
+          </tr>
+          [% IF payment.copy_barcode %]
+          <tr>
+            <td colspan="5">[% payment.copy_barcode %] [% payment.title %]</td>
+          </tr>
+          [% END %]
+        </table>
+        <br/>
+      [% END %]
+    </blockquote>
+  </p> 
+  <hr/>
+  <br/><br/> 
+  <div>[% staff_org.name %] [% date.format(date.now, '%x %r') %]</div>
+  <div>You were helped by [% staff.first_given_name %]</div>
+</div>
+$TEMPLATE$ WHERE name = 'bills_payment';
+
+
+INSERT INTO config.print_template 
+    (name, label, owner, active, locale, content_type, template)
+VALUES ('patron_data', 'Patron Data', 1, TRUE, 'en-US', 'text/html', '');
+
+UPDATE config.print_template SET template = $TEMPLATE$
+[% 
+  USE date;
+  USE money = format('$%.2f');
+  SET patron = template_data.patron;
+%]
+<table>
+  <tr><td>Barcode:</td><td>[% patron.card.barcode %]</td></tr>
+  <tr><td>Patron's Username:</td><td>[% patron.usrname %]</td></tr>
+  <tr><td>Prefix/Title:</td><td>[% patron.prefix %]</td></tr>
+  <tr><td>First Name:</td><td>[% patron.first_given_name %]</td></tr>
+  <tr><td>Middle Name:</td><td>[% patron.second_given_name %]</td></tr>
+  <tr><td>Last Name:</td><td>[% patron.family_name %]</td></tr>
+  <tr><td>Suffix:</td><td>[% patron.suffix %]</td></tr>
+  <tr><td>Holds Alias:</td><td>[% patron.alias %]</td></tr>
+  <tr><td>Date of Birth:</td><td>[% patron.dob %]</td></tr>
+  <tr><td>Juvenile:</td><td>[% patron.juvenile %]</td></tr>
+  <tr><td>Primary Identification Type:</td><td>[% patron.ident_type.name %]</td></tr>
+  <tr><td>Primary Identification:</td><td>[% patron.ident_value %]</td></tr>
+  <tr><td>Secondary Identification Type:</td><td>[% patron.ident_type2.name %]</td></tr>
+  <tr><td>Secondary Identification:</td><td>[% patron.ident_value2 %]</td></tr>
+  <tr><td>Email Address:</td><td>[% patron.email %]</td></tr>
+  <tr><td>Daytime Phone:</td><td>[% patron.day_phone %]</td></tr>
+  <tr><td>Evening Phone:</td><td>[% patron.evening_phone %]</td></tr>
+  <tr><td>Other Phone:</td><td>[% patron.other_phone %]</td></tr>
+  <tr><td>Home Library:</td><td>[% patron.home_ou.name %]</td></tr>
+  <tr><td>Main (Profile) Permission Group:</td><td>[% patron.profile.name %]</td></tr>
+  <tr><td>Privilege Expiration Date:</td><td>[% patron.expire_date %]</td></tr>
+  <tr><td>Internet Access Level:</td><td>[% patron.net_access_level.name %]</td></tr>
+  <tr><td>Active:</td><td>[% patron.active %]</td></tr>
+  <tr><td>Barred:</td><td>[% patron.barred %]</td></tr>
+  <tr><td>Is Group Lead Account:</td><td>[% patron.master_account %]</td></tr>
+  <tr><td>Claims-Returned Count:</td><td>[% patron.claims_returned_count %]</td></tr>
+  <tr><td>Claims-Never-Checked-Out Count:</td><td>[% patron.claims_never_checked_out_count %]</td></tr>
+
+  [% FOR addr IN patron.addresses %]
+    <tr><td colspan="2">----------</td></tr>
+    <tr><td>Type:</td><td>[% addr.address_type %]</td></tr>
+    <tr><td>Street (1):</td><td>[% addr.street1 %]</td></tr>
+    <tr><td>Street (2):</td><td>[% addr.street2 %]</td></tr>
+    <tr><td>City:</td><td>[% addr.city %]</td></tr>
+    <tr><td>County:</td><td>[% addr.county %]</td></tr>
+    <tr><td>State:</td><td>[% addr.state %]</td></tr>
+    <tr><td>Postal Code:</td><td>[% addr.post_code %]</td></tr>
+    <tr><td>Country:</td><td>[% addr.country %]</td></tr>
+    <tr><td>Valid Address?:</td><td>[% addr.valid %]</td></tr>
+    <tr><td>Within City Limits?:</td><td>[% addr.within_city_limits %]</td></tr>
+  [% END %]
+
+  [% FOR entry IN patron.stat_cat_entries %]
+    <tr><td>-----------</td></tr>
+    <tr><td>[% entry.stat_cat.name %]</td><td>[% entry.stat_cat_entry %]</td></tr>
+  [% END %]
+
+</table>
+
+$TEMPLATE$ WHERE name = 'patron_data';
+
+
+INSERT INTO config.print_template 
+    (name, label, owner, active, locale, content_type, template)
+VALUES ('hold_shelf_slip', 'Hold Shelf Slip', 1, TRUE, 'en-US', 'text/html', '');
+
+
+UPDATE config.print_template SET template = $TEMPLATE$
+[% 
+  USE date;
+  USE money = format('$%.2f');
+  SET copy = template_data.checkin.copy;
+  SET hold = template_data.checkin.hold;
+  SET volume = template_data.checkin.volume;
+  SET hold = template_data.checkin.hold;
+  SET record = template_data.checkin.record;
+  SET patron = template_data.checkin.patron;
+%] 
+
+<div>
+  [% IF hold.behind_desk == 't' %]
+    This item needs to be routed to the <strong>Private Holds Shelf</strong>.
+  [% ELSE %]
+    This item needs to be routed to the <strong>Public Holds Shelf</strong>.
+  [% END %]
+</div>
+<br/>
+
+<div>Barcode: [% copy.barcode %]</div>
+<div>Title: [% checkin.title %]</div>
+<div>Call Number: [% volume.prefix.label %] [% volume.label %] [% volume.suffix.label %]</div>
+
+<br/>
+
+<div>Hold for patron: [% patron.family_name %], 
+  [% patron.first_given_name %] [% patron.second_given_name %]</div>
+<div>Barcode: [% patron.card.barcode %]</div>
+
+[% IF hold.phone_notify %]
+  <div>Notify by phone: [% hold.phone_notify %]</div>
+[% END %]
+[% IF hold.sms_notify %]
+  <div>Notify by text: [% hold.sms_notify %]</div>
+[% END %]
+[% IF hold.email_notify %]
+  <div>Notify by email: [% patron.email %]</div>
+[% END %]
+
+[% FOR note IN hold.notes %]
+  <ul>
+  [% IF note.slip == 't' %]
+    <li><strong>[% note.title %]</strong> - [% note.body %]</li>
+  [% END %]
+  </ul>
+[% END %]
+<br/>
+
+<div>Request Date: [% 
+  date.format(helpers.format_date(hold.request_time, staff_org_timezone), '%x %r') %]</div>
+<div>Slip Date: [% date.format(date.now, '%x %r') %]</div>
+<div>Printed by [% staff.first_given_name %] at [% staff_org.shortname %]</div>
+
+</div>
+
+$TEMPLATE$ WHERE name = 'hold_shelf_slip';
+
+
+INSERT INTO config.print_template 
+    (name, label, owner, active, locale, content_type, template)
+VALUES ('transit_slip', 'Transit Slip', 1, TRUE, 'en-US', 'text/html', '');
+
+
+UPDATE config.print_template SET template = $TEMPLATE$
+[% 
+  USE date;
+  USE money = format('$%.2f');
+  SET checkin = template_data.checkin;
+  SET copy = checkin.copy;
+  SET destOrg = checkin.destOrg;
+  SET destAddress = checkin.destAddress;
+  SET destCourierCode = checkin.destCourierCode;
+%] 
+<div>
+  <div>This item needs to be routed to <b>[% destOrg.shortname %]</b></div>
+  <div>[% destOrg.name %]</div>
+  [% IF destCourierCode %]Courier Code: [% destCourierCode %][% END %]
+
+  [% IF destAddress %]
+    <div>[% destAddress.street1 %]</div>
+    <div>[% destAddress.street2 %]</div>
+    <div>[% destAddress.city %],
+    [% destAddress.state %]
+    [% destAddress.post_code %]</div>
+  [% ELSE %]
+    <div>We do not have a holds address for this library.</div>
+  [% END %]
+  
+  <br/>
+  <div>Barcode: [% copy.barcode %]</div>
+  <div>Title: [% checkin.title %]</div>
+  <div>Author: [% checkin.author %]</div>
+  
+  <br/>
+  <div>Slip Date: [% date.format(date.now, '%x %r') %]</div>
+  <div>Printed by [% staff.first_given_name %] at [% staff_org.shortname %]</div>
+</div>
+
+$TEMPLATE$ WHERE name = 'transit_slip';
+
+ 
+INSERT INTO config.print_template 
+    (name, label, owner, active, locale, content_type, template)
+VALUES ('hold_transit_slip', 'Hold Transit Slip', 1, TRUE, 'en-US', 'text/html', '');
+
+UPDATE config.print_template SET template = $TEMPLATE$
+[% 
+  USE date;
+  USE money = format('$%.2f');
+  SET checkin = template_data.checkin;
+  SET copy = checkin.copy;
+  SET hold = checkin.hold;
+  SET patron = checkin.patron;
+  SET destOrg = checkin.destOrg;
+  SET destAddress = checkin.destAddress;
+  SET destCourierCode = checkin.destCourierCode;
+%] 
+<div>
+  <div>This item needs to be routed to <b>[% destOrg.shortname %]</b></div>
+  <div>[% destOrg.name %]</div>
+  [% IF destCourierCode %]Courier Code: [% destCourierCode %][% END %]
+
+  [% IF destAddress %]
+    <div>[% destAddress.street1 %]</div>
+    <div>[% destAddress.street2 %]</div>
+    <div>[% destAddress.city %],
+    [% destAddress.state %]
+    [% destAddress.post_code %]</div>
+  [% ELSE %]
+    <div>We do not have a holds address for this library.</div>
+  [% END %]
+  
+  <br/>
+  <div>Barcode: [% copy.barcode %]</div>
+  <div>Title: [% checkin.title %]</div>
+  <div>Author: [% checkin.author %]</div>
+
+  <br/>
+  <div>Hold for patron [% patron.card.barcode %]</div>
+  
+  <br/>
+  <div>Request Date: [% 
+    date.format(helpers.format_date(hold.request_time, staff_org_timezone), '%x %r') %]
+  </div>
+  <div>Slip Date: [% date.format(date.now, '%x %r') %]</div>
+  <div>Printed by [% staff.first_given_name %] at [% staff_org.shortname %]</div>
+</div>
+
+$TEMPLATE$ WHERE name = 'transit_slip';
+
+INSERT INTO config.print_template 
+    (name, label, owner, active, locale, content_type, template)
+VALUES ('checkin', 'Checkin', 1, TRUE, 'en-US', 'text/html', '');
+
+UPDATE config.print_template SET template = $TEMPLATE$
+[% 
+  USE date;
+  USE money = format('$%.2f');
+  SET checkins = template_data.checkins;
+%] 
+
+<div>
+  <div>Welcome to [% staff_org.name %]</div>
+  <div>You checked in the following items:</div>
+  <hr/>
+  <ol>
+	[% FOR checkin IN checkins %]
+    <li>
+      <div>[% checkin.title %]</div>
+      <span>Barcode: </span>
+      <span>[% checkin.copy.barcode %]</span>
+      <span>Call Number: </span>
+      <span>
+      [% IF checkin.volume %]
+	    [% volume.prefix.label %] [% volume.label %] [% volume.suffix.label %]
+      [% ELSE %]
+        Not Cataloged
+      [% END %]
+      </span>
+    </li>
+  [% END %]
+  </ol>
+  <hr/>
+  <div>Slip Date: [% date.format(date.now, '%x %r') %]</div>
+  <div>Printed by [% staff.first_given_name %] at [% staff_org.shortname %]</div>
+</div>
+
+$TEMPLATE$ WHERE name = 'checkin';
+
+
+INSERT INTO config.print_template 
+    (name, label, owner, active, locale, content_type, template)
+VALUES ('holds_for_patron', 'Holds For Patron', 1, TRUE, 'en-US', 'text/html', '');
+
+
+UPDATE config.print_template SET template = $TEMPLATE$
+[% 
+  USE date;
+  USE money = format('$%.2f');
+  SET holds = template_data;
+%] 
+
+<div>
+  <div>Welcome to [% staff_org.name %]</div>
+  <div>You have the following items on hold:</div>
+  <hr/>
+  <ol>
+	[% FOR hold IN holds %]
+    <li>
+      <div>[% hold.title %]</div>
+    </li>
+  [% END %]
+  </ol>
+  <hr/>
+  <div>Slip Date: [% date.format(date.now, '%x %r') %]</div>
+  <div>Printed by [% staff.first_given_name %] at [% staff_org.shortname %]</div>
+</div>
+
+$TEMPLATE$ WHERE name = 'holds_for_patron';
+
+
+INSERT INTO config.print_template 
+    (name, label, owner, active, locale, content_type, template)
+VALUES ('bills_historical', 'Bills, Historical', 1, TRUE, 'en-US', 'text/html', '');
+
+
+UPDATE config.print_template SET template = $TEMPLATE$
+[% 
+  USE date;
+  USE money = format('$%.2f');
+  SET xacts = template_data.xacts;
+%]
+<div>
+  <style>td { padding: 1px 3px 1px 3px; }</style>
+  <div>Welcome to [% staff_org.name %]</div>
+  <div>You have the following bills:</div>
+  <hr/>
+  <ol>
+  [% FOR xact IN xacts %]
+    <li>
+      <table>
+        <tr>
+          <td>Bill #:</td>
+          <td>[% xact.id %]</td>
+        </tr>
+        <tr>
+          <td>Date:</td>
+          <td>[% date.format(helpers.format_date(
+            xact.xact_start, staff_org_timezone), '%x %r') %]
+          </td>
+        </tr>
+        <tr>
+          <td>Last Billing:</td>
+          <td>[% xact.last_billing_type %]</td>
+        </tr>
+        <tr>
+          <td>Total Billed:</td>
+          <td>[% money(xact.total_owed) %]</td>
+        </tr>
+        <tr>
+          <td>Last Payment:</td>
+          <td>
+            [% xact.last_payment_type %]
+            [% IF xact.last_payment_ts %]
+              at [% date.format(
+                    helpers.format_date(
+                        xact.last_payment_ts, staff_org_timezone), '%x %r') %]
+            [% END %]
+          </td>
+        </tr>
+        <tr>
+          <td>Total Paid:</td>
+          <td>[% money(xact.total_paid) %]</td>
+        </tr>
+        <tr>
+          <td>Balance:</td>
+          <td>[% money(xact.balance_owed) %]</td>
+        </tr>
+      </table>
+    </li>
+  [% END %]
+  </ol>
+  <hr/>
+  <div>[% staff_org.name %] [% date.format(date.now, '%x %r') %]</div>
+  <div>You were helped by [% staff.first_given_name %]</div>
+  <br/>
+</div>
+$TEMPLATE$ WHERE name = 'bills_historical';
+
+INSERT INTO config.print_template 
+    (name, label, owner, active, locale, content_type, template)
+VALUES ('checkout', 'Checkout', 1, TRUE, 'en-US', 'text/html', '');
+
+UPDATE config.print_template SET template = $TEMPLATE$
+[% 
+  USE date;
+  USE money = format('$%.2f');
+  SET checkouts = template_data.checkouts;
+%] 
+
+<div>
+  <div>Welcome to [% staff_org.name %]</div>
+  <div>You checked out the following items:</div>
+  <hr/>
+  <ol>
+	[% FOR checkout IN checkouts %]
+    <li>
+      <div>[% checkout.title %]</div>
+      <span>Barcode: </span>
+      <span>[% checkout.copy.barcode %]</span>
+      <span>Call Number: </span>
+      <span>
+      [% IF checkout.volume %]
+	    [% volume.prefix.label %] [% volume.label %] [% volume.suffix.label %]
+      [% ELSE %]
+        Not Cataloged
+      [% END %]
+      </span>
+    </li>
+  [% END %]
+  </ol>
+  <hr/>
+  <div>Slip Date: [% date.format(date.now, '%x %r') %]</div>
+  <div>Printed by [% staff.first_given_name %] at [% staff_org.shortname %]</div>
+</div>
+
+$TEMPLATE$ WHERE name = 'checkout';
+
+INSERT INTO config.print_template 
+    (name, label, owner, active, locale, content_type, template)
+VALUES ('renew', 'renew', 1, TRUE, 'en-US', 'text/html', '');
+
+UPDATE config.print_template SET template = $TEMPLATE$
+[% 
+  USE date;
+  USE money = format('$%.2f');
+  SET renewals = template_data.renewals;
+%] 
+
+<div>
+  <div>Welcome to [% staff_org.name %]</div>
+  <div>You renewed the following items:</div>
+  <hr/>
+  <ol>
+	[% FOR renewal IN renewals %]
+    <li>
+      <div>[% renewal.title %]</div>
+      <span>Barcode: </span>
+      <span>[% renewal.copy.barcode %]</span>
+      <span>Call Number: </span>
+      <span>
+      [% IF renewal.volume %]
+	    [% volume.prefix.label %] [% volume.label %] [% volume.suffix.label %]
+      [% ELSE %]
+        Not Cataloged
+      [% END %]
+      </span>
+    </li>
+  [% END %]
+  </ol>
+  <hr/>
+  <div>Slip Date: [% date.format(date.now, '%x %r') %]</div>
+  <div>Printed by [% staff.first_given_name %] at [% staff_org.shortname %]</div>
+</div>
+
+$TEMPLATE$ WHERE name = 'renew';
+
+INSERT INTO config.print_template
+    (name, label, owner, active, locale, content_type, template)
+VALUES ('serials_routing_list', 'Serials routing list', 1, TRUE, 'en-US', 'text/html', '');
+
+UPDATE config.print_template SET template = $TEMPLATE$
+[% 
+  SET title = template_data.title;
+  SET distribution = template_data.distribution;
+  SET issuance = template_data.issuance;
+  SET routing_list = template_data.routing_list;
+  SET stream = template_data.stream;
+%] 
+
+<p>[% title %]</p>
+<p>[% issuance.label %]</p>
+<p>([% distribution.holding_lib.shortname %]) [% distribution.label %] / [% stream.routing_label %] ID [% stream.id %]</p>
+  <ol>
+	[% FOR route IN routing_list %]
+    <li>
+    [% IF route.reader %]
+      [% route.reader.first_given_name %] [% route.reader.family_name %]
+      [% IF route.note %]
+        - [% route.note %]
+      [% END %]
+      [% route.reader.mailing_address.street1 %]
+      [% route.reader.mailing_address.street2 %]
+      [% route.reader.mailing_address.city %], [% route.reader.mailing_address.state %] [% route.reader.mailing_address.post_code %]
+    [% ELSIF route.department %]
+      [% route.department %]
+      [% IF route.note %]
+        - [% route.note %]
+      [% END %]
+    [% END %]
+    </li>
+  [% END %]
+  </ol>
+</div>
+
+$TEMPLATE$ WHERE name = 'serials_routing_list';
+
+INSERT into config.workstation_setting_type (name, grp, datatype, label)
+VALUES (
+    'eg.grid.admin.local.cash_reports.desk_payments', 'gui', 'object',
+    oils_i18n_gettext(
+        'eg.grid.admin.local.cash_reports.desk_payments',
+        'Grid Config: admin.local.cash_reports.desk_payments',
+        'cwst', 'label'
+    )
+), (
+    'eg.grid.admin.local.cash_reports.user_payments', 'gui', 'object',
+    oils_i18n_gettext(
+        'eg.grid.admin.local.cash_reports.user_payments',
+        'Grid Config: admin.local.cash_reports.user_payments',
+        'cwst', 'label'
+    )
+);
+
+INSERT INTO config.global_flag (name, value, enabled, label)
+VALUES (
+    'opac.max_concurrent_search.query',
+    '20',
+    TRUE,
+    oils_i18n_gettext(
+        'opac.max_concurrent_search.query',
+        'Limit the number of global concurrent matching search queries',
+        'cgf', 'label'
+    )
+), (
+    'opac.max_concurrent_search.ip',
+    '0',
+    TRUE,
+    oils_i18n_gettext(
+        'opac.max_concurrent_search.ip',
+        'Limit the number of global concurrent searches per client IP address',
+        'cgf', 'label'
+    )
+), (
+    'opac.login_redirect_domains',
+    '',
+    TRUE,
+    oils_i18n_gettext(
+        'opac.login_redirect_domains',
+        'Restrict post-login redirection to local URLs, or those that match the supplied comma-separated list of foreign domains or host names.',
+        'cgf', 'label'
+    )
+);
+
+INSERT INTO config.global_flag (name, enabled, label) VALUES (
+    'ingest.queued.max_threads',  TRUE,
+    oils_i18n_gettext(
+        'ingest.queued.max_threads',
+        'Queued Ingest: Maximum number of database workers allowed for queued ingest processes',
+        'cgf',
+        'label'
+    )),(
+    'ingest.queued.abort_on_error',  FALSE,
+    oils_i18n_gettext(
+        'ingest.queued.abort_on_error',
+        'Queued Ingest: Abort transaction on ingest error rather than simply logging an error',
+        'cgf',
+        'label'
+    )),(
+    'ingest.queued.authority.propagate',  FALSE,
+    oils_i18n_gettext(
+        'ingest.queued.authority.propagate',
+        'Queued Ingest: Queue all bib record updates on authority change propagation, even if bib queuing is not generally enabled',
+        'cgf',
+        'label'
+    )),(
+    'ingest.queued.all',  FALSE,
+    oils_i18n_gettext(
+        'ingest.queued.all',
+        'Queued Ingest: Use Queued Ingest for all bib and authority record ingest',
+        'cgf',
+        'label'
+    )),(
+    'ingest.queued.biblio.all',  FALSE,
+    oils_i18n_gettext(
+        'ingest.queued.biblio.all',
+        'Queued Ingest: Use Queued Ingest for all bib record ingest',
+        'cgf',
+        'label'
+    )),(
+    'ingest.queued.authority.all',  FALSE,
+    oils_i18n_gettext(
+        'ingest.queued.authority.all',
+        'Queued Ingest: Use Queued Ingest for all authority record ingest',
+        'cgf',
+        'label'
+    )),(
+    'ingest.queued.biblio.insert.marc_edit_inline',  TRUE,
+    oils_i18n_gettext(
+        'ingest.queued.biblio.insert.marc_edit_inline',
+        'Queued Ingest: Do NOT use Queued Ingest when creating a new bib, or undeleting a bib, via the MARC editor',
+        'cgf',
+        'label'
+    )),(
+    'ingest.queued.biblio.insert',  FALSE,
+    oils_i18n_gettext(
+        'ingest.queued.biblio.insert',
+        'Queued Ingest: Use Queued Ingest for bib record ingest on insert and undelete',
+        'cgf',
+        'label'
+    )),(
+    'ingest.queued.authority.insert',  FALSE,
+    oils_i18n_gettext(
+        'ingest.queued.authority.insert',
+        'Queued Ingest: Use Queued Ingest for authority record ingest on insert and undelete',
+        'cgf',
+        'label'
+    )),(
+    'ingest.queued.biblio.update.marc_edit_inline',  TRUE,
+    oils_i18n_gettext(
+        'ingest.queued.biblio.update.marc_edit_inline',
+        'Queued Ingest: Do NOT Use Queued Ingest when editing bib records via the MARC Editor',
+        'cgf',
+        'label'
+    )),(
+    'ingest.queued.biblio.update',  FALSE,
+    oils_i18n_gettext(
+        'ingest.queued.biblio.update',
+        'Queued Ingest: Use Queued Ingest for bib record ingest on update',
+        'cgf',
+        'label'
+    )),(
+    'ingest.queued.authority.update',  FALSE,
+    oils_i18n_gettext(
+        'ingest.queued.authority.update',
+        'Queued Ingest: Use Queued Ingest for authority record ingest on update',
+        'cgf',
+        'label'
+    )),(
+    'ingest.queued.biblio.delete',  FALSE,
+    oils_i18n_gettext(
+        'ingest.queued.biblio.delete',
+        'Queued Ingest: Use Queued Ingest for bib record ingest on delete',
+        'cgf',
+        'label'
+    )),(
+    'ingest.queued.authority.delete',  FALSE,
+    oils_i18n_gettext(
+        'ingest.queued.authority.delete',
+        'Queued Ingest: Use Queued Ingest for authority record ingest on delete',
+        'cgf',
+        'label'
+    )
+);
+
+UPDATE config.global_flag SET value = '20' WHERE name = 'ingest.queued.max_threads';
+
+INSERT INTO config.org_unit_setting_type (name, label, grp, description, datatype, fm_class) VALUES
+(   'circ.custom_penalty_override.PATRON_EXCEEDS_FINES',
+    oils_i18n_gettext('circ.custom_penalty_override.PATRON_EXCEEDS_FINES',
+        'Custom PATRON_EXCEEDS_FINES penalty',
+        'coust', 'label'),
+    'circ',
+    oils_i18n_gettext('circ.custom_penalty_override.PATRON_EXCEEDS_FINES',
+        'Specifies a non-default standing penalty to apply to patrons that exceed the max-fine threshold for their group.',
+        'coust', 'description'),
+    'link', 'csp'),
+(   'circ.custom_penalty_override.PATRON_EXCEEDS_OVERDUE_COUNT',
+    oils_i18n_gettext('circ.custom_penalty_override.PATRON_EXCEEDS_OVERDUE_COUNT',
+        'Custom PATRON_EXCEEDS_OVERDUE_COUNT penalty',
+        'coust', 'label'),
+    'circ',
+    oils_i18n_gettext('circ.custom_penalty_override.PATRON_EXCEEDS_OVERDUE_COUNT',
+        'Specifies a non-default standing penalty to apply to patrons that exceed the overdue count threshold for their group.',
+        'coust', 'description'),
+    'link', 'csp'),
+(   'circ.custom_penalty_override.PATRON_EXCEEDS_CHECKOUT_COUNT',
+    oils_i18n_gettext('circ.custom_penalty_override.PATRON_EXCEEDS_CHECKOUT_COUNT',
+        'Custom PATRON_EXCEEDS_CHECKOUT_COUNT penalty',
+        'coust', 'label'),
+    'circ',
+    oils_i18n_gettext('circ.custom_penalty_override.PATRON_EXCEEDS_CHECKOUT_COUNT',
+        'Specifies a non-default standing penalty to apply to patrons that exceed the checkout count threshold for their group.',
+        'coust', 'description'),
+    'link', 'csp'),
+(   'circ.custom_penalty_override.PATRON_EXCEEDS_COLLECTIONS_WARNING',
+    oils_i18n_gettext('circ.custom_penalty_override.PATRON_EXCEEDS_COLLECTIONS_WARNING',
+        'Custom PATRON_EXCEEDS_COLLECTIONS_WARNING penalty',
+        'coust', 'label'),
+    'circ',
+    oils_i18n_gettext('circ.custom_penalty_override.PATRON_EXCEEDS_COLLECTIONS_WARNING',
+        'Specifies a non-default standing penalty to apply to patrons that exceed the collections fine warning threshold for their group.',
+        'coust', 'description'),
+    'link', 'csp'),
+(   'circ.custom_penalty_override.PATRON_EXCEEDS_LOST_COUNT',
+    oils_i18n_gettext('circ.custom_penalty_override.PATRON_EXCEEDS_LOST_COUNT',
+        'Custom PATRON_EXCEEDS_LOST_COUNT penalty',
+        'coust', 'label'),
+    'circ',
+    oils_i18n_gettext('circ.custom_penalty_override.PATRON_EXCEEDS_LOST_COUNT',
+        'Specifies a non-default standing penalty to apply to patrons that exceed the lost item count threshold for their group.',
+        'coust', 'description'),
+    'link', 'csp'),
+(   'circ.custom_penalty_override.PATRON_EXCEEDS_LONGOVERDUE_COUNT',
+    oils_i18n_gettext('circ.custom_penalty_override.PATRON_EXCEEDS_LONGOVERDUE_COUNT',
+        'Custom PATRON_EXCEEDS_LONGOVERDUE_COUNT penalty',
+        'coust', 'label'),
+    'circ',
+    oils_i18n_gettext('circ.custom_penalty_override.PATRON_EXCEEDS_LONGOVERDUE_COUNT',
+        'Specifies a non-default standing penalty to apply to patrons that exceed the long-overdue item count threshold for their group.',
+        'coust', 'description'),
+    'link', 'csp'),
+(   'circ.custom_penalty_override.PATRON_IN_COLLECTIONS',
+    oils_i18n_gettext('circ.custom_penalty_override.PATRON_IN_COLLECTIONS',
+        'Custom PATRON_IN_COLLECTIONS penalty',
+        'coust', 'label'),
+    'circ',
+    oils_i18n_gettext('circ.custom_penalty_override.PATRON_IN_COLLECTIONS',
+        'Specifies a non-default standing penalty that may have been applied to patrons that have been placed into collections and that should be automatically removed if they have paid down their balance below the threshold for their group. Use of this feature will likely require configuration and coordination with an external collection agency.',
+        'coust', 'description'),
+    'link', 'csp')
+;
+
+INSERT INTO config.workstation_setting_type (name, grp, datatype, label)
+VALUES (
+    'eg.holds.pull_list_filters', 'gui', 'object',
+    oils_i18n_gettext(
+        'eg.holds.pull_list_filters',
+        'Holds pull list filter values for pickup library and shelving locations.',
+        'cwst', 'label'
+    )
+);
+
+INSERT into config.org_unit_setting_type
+    (name, grp, label, description, datatype)
+VALUES (
+    'staff.added_content.novelistselect.version',
+    'gui',
+    oils_i18n_gettext('staff.added_content.novelistselect.version',
+        'Staff Client added content: NoveList Select API version',
+        'coust', 'label'),
+    oils_i18n_gettext('staff.added_content.novelistselect.version',
+        'API version used to provide NoveList Select added content in the Staff Client',
+        'coust', 'description'),
+    'string'
+);
+
+INSERT into config.org_unit_setting_type
+    (name, grp, label, description, datatype)
+VALUES (
+    'staff.added_content.novelistselect.profile',
+    'gui',
+    oils_i18n_gettext('staff.added_content.novelistselect.profile',
+        'Staff Client added content: NoveList Select profile/user',
+        'coust', 'label'),
+    oils_i18n_gettext('staff.added_content.novelistselect.profile',
+        'Profile/user used to provide NoveList Select added content in the Staff Client',
+        'coust', 'description'),
+    'string'
+);
+
+INSERT into config.org_unit_setting_type
+    (name, grp, label, description, datatype)
+VALUES (
+    'staff.added_content.novelistselect.passwd',
+    'gui',
+    oils_i18n_gettext('staff.added_content.novelistselect.passwd',
+        'Staff Client added content: NoveList Select key/password',
+        'coust', 'label'),
+    oils_i18n_gettext('staff.added_content.novelistselect.passwd',
+        'Key/password used to provide NoveList Select added content in the Staff Client',
+        'coust', 'description'),
+    'string'
+);
+
+INSERT into config.org_unit_setting_type
+    (name, datatype, grp, update_perm, label, description)
+VALUES (
+    'staff.added_content.novelistselect.url', 'string', 'opac', 647,
+    oils_i18n_gettext(
+        'staff.added_content.novelistselect.url',
+        'URL Override for NoveList Select added content javascript',
+        'coust', 'label'
+    ),
+    oils_i18n_gettext(
+        'staff.added_content.novelistselect.url',
+        'URL Override for NoveList Select added content javascript',
+        'coust', 'description'
+    )
+);
+
+INSERT into config.workstation_setting_type (name, grp, datatype, label)
+VALUES (
+    'eg.grid.catalog.link_checker', 'gui', 'object',
+    oils_i18n_gettext(
+        'eg.grid.catalog.link_checker',
+        'Grid Config: catalog.link_checker',
+        'cwst', 'label'
+    )
+), (
+    'eg.grid.catalog.link_checker.attempt', 'gui', 'object',
+    oils_i18n_gettext(
+        'eg.grid.catalog.link_checker.attempt',
+        'Grid Config: catalog.link_checker.attempt',
+        'cwst', 'label'
+    )
+), (
+    'eg.grid.catalog.link_checker.url', 'gui', 'object',
+    oils_i18n_gettext(
+        'eg.grid.catalog.link_checker.url',
+        'Grid Config: catalog.link_checker.url',
+        'cwst', 'label'
+    )
+), (
+    'eg.grid.filters.catalog.link_checker', 'gui', 'object',
+    oils_i18n_gettext(
+        'eg.grid.filters.catalog.link_checker',
+        'Grid Filter Sets: catalog.link_checker',
+        'cwst', 'label'
+    )
+), (
+    'eg.grid.filters.catalog.link_checker.attempt', 'gui', 'object',
+    oils_i18n_gettext(
+        'eg.grid.filters.catalog.link_checker.attempt',
+        'Grid Filter Sets: catalog.link_checker.attempt',
+        'cwst', 'label'
+    )
+), (
+    'eg.grid.filters.catalog.link_checker.url', 'gui', 'object',
+    oils_i18n_gettext(
+        'eg.grid.filters.catalog.link_checker.url',
+        'Grid Filter Sets: catalog.link_checker.url',
+        'cwst', 'label'
+    )
+);
+
+INSERT into config.workstation_setting_type (name, grp, datatype, label)
+VALUES (
+    'eg.grid.admin.local.actor.stat_cat', 'gui', 'object',
+    oils_i18n_gettext(
+        'eg.grid.admin.local.actor.stat_cat',
+        'Grid Config: admin.local.actor.stat_cat',
+        'cwst', 'label'
+    )
+), (
+    'eg.grid.admin.local.asset.stat_cat', 'gui', 'object',
+    oils_i18n_gettext(
+        'eg.grid.admin.local.asset.stat_cat',
+        'Grid Config: admin.local.asset.stat_cat',
+        'cwst', 'label'
+    )
+);
+
+INSERT into config.workstation_setting_type (name, grp, datatype, label)
+VALUES (
+    'eg.grid.admin.local.actor.stat_cat_entry', 'gui', 'object',
+    oils_i18n_gettext(
+        'eg.grid.admin.local.actor.stat_cat_entry',
+        'Grid Config: admin.local.actor.stat_cat_entry',
+        'cwst', 'label'
+    )
+), (
+    'eg.grid.admin.local.asset.stat_cat_entry', 'gui', 'object',
+    oils_i18n_gettext(
+        'eg.grid.admin.local.asset.stat_cat_entry',
+        'Grid Config: admin.local.asset.stat_cat_entry',
+        'cwst', 'label'
+    )
+);
+
+INSERT INTO config.org_unit_setting_type (
+  name, grp, label, description, datatype
+) VALUES (
+  'cat.patron_view_discovery_layer_url',
+  'cat',
+  oils_i18n_gettext(
+    'cat.patron_view_discovery_layer_url',
+    'Patron view discovery layer URL',
+    'coust',
+    'label'
+  ),
+  oils_i18n_gettext(
+    'cat.patron_view_discovery_layer_url',
+    'URL for displaying an item in the "patron view" discovery layer with a placeholder for the bib record ID: {eg_record_id}. For example: https://example.com/Record/{eg_record_id}',
+    'coust',
+    'description'
+  ),
+  'string'
+);
+
+INSERT into config.workstation_setting_type
+    (name, grp, label, description, datatype)
+VALUES (
+    'eg.circ.patron.search.show_names',
+    'gui',
+    oils_i18n_gettext('eg.circ.patron.search.show_names',
+        'Staff Client patron search: show name fields',
+        'coust', 'label'),
+    oils_i18n_gettext('eg.circ.patron.search.show_names',
+        'Displays the name row of advanced patron search fields',
+        'coust', 'description'),
+    'bool'
+);
+
+INSERT into config.workstation_setting_type
+    (name, grp, label, description, datatype)
+VALUES (
+    'eg.circ.patron.search.show_ids',
+    'gui',
+    oils_i18n_gettext('eg.circ.patron.search.show_ids',
+        'Staff Client patron search: show ID fields',
+        'coust', 'label'),
+    oils_i18n_gettext('eg.circ.patron.search.show_ids',
+        'Displays the ID row of advanced patron search fields',
+        'coust', 'description'),
+    'bool'
+);
+
+INSERT into config.workstation_setting_type
+    (name, grp, label, description, datatype)
+VALUES (
+    'eg.circ.patron.search.show_address',
+    'gui',
+    oils_i18n_gettext('eg.circ.patron.search.show_address',
+        'Staff Client patron search: show address fields',
+        'coust', 'label'),
+    oils_i18n_gettext('eg.circ.patron.search.show_address',
+        'Displays the address row of advanced patron search fields',
+        'coust', 'description'),
+    'bool'
+);
+
+INSERT INTO config.workstation_setting_type (name, grp, datatype, label) 
+VALUES (
+    'eg.grid.admin.config.circ_matrix_matchpoint', 'gui', 'object',
+    oils_i18n_gettext(
+        'eg.grid.admin.config.circ_matrix_matchpoint',
+        'Grid Config: admin.config.circ_matrix_matchpoint',
+        'cwst', 'label'
+    )
+);
+
+INSERT INTO config.workstation_setting_type (name, grp, datatype, label)
+VALUES 
+(
+    'acq.lineitem.sort_order.claims', 'gui', 'integer',
+    oils_i18n_gettext(
+        'acq.lineitem.sort_order.claims',
+        'ACQ Claim-Ready Lineitem List Sort Order',
+        'cwst', 'label')
+),
+(
+    'acq.lineitem.page_size.claims', 'gui', 'integer',
+    oils_i18n_gettext(
+        'acq.lineitem.page_size.claims',
+        'ACQ Claim-Ready Lineitem List Page Size',
+        'cwst', 'label')
+),
+(
+    'eg.acq.search.lineitems.filter_to_invoiceable', 'gui', 'bool',
+    oils_i18n_gettext(
+        'eg.acq.search.lineitems.filter_to_invoiceable',
+        'ACQ Lineitem Search Filter to Invoiceable',
+        'cwst', 'label')
+),
+(
+    'eg.acq.search.lineitems.keep_results', 'gui', 'bool',
+    oils_i18n_gettext(
+        'eg.acq.search.lineitems.keep_results',
+        'ACQ Lineitem Search Keep Results Between Searches',
+        'cwst', 'label')
+),
+(
+    'eg.acq.search.lineitems.trim_list', 'gui', 'bool',
+    oils_i18n_gettext(
+        'eg.acq.search.lineitems.trim_list',
+        'ACQ Lineitem Search Trim List When Keeping Results',
+        'cwst', 'label')
+);
+
+INSERT INTO config.usr_setting_type (name, grp, datatype, label)
+VALUES
+(
+    'eg.cat.z3950.default_field', 'gui', 'string',
+    oils_i18n_gettext(
+        'eg.cat.z3950.default_field',
+        'Z39.50 Search default field',
+        'cust', 'label')
+),(
+    'eg.cat.z3950.default_targets', 'gui', 'object',
+    oils_i18n_gettext(
+        'eg.cat.z3950.default_targets',
+        'Z39.50 Search default targets',
+        'cust', 'label')
+);
+
+INSERT INTO config.workstation_setting_type (name, grp, datatype, label)
+VALUES
+(
+    'eg.grid.global_z3950.search_results', 'gui', 'object',
+    oils_i18n_gettext(
+        'eg.grid.global_z3950.search_results',
+        'Grid Config: Z39.50 Search Results',
+        'cwst', 'label')
+),(
+    'acq.default_bib_marc_template', 'gui', 'integer',
+    oils_i18n_gettext(
+        'acq.default_bib_marc_template',
+        'Default ACQ Brief Record Bibliographic Template',
+        'cwst', 'label')
+),(
+    'eg.grid.cat.vandelay.queue.list.acq', 'gui', 'object',
+    oils_i18n_gettext(
+        'eg.grid.cat.vandelay.queue.list.acq',
+        'Grid Config: Vandelay ACQ Queue List',
+        'cwst', 'label'
+    )
+),(
+    'eg.grid.cat.vandelay.background-import.list', 'gui', 'object',
+    oils_i18n_gettext(
+        'eg.grid.cat.vandelay.background-import.list',
+        'Grid Config: Vandelay Background Import List',
+        'cwst', 'label'
+    )
+);
+
+INSERT into config.org_unit_setting_type
+    (name, datatype, grp, label, description)
+VALUES (
+    'acq.import_tab_display', 'string', 'gui',
+    oils_i18n_gettext(
+        'acq.import_tab_display',
+        'ACQ: Which import tab(s) display in general Import/Export?',
+        'coust', 'label'
+    ),
+    oils_i18n_gettext(
+        'acq.import_tab_display',
+        'Valid values are: "cat" for Import for Cataloging, '
+        || '"acq" for Import for Acquisitions, "both" or unset to display both.',
+        'coust', 'description'
+    )
+);
+
+INSERT INTO action_trigger.hook (key, core_type, passive, description) VALUES
+(  'vandelay.background_import.requested', 'vbi', TRUE,
+   oils_i18n_gettext('vandelay.background_import.requested','A Import/Overlay background job was requested','ath', 'description')
+),('vandelay.background_import.completed', 'vbi', TRUE,
+   oils_i18n_gettext('vandelay.background_import.completed','A Import/Overlay background job was completed','ath', 'description')
+);
+
+INSERT INTO action_trigger.event_definition (active, owner, name, hook, validator, reactor, group_field, usr_field, template)
+    VALUES ('f', 1, 'Vandelay Background Import Requested', 'vandelay.background_import.requested', 'NOOP_True', 'SendEmail', 'email', 'owner',
+$$
+[%- USE date -%]
+[%- hostname = '' # set this in order to generate a link -%]
+To: [%- target.0.email || params.recipient_email %]
+From: [%- params.sender_email || default_sender %]
+Date: [%- date.format(date.now, '%a, %d %b %Y %T -0000', gmt => 1) %]
+Subject: Background Import Requested
+Auto-Submitted: auto-generated
+
+[% target.size %] new background import requests were added:
+
+[% FOR bi IN target %]
+    [%- IF bi.queue; summary = helpers.fetch_vbi_queue_summary(bi)%]
+  * Queue: [% summary.queue.name %] ([% bi.import_type %])
+    Records in queue: [% summary.total %]
+    Items in queue: [% summary.total_items %]
+     [% IF bi.state != 'new' %]
+     - Records imported: [% summary.imported %]
+     - Items imported: [% summary.total_items_imported %]
+     - Records import errors: [% summary.rec_import_errors %]
+     - Items import errors: [% summary.item_import_errors %]
+     [% END %]
+    [% END %]
+  [% IF hostname %]View queue at: https://[% hostname %]/eg2/staff/cat/vandelay/queue/[% bi.import_type %]/[% bi.queue %][% END %]
+
+[% END %]
+
+[% IF hostname %]Manage background imports at: https://[% hostname %]/eg2/staff/cat/vandelay/background-import[% END %]
+
+$$);
+
+INSERT INTO action_trigger.event_definition (active, owner, name, hook, validator, reactor, group_field, usr_field, template)
+    VALUES ('f', 1, 'Vandelay Background Import Completed', 'vandelay.background_import.completed', 'NOOP_True', 'SendEmail', 'email', 'owner',
+$$
+[%- USE date -%]
+[%- hostname = '' # set this in order to generate a link -%]
+To: [%- target.0.email || params.recipient_email %]
+From: [%- params.sender_email || default_sender %]
+Date: [%- date.format(date.now, '%a, %d %b %Y %T -0000', gmt => 1) %]
+Subject: Background Import Completed
+Auto-Submitted: auto-generated
+
+[% target.size %] new background import requests were completed:
+
+[% FOR bi IN target %]
+    [%- summary = helpers.fetch_vbi_queue_summary(bi) -%]
+  * Queue: [% summary.queue.name %] ([% bi.import_type %])
+    Records in queue: [% summary.total %]
+    Items in queue: [% summary.total_items %]
+     - Records imported: [% summary.imported %]
+     - Items imported: [% summary.total_items_imported %]
+     - Records import errors: [% summary.rec_import_errors %]
+     - Items import errors: [% summary.item_import_errors %]
+  [% IF hostname %]View queue at: https://[% hostname %]/eg2/staff/cat/vandelay/queue/[% bi.import_type %]/[% bi.queue %][% END %]
+
+[% END %]
+
+[% IF hostname %]Manage background imports at: https://[% hostname %]/eg2/staff/cat/vandelay/background-import[% END %]
+
+$$);
+
+INSERT INTO config.org_unit_setting_type (
+  name, grp, label, description, datatype
+) VALUES (
+  'ui.patron.edit.aus.default_phone.regex',
+  'gui',
+  oils_i18n_gettext(
+    'ui.patron.edit.aus.default_phone.regex',
+    'Regex for default_phone field on patron registration',
+    'coust',
+    'label'
+  ),
+  oils_i18n_gettext(
+    'ui.patron.edit.aus.default_phone.regex',
+    'The Regular Expression for validation on the default_phone field in patron registration.',
+    'coust',
+    'description'
+  ),
+  'string'
+), (
+  'ui.patron.edit.aus.default_phone.example',
+  'gui',
+  oils_i18n_gettext(
+    'ui.patron.edit.aus.default_phone.example',
+    'Example for default_phone field on patron registration',
+    'coust',
+    'label'
+  ),
+  oils_i18n_gettext(
+    'ui.patron.edit.aus.default_phone.example',
+    'The Example for validation on the default_phone field in patron registration.',
+    'coust',
+    'description'
+  ),
+  'string'
+), (
+  'ui.patron.edit.aus.default_sms_notify.regex',
+  'gui',
+  oils_i18n_gettext(
+    'ui.patron.edit.aus.default_sms_notify.regex',
+    'Regex for default_sms_notify field on patron registration',
+    'coust',
+    'label'
+  ),
+  oils_i18n_gettext(
+    'ui.patron.edit.aus.default_sms_notify.regex',
+    'The Regular Expression for validation on the default_sms_notify field in patron registration.',
+    'coust',
+    'description'
+  ),
+  'string'
+), (
+  'ui.patron.edit.aus.default_sms_notify.example',
+  'gui',
+  oils_i18n_gettext(
+    'ui.patron.edit.aus.default_sms_notify.example',
+    'Example for default_sms_notify field on patron registration',
+    'coust',
+    'label'
+  ),
+  oils_i18n_gettext(
+    'ui.patron.edit.aus.default_sms_notify.example',
+    'The Example for validation on the default_sms_notify field in patron registration.',
+    'coust',
+    'description'
+  ),
+  'string'
+);
+
+INSERT INTO config.workstation_setting_type (name, grp, datatype, label)
+VALUES (
+    'eg.grid.reporter.full.outputs.pending', 'gui', 'object', 
+    oils_i18n_gettext( 'eg.grid.reporter.full.outputs.pending', 'Pending report output grid settings', 'cwst', 'label')
+), (
+    'eg.grid.reporter.full.outputs.complete', 'gui', 'object', 
+    oils_i18n_gettext( 'eg.grid.reporter.full.outputs.complete', 'Completed report output grid settings', 'cwst', 'label')
+), (
+    'eg.grid.reporter.full.templates', 'gui', 'object', 
+    oils_i18n_gettext( 'eg.grid.reporter.full.templates', 'Report template grid settings', 'cwst', 'label')
+), (
+    'eg.grid.reporter.full.reports', 'gui', 'object', 
+    oils_i18n_gettext( 'eg.grid.reporter.full.reports', 'Report definition grid settings', 'cwst', 'label')
+);
+
+INSERT INTO actor.passwd_type (code, name, login, crypt_algo, iter_count)
+    VALUES ('sip2', 'SIP2 Client Password', FALSE, 'bf', 5);
+
+-- ID 1 is magic.
+INSERT INTO sip.setting_group (id, label, institution) 
+    VALUES (1, 'Default Settings', 'example');
+
+-- carve space for other canned setting groups
+SELECT SETVAL('sip.setting_group_id_seq'::TEXT, 1000);
+
+-- has to be global since settings are linked to accounts and if
+-- status-before-login is used, no account information will be available.
+INSERT INTO config.global_flag (name, value, enabled, label) VALUES
+(   'sip.sc_status_before_login_institution', NULL, FALSE, 
+    oils_i18n_gettext(
+        'sip.sc_status_before_login_institution',
+        'Activate status-before-login-support and define the institution ' ||
+        'value which should be used in the response',
+        'cgf', 'label')
+);
+
+INSERT INTO sip.setting (setting_group, name, value, description)
+VALUES (
+    1, 'currency', '"USD"',
+    oils_i18n_gettext(
+        1,
+        'Monetary amounts are reported in this currency',
+        'sipset', 'description')
+), (
+    1, 'av_format', '"eg_legacy"',
+    oils_i18n_gettext(
+        2,
+        'AV Format. Options: eg_legacy, 3m, swyer_a, swyer_b',
+        'sipset', 'description')
+), (
+    1, 'due_date_use_sip_date_format', 'false',
+    oils_i18n_gettext(
+        3,
+        'Due date uses 18-char date format (YYYYMMDDZZZZHHMMSS).  Otherwise "YYYY-MM-DD HH:MM:SS',
+        'sipset', 'description')
+), (
+    1, 'patron_status_permit_loans', 'false',
+    oils_i18n_gettext(
+        4,
+        'Checkout and renewal are allowed even when penalties blocking these actions exist',
+        'sipset', 'description')
+), (
+    1, 'patron_status_permit_all', 'false',
+    oils_i18n_gettext(
+        5,
+        'Holds, checkouts, and renewals allowed regardless of blocking penalties',
+        'sipset', 'description')
+), (
+    1, 'default_activity_who', 'null',
+    oils_i18n_gettext(
+        6,
+        'Patron holds data may be returned as either "title" or "barcode"',
+        'sipset', 'description')
+), (
+    1, 'msg64_summary_datatype', '"title"',
+    oils_i18n_gettext(
+        7,
+        'Patron circulation data may be returned as either "title" or "barcode"',
+        'sipset', 'description')
+), (
+    1, 'msg64_hold_datatype', '"title"',
+    oils_i18n_gettext(
+        8,
+        'Patron holds data may be returned as either "title" or "barcode"',
+        'sipset', 'description')
+), (
+    1, 'msg64_hold_items_available', 'false',
+    oils_i18n_gettext(
+        9,
+        'Only return information on available holds',
+        'sipset', 'description')
+), (
+    1, 'checkout.override.COPY_ALERT_MESSAGE', 'true',
+    oils_i18n_gettext(
+        10,
+        'Checkout override copy alert message',
+        'sipset', 'description')
+), (
+    1, 'checkout.override.COPY_NOT_AVAILABLE', 'true',
+    oils_i18n_gettext(
+        11,
+        'Checkout override copy not available message',
+        'sipset', 'description')
+), (
+    1, 'checkin.override.COPY_ALERT_MESSAGE', 'true',
+    oils_i18n_gettext(
+        12,
+        'Checkin override copy alert message',
+        'sipset', 'description')
+), (
+    1, 'checkin.override.COPY_BAD_STATUS', 'true',
+    oils_i18n_gettext(
+        13,
+        'Checkin override bad copy status',
+        'sipset', 'description')
+), (
+    1, 'checkin.override.COPY_STATUS_MISSING', 'true',
+    oils_i18n_gettext(
+        14,
+        'Checkin override copy status missing',
+        'sipset', 'description')
+), (
+    1, 'checkin_hold_as_transit', 'false',
+    oils_i18n_gettext(
+        15,
+        'Checkin local holds as transits',
+        'sipset', 'description')
+), (
+    1, 'support_acs_resend_messages', 'false',
+    oils_i18n_gettext(
+        16,
+        'Support ACS Resend Messages (code 97)',
+        'sipset', 'description')
+);
+SELECT setval( 'sip.setting_id_seq', 1000 );
+
+INSERT INTO sip.screen_message (key, message) VALUES (
+    'checkout.open_circ_exists', 
+    oils_i18n_gettext(
+        'checkout.open_circ_exists',
+        'This item is already checked out',
+        'sipsm', 'message')
+), (
+    'checkout.patron_not_allowed', 
+    oils_i18n_gettext(
+        'checkout.patron_not_allowed',
+        'Patron is not allowed to checkout the selected item',
+        'sipsm', 'message')
+), (
+    'payment.overpayment_not_allowed',
+    oils_i18n_gettext(
+        'payment.overpayment_not_allowed',
+        'Overpayment not allowed',
+        'sipsm', 'message')
+), (
+    'payment.transaction_not_found',
+    oils_i18n_gettext(
+        'payment.transaction_not_found',
+        'Bill not found',
+        'sipsm', 'message')
+);
+
+INSERT INTO config.usr_setting_type (name,grp,opac_visible,label,description,datatype) VALUES (
+    'ui.show_search_highlight',
+    'gui',
+    TRUE,
+    oils_i18n_gettext(
+        'ui.show_search_highlight',
+        'Search Highlight',
+        'cust',
+        'label'
+    ),
+    oils_i18n_gettext(
+        'ui.show_search_highlight',
+        'A toggle deciding whether to highlight strings in a keyword search result matching the searched term(s)',
+        'cust',
+        'description'
+    ),
+    'bool'
+);
+
+INSERT INTO config.workstation_setting_type (name, grp, datatype, label)
+VALUES (
+    'eg.search.sort_order', 'gui', 'string',
+    oils_i18n_gettext(
+        'eg.search.sort_order',
+        'Default sort order upon first opening a catalog search',
+        'cwst', 'label'
+    )
+), 
+(
+    'eg.search.available_only', 'gui', 'bool',
+    oils_i18n_gettext(
+        'eg.search.available_only',
+        'Whether to search for only bibs with available items upon first opening a catalog search',
+        'cwst', 'label'
+    )
+),
+(
+    'eg.search.group_formats', 'gui', 'bool',
+    oils_i18n_gettext(
+        'eg.search.group_formats',
+        'Whether to group formats/editions upon first opening a catalog search',
+        'cwst', 'label'
+    )
+);
+
+INSERT into config.workstation_setting_type (name, grp, datatype, label)
+VALUES (
+    'eg.grid.admin.acq.distribution_formula', 'gui', 'object',
+    oils_i18n_gettext(
+        'eg.grid.admin.acq.distribution_formula',
+        'Grid Config: admin.acq.distribution_formula',
+        'cwst', 'label'
+    )
+);
+
+INSERT into config.org_unit_setting_type
+    (name, grp, label, description, datatype)
+VALUES (
+    'ui.toast_duration',
+    'gui',
+    oils_i18n_gettext('ui.toast_duration',
+        'Staff Client toast alert duration (seconds)',
+        'coust', 'label'),
+    oils_i18n_gettext('ui.toast_duration',
+        'The number of seconds a toast alert should remain visible if not manually dismissed. Default is 10.',
+        'coust', 'description'),
+    'integer'
+);
+
+INSERT INTO action.hold_request_reset_reason (id, name, manual) VALUES
+(1,'HOLD_TIMED_OUT',false),
+(2,'HOLD_MANUAL_RESET',true),
+(3,'HOLD_BETTER_HOLD',false),
+(4,'HOLD_FROZEN',true),
+(5,'HOLD_UNFROZEN',true),
+(6,'HOLD_CANCELED',true),
+(7,'HOLD_UNCANCELED',true),
+(8,'HOLD_UPDATED',true),
+(9,'HOLD_CHECKED_OUT',true),
+(10,'HOLD_CHECKED_IN',true);
+
+INSERT into config.workstation_setting_type (name, grp, datatype, label)
+VALUES (
+    'eg.grid.catalog.record.conjoined', 'gui', 'object',
+    oils_i18n_gettext(
+        'eg.grid.catalog.record.conjoined',
+        'Grid Config: catalog.record.conjoined',
+        'cwst', 'label'
+    )
+);
+
+INSERT INTO config.mfa_factor (name, label, description) VALUES
+  ('webauthn', 'Web Authentication API', 'Uses external Public Key credentials to confirm authentication'),
+  ('totp', 'Time-based One-Time Password', 'For use with TOTP applications such as Google Authenticator'),
+  ('email', 'One-Time Password by Email', 'Uses a dedicated MFA email address to confirm authentication'),
+  ('sms', 'One-Time Password by SMS', 'Uses a dedicated MFA phone number and carrier to confirm authentication'),
+  ('static', 'Pre-generated backup passwords', 'Confirms authentication via pre-shared One-Time passwords')
+;
+
+INSERT INTO config.org_unit_setting_type ( name, label, description, datatype, grp, update_perm )
+    VALUES (
+        'auth.mfa_expire_interval',
+        oils_i18n_gettext(
+            'auth.mfa_expire_interval',
+            'Security: MFA recheck interval',
+            'coust',
+            'label'
+        ),
+        oils_i18n_gettext(
+            'auth.mfa_expire_interval',
+            'How long before MFA verification is required again, when MFA is required for a user.',
+            'coust',
+            'description'
+        ),
+        'interval',
+        'sec',
+        658 -- XXX Update this with the ADMIN_MFA permission id if that changes at commit time!!!
+    );
+
+INSERT into action_trigger.hook (key, core_type, description) VALUES
+( 'mfa.send_email', 'au', 'User has requested a One-Time MFA code by email'),
+( 'mfa.send_sms', 'au', 'User has requested a One-Time MFA code by SMS');
+
+INSERT INTO action_trigger.event_definition (active, owner, name, hook, validator, reactor, delay, template)
+VALUES (
+    't', 1, 'Send One-Time Password Email', 'mfa.send_email', 'NOOP_True', 'SendEmail', '00:00:00',
+$$
+[%- USE date -%]
+[%- user = target -%]
+[%- lib = target.home_ou -%]
+To: [%- user_data.email %]
+From: [%- helpers.get_org_setting(target.home_ou.id, 'org.bounced_emails') || lib.email || params.sender_email || default_sender %]
+Date: [%- date.format(date.now, '%a, %d %b %Y %T -0000', gmt => 1) %]
+Reply-To: [%- lib.email || params.sender_email || default_sender %]
+Subject: Your Library One-Time access code
+Auto-Submitted: auto-generated
+
+Dear [% user.first_given_name %] [% user.family_name %],
+
+We will never call to ask you for this code, and make sure you do not share it with anyone calling you directly.
+
+Use this code to continue logging in to your Evergreen account:
+
+One-Time code: [% user_data.otp_code %]
+
+Sincerely,
+[% user_data.issuer %] - [% lib.name %]
+
+Contact your library for more information:
+
+[% lib.name %]
+[%- SET addr = lib.mailing_address -%]
+[%- IF !addr -%] [%- SET addr = lib.billing_address -%] [%- END %]
+[% addr.street1 %] [% addr.street2 %]
+[% addr.city %], [% addr.state %]
+[% addr.post_code %]
+[% lib.phone %]
+$$);
+
+INSERT INTO action_trigger.environment (event_def, path)
+VALUES (currval('action_trigger.event_definition_id_seq'), 'home_ou'),
+       (currval('action_trigger.event_definition_id_seq'), 'home_ou.mailing_address'),
+       (currval('action_trigger.event_definition_id_seq'), 'home_ou.billing_address');
+
+INSERT INTO action_trigger.event_definition (active, owner, name, hook, validator, reactor, delay, template)
+VALUES (
+    't', 1, 'Send One-Time Password SMS', 'mfa.send_sms', 'NOOP_True', 'SendSMS', '00:00:00',
+$$
+[%- USE date -%]
+[%- user = target -%]
+[%- lib = user.home_ou -%]
+From: [%- helpers.get_org_setting(target.home_ou.id, 'org.bounced_emails') || lib.email || params.sender_email || default_sender %]
+To: [%- helpers.get_sms_gateway_email(user_data.carrier,user_data.phone) %]
+Subject: One-Time code
+
+Your [% user_data.issuer %] code is: [%user_data.otp_code %] $$);
+
+INSERT INTO action_trigger.environment (event_def, path)
+VALUES (currval('action_trigger.event_definition_id_seq'), 'home_ou');
+
+
+INSERT INTO config.usr_activity_type (id, ewhat, egroup, label)
+VALUES (31, 'confirm', 'mfa', oils_i18n_gettext(31, 'Generic MFA authentication confirmation', 'cuat', 'label'));
+
+----- Flags used to control OTP calculations -----
+INSERT INTO config.global_flag (name, label, value, enabled) VALUES
+    ('webauthn.mfa.issuer', 'WebAuthn Relying Party name for multi-factor authentication', 'Evergreen WebAuthn', TRUE),
+    ('webauthn.mfa.domain', 'WebAuthn Relying Party domain (optional base domain) for multi-factor authentication', '', TRUE),
+    ('webauthn.mfa.digits', 'WebAuthn challenge size (bytes)', '16', TRUE),
+    ('webauthn.mfa.period', 'WebAuthn challenge timeout (seconds)', '60', TRUE), -- 1 minute for WebAuthn
+    ('webauthn.mfa.multicred', 'If Enabled, allows a user to register multiple multi-factor login WebAuthn verification devices', NULL, TRUE),
+    ('webauthn.login.issuer', 'WebAuthn Relying Party name for single-factor login', 'Evergreen WebAuthn', TRUE),
+    ('webauthn.login.domain', 'WebAuthn Relying Party domain (optional base domain) for single-factor login', '', TRUE),
+    ('webauthn.login.digits', 'WebAuthn single-factor login challenge size (bytes)', '16', TRUE),
+    ('webauthn.login.period', 'WebAuthn single-factor login challenge timeout (seconds)', '60', TRUE),
+    ('webauthn.login.multicred', 'If Enabled, allows a user to register multiple single-factor login WebAuthn verification devices', NULL, TRUE),
+    ('totp.mfa.issuer', 'TOTP Issuer string for multi-factor authentication', 'Evergreen-MFA', TRUE),
+    ('totp.mfa.digits', 'TOTP code length (Google Authenticator supports only 6)', '6', TRUE),
+    ('totp.mfa.algorithm', 'TOTP code generation algorithm (Google Authenticator supports only SHA1)', 'SHA1', TRUE),
+    ('totp.mfa.period', 'TOTP code validity period in seconds  (Google Authenticator supports only 30)', '30', TRUE), -- 30 seconds for totp, but remember, fuzziness!
+    ('totp.login.issuer', 'TOTP Issuer string for single-factor login', 'Evergreen-Login', TRUE),
+    ('totp.login.digits', 'TOTP code length (Google Authenticator supports only 6)', '6', TRUE),
+    ('totp.login.algorithm', 'TOTP code generation algorithm (Google Authenticator supports only SHA1)', 'SHA1', TRUE),
+    ('totp.login.period', 'TOTP code validity period in seconds  (Google Authenticator supports only 30)', '30', TRUE),
+    ('email.mfa.issuer', 'Email Issuer string for multi-factor authentication', 'Evergreen-MFA', TRUE),
+    ('email.mfa.digits', 'Email One-Time code length for multi-factor authentication; max: 8', '6', TRUE),
+    ('email.mfa.algorithm', 'Email One-Time code algorithm for multi-factor authentication: SHA1, SHA256, SHA512', 'SHA1', TRUE),
+    ('email.mfa.period', 'Email One-Time validity period for multi-factor authentication in seconds (default: 30 minutes)', '1800', TRUE), -- 30 minutes for email
+    ('email.login.issuer', 'Email Issuer string for single-factor login', 'Evergreen-Login', TRUE),
+    ('email.login.digits', 'Email One-Time code length for single-factor login; max: 8', '6', TRUE),
+    ('email.login.algorithm', 'Email One-Time code algorithm for single-factor login: SHA1, SHA256, SHA512', 'SHA1', TRUE),
+    ('email.login.period', 'Email One-Time validity period for single-factor login in seconds (default: 30 minutes)', '1800', TRUE),
+    ('sms.mfa.issuer', 'SMS Issuer string for multi-factor authentication', 'Evergreen-MFA', TRUE),
+    ('sms.mfa.digits', 'SMS One-Time code length for multi-factor authentication; max: 8', '6', TRUE),
+    ('sms.mfa.algorithm', 'SMS One-Time code algorithm for multi-factor authentication: SHA1, SHA256, SHA512', 'SHA1', TRUE),
+    ('sms.mfa.period', 'SMS One-Time validity period for multi-factor authentication in seconds (default: 15 minutes)', '900', TRUE), -- 15 minutes for SMS
+    ('sms.login.issuer', 'SMS Issuer string for single-factor login', 'Evergreen-Login', TRUE),
+    ('sms.login.digits', 'SMS One-Time code length for single-factor login; max: 8', '6', TRUE),
+    ('sms.login.algorithm', 'SMS One-Time code algorithm for single-factor login: SHA1, SHA256, SHA512', 'SHA1', TRUE),
+    ('sms.login.period', 'SMS One-Time validity period for single-factor login in seconds (default: 15 minutes)', '900', TRUE)
+;
+
+INSERT INTO actor.passwd_type (code, name) VALUES
+    ('email-mfa', 'Time-base One-Time Password Secret for multi-factor authentication via EMail'),
+    ('email-login', 'Time-base One-Time Password Secret for single-factor login via EMail'),
+    ('sms-mfa', 'Time-base One-Time Password Secret for multi-factor authentication via SMS'),
+    ('sms-login', 'Time-base One-Time Password Secret for single-factor login via SMS'),
+    ('totp-mfa', 'Time-base One-Time Password Secret for multi-factor authentication'),
+    ('totp-login', 'Time-base One-Time Password Secret for single-factor login'),
+    ('webauthn-mfa', 'WebAuthn data for multi-factor authentication'),
+    ('webauthn-login', 'WebAuthn data for single-factor login')
+;
+
+INSERT INTO config.print_template 
+    (name, label, owner, active, locale, content_type, template)
+VALUES ('scko_items_out', 'Self-Checkout Items Out', 1, TRUE, 'en-US', 'text/html', '');
+
+UPDATE config.print_template SET template = $TEMPLATE$
+[%- 
+    USE date;
+    SET user = template_data.user;
+    SET checkouts = template_data.checkouts;
+-%]
+<div>
+  <style> li { padding: 8px; margin 5px; }</style>
+  <div>[% date.format(date.now, '%x %r') %]</div>
+  <br/>
+
+  [% user.pref_family_name || user.family_name %], 
+  [% user.pref_first_given_name || user.first_given_name %]
+
+  <ol>
+  [% FOR checkout IN checkouts %]
+    <li>
+      <div>[% checkout.title %]</div>
+      <div>Barcode: [% checkout.copy.barcode %]</div>
+      <div>Due Date: [% 
+        date.format(helpers.format_date(
+            checkout.circ.due_date, staff_org_timezone), '%x %r') 
+      %]
+      </div>
+    </li>
+  [% END %]
+  </ol>
+</div>
+$TEMPLATE$ WHERE name = 'scko_items_out';
+
+INSERT INTO config.print_template 
+    (name, label, owner, active, locale, content_type, template)
+VALUES ('scko_holds', 'Self-Checkout Holds', 1, TRUE, 'en-US', 'text/html', '');
+
+UPDATE config.print_template SET template = $TEMPLATE$
+[%- 
+    USE date;
+    SET user = template_data.user;
+    SET holds = template_data.holds;
+-%]
+<div>
+  <style> li { padding: 8px; margin 5px; }</style>
+  <div>[% date.format(date.now, '%x %r') %]</div>
+  <br/>
+
+  [% user.pref_family_name || user.family_name %], 
+  [% user.pref_first_given_name || user.first_given_name %]
+
+  <ol>
+  [% FOR hold IN holds %]
+    <li>
+      <table>
+        <tr>
+          <td>Title:</td>
+          <td>[% hold.title %]</td>
+        </tr>
+        <tr>
+          <td>Author:</td>
+          <td>[% hold.author %]</td>
+        </tr>
+        <tr>
+          <td>Pickup Location:</td>
+          <td>[% helpers.get_org_unit(hold.pickup_lib).name %]</td>
+        </tr>
+        <tr>
+          <td>Status:</td>
+          <td>
+            [%- IF hold.ready -%]
+                Ready for pickup
+            [% ELSE %]
+                #[% hold.relative_queue_position %] of [% hold.potentials %] copies.
+            [% END %]
+          </td>
+        </tr>
+      </table>
+    </li>
+  [% END %]
+  </ol>
+</div>
+$TEMPLATE$ WHERE name = 'scko_holds';
+
+INSERT INTO config.print_template 
+    (name, label, owner, active, locale, content_type, template)
+VALUES ('scko_fines', 'Self-Checkout Fines', 1, TRUE, 'en-US', 'text/html', '');
+
+UPDATE config.print_template SET template = $TEMPLATE$
+[%- 
+    USE date;
+    USE money = format('$%.2f');
+    SET user = template_data.user;
+    SET xacts = template_data.xacts;
+-%]
+<div>
+  <style> li { padding: 8px; margin 5px; }</style>
+  <div>[% date.format(date.now, '%x %r') %]</div>
+  <br/>
+
+  [% user.pref_family_name || user.family_name %], 
+  [% user.pref_first_given_name || user.first_given_name %]
+
+  <ol>
+  [% FOR xact IN xacts %]
+    [% NEXT IF xact.balance_owed <= 0 %]
+    <li>
+      <table>
+        <tr>
+          <td>Details:</td>
+          <td>[% xact.details %]</td>
+        </tr>
+        <tr>
+          <td>Total Billed:</td>
+          <td>[% money(xact.total_owed) %]</td>
+        </tr>
+        <tr>
+          <td>Total Paid:</td>
+          <td>[% money(xact.total_paid) %]</td>
+        </tr>
+        <tr>
+          <td>Balance Owed:</td>
+          <td>[% money(xact.balance_owed) %]</td>
+        </tr>
+      </table>
+    </li>
+  [% END %]
+  </ol>
+</div>
+$TEMPLATE$ WHERE name = 'scko_fines';
+
+INSERT INTO config.print_template 
+    (name, label, owner, active, locale, content_type, template)
+VALUES ('scko_checkouts', 'Self-Checkout Checkouts', 1, TRUE, 'en-US', 'text/html', '');
+
+UPDATE config.print_template SET template = $TEMPLATE$
+[%- 
+    USE date;
+    SET user = template_data.user;
+    SET checkouts = template_data.checkouts;
+    SET lib = staff_org;
+    SET hours = lib.hours_of_operation;
+    SET lib_addr = staff_org.billing_address || staff_org.mailing_address;
+-%]
+<div>
+  <style> li { padding: 8px; margin 5px; }</style>
+  <div>[% date.format(date.now, '%x %r') %]</div>
+  <div>[% lib.name %]</div>
+  <div>[% lib_addr.street1 %] [% lib_addr.street2 %]</div>
+  <div>[% lib_addr.city %], [% lib_addr.state %] [% lib_addr.post_code %]</div>
+  <div>[% lib.phone %]</div>
+  <br/>
+
+  [% user.pref_family_name || user.family_name %], 
+  [% user.pref_first_given_name || user.first_given_name %]
+
+  <ol>
+  [% FOR checkout IN checkouts %]
+    <li>
+      <div>[% checkout.title %]</div>
+      <div>Barcode: [% checkout.barcode %]</div>
+
+      [% IF checkout.ctx.renewalFailure %]
+      <div style="color:red;">Renewal Failed</div>
+      [% END %]
+
+      <div>Due Date: [% date.format(helpers.format_date(
+        checkout.circ.due_date, staff_org_timezone), '%x') %]</div>
+    </li>
+  [% END %]
+  </ol>
+
+  <div>
+    Library Hours
+    [%- 
+        BLOCK format_time;
+          IF time;
+            date.format(time _ ' 1/1/1000', format='%I:%M %p');
+          END;
+        END
+    -%]
+    <div>
+      Monday 
+      [% PROCESS format_time time = hours.dow_0_open %] 
+      [% PROCESS format_time time = hours.dow_0_close %] 
+    </div>
+    <div>
+      Tuesday 
+      [% PROCESS format_time time = hours.dow_1_open %] 
+      [% PROCESS format_time time = hours.dow_1_close %] 
+    </div>
+    <div>
+      Wednesday 
+      [% PROCESS format_time time = hours.dow_2_open %] 
+      [% PROCESS format_time time = hours.dow_2_close %] 
+    </div>
+    <div>
+      Thursday
+      [% PROCESS format_time time = hours.dow_3_open %] 
+      [% PROCESS format_time time = hours.dow_3_close %] 
+    </div>
+    <div>
+      Friday
+      [% PROCESS format_time time = hours.dow_4_open %] 
+      [% PROCESS format_time time = hours.dow_4_close %] 
+    </div>
+    <div>
+      Saturday
+      [% PROCESS format_time time = hours.dow_5_open %] 
+      [% PROCESS format_time time = hours.dow_5_close %] 
+    </div>
+    <div>
+      Sunday 
+      [% PROCESS format_time time = hours.dow_6_open %] 
+      [% PROCESS format_time time = hours.dow_6_close %] 
+    </div>
+  </div>
+
+</div>
+$TEMPLATE$ WHERE name = 'scko_checkouts';
+
+INSERT INTO config.org_unit_setting_type
+    (grp, name, datatype, label, description)
+VALUES (
+    'holds',
+    'circ.holds.adjacent_target_while_stalling', 'bool',
+    oils_i18n_gettext(
+        'circ.holds.adjacent_target_while_stalling',
+        'Allow adjacent copies to capture when Soft Stalling',
+        'coust',
+        'label'
+    ),
+    oils_i18n_gettext(
+        'circ.holds.adjacent_target_while_stalling',
+        'Allow adjacent copies at the targeted library to capture when Soft Stalling interval is set',
+        'coust',
+        'description'
+    )
+);
+
+INSERT into config.workstation_setting_type (name, grp, datatype, label)
+VALUES (
+    'eg.grid.catalog.record_buckets', 'gui', 'object',
+    oils_i18n_gettext(
+        'eg.grid.catalog.record_buckets',
+        'Grid Config: catalog.record_buckets',
+        'cwst', 'label'
+    )
+), (
+    'eg.grid.catalog.record_bucket.content', 'gui', 'object',
+    oils_i18n_gettext(
+        'eg.grid.catalog.record_bucket.content',
+        'Grid Config: catalog.record_bucket.content',
+        'cwst', 'label'
+    )
+), (
+    'eg.grid.filters.catalog.record_buckets', 'gui', 'object',
+    oils_i18n_gettext(
+        'eg.grid.filters.catalog.record_buckets',
+        'Grid Filters: catalog.record_buckets',
+        'cwst', 'label'
+    )
+), (
+    'eg.grid.filters.catalog.record_bucket.content', 'gui', 'object',
+    oils_i18n_gettext(
+        'eg.grid.filters.catalog.record_bucket.content',
+        'Grid Filters: catalog.record_bucket.content',
+        'cwst', 'label'
+    )
+), (
+    'eg.grid.buckets.user_shares', 'gui', 'object',
+    oils_i18n_gettext(
+        'eg.grid.buckets.user_shares',
+        'Grid Config: eg.grid.buckets.user_shares',
+        'cwst', 'label'
+    )
+);
+
+INSERT into config.workstation_setting_type
+    (name, grp, label, description, datatype)
+VALUES (
+    'eg.staff.catalog.results.show_sidebar',
+    'gui',
+    oils_i18n_gettext('eg.staff.catalog.results.show_sidebar',
+        'Staff catalog: show sidebar',
+        'coust', 'label'),
+    oils_i18n_gettext('eg.staff.catalog.results.show_sidebar',
+        'Show the sidebar in staff catalog search results. Default is true.',
+        'coust', 'description'),
+    'bool'
 );
 

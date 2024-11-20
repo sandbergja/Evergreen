@@ -1,8 +1,11 @@
+/* eslint-disable no-shadow, no-var */
 import {Injectable} from '@angular/core';
 import {Observable, Observer} from 'rxjs';
+import {map, reduce} from 'rxjs/operators';
 import {IdlService, IdlObject} from './idl.service';
 import {NetService, NetRequest} from './net.service';
 import {AuthService} from './auth.service';
+import {StoreService} from './store.service';
 
 // Externally defined.  Used here for debugging.
 declare var js2JSON: (jsThing: any) => string;
@@ -104,43 +107,43 @@ export class PcrudContext {
         }
 
         this.idl.classes[fmClass].fields
-        .filter(f =>
-            f.datatype === 'link' && (
-                f.reltype === 'has_a' || f.reltype === 'might_have'
-            )
-        ).forEach(field => {
+            .filter(f =>
+                f.datatype === 'link' && (
+                    f.reltype === 'has_a' || f.reltype === 'might_have'
+                )
+            ).forEach(field => {
 
-            const selector = this.idl.getLinkSelector(fmClass, field.name);
-            if (!selector) { return; }
+                const selector = this.idl.getLinkSelector(fmClass, field.name);
+                if (!selector) { return; }
 
-            if (field.map) {
+                if (field.map) {
                 // For mapped fields, we only want to auto-flesh them
                 // if both steps along the path are single-row fleshers.
 
-                const mapClass = field['class'];
-                const mapField = field.map;
-                const def = this.idl.classes[mapClass].field_map[mapField];
+                    const mapClass = field['class'];
+                    const mapField = field.map;
+                    const def = this.idl.classes[mapClass].field_map[mapField];
 
-                if (!(def.reltype === 'has_a' ||
+                    if (!(def.reltype === 'has_a' ||
                       def.reltype === 'might_have')) {
                     // Field maps to a remote field which may contain
                     // multiple rows.  Skip it.
-                    return;
+                        return;
+                    }
                 }
-            }
 
-            if (!pcrudOps.flesh_fields[fmClass]) {
-                pcrudOps.flesh_fields[fmClass] = [];
-            }
+                if (!pcrudOps.flesh_fields[fmClass]) {
+                    pcrudOps.flesh_fields[fmClass] = [];
+                }
 
-            if (pcrudOps.flesh_fields[fmClass].indexOf(field.name) < 0) {
-                pcrudOps.flesh_fields[fmClass].push(field.name);
-            }
-        });
+                if (pcrudOps.flesh_fields[fmClass].indexOf(field.name) < 0) {
+                    pcrudOps.flesh_fields[fmClass].push(field.name);
+                }
+            });
     }
 
     retrieve(fmClass: string, pkey: Number | string,
-            pcrudOps?: any, reqOps?: PcrudReqOps): Observable<PcrudResponse> {
+        pcrudOps?: any, reqOps?: PcrudReqOps): Observable<PcrudResponse> {
         reqOps = reqOps || {};
         this.authoritative = reqOps.authoritative || false;
         if (reqOps.fleshSelectors) {
@@ -148,18 +151,18 @@ export class PcrudContext {
         }
         return this.dispatch(
             `open-ils.pcrud.retrieve.${fmClass}`,
-             [this.token(reqOps), pkey, pcrudOps]);
+            [this.token(reqOps), pkey, pcrudOps]);
     }
 
     retrieveAll(fmClass: string, pcrudOps?: any,
-            reqOps?: PcrudReqOps): Observable<PcrudResponse> {
+        reqOps?: PcrudReqOps): Observable<PcrudResponse> {
         const search = {};
         search[this.idl.classes[fmClass].pkey] = {'!=' : null};
         return this.search(fmClass, search, pcrudOps, reqOps);
     }
 
     search(fmClass: string, search: any,
-            pcrudOps?: any, reqOps?: PcrudReqOps): Observable<PcrudResponse> {
+        pcrudOps?: any, reqOps?: PcrudReqOps): Observable<PcrudResponse> {
         reqOps = reqOps || {};
         this.authoritative = reqOps.authoritative || false;
 
@@ -202,7 +205,7 @@ export class PcrudContext {
     }
 
     private dispatch(method: string, params: any[]): Observable<PcrudResponse> {
-        if (this.authoritative) {
+        if (this.authoritative && PcrudService.useAuthoritative) {
             return this.wrapXact(() => {
                 return this.sendRequest(method, params);
             });
@@ -218,39 +221,39 @@ export class PcrudContext {
     // => xact_close(commit/rollback)
     // => disconnect
     wrapXact(mainFunc: () => Observable<PcrudResponse>): Observable<PcrudResponse> {
-        return Observable.create(observer => {
+        return new Observable(observer => {
 
             // 1. connect
             this.connect()
 
             // 2. start the transaction
-            .then(() => this.xactBegin().toPromise())
+                .then(() => this.xactBegin().toPromise())
 
             // 3. execute the main body
-            .then(() => {
+                .then(() => {
 
-                mainFunc().subscribe(
-                    res => observer.next(res),
-                    err => observer.error(err),
-                    ()  => {
-                        this.xactClose().toPromise().then(
-                            ok => {
+                    mainFunc().subscribe(
+                        res => observer.next(res),
+                        (err: unknown) => observer.error(err),
+                        ()  => {
+                            this.xactClose().toPromise().then(
+                                ok => {
                                 // 5. disconnect
-                                this.disconnect();
-                                // 6. all done
-                                observer.complete();
-                            },
-                            // xact close error
-                            err => observer.error(err)
-                        );
-                    }
-                );
-            });
+                                    this.disconnect();
+                                    // 6. all done
+                                    observer.complete();
+                                },
+                                // xact close error
+                                err => observer.error(err)
+                            );
+                        }
+                    );
+                });
         });
     }
 
     private sendRequest(method: string,
-            params: any[]): Observable<PcrudResponse> {
+        params: any[]): Observable<PcrudResponse> {
 
         // this.log(`sendRequest(${method})`);
 
@@ -271,7 +274,7 @@ export class PcrudContext {
         this.xactCloseMode = 'commit';
 
         return this.wrapXact(() => {
-            return Observable.create(observer => {
+            return new Observable(observer => {
                 this.cudObserver = observer;
                 this.nextCudRequest();
             });
@@ -308,7 +311,7 @@ export class PcrudContext {
             [this.token(), fmObj]
         ).subscribe(
             res => this.cudObserver.next(res),
-            err => this.cudObserver.error(err),
+            (err: unknown) => this.cudObserver.error(err),
             ()  => this.nextCudRequest()
         );
     }
@@ -316,9 +319,11 @@ export class PcrudContext {
 
 @Injectable({providedIn: 'root'})
 export class PcrudService {
+    static useAuthoritative = true;
 
     constructor(
         private idl: IdlService,
+        private store: StoreService,
         private net: NetService,
         private auth: AuthService
     ) {}
@@ -362,6 +367,60 @@ export class PcrudService {
 
     autoApply(list: IdlObject | IdlObject[]): Observable<PcrudResponse> {
         return this.newContext().autoApply(list);
+    }
+
+    setAuthoritative(): void {
+        const key = 'eg.sys.use_authoritative';
+
+        // Track the value as clearable on login/logout.
+        this.store.addLoginSessionKey(key);
+
+        const enabled = this.store.getLoginSessionItem(key);
+
+        if (typeof enabled === 'boolean') {
+            PcrudService.useAuthoritative = enabled;
+        } else {
+            this.net.request(
+                'open-ils.actor',
+                'opensrf.open-ils.system.use_authoritative'
+            ).subscribe({
+                next: enabled => {
+                    enabled = Boolean(Number(enabled));
+                    PcrudService.useAuthoritative = enabled;
+                    this.store.setLoginSessionItem(key, enabled);
+                    console.debug('authoriative check function returned a value of ', enabled);
+                    return enabled;
+                },
+                // eslint-disable-next-line rxjs/no-implicit-any-catch
+                error: err => {
+                    PcrudService.useAuthoritative = true;
+                    this.store.setLoginSessionItem(key, true);
+                    console.debug('authoriative check function failed somehow, assuming TRUE');
+                },
+                complete: () => console.debug('authoriative check function complete')
+            });
+        }
+    }
+
+    /* translateFlatSortSimple(sort: any[]): any {
+        if (!sort || sort.length === 0) return null;
+
+        return sort.reduce((acc, s) => {
+            acc[s.name] = s.dir.toLowerCase();
+            return acc;
+        }, {});
+    }*/
+
+    translateFlatSortComplex(hint: string, sort: any[]): any {
+        if (!sort || sort.length === 0) {return null;}
+
+        return {
+            order_by: sort.map(s => ({
+                class: hint,
+                field: s.name,
+                direction: s.dir.toUpperCase()
+            }))
+        };
     }
 }
 

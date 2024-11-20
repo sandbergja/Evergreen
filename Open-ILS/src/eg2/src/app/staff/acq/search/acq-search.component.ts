@@ -1,11 +1,8 @@
-import {Component, OnInit, AfterViewInit, ViewChild, ViewChildren, QueryList, OnDestroy} from '@angular/core';
+import {Component, OnInit, ViewChild, ViewChildren, QueryList, OnDestroy} from '@angular/core';
 import {NgbNav, NgbNavChangeEvent} from '@ng-bootstrap/ng-bootstrap';
 import {Router, ActivatedRoute, ParamMap, RouterEvent, NavigationEnd} from '@angular/router';
 import {filter, takeUntil} from 'rxjs/operators';
 import {Subject} from 'rxjs';
-import {StaffCommonModule} from '@eg/staff/common.module';
-import {IdlService, IdlObject} from '@eg/core/idl.service';
-import {PcrudService} from '@eg/core/pcrud.service';
 import {AcqSearchTerm} from './acq-search.service';
 import {LineitemResultsComponent} from './lineitem-results.component';
 import {PurchaseOrderResultsComponent} from './purchase-order-results.component';
@@ -13,10 +10,10 @@ import {InvoiceResultsComponent} from './invoice-results.component';
 import {PicklistResultsComponent} from './picklist-results.component';
 
 @Component({
-  templateUrl: './acq-search.component.html'
+    templateUrl: './acq-search.component.html'
 })
 
-export class AcqSearchComponent implements OnInit, AfterViewInit, OnDestroy {
+export class AcqSearchComponent implements OnInit, OnDestroy {
 
     searchType = '';
     validSearchTypes = ['lineitems', 'purchaseorders', 'invoices', 'selectionlists'];
@@ -37,8 +34,6 @@ export class AcqSearchComponent implements OnInit, AfterViewInit, OnDestroy {
     constructor(
         private router: Router,
         private route: ActivatedRoute,
-        private pcrud: PcrudService,
-        private idl: IdlService,
     ) {
         this.route.queryParamMap.subscribe((params: ParamMap) => {
             this.urlSearchTerms = [];
@@ -79,10 +74,13 @@ export class AcqSearchComponent implements OnInit, AfterViewInit, OnDestroy {
             if (routeEvent instanceof NavigationEnd) {
                 // force reset of grid data source if we're navigating from
                 // a search tab to the same search tab
+                // eslint-disable-next-line eqeqeq
                 if (this.previousUrl != null) {
                     const prevRoute = this.previousUrl.match(/acq\/search\/([a-z]+)/);
                     const newRoute = routeEvent.url.match(/acq\/search\/([a-z]+)/);
+                    // eslint-disable-next-line eqeqeq
                     const prevTab = prevRoute  == null ? 'lineitems' : prevRoute[1];
+                    // eslint-disable-next-line eqeqeq
                     const newTab = newRoute  == null ? 'lineitems' : newRoute[1];
                     if (prevTab === newTab) {
                         switch (newTab) {
@@ -136,10 +134,8 @@ export class AcqSearchComponent implements OnInit, AfterViewInit, OnDestroy {
         };
     }
 
-    ngAfterViewInit() {}
-
     ngOnDestroy(): void {
-        this.destroyed.next();
+        this.destroyed.next(null);
         this.destroyed.complete();
     }
 

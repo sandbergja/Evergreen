@@ -23,9 +23,33 @@
 </script>
 [% END %]
 
-[% IF ctx.get_org_setting(ctx.search_ou, 'opac.patron.custom_jquery') %]
-[%     custom_jquery = ctx.get_org_setting(ctx.search_ou, 'opac.patron.custom_jquery') %]
-[%     '<script>'; custom_jquery ; '</script>' %]                                          
+<!-- Accessible session timeout -->
+[% # auth.opac_timeout is the number of seconds
+authtimeout = ctx.get_org_setting(ctx.physical_loc || ctx.aou_tree.id, 'auth.opac_timeout');
+IF authtimeout AND !ctx.is_staff %]
+<script>
+    function timeControl() {
+        // set timer for 3 minutes less than the limit, then ask user to confirm.
+        setTimeout(userCheck, ([% authtimeout %] * 1000) - (3 * 60 * 1000));
+        // console.debug("Timer set; ask in: ", ([% authtimeout %] * 1000) - (3 * 60 * 1000));
+    }
+    function userCheck() {
+        // set page refresh for 3 minutes
+        var id = setTimeout(authReload, (3 * 60 * 1000));
+        // If user selects "OK" the timer is reset 
+        // if the user selects 'cancel', nothing will happen until the original time limit;
+        // then they will be redirected to the home page
+        if (confirm( "[% l('You will be logged out in a few minutes. Would you like more time?') %]" )) {
+            clearTimeout(id);
+            timeControl();
+        }
+    }
+    function authReload() {
+        window.location = ("[% ctx.opac_root %]");
+    }
+    timeControl();
+    // console.debug("Timeout (seconds): ", ([% authtimeout %]));
+</script>
 [% END %]
 
 <!-- DOB validation for Patron Registration in OPAC -->
@@ -33,13 +57,37 @@
     function dobValidate(input) {
         var validformat = /^(19|20)\d\d([- /.])(0[1-9]|1[012])\2(0[1-9]|[12][0-9]|3[01])$/
         var returnval = false
-        if (!validformat.test(input.value))
+        if (input.value != '' && !validformat.test(input.value))
             alert("[% l('You have entered an invalid date, or an improperly formatted date.  Please enter Date of Birth in YYYY-MM-DD or YYYY/MM/DD format and try again.') %]")
         else
             returnval = true
         if (returnval == false) input.select()
         return returnval
 }
+</script>
+
+<!-- Password Visibility Checkbox -->
+<script>
+    // Show the checkbox if JS is enabled
+    document.getElementById('password_visibility').style.display = 'block';
+    let checkbox = document.getElementById('password_visibility_checkbox');
+    let input = document.getElementById('password_field');
+    checkbox.addEventListener('change', () => {
+        if(checkbox.checked){
+          input.type = 'text';
+          input.setAttribute('aria-description', "[% l('Your password is visible!') %]");
+        }
+        else {
+          input.type = 'password';
+          input.setAttribute('aria-description', "[% l('Your password is not visible.') %]");
+        }
+        input.focus();
+    });
+    // If the form is submitted revert the password field to a password input 
+    let form = document.getElementById('opac-login-form');
+    form.addEventListener('submit', () => {
+        input.type = 'password';
+    });
 </script>
 
 [%- IF ctx.use_stripe %]
@@ -122,23 +170,9 @@
 <script type="text/javascript" src="[% ctx.media_prefix %]/js/dojo/opensrf/JSON_v1.js?[% ctx.eg_cache_hash %]"></script>
 
 [% IF use_autosuggest.enabled == "t" AND basic_search != "f"; %]
-<script type="text/javascript">
-    dojo.require("openils.widget.AutoSuggest");
-
-    /* Set focus, and place the cursor at the end of the input string */
-    dojo.addOnLoad(function() {
-        /* Don't error out if the object doesn't exist, like on advanced search pages */
-        if (dojo.byId('search_box')) {
-            dijit.byId('search_box').focus();
-
-            var sb_value = dijit.byId('search_box').value;
-            /* Dojo won't trigger a change if the value doesn't change */
-            if (sb_value) {
-                dijit.byId('search_box').setValue(sb_value + ' ');
-                dijit.byId('search_box').setValue(sb_value);
-            }
-        }
-    });
+<script type="module">
+  import {ListBoxCombobox} from '[% ctx.media_prefix %]/js/ui/default/opac/autosuggest.module.js';
+  document.addEventListener('DOMContentLoaded', () => {new ListBoxCombobox('search_box').attach()}, {once: true})
 </script>
 [% END; # use_autosuggest %]
 

@@ -1,12 +1,13 @@
+/* eslint-disable */
 import {Component, OnInit, AfterViewInit, Renderer2} from '@angular/core';
-import {Router, ActivatedRoute, NavigationEnd} from '@angular/router';
+import {Router, ActivatedRoute} from '@angular/router';
 import {IdlObject} from '@eg/core/idl.service';
 import {OrgService} from '@eg/core/org.service';
 import {ServerStoreService} from '@eg/core/server-store.service';
 import {CatalogService} from '@eg/share/catalog/catalog.service';
 import {CatalogSearchContext, CatalogSearchState} from '@eg/share/catalog/search-context';
 import {StaffCatalogService} from './catalog.service';
-import {NgbTabset, NgbTabChangeEvent} from '@ng-bootstrap/ng-bootstrap';
+import {NgbNavChangeEvent} from '@ng-bootstrap/ng-bootstrap';
 
 // Maps opac-style default tab names to local tab names.
 const LEGACY_TAB_NAME_MAP = {
@@ -22,9 +23,9 @@ const COLLAPSE_ON_PAGES = [
 ];
 
 @Component({
-  selector: 'eg-catalog-search-form',
-  styleUrls: ['search-form.component.css'],
-  templateUrl: 'search-form.component.html'
+    selector: 'eg-catalog-search-form',
+    styleUrls: ['search-form.component.css'],
+    templateUrl: 'search-form.component.html'
 })
 export class SearchFormComponent implements OnInit, AfterViewInit {
 
@@ -32,13 +33,27 @@ export class SearchFormComponent implements OnInit, AfterViewInit {
     ccvmMap: {[ccvm: string]: IdlObject[]} = {};
     cmfMap: {[cmf: string]: IdlObject} = {};
     showSearchFilters = false;
+    activeFiltersCount: number = 0;
+    libraryGroups: IdlObject[];
     copyLocations: IdlObject[];
+    copyLocationGroups: IdlObject[];
     searchTab: string;
+    combineLibraryAndLocationGroups: boolean;
+
+    refreshingLibraryGroups: boolean = false;
+    refreshingCopyLocationGroups: boolean = false;
 
     // What does the user want us to do?
     // On pages where we can be hidded, start out hidden, unless the
     // user has opted to show us.
     showSearchFormSetting = false;
+
+    // Show the course search limit checkbox only if opted in to the
+    // course module
+    showCourseFilter = false;
+
+    sortMethodSetting: string;
+
 
     constructor(
         private renderer: Renderer2,
@@ -50,6 +65,8 @@ export class SearchFormComponent implements OnInit, AfterViewInit {
         private staffCat: StaffCatalogService
     ) {
         this.copyLocations = [];
+        this.copyLocationGroups = [];
+        this.libraryGroups = [];
 
     }
 
@@ -57,10 +74,13 @@ export class SearchFormComponent implements OnInit, AfterViewInit {
         this.ccvmMap = this.cat.ccvmMap;
         this.cmfMap = this.cat.cmfMap;
         this.context = this.staffCat.searchContext;
+        this.combineLibraryAndLocationGroups = this.cat.combineLibraryAndLocationGroups;
+        this.sortMethodSetting = this.context.sort;
 
         // Start with advanced search options open
         // if any filters are active.
-        this.showSearchFilters = this.filtersActive();
+        this.activeFiltersCount = this.filtersActive();
+        this.showSearchFilters = this.activeFiltersCount > 0;
 
         // Some search scenarios, like rendering a search template,
         // will not be searchable and thus not resovle to a specific
@@ -73,7 +93,10 @@ export class SearchFormComponent implements OnInit, AfterViewInit {
         });
 
         this.store.getItem('eg.catalog.search.form.open')
-        .then(value => this.showSearchFormSetting = value);
+            .then(value => this.showSearchFormSetting = value);
+
+        this.store.getItem('eg.staffcat.course_materials_selector')
+            .then(value => this.showCourseFilter = value);
     }
 
     // Are we on a page where the form is allowed to be collapsed.
@@ -135,6 +158,8 @@ export class SearchFormComponent implements OnInit, AfterViewInit {
 
                 }
 
+                this.refreshLibraryGroups();
+                this.refreshCopyLocationGroups();
                 if (this.searchTab === 'term') {
                     this.refreshCopyLocations();
                 }
@@ -144,7 +169,11 @@ export class SearchFormComponent implements OnInit, AfterViewInit {
         });
     }
 
-    onTabChange(evt: NgbTabChangeEvent) {
+    lassoAndLocationGroupsAllowed() {
+        return this.searchTab === 'term';
+    }
+
+    onNavChange(evt: NgbNavChangeEvent) {
         this.searchTab = evt.nextId;
 
         // Focus after tab-change event has a chance to complete
@@ -158,6 +187,8 @@ export class SearchFormComponent implements OnInit, AfterViewInit {
         let selector: string;
         switch (this.searchTab) {
             case 'ident':
+                this.refreshLibraryGroups();
+                this.refreshCopyLocationGroups();
                 selector = '#ident-query-input';
                 break;
             case 'marc':
@@ -170,6 +201,8 @@ export class SearchFormComponent implements OnInit, AfterViewInit {
                 selector = '#cnbrowse-term-input';
                 break;
             default:
+                this.refreshLibraryGroups();
+                this.refreshCopyLocationGroups();
                 this.refreshCopyLocations();
                 selector = '#first-query-input';
         }
@@ -180,7 +213,7 @@ export class SearchFormComponent implements OnInit, AfterViewInit {
             // Note the error is thrown from selectRootElement(), not the
             // call to .focus() on a null reference.
             this.renderer.selectRootElement(selector).focus();
-        } catch (E) {}
+        } catch (E) { /* empty */ }
     }
 
     /**
@@ -191,7 +224,7 @@ export class SearchFormComponent implements OnInit, AfterViewInit {
         // Note that filters may become active due to external
         // actions on the search context.  Always show the filters
         // if filter values are applied.
-        return this.showSearchFilters || this.filtersActive();
+        return this.showSearchFilters;
     }
 
     toggleFilters() {
@@ -199,26 +232,46 @@ export class SearchFormComponent implements OnInit, AfterViewInit {
         this.refreshCopyLocations();
     }
 
-    filtersActive(): boolean {
+    updateFilters(filterName: string, selectElement: any): void {
+        const selectedValues = Array.from(selectElement.options)
+            .filter((option: HTMLOptionElement) => option.selected)
+            .map((option: HTMLOptionElement) => option.value);
 
-        if (this.context.termSearch.copyLocations[0] !== '') { return true; }
+        this.context.termSearch.ccvmFilters[filterName] = selectedValues.length  && selectedValues[0] !== '' ? selectedValues : [''];
+        this.filtersActive();
+    }
+
+    filtersActive(): number {
+        this.activeFiltersCount = 0;
+        if (this.context.termSearch.copyLocations[0] !== '') { 
+            this.activeFiltersCount++;
+        }
+
+        if (this.context.termSearch.date1) {
+            this.activeFiltersCount++;
+        }
 
         // ccvm filters may be present without any filters applied.
         // e.g. if filters were applied then removed.
-        let show = false;
         Object.keys(this.context.termSearch.ccvmFilters).forEach(ccvm => {
             if (this.context.termSearch.ccvmFilters[ccvm][0] !== '') {
-                show = true;
+                this.activeFiltersCount++;
             }
         });
 
-        return show;
+        return this.activeFiltersCount;
     }
 
     orgOnChange = (org: IdlObject): void => {
         this.context.searchOrg = org;
         this.refreshCopyLocations();
+        this.refreshCopyLocationGroups();
+        this.refreshLibraryGroups();
     }
+
+    sortOrderChange = (sortMethod: string) : void => {
+        this.context.sort = sortMethod;
+    };
 
     refreshCopyLocations() {
         if (!this.showFilters()) { return; }
@@ -228,8 +281,26 @@ export class SearchFormComponent implements OnInit, AfterViewInit {
         );
     }
 
+    refreshCopyLocationGroups() {
+        if (this.refreshingCopyLocationGroups) return;
+        this.refreshingCopyLocationGroups = true;
+        this.cat.fetchCopyLocationGroups(this.context.searchOrg).then(() => {
+            this.copyLocationGroups = this.cat.copyLocationGroups
+            this.refreshingCopyLocationGroups = false;
+        });
+    }
+
+    refreshLibraryGroups() {
+        if (this.refreshingLibraryGroups) return;
+        this.refreshingLibraryGroups = true;
+        this.cat.fetchLibraryGroups(this.context.searchOrg).then(() => {
+            this.libraryGroups = this.cat.libraryGroups
+            this.refreshingLibraryGroups = false;
+        });
+    }
+
     orgName(orgId: number): string {
-        return this.org.get(orgId).shortname();
+        return this.org.get(orgId)?.shortname();
     }
 
     addSearchRow(index: number): void {
@@ -260,6 +331,7 @@ export class SearchFormComponent implements OnInit, AfterViewInit {
 
     searchByForm(): void {
         this.context.pager.offset = 0; // New search
+        this.activeFiltersCount = this.filtersActive();
 
         // Form search overrides basket display
         this.context.showBasket = false;
@@ -286,7 +358,7 @@ export class SearchFormComponent implements OnInit, AfterViewInit {
 
     // https://stackoverflow.com/questions/42322968/angular2-dynamic-input-field-lose-focus-when-input-changes
     trackByIdx(index: any, item: any) {
-       return index;
+        return index;
     }
 
     searchIsActive(): boolean {
@@ -311,6 +383,21 @@ export class SearchFormComponent implements OnInit, AfterViewInit {
     }
     searchFilters(): string[] {
         return this.staffCat.searchFilters;
+    }
+
+    reserveComboboxChange(limiterStatus: string): void {
+        switch (limiterStatus) {
+            case 'any':
+                this.context.termSearch.onReserveFilter = false;
+                break;
+            case 'limit':
+                this.context.termSearch.onReserveFilter = true;
+                this.context.termSearch.onReserveFilterNegated = false;
+                break;
+            case 'negated':
+                this.context.termSearch.onReserveFilter = true;
+                this.context.termSearch.onReserveFilterNegated = true;
+        }
     }
 }
 

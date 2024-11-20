@@ -1,6 +1,6 @@
 import {Component, OnInit} from '@angular/core';
 import {ActivatedRoute, ParamMap} from '@angular/router';
-import {IdlService} from '@eg/core/idl.service';
+import {IdlObject, IdlService} from '@eg/core/idl.service';
 import {Observable} from 'rxjs';
 import {tap, switchMap} from 'rxjs/operators';
 
@@ -11,14 +11,26 @@ import {tap, switchMap} from 'rxjs/operators';
 @Component({
     template: `
       <ng-container *ngIf="idlClass">
-      <eg-title i18n-prefix prefix="{{classLabel}} Administration">
+      <eg-title i18n-prefix prefix="{{recordLabel || classLabel}} Administration">
       </eg-title>
-      <eg-staff-banner bannerText="{{classLabel}} Configuration" i18n-bannerText>
+      <eg-staff-banner bannerText="{{recordLabel || classLabel}}" i18n-bannerText>
       </eg-staff-banner>
       <eg-admin-page persistKeyPfx="{{persistKeyPfx}}" idlClass="{{idlClass}}"
         configLinkBasePath="{{configLinkBasePath}}"
         fieldOrder="{{fieldOrder}}"
+        [fieldOptions]="fieldOptions"
         readonlyFields="{{readonlyFields}}"
+        recordLabel="{{recordLabel}}"
+        orgDefaultAllowed="{{orgDefaultAllowed}}"
+        orgFieldsDefaultingToContextOrg="{{orgFieldsDefaultingToContextOrg}}"
+        contextOrgSelectorPersistKey="{{contextOrgSelectorPersistKey}}"
+        [hideClearFilters]="hideClearFilters"
+        [initialFilterValues]="initialFilterValues"
+        [defaultNewRecord]="defaultNewRecordIdl"
+        [enableUndelete]="enableUndelete"
+        [disableDelete]="disableDelete"
+        [deleteConfirmation]="deleteConfirmation"
+        [disableEdit]="disableEdit"
         [disableOrgFilter]="disableOrgFilter"></eg-admin-page>
       </ng-container>
     `
@@ -30,11 +42,24 @@ export class BasicAdminPageComponent implements OnInit {
     classLabel: string;
     persistKeyPfx: string;
     fieldOrder = '';
+    fieldOptions = {};
+    contextOrgSelectorPersistKey = '';
     readonlyFields = '';
+    recordLabel = '';
+    orgDefaultAllowed = '';
+    orgFieldsDefaultingToContextOrg = '';
+    hideClearFilters: boolean;
+    initialFilterValues: {[field: string]: string};
+    defaultNewRecordIdl: IdlObject;
     configLinkBasePath = '/staff/admin';
 
     // Tell the admin page to disable and hide the automagic org unit filter
     disableOrgFilter: boolean;
+
+    enableUndelete: boolean;
+    disableDelete: boolean;
+    deleteConfirmation: string;
+    disableEdit: boolean;
 
     private getParams$: Observable<ParamMap>;
     private getRouteData$: Observable<any>;
@@ -42,6 +67,7 @@ export class BasicAdminPageComponent implements OnInit {
 
     private schema: string;
     private table: string;
+    private defaultNewRecord: Record<string, any>;
 
     constructor(
         private route: ActivatedRoute,
@@ -50,6 +76,7 @@ export class BasicAdminPageComponent implements OnInit {
     }
 
     ngOnInit() {
+        console.log('BasicAdminPageComponent, this', this);
         this.getParams$ = this.route.paramMap
             .pipe(tap(params => {
                 this.schema = params.get('schema');
@@ -69,9 +96,21 @@ export class BasicAdminPageComponent implements OnInit {
                     if (!this.table) {
                         this.table = data['table'];
                     }
-                this.disableOrgFilter = data['disableOrgFilter'];
-                this.fieldOrder = data['fieldOrder'];
-                this.readonlyFields = data['readonlyFields'];
+                    this.disableOrgFilter = data['disableOrgFilter'];
+                    this.enableUndelete = data['enableUndelete'];
+                    this.disableDelete = data['disableDelete'];
+                    this.deleteConfirmation = data['deleteConfirmation'];
+                    this.disableEdit = data['disableEdit'];
+                    this.fieldOrder = data['fieldOrder'];
+                    this.fieldOptions = data['fieldOptions'];
+                    this.contextOrgSelectorPersistKey = data['contextOrgSelectorPersistKey'];
+                    this.readonlyFields = data['readonlyFields'];
+                    this.recordLabel = data['recordLabel'];
+                    this.orgDefaultAllowed = data['orgDefaultAllowed'];
+                    this.orgFieldsDefaultingToContextOrg = data['orgFieldsDefaultingToContextOrg'];
+                    this.hideClearFilters = data['hideClearFilters'];
+                    this.initialFilterValues = data['initialFilterValues'];
+                    this.defaultNewRecord = data['defaultNewRecord'];
                 }
 
             }));
@@ -110,6 +149,19 @@ export class BasicAdminPageComponent implements OnInit {
 
             if (!this.idlClass) {
                 throw new Error('Unable to find IDL class for table ' + fullTable);
+            }
+
+            if (this.defaultNewRecord) {
+                const record = this.idl.create(this.idlClass);
+                // Call IDL setter for each field that has a default value
+                Object.keys(this.defaultNewRecord).forEach(key => {
+                    if (typeof (record[key]) === 'function') {
+                        record[key].apply(record, [this.defaultNewRecord[key]]);
+                    } else {
+                        console.warn('Unknown field "' + key + '" in defaultNewRecord for table ' + fullTable);
+                    }
+                });
+                this.defaultNewRecordIdl = record;
             }
         });
     }

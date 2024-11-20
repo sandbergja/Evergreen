@@ -49,6 +49,9 @@ angular.module('egCoreMod').run(['egStrings', function(s) {
   s.RENEW_ITEMS = "[% l('Renew Items?') %]";
   s.RENEW_ALL_ITEMS = "[% l('Renew All Items?') %]";
   s.CHECK_IN_CONFIRM = "[% l('Check In Items?') %]";
+  s.CONFIRM_ARCHIVE_NOTE = "[% l('Archive selected notes? Public non-deleted notes will still be visible to patrons.') %]";
+  s.CONFIRM_UNARCHIVE_NOTE = "[% l('Unarchive selected notes? Associated blocks/penalties will be restored.') %]";
+  s.CONFIRM_REMOVE_NOTE = "[% l('Remove selected notes?') %]";
   s.REG_INVALID_FIELDS = 
     "[% l('Please enter valid values for all required fields.') %]"
   s.REG_PASSWORD_RESET_REQUEST_NO_EMAIL =
@@ -87,6 +90,11 @@ angular.module('egCoreMod').run(['egStrings', function(s) {
   s.TEST_NOTIFY_SUCCESS = "[% l('Test Notification sent') %]";
   s.TEST_NOTIFY_FAIL = "[% l('Test Notification failed to send') %]";
   s.REMOVE_HOLD_SUBSCRIPTIONS = "[% l('Remove selected Hold Groups for user?') %]";
+  s.PENALTY_REFRESH_FAILED = "[% l('Penalty Refresh Failed') %]";
+  s.PENALTY_REFRESH_SUCCESS = "[% l('Penalty Refresh Succeeded') %]";
+  s.ADD_EXCEPTION_FAILED = "[% l('MFA Exception Addition failed: Permission denied') %]";
+  s.REMOVE_EXCEPTION_FAILED = "[% l('MFA Exception Removal failed: Permission denied') %]";
+  s.REMOVE_FACTOR_FAILED = "[% l('MFA Factor Removal failed: Permission denied') %]";
 }]);
 </script>
 
@@ -179,6 +187,9 @@ angular.module('egCoreMod').run(['egStrings', function(s) {
         </a>
         <ul uib-dropdown-menu>
           <li>
+            <a href ng-click="refreshPenalties()">[% l('Refresh Penalties') %]</a>
+          </li>
+          <li>
             <a href="./circ/patron/{{patron().id()}}/alerts">
               [% l('Display Alerts') %]
             </a>
@@ -186,11 +197,6 @@ angular.module('egCoreMod').run(['egStrings', function(s) {
           <li>
             <a href="/eg2/staff/circ/patron/event-log/{{patron().id()}}" target="_blank">
               [% l('Triggered Events / Notifications') %]
-            </a>
-          </li>
-          <li>
-            <a href="./circ/patron/{{patron().id()}}/message_center">
-              [% l('Message Center') %]
             </a>
           </li>
           <li>

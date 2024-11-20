@@ -1,4 +1,4 @@
-import {Component, OnInit, Input, ViewChild} from '@angular/core';
+import {Component, Input, ViewChild} from '@angular/core';
 import {Observable, throwError} from 'rxjs';
 import {NetService} from '@eg/core/net.service';
 import {StoreService} from '@eg/core/store.service';
@@ -15,12 +15,12 @@ import {StringComponent} from '@eg/share/string/string.component';
  */
 
 @Component({
-  selector: 'eg-hold-transfer-dialog',
-  templateUrl: 'transfer-dialog.component.html'
+    selector: 'eg-hold-transfer-dialog',
+    templateUrl: 'transfer-dialog.component.html'
 })
 
 export class HoldTransferDialogComponent
-    extends DialogComponent implements OnInit {
+    extends DialogComponent {
 
     @Input() holdIds: number | number[];
 
@@ -43,8 +43,6 @@ export class HoldTransferDialogComponent
         super(modal); // required for subclassing
     }
 
-    ngOnInit() {}
-
     open(args: NgbModalOptions): Observable<boolean> {
         this.numSucceeded = 0;
         this.numFailed = 0;
@@ -55,7 +53,7 @@ export class HoldTransferDialogComponent
 
         if (!this.transferTarget) {
             this.targetNeeded.current()
-            .then((msg) => this.toast.warning(msg));
+                .then((msg) => this.toast.warning(msg));
 
             return throwError('Transfer Target Required');
         }

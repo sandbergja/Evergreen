@@ -1,0 +1,89 @@
+<eg-title i18n-prefix prefix="Circulation Policy Configuration"></eg-title>
+<eg-staff-banner bannerText="Circulation Policy Configuration" i18n-bannerText>
+</eg-staff-banner>
+
+<eg-string #successString i18n-text text="Circulation Policy Update Succeeded"></eg-string>
+<eg-string #createString i18n-text text="Circulation Policy Creation Succeeded"></eg-string>
+
+<ng-container *ngIf="orgField || gridFilters">
+  <div class="row">
+    <div class="col-lg-6">
+      <ng-container *ngIf="orgField">
+        <eg-org-family-select
+          [limitPerms]="viewPerms" 
+          [selectedOrgId]="contextOrg.id()"
+          [(ngModel)]="searchOrgs"
+          (ngModelChange)="grid.reload()">
+        </eg-org-family-select>
+      </ng-container>
+    </div>
+    <div class="col-lg-6 d-flex">
+      <div class="flex-1"></div><!-- push right -->
+      <ng-container *ngIf="gridFilters">
+        <span i18n>Filters Applied: {{gridFilters | json}}</span>
+        <a class="pl-2 font-italic" 
+          [attr.href]="clearGridFiltersUrl()" i18n>Clear Filters</a>
+      </ng-container>
+    </div>
+  </div>
+  <hr/>
+</ng-container>
+
+<eg-grid #grid idlClass="ccmm"
+  [dataSource]="dataSource"
+  [sortable]="true"
+  [filterable]="true"
+  persistKey="admin.config.circ_matrix_matchpoint"
+  (onRowActivate)="editSelected([$event])"
+  [showFields]='"is_renewal,active,org_unit,copy_circ_lib,copy_owning_lib,user_home_ou"'>
+  <eg-grid-toolbar-button 
+    label="New Circulation Policy" i18n-label (onClick)="createNew()">
+  </eg-grid-toolbar-button>
+  <eg-grid-toolbar-action
+    label="Edit Selected" i18n-label
+    (onClick)="editSelected($event)"
+    [disableOnRows]="notOneSelectedRow">
+  </eg-grid-toolbar-action>
+</eg-grid>
+
+<eg-circ-matrix-matchpoint-dialog #matchpointDialog
+  (recordCanceled)="clearLinkedCircLimitSets()"
+  (recordError)="clearLinkedCircLimitSets()">
+  <div #limitSets [ngStyle]="{marginBottom:'10px'}">
+    <ng-container>
+      <eg-linked-circ-limit-sets
+        #circLimitSets
+        (outputLinkedLimitSet)="setLimitSets($event)">
+      </eg-linked-circ-limit-sets>
+    </ng-container>
+  </div>
+
+  <ng-template #active let-idPrefix="idPrefix" let-field="field" let-record="record">
+    <div class="row">
+      <div class="col-lg-12">
+        <eg-staff-banner bannerText="Circulation Policy Matchpoints" i18n-bannerText>
+        </eg-staff-banner>
+      </div>
+    </div>
+  </ng-template>
+
+  <ng-template #item_age let-idPrefix="idPrefix" let-field="field" let-record="record">
+    <div class="row">
+      <div class="col-lg-12">
+        <eg-staff-banner bannerText="Circulation Policy Effects" i18n-bannerText>
+        </eg-staff-banner>
+      </div>
+    </div>
+  </ng-template>
+
+  <eg-fm-record-editor #editDialog
+    idlClass="ccmm"
+    [preloadLinkedValues]="true"
+    readonlyFields="name"
+    displayMode="inline"
+    fieldOrder="id,active,grp,org_unit,copy_circ_lib,copy_owning_lib,user_home_ou,is_renewal,juvenile_flag,circ_modifier,copy_location,marc_type,marc_form,marc_bib_level,marc_vr_format,ref_flag,usr_age_lower_bound,usr_age_upper_bound,item_age,circulate,duration_rule,renewals,hard_due_date,recurring_fine_rule,grace_period,max_fine_rule,available_copy_hold_ratio,total_copy_hold_ratio,script_test,description"
+    requiredFields="active,grp,org_unit"
+    (recordSaved)="configureLimitSets($event); clearLinkedCircLimitSets(); closeDialog()"
+    [fieldOptions]="{active:{appendTemplate:{template:active}}, item_age:{appendTemplate:{template:item_age}}}">
+  </eg-fm-record-editor>
+</eg-circ-matrix-matchpoint-dialog>

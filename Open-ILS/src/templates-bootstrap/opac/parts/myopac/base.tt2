@@ -9,15 +9,15 @@
 
         {children => 0, parent => "parent", url => "messages", text => l("<i class='fas fa-envelope' aria-hidden='true'></i> <span class='sumNum'>[_1]</span>Messages",  ctx.user_stats.messages.unread), name => l("Messages")},
 
-        {children => 3, parent => "parent",url => "circs", text => l("<i class='fas fa-book' aria-hidden='true'></i> <span class='sumNum'>[_1]</span>Items Checked Out", ctx.user_stats.checkouts.total_out), name = l("Circulations")},
-        {children => 0, parent => "circs", url => "circs", text => l("<i class='fas fa-book-reader' aria-hidden='true'></i> Current Items Checked Out"), name=> l("Circulations")},
-        {children => 0, parent => "circs", url => "ebook_circs", text => l("<i class='fas fa-desktop' aria-hidden='true'></i> E-Items Currently Checked Out"), name => l("E-Items Currently Checked Out")},
+        {children => 3, parent => "parent",url => "circs", text => l("<i class='fas fa-book' aria-hidden='true'></i> <span class='sumNum' id='my_nav_all_checked'>[_1]</span>Items Checked Out", ctx.user_stats.checkouts.total_out), name = l("Circulations")},
+        {children => 0, parent => "circs", url => "circs", text => l("<i class='fas fa-book-reader' aria-hidden='true'></i> <span class='sumNum' id='my_nav_checked'>[_1]</span>Items Checked Out", ctx.user_stats.checkouts.total_out), name=> l("Circulations")},
+        {children => 0, parent => "circs", url => "ebook_circs", text => l("<i class='fas fa-desktop' aria-hidden='true'></i> <span class='sumNum' id='my_nav_e_checked'>0</span>E-Items Checked Out"), name => l("E-Items Checked Out")},
         {children => 0, parent => "circs", url => "circ_history", text => l("<i class='fas fa-history' aria-hidden='true'></i> Check Out History"), name => l("Check Out History")},
 
-        {children => 5, parent => "parent",url => "holds", text => l("<i class='fas fa-clock' aria-hidden='true'></i> <span class='sumNum'>[_1]</span>Holds / <span class='sumNum'>[_2]</span> Ready", ctx.user_stats.holds.total, ctx.user_stats.holds.ready), name => l("Holds")},
-        {children => 0, parent => "holds", url => "holds", text => l("<i class='fas fa-hands' aria-hidden='true'></i> Items on Hold"), name => l("Holds")},
-        {children => 0, parent => "holds", url => "ebook_holds", text => l("<i class='fas fa-desktop' aria-hidden='true'></i> E-Items on Hold"), name => l("E-Items on Hold")},
-        {children => 0, parent => "holds", url => "ebook_holds_ready", text => l("<i class='fas fa-download' aria-hidden='true'></i>  E-Items Ready for Checkout"), name => l("E-Items Ready for Checkout")},
+        {children => 5, parent => "parent",url => "holds", text => l("<i class='fas fa-clock' aria-hidden='true'></i> <span class='sumNum' id='my_nav_all_holds'>[_1]</span>Holds / <span class='sumNum' id='my_nav_all_pickup'>[_2]</span> Ready", ctx.user_stats.holds.total, ctx.user_stats.holds.ready), name => l("Holds")},
+        {children => 0, parent => "holds", url => "holds", text => l("<i class='fas fa-hands' aria-hidden='true'></i> <span class='sumNum' id='my_nav_holds'>[_1]</span>Items on Hold", ctx.user_stats.holds.total), name => l("Holds")},
+        {children => 0, parent => "holds", url => "ebook_holds", text => l("<i class='fas fa-desktop' aria-hidden='true'></i> <span class='sumNum' id='my_nav_e_holds'>0</span>E-Items on Hold"), name => l("E-Items on Hold")},
+        {children => 0, parent => "holds", url => "ebook_holds_ready", text => l("<i class='fas fa-download' aria-hidden='true'></i> <span class='sumNum' id='my_nav_e_ready'>0</span>E-Items Ready for Checkout"), name => l("E-Items Ready for Checkout")},
         {children => 0, parent => "holds", url => "hold_history", text => l("<i class='fas fa-history' aria-hidden='true'></i> Holds History"), name => l("Holds History")},
 
         {children => 4, parent => "parent", url => "prefs", text => l("<i class='fas fa-cog' aria-hidden='true'></i> Preferences"),name => l("Preferences")},
@@ -43,8 +43,7 @@
     END;
     skin_root = "../"
 %]
-
-    <h2 class="sr-only">[% l('My Account') %]</h2>
+<main id="main">
     [% INCLUDE "opac/parts/topnav.tt2" %]
     <div>
         [% INCLUDE "opac/parts/searchbar.tt2" %]
@@ -54,7 +53,7 @@
         <div class="row">
             <div class="col-lg-3">
                 <div class="my_nav">
-                <div class="btn-group-vertical dropright">
+                <div class="btn-group-vertical">
 
                 [%- FOREACH page IN myopac_pages;
                     IF page.url == myopac_page || page.url == parent;
@@ -65,12 +64,10 @@
                     END -%]
 
                     [% IF page.parent == "parent" && page.children > 0; %]
-                    <div class="dropdown dropright">
-                        <button class="w-100 btn btn-action text-left dropdown-toggle [% active %]" id="dropdownMenuLink-[% page.url %]" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            [% page.text; %]
-                        </button>
-
-                        <div class="dropdown-menu" aria-labelledby="dropdownMenuLink-[% page.url %]">
+                    <details>
+                        <summary class="w-100 btn btn-action [% active %]">
+                            <span role="text">[% page.text; %]</span>
+                        </summary>
                         [%- FOREACH child IN myopac_pages; -%]
                             [% IF child.parent == page.url;
                             IF myopac_page == child.url;
@@ -82,18 +79,17 @@
                         %]
                         [%- IF (ebook_api.enabled == 'true' && child.url.search('ebook')) || !child.url.search('ebook') %]
 
-                        <a role="button" href="[% mkurl(ctx.opac_root _ '/myopac/' _ child.url, {}, ['bbid', 'offset', 'limit','sort','sort_type', 'hid']) %]"
+                        <a href="[% mkurl(ctx.opac_root _ '/myopac/' _ child.url, {}, ['bbid', 'offset', 'limit','sort','sort_type', 'hid']) %]"
                     class="dropdown-item [% cactive %]">[% child.text; %]</a>
                     [% END %]
                             [% END %]
                         [% END %]
-                        </div>
-                    </div>
+                    </details>
                     [% ELSIF page.parent == "parent"; %]
 
-                    <a role="button" class="btn btn-action [% active %]" href="[% mkurl(ctx.opac_root _ '/myopac/' _ page.url, {}, ['bbid', 'offset', 'limit','sort','sort_type', 'hid']) %]">
-  [% page.text; %]
-  </a>
+                    <a class="btn btn-action [% active %]" href="[% mkurl(ctx.opac_root _ '/myopac/' _ page.url, {}, ['bbid', 'offset', 'limit','sort','sort_type', 'hid']) %]">
+                        <span role="text">[% page.text; %]</span>
+                    </a>
 
                     [% END %]
                 [% END %]
@@ -106,6 +102,6 @@
         </div>
         </div>
     </div> <!-- content-wrapper -->
-
+</main>
 
 [% END %]

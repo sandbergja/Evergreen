@@ -192,13 +192,13 @@ but similar functionality is available in the Template Toolkit OPAC
 A patron who is a member of a publicly visible xref:circulation:basic_holds.adoc#hold_groups[Hold Group] will see
 a new option on the Holds menu of My Account labelled *Hold Groups*.
 
-image::media/opac_hold_groups.png[My Account Hold Groups]
+image::my_account/opac_hold_groups.png[My Account Hold Groups]
 
 If the *Hold Groups* menu item is selected, the patron will see a list
 of Hold Groups of which they are a member, as well as a link for
 removing themselves from the Hold Group.
 
-image::media/opac_remove_hg.png[Remove Me From Hold Group]
+image::my_account/opac_remove_hg.png[Remove Me From Hold Group]
 
 Only those Hold Groups that were marked by staff as “publicly visible”
 are displayed. If the patron does not belong to any publicly visible
@@ -207,22 +207,28 @@ Hold Groups, the Hold Group menu item is not displayed at all.
 Holds placed through a Hold Group can be modified by patrons in the same
 way as other holds (e.g., suspended, cancelled, etc.).
 
-== Account Preferences ==
+== Preferences ==
 
 indexterm:[my account, account preferences]
 
-From here you can manage display preferences including your *Personal 
-Information*, *Notification Preferences*, and *Search and History Preferences*. 
+From here you can manage display preferences including your *Personal Information*, 
+*Notification*, *Search and History*, and *Lists*. 
 Additional static information, such as your _Account Expiration Date_, can be 
-found under Personal Information.
+found under *Personal Information*.
 
 For example: 
 
 * Personal Information
 
-** change password - allows patrons to change their password
+** _Change password_ - allows patrons to change their password.
 
-** change email address	- allows patrons to change their email address.
+** _Change email address_	- allows patrons to change their email address.
+
+** _Change username_ - allows patrons to change their username.
+
+** _Preferred Language field_ - As of 3.9 this field contains a dropdown listing available locales for your Evergreen instance. Locales are configured in the `config.i18n_locales` table and you can use this feature to send action trigger messages in different languages. For more information please see xref:admin:actiontriggers.adoc#creating_alternate_message_templates[Creating Alternate Message Templates].
+
+** Contains other information such as home library, address, phone, etc.
 
 
 
@@ -234,16 +240,22 @@ For example:
 
 ** _Default Phone Number_
 
+** _Email checkout receipts by default?_
+
 
 * Search and History Preferences
 
-** Search hits per page
+** _Search hits per page_
 
-** Preferred pickup location
+** _Preferred search location_
 
-** Keep history of checked out items?
+** _Preferred pickup location_
 
-** Keep history of holds?
+** _Keep history of checked out items?_
+
+** _Keep history of holds?_
+
+** _Skip warning when adding to temporary book list?_
 
 [WARNING]
 ========
@@ -264,9 +276,9 @@ indexterm:[privacy waiver]
 
 
 If your library has enabled it, you can authorize other people to use
-your account. In the Search and History Preferences tab
-under Account Preferences, find the section labeled "Allow others to use
-my account". Enter the name and indicate that the
+your account. In the _Search and History_ tab
+under _Preferences_, find the section labeled _"Allow others to use
+my account"_. Enter the name and indicate that the
 specified person is allowed to place holds, pickup holds, view
 borrowing history, and check out items on their account.  This
 information will also be visible to circulation staff at your library.
@@ -287,21 +299,21 @@ information on adding messages to patron accounts.
 
 *Viewing Patron Messages in the OPAC*
 
-Patrons will see a new tab for *Messages* in their OPAC account, as well as a 
-notification of *Unread Messages* in the account summary.
+Patrons will see an option for *Messages* in their OPAC *Account Summary* page, as well as a 
+notification of *Unread Messages* in the banner towards the top right.
 
-image::media/message_center11.PNG[Message Center 11]
+image::my_account/messages_buttons.jpg[How to Get to Messages]
 
 Patrons will see a list of the messages from the library by clicking on the 
 *Messages* tab.
 
-image::media/message_center10.PNG[Message Center 10]
+image::my_account/messages_inbox.jpg[Messages Inbox]
 
-Patrons can click on a message *Subject* to view the message.  After viewing the
+Patrons can click on the *Read* button to see the message.  After viewing the
 message, it will automatically be marked as read.  Patrons have the options to 
 mark the message as unread and to delete the message.
 
-image::media/message_center12.PNG[Message Center 12]
+image::my_account/message_read.jpg[Message Contents]
 
 NOTE: Patron deleted messages will still appear in the patron's account in the 
 staff client under Other -> Message Center.
@@ -337,23 +349,23 @@ If a patron has bills on their account and their library permits online payments
 
 After logging in to MyAccount, the patron should select the **Charges** menu item, and then select **Current Charges**.
 
-image::media/opac_current_charges.png[MyAccount Current Charges]
+image::my_account/opac_current_charges.png[MyAccount Current Charges]
 
 Next, they should (optionally) select the charges they wish to pay and then select either **Pay Selected Charges** or **Pay All Charges**.
 
-image::media/opac_select_charges.png[Select Charges]
+image::my_account/opac_select_charges.png[Select Charges]
 
 They will be prompted to enter their credit card information on the next screen. The patron should enter their credit card information and select **Submit Payment**. There is no confirmation step. Note that credit card information is not masked, so patrons should take care if they are in a public place. 
 
-image::media/opac_cc_entry.png[Credit Card Entry]
+image::my_account/opac_cc_entry.png[Credit Card Entry]
 
 There will be a processing message displayed while the payment is processed.
 
-image::media/opac_cc_inprocess.png[Credit Card Processing]
+image::my_account/opac_cc_inprocess.png[Credit Card Processing]
 
 Lastly, the patron will receive a confirmation and an option to print a receipt. 
 
-image::media/opac_cc_receipt.png[Credit Card Receipt]
+image::my_account/opac_cc_receipt.png[Credit Card Receipt]
 
 Receipts can also be printed or emailed by navigating to **Charges → Payment History** and selecting the relevant print or email option from the Payment History grid. Receipts can be configured in the xref:admin:actiontriggers.adoc[Notifications and Action Triggers] interface.
 
@@ -361,10 +373,10 @@ Receipts can also be printed or emailed by navigating to **Charges → Payment H
 
 If a credit card is declined, the patron will be given a declined message when they attempt to submit payment information.
 
-image::media/opac_cc_declined.png[Credit Card Declined]
+image::my_account/opac_cc_declined.png[Credit Card Declined]
 
 Stripe supports sending various types of error messages, including messages for an expired card, invalid CVV code, incorrect zip code, and more.
 
 If there is an error in Evergreen’s Stripe configuration, the patron will be presented with an error message when they attempt to initiate a payment. This will be displayed at the point when a patron selects either the **Pay Selected Charges** or **Pay All Charges** button, before the payment form is rendered.
 
-image::media/opac_cc_config_error.png[Configuration Error Message]
+image::my_account/opac_cc_config_error.png[Configuration Error Message]

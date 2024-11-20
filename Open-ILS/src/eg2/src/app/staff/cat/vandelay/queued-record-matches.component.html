@@ -1,6 +1,6 @@
 
 <ng-template #bibIdTemplate let-row="row">
-  <a routerLink="/staff/catalog/record/{{row.eg_record}}/marc_view" i18n>
+  <a target="_blank" routerLink="/staff/catalog/record/{{row.eg_record}}/marc_view" i18n>
     {{row.eg_record}}
   </a>
 </ng-template>
@@ -8,11 +8,12 @@
 <ng-template #targetTemplate let-row="row">
   <ng-container *ngIf="isOverlayTarget(row.id)">
     <span i18n-title title="Selected Merge Target" 
-      class="material-icons">check_circle</span>
+      class="material-icons" aria-hidden="true">check_circle</span>
+    <span class="visually-hidden" i18n>Selected Merge Target</span>
   </ng-container>
 </ng-template>
 
-<ng-container *ngIf="queueType == 'bib'">
+<ng-container *ngIf="queueType === 'bib'">
   <eg-grid #bibGrid [dataSource]="bibDataSource" 
     (onRowClick)="matchRowClick($event)"
     [cellTextGenerator]="cellTextGenerator"
@@ -53,7 +54,7 @@
     </eg-grid-column>
   </eg-grid>
 </ng-container>
-<ng-container *ngIf="queueType == 'authority'">
+<ng-container *ngIf="queueType === 'authority'">
   <eg-grid #authGrid [dataSource]="authDataSource">
     <eg-grid-column name="id" [index]="true" [hidden]="true" 
       i18n-label label="Match ID">

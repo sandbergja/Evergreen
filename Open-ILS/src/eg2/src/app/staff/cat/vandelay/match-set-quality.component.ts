@@ -1,5 +1,5 @@
-import {Component, OnInit, ViewChild, AfterViewInit, Input} from '@angular/core';
-import {Observable, of} from 'rxjs';
+import {Component, ViewChild, Input} from '@angular/core';
+import {of} from 'rxjs';
 import {IdlObject, IdlService} from '@eg/core/idl.service';
 import {PcrudService} from '@eg/core/pcrud.service';
 import {NetService} from '@eg/core/net.service';
@@ -11,10 +11,10 @@ import {Pager} from '@eg/share/util/pager';
 import {MatchSetNewPointComponent} from './match-set-new-point.component';
 
 @Component({
-  selector: 'eg-match-set-quality',
-  templateUrl: 'match-set-quality.component.html'
+    selector: 'eg-match-set-quality',
+    templateUrl: 'match-set-quality.component.html'
 })
-export class MatchSetQualityComponent implements OnInit {
+export class MatchSetQualityComponent {
 
     // Match set arrives from parent async.
     matchSet_: IdlObject;
@@ -68,13 +68,11 @@ export class MatchSetQualityComponent implements OnInit {
         this.deleteSelected = (rows: any[]) => {
             this.pcrud.remove(rows).subscribe(
                 ok  => console.log('deleted ', ok),
-                err => console.error(err),
+                (err: unknown) => console.error(err),
                 ()  => this.grid.reload()
             );
         };
     }
-
-    ngOnInit() {}
 
     addQuality() {
         const quality = this.idl.create('vmsq');
@@ -93,7 +91,7 @@ export class MatchSetQualityComponent implements OnInit {
 
         this.pcrud.create(quality).subscribe(
             ok  => console.debug('created ', ok),
-            err => console.error(err),
+            (err: unknown) => console.error(err),
             ()  => {
                 this.newPointType = null;
                 this.grid.reload();

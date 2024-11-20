@@ -1,23 +1,23 @@
-
 <!-- drop-down toggle link -->
 <ng-template #dropdownToggle>
-  <span i18n>Filter</span>
   <ng-container *ngIf="!col.isFiltered">
-    <span class="material-icons mat-icon-in-button">filter_list</span>
+    <span id="filter_toggle_{{col.name}}" i18n hidden>Filter by {{col.headerLabel}}</span>
+    <span class="material-icons mat-icon-in-button" attr.aria-hidden="true" title="Filter by {{col.headerLabel}}" i18n-title>filter_list</span>
   </ng-container>
   <ng-container *ngIf="col.isFiltered">
-    <span class="material-icons mat-icon-in-button">create</span>
+    <span id="filter_toggle_{{col.name}}" i18n hidden>Edit {{col.headerLabel}} filter</span>
+    <span class="material-icons mat-icon-in-button" attr.aria-hidden="true" title="Edit {{col.headerLabel}} filter" i18n-title>create</span>
   </ng-container>
 </ng-template>
 
 <!-- apply/clear actions are the same for all filter types -->
 <ng-template #actionsTemplate>
   <div class="pt-2">
-    <button class="btn btn-sm btn-outline-dark" (click)="applyFilterCommon(col)" i18n>Apply filter</button>
-    <span class="pl-2"></span>
-    <button class="btn btn-sm btn-outline-dark" (click)="clearFilter(col)" i18n>Clear filter</button>
-    <span class="pl-2"></span>
-    <button class="btn btn-sm btn-outline-dark" (click)="closeDropdown()" i18n>Close</button>
+    <button type="button" class="btn btn-sm btn-outline-dark" (click)="applyFilterCommon(col)" i18n>Apply filter</button>
+    <span class="ps-2"></span>
+    <button type="button" class="btn btn-sm btn-outline-dark" (click)="clearFilter(col)" i18n>Clear filter</button>
+    <span class="ps-2"></span>
+    <button type="button" class="btn btn-sm btn-outline-dark" (click)="closeDropdown()" i18n>Close</button>
   </div>
 </ng-template>
 
@@ -40,11 +40,11 @@
   <div [ngSwitch]="col.datatype">
     <div *ngSwitchCase="'link'">
       <div class="input-group">
-        <div ngbDropdown container="body" class="d-inline-block p-1" [autoClose]="false" placement="bottom-left" 
+        <div ngbDropdown container="body" class="d-inline-block py-1" autoClose="outside" placement="bottom-left" 
           [ngClass]="{'border rounded border-secondary eg-grid-col-is-filtered' : col.isFiltered}">
-          <a ngbDropdownToggle class="no-dropdown-caret text-dark" href="javascript:;">
+          <button type="button" ngbDropdownToggle class="no-dropdown-caret btn">
             <ng-container *ngTemplateOutlet="dropdownToggle"></ng-container>
-          </a>
+          </button>
           <div ngbDropdownMenu class="eg-grid-filter-menu">
             <div class="dropdown-item">
               <div>
@@ -62,15 +62,15 @@
     </div>
     <div *ngSwitchCase="'bool'">
       <div class="input-group">
-        <div ngbDropdown container="body" class="d-inline-block p-1" autoClose="outside" placement="bottom-left" 
+        <div ngbDropdown container="body" class="d-inline-block py-1" autoClose="outside" placement="bottom-left" 
           [ngClass]="{'border rounded border-secondary eg-grid-col-is-filtered' : col.isFiltered}">
-          <a ngbDropdownToggle class="no-dropdown-caret text-dark" href="javascript:;">
+          <button type="button" ngbDropdownToggle class="no-dropdown-caret btn">
             <ng-container *ngTemplateOutlet="dropdownToggle"></ng-container>
-          </a>
+          </button>
           <div ngbDropdownMenu class="eg-grid-filter-menu">
             <div class="dropdown-item">
               <div>
-                <select class="custom-select" [(ngModel)]="col.filterValue"
+                <select class="form-select" [(ngModel)]="col.filterValue"
                   (change)="applyFilterCommon(col)"
                   [disabled]="col.filterInputDisabled || context.dataSource.requestingData">
                   <option value="" i18n>Any</option>
@@ -86,15 +86,15 @@
     </div>
     <div *ngSwitchCase="'text'">
       <div class="input-group">
-        <div ngbDropdown container="body" class="d-inline-block p-1" autoClose="outside" placement="bottom-left" 
+        <div ngbDropdown container="body" class="d-inline-block py-1" autoClose="outside" placement="bottom-left" 
           [ngClass]="{'border rounded border-secondary eg-grid-col-is-filtered' : col.isFiltered}">
-          <a ngbDropdownToggle class="no-dropdown-caret text-dark" href="javascript:;">
+          <button type="button" ngbDropdownToggle class="no-dropdown-caret btn">
             <ng-container *ngTemplateOutlet="dropdownToggle"></ng-container>
-          </a>
+          </button>
           <div ngbDropdownMenu class="eg-grid-filter-menu">
             <div class="dropdown-item">
               <div>
-                <label for="eg-filter-op-select-{{col.name}}" i18n>Operator</label>
+                <label class="form-label" for="eg-filter-op-select-{{col.name}}" i18n>Operator</label>
                 <select id="eg-filter-op-select-{{col.name}}" class="form-control" 
                   [(ngModel)]="col.filterOperator" (change)="operatorChanged(col)">
                   <option value="=" i18n>Is exactly</option>
@@ -125,15 +125,15 @@
     </div>
     <div *ngSwitchCase="'int'">
       <div class="input-group">
-        <div ngbDropdown container="body" class="d-inline-block p-1" autoClose="outside" placement="bottom-left" 
+        <div ngbDropdown container="body" class="d-inline-block py-1" autoClose="outside" placement="bottom-left" 
           [ngClass]="{'border rounded border-secondary eg-grid-col-is-filtered' : col.isFiltered}">
-          <a ngbDropdownToggle class="no-dropdown-caret text-dark" href="javascript:;">
+          <button type="button" ngbDropdownToggle class="no-dropdown-caret btn">
             <ng-container *ngTemplateOutlet="dropdownToggle"></ng-container>
-          </a>
+          </button>
           <div ngbDropdownMenu class="eg-grid-filter-menu">
             <div class="dropdown-item">
               <div>
-                <label for="eg-filter-op-select-{{col.name}}" i18n>Operator</label>
+                <label class="form-label" for="eg-filter-op-select-{{col.name}}" i18n>Operator</label>
                 <ng-container *ngTemplateOutlet="numericOperators"></ng-container>
               </div>
               <div class="pt-2">
@@ -149,15 +149,15 @@
     </div>
     <div *ngSwitchCase="'id'">
       <div class="input-group">
-        <div ngbDropdown container="body" class="d-inline-block p-1" autoClose="outside" placement="bottom-left" 
+        <div ngbDropdown container="body" class="d-inline-block py-1" autoClose="outside" placement="bottom-left" 
           [ngClass]="{'border rounded border-secondary eg-grid-col-is-filtered' : col.isFiltered}">
-          <a ngbDropdownToggle class="no-dropdown-caret text-dark" href="javascript:;">
+          <button type="button" ngbDropdownToggle class="no-dropdown-caret btn">
             <ng-container *ngTemplateOutlet="dropdownToggle"></ng-container>
-          </a>
+          </button>
           <div ngbDropdownMenu class="eg-grid-filter-menu">
             <div class="dropdown-item">
               <div>
-                <label for="eg-filter-op-select-{{col.name}}" i18n>Operator</label>
+                <label class="form-label" for="eg-filter-op-select-{{col.name}}" i18n>Operator</label>
                 <ng-container *ngTemplateOutlet="numericOperators"></ng-container>
               </div>
               <div class="pt-2">
@@ -173,15 +173,15 @@
     </div>
     <div *ngSwitchCase="'float'">
       <div class="input-group">
-        <div ngbDropdown container="body" class="d-inline-block p-1" autoClose="outside" placement="bottom-left" 
+        <div ngbDropdown container="body" class="d-inline-block py-1" autoClose="outside" placement="bottom-left" 
           [ngClass]="{'border rounded border-secondary eg-grid-col-is-filtered' : col.isFiltered}">
-          <a ngbDropdownToggle class="no-dropdown-caret text-dark" href="javascript:;">
+          <button type="button" ngbDropdownToggle class="no-dropdown-caret btn">
             <ng-container *ngTemplateOutlet="dropdownToggle"></ng-container>
-          </a>
+          </button>
           <div ngbDropdownMenu class="eg-grid-filter-menu">
             <div class="dropdown-item">
               <div>
-                <label for="eg-filter-op-select-{{col.name}}" i18n>Operator</label>
+                <label class="form-label" for="eg-filter-op-select-{{col.name}}" i18n>Operator</label>
                 <ng-container *ngTemplateOutlet="numericOperators"></ng-container>
               </div>
               <div class="pt-2">
@@ -197,15 +197,15 @@
     </div>
     <div *ngSwitchCase="'money'">
       <div class="input-group">
-        <div ngbDropdown container="body" class="d-inline-block p-1" autoClose="outside" placement="bottom-left" 
+        <div ngbDropdown container="body" class="d-inline-block py-1" autoClose="outside" placement="bottom-left" 
           [ngClass]="{'border rounded border-secondary eg-grid-col-is-filtered' : col.isFiltered}">
-          <a ngbDropdownToggle class="no-dropdown-caret text-dark" href="javascript:;">
+          <button type="button" ngbDropdownToggle class="no-dropdown-caret btn">
             <ng-container *ngTemplateOutlet="dropdownToggle"></ng-container>
-          </a>
+          </button>
           <div ngbDropdownMenu class="eg-grid-filter-menu">
             <div class="dropdown-item">
               <div>
-                <label for="eg-filter-op-select-{{col.name}}" i18n>Operator</label>
+                <label class="form-label" for="eg-filter-op-select-{{col.name}}" i18n>Operator</label>
                 <ng-container *ngTemplateOutlet="numericOperators"></ng-container>
               </div>
               <div class="pt-2">
@@ -221,18 +221,18 @@
     </div>
     <div *ngSwitchCase="'timestamp'">
       <div class="input-group">
-        <!-- [autoClose]="false" because editing the date widgets, which open
+        <!-- autoClose="outside" because editing the date widgets, which open
              their open popups, registers to the dropdown as clicking 
              outside the dropdown -->
-        <div ngbDropdown container="body" class="d-inline-block p-1" [autoClose]="false" placement="bottom-left" 
+        <div ngbDropdown container="body" class="d-inline-block py-1" autoClose="outside" placement="bottom-left" 
           [ngClass]="{'border rounded border-secondary eg-grid-col-is-filtered' : col.isFiltered}">
-          <a ngbDropdownToggle class="no-dropdown-caret text-dark" href="javascript:;">
+          <button type="button" ngbDropdownToggle class="no-dropdown-caret btn">
             <ng-container *ngTemplateOutlet="dropdownToggle"></ng-container>
-          </a>
+          </button>
           <div ngbDropdownMenu class="eg-grid-filter-menu">
             <div class="dropdown-item">
               <div>
-                <label for="eg-filter-op-select-{{col.name}}" i18n>Operator</label>
+                <label class="form-label" for="eg-filter-op-select-{{col.name}}" i18n>Operator</label>
                 <select id="eg-filter-op-select-{{col.name}}" class="form-control" 
                   [(ngModel)]="col.filterOperator" (change)="operatorChanged(col)">
                   <option value="=" i18n>Is exactly</option>
@@ -251,11 +251,11 @@
                   (onChangeAsYmd)="applyFilterCommon(col)"
                   [disabled]="col.filterInputDisabled || context.dataSource.requestingData"></eg-date-select>
                 <div [hidden]="col.filterOperator !== 'between'" class="form-inline form-group">
-                  <label for="eg-filter-end-date-select-{{col.name}}" style="width: 3em;" i18n>and</label>
+                  <label class="form-label" for="eg-filter-end-date-select-{{col.name}}" style="width: 3em;" i18n>and</label>
                   <eg-date-select [hidden]="col.filterOperator !== 'between'" #dateSelectTwo
                     (onChangeAsYmd)="applyFilterCommon(col)"
                     [disabled]="col.filterInputDisabled || context.dataSource.requestingData"
-                    [required]="col.filterOperator == 'between'"></eg-date-select>
+                    [required]="col.filterOperator === 'between'"></eg-date-select>
                 </div>
               </div>
               <ng-container *ngTemplateOutlet="actionsTemplate"></ng-container>
@@ -266,15 +266,15 @@
     </div>
     <div *ngSwitchCase="'org_unit'">
       <div class="input-group">
-        <div ngbDropdown container="body" class="d-inline-block p-1" [autoClose]="false" placement="bottom-left" 
+        <div ngbDropdown container="body" class="d-inline-block py-1" autoClose="outside" placement="bottom-left" 
           [ngClass]="{'border rounded border-secondary eg-grid-col-is-filtered' : col.isFiltered}">
-          <a ngbDropdownToggle class="no-dropdown-caret text-dark" href="javascript:;">
+          <button type="button" ngbDropdownToggle class="no-dropdown-caret btn">
             <ng-container *ngTemplateOutlet="dropdownToggle"></ng-container>
-          </a>
+          </button>
           <div ngbDropdownMenu class="eg-grid-filter-menu">
             <div class="dropdown-item">
               <div>
-                <label for="eg-filter-op-select-{{col.name}}" i18n>Operator</label>
+                <label class="form-label" for="eg-filter-op-select-{{col.name}}" i18n>Operator</label>
                 <select id="eg-filter-op-select-{{col.name}}" class="form-control" 
                   [(ngModel)]="col.filterOperator" (change)="operatorChanged(col)">
                   <option value="=" i18n>Is (or includes)</option>
@@ -286,17 +286,17 @@
                   <input type="checkbox"
                     [(ngModel)]="col.filterIncludeOrgAncestors"
                     class="form-check-input" id="include-ancestors">
-                  <label class="form-check-label" for="include-ancestors" i18n>+ Ancestors</label>
+                  <label class="form-label form-check-label" for="include-ancestors" i18n>+ Ancestors</label>
                 </div>
                 <div class="form-check">
                   <input type="checkbox"
                     [(ngModel)]="col.filterIncludeOrgDescendants"
                     class="form-check-input" id="include-descendants">
-                  <label class="form-check-label" for="include-descendants" i18n>+ Descendants</label>
+                  <label class="form-label form-check-label" for="include-descendants" i18n>+ Descendants</label>
                 </div>
               </div>
               <div class="pt-2">
-                <eg-org-select [applyOrgId]="col.filterValue" 
+                <eg-org-select ariaLabel="Filter by" i18n-ariaLabel [applyOrgId]="col.filterValue" 
                   (onChange)="col.filterValue = $event; applyFilterCommon(col)"
                   [disabled]="col.filterInputDisabled || context.dataSource.requestingData"
                   i18n-placeholder placeholder="Enter library to filter by" #ousel></eg-org-select>

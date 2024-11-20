@@ -1,17 +1,19 @@
 import {Component, OnInit, NgZone, HostListener} from '@angular/core';
+import {Location} from '@angular/common';
 import {Router, ActivatedRoute, NavigationEnd} from '@angular/router';
 import {AuthService, AuthWsState} from '@eg/core/auth.service';
 import {NetService} from '@eg/core/net.service';
 import {AccessKeyService} from '@eg/share/accesskey/accesskey.service';
 import {AccessKeyInfoComponent} from '@eg/share/accesskey/accesskey-info.component';
 
+const MFA_PATH = '/staff/mfa';
 const LOGIN_PATH = '/staff/login';
 const WS_BASE_PATH = '/staff/admin/workstation/workstations/';
 const WS_MANAGE_PATH = '/staff/admin/workstation/workstations/manage';
 
 @Component({
-  templateUrl: 'staff.component.html',
-  styleUrls: ['staff.component.css']
+    templateUrl: 'staff.component.html',
+    styleUrls: ['staff.component.css']
 })
 
 export class StaffComponent implements OnInit {
@@ -19,6 +21,7 @@ export class StaffComponent implements OnInit {
     constructor(
         private router: Router,
         private route: ActivatedRoute,
+        private ngLocation: Location,
         private zone: NgZone,
         private net: NetService,
         private auth: AuthService,
@@ -46,7 +49,7 @@ export class StaffComponent implements OnInit {
             }
 
             console.debug('Auth session has expired. Redirecting to login');
-            this.auth.redirectUrl = this.router.url;
+            const url = this.ngLocation.prepareExternalUrl(this.router.url);
 
             // https://github.com/angular/angular/issues/18254
             // When a tab redirects to a login page as a result of
@@ -55,7 +58,7 @@ export class StaffComponent implements OnInit {
             // with the page.  Fix it by wrapping it in zone.run().
             // This is the only navigate() where I have seen this happen.
             this.zone.run(() => {
-                this.router.navigate([LOGIN_PATH]);
+                this.router.navigate([LOGIN_PATH], {queryParams: {routeTo: url}});
             });
         });
 
@@ -86,6 +89,17 @@ export class StaffComponent implements OnInit {
         // We lost our authtoken, go back to the login page.
         if (!this.auth.token()) {
             this.router.navigate([LOGIN_PATH]);
+        }
+
+        // No auth checks needed for MFA page.
+        if (url.startsWith(MFA_PATH)) {
+            return;
+        }
+
+        // Provisional tokens require MFA
+        if (this.auth.provisional()) {
+            this.router.navigate([MFA_PATH]);
+            return;
         }
 
         // No workstation checks needed for workstation admin page.
