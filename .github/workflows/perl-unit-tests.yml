@@ -3,12 +3,12 @@ on: [push, pull_request]
 jobs:
   install-opensrf:
     name: Install Opensrf
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
         with:
           repository: evergreen-library-system/OpenSRF
           path: opensrf
       - name: Install prereqs
-        run: sudo make -f src/extras/Makefile.install ubuntu-noble
-        working-directory: /home/runner/work/Evergreen/Evergreen/opensrf
+        run: sudo make -f src/extras/Makefile.install ubuntu-jammy
+        working-directory: ./opensrf
