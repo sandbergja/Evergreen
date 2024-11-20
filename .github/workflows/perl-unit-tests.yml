@@ -9,4 +9,4 @@ jobs:
         run: git clone --branch main git://git.evergreen-ils.org/OpenSRF.git
       - name: Install prereqs
         run: sudo make -f src/extras/Makefile.install ubuntu-jammy
-        working-directory: ./opensrf
+        working-directory: ./OpenSRF
