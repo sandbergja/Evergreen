@@ -5,10 +5,8 @@ jobs:
     name: Install Opensrf
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-        with:
-          repository: git://git.evergreen-ils.org/OpenSRF.git
-          path: opensrf
+      - name: Clone OpenSRF repository
+        run: git clone --branch main git://git.evergreen-ils.org/OpenSRF.git
       - name: Install prereqs
         run: sudo make -f src/extras/Makefile.install ubuntu-jammy
         working-directory: ./opensrf
