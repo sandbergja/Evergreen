@@ -11,4 +11,4 @@ jobs:
           path: opensrf
       - name: Install prereqs
         run: sudo make -f src/extras/Makefile.install ubuntu-noble
-        working-directory: ./opensrf
+        working-directory: /home/runner/work/Evergreen/Evergreen/opensrf
