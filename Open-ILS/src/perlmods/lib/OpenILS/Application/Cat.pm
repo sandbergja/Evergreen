@@ -959,6 +959,8 @@ sub transfer_copies_to_volume {
                $part_obj = Fieldmapper::biblio::monograph_part->new();
                $part_obj->label( $part_label );
                $part_obj->record( $cn->record );
+               $part_obj->creator($editor->requestor->id );
+               $part_obj->editor($editor->requestor->id );
                unless($editor->create_biblio_monograph_part($part_obj)) {
                  return $editor->die_event if $editor->die_event;
                }
@@ -1222,6 +1224,8 @@ sub fleshed_volume_update {
             $logger->info("vol-update: deleting volume");
             return $editor->die_event unless
                 $editor->allowed('UPDATE_VOLUME', $vol->owning_lib);
+            return $editor->die_event unless
+                $assetcom->test_perm_against_original_owning_lib( $editor, 'UPDATE_VOLUME', $vol->id);
 
             if(my $evt = $assetcom->delete_volume($editor, $vol, $oargs, $$options{force_delete_copies})) {
                 $editor->rollback;
@@ -1233,6 +1237,8 @@ sub fleshed_volume_update {
 
         } elsif( $vol->isnew ) {
             $logger->info("vol-update: creating volume");
+            return $editor->die_event unless
+                $editor->allowed('CREATE_VOLUME', $vol->owning_lib);
             ($vol,$evt) = $assetcom->create_volume( $auto_merge_vols ? { all => 1} : $oargs, $editor, $vol );
             return $evt if $evt;
 
@@ -1313,6 +1319,8 @@ sub update_volume {
 
     return {evt => $editor->event} unless
         $editor->allowed('UPDATE_VOLUME', $vol->owning_lib);
+    return {evt => $editor->event} unless
+        $assetcom->test_perm_against_original_owning_lib( $editor, 'UPDATE_VOLUME', $vol->id);
 
     return {evt => $evt} 
         if ( $evt = OpenILS::Application::Cat::AssetCommon->org_cannot_have_vols($editor, $vol->owning_lib) );
@@ -1415,6 +1423,15 @@ sub batch_volume_transfer {
 
     my $vols = $e->batch_retrieve_asset_call_number($vol_ids);
     my @seen;
+
+    my %owning_lib_set;
+    for my $vol (@$vols) {
+        $owning_lib_set{$vol->owning_lib} = 1;  # Build the set of unique owning libs
+    }
+    for my $org_key (keys %owning_lib_set) {
+        # So we're testing the perm against the original owning libraries, and not just the destination
+        return $e->event unless $e->allowed('UPDATE_VOLUME', $org_key); 
+    }
 
    my @rec_ids;
 
@@ -1544,6 +1561,8 @@ sub batch_volume_transfer {
                         $part_obj = Fieldmapper::biblio::monograph_part->new();
                         $part_obj->label( $part_label );
                         $part_obj->record( $rec );
+                        $part_obj->creator($e->requestor->id );
+                        $part_obj->editor($e->requestor->id );
                         unless($e->create_biblio_monograph_part($part_obj)) {
                           return $e->die_event if $e->die_event;
                         }
@@ -1749,7 +1768,9 @@ sub acn_sms_msg {
 
     my $targets = $e->batch_retrieve_asset_call_number($target_ids);
 
-    $e->rollback; # FIXME using transaction because of pgpool/slony setups, but not
+    $e->rollback; # FIXME using transaction because of pgpool + logical replication
+                  # setups where statements in an explicit transaction are sent to
+                  # the primary database in the replica set, but not
                   # simply making this method authoritative because of weirdness
                   # with transaction handling in A/T code that causes rollback
                   # failure down the line if handling many targets
@@ -2086,6 +2107,44 @@ sub volcopy_data {
     return undef;
 }
 
+__PACKAGE__->register_method(
+    method    => "update_copy_barcode",
+    api_name  => "open-ils.cat.update_copy_barcode",
+    argc      => 3,
+    signature => {
+        desc   => q|Updates the barcode for a item, checking for either the UPDATE_COPY permission or the UPDATE_COPY_BARCODE permission.|,
+        params => [
+            {desc => 'Authtoken', type => 'string'},
+            {desc => 'Copy ID', type => 'number'},
+            {desc => 'New Barcode', type => 'string'}
+        ]
+    },
+    return => {desc => 'Returns the copy ID if successful, an ILS event otherwise.', type => 'string'}
+);
+
+sub update_copy_barcode {
+    my ($self, $client, $auth, $copy_id, $barcode) = @_;
+    my $e = new_editor(authtoken => $auth, xact => 1);
+
+    $e->checkauth or return $e->event;
+
+    my $copy = $e->retrieve_asset_copy($copy_id)
+        or return $e->event;
+
+    # make sure there is no undeleted copy (including the same one?) with the same barcode
+    my $existing = $e->search_asset_copy({barcode => $barcode, deleted => 'f'}, {idlist=>1});
+    return OpenILS::Event->new('ITEM_BARCODE_EXISTS') if @$existing;
+
+    # if both of these perm checks fail, we'll report it for UPDATE_COPY_BARCODE as it is more specific
+    return $e->event unless $e->allowed('UPDATE_COPY', $copy->circ_lib) || $e->allowed('UPDATE_COPY_BARCODE', $copy->circ_lib);
+
+    $copy->barcode( $barcode );
+
+    $e->update_asset_copy( $copy ) or return $e->event;
+    $e->commit or return $e->event;
+
+    return $copy->id;
+}
 
 1;
 

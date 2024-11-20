@@ -6,8 +6,8 @@ import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {NetRequest, NetService} from '@eg/core/net.service';
 
 @Component({
-  selector: 'eg-op-change',
-  templateUrl: 'op-change.component.html'
+    selector: 'eg-op-change',
+    templateUrl: 'op-change.component.html'
 })
 
 export class OpChangeComponent
@@ -36,6 +36,14 @@ export class OpChangeComponent
         this.onOpen$.subscribe(
             val => this.renderer.selectRootElement('#username').focus()
         );
+    }
+
+    my_close() {
+        if (this.requestToEscalate) {
+            this.requestToEscalate.observer.error('Operation canceled');
+            delete this.requestToEscalate;
+        }
+        this.close(); // dialog close
     }
 
     login(): Promise<any> {
@@ -104,11 +112,11 @@ export class OpChangeComponent
         // Relay responses received for our escalated request to
         // the caller via the original request observer.
         this.net.requestCompiled(req)
-        .subscribe(
-            res => sourceReq.observer.next(res),
-            err => sourceReq.observer.error(err),
-            ()  => sourceReq.observer.complete()
-        ).add(_ => this.auth.undoOpChange());
+            .subscribe(
+                res => sourceReq.observer.next(res),
+                (err: unknown) => sourceReq.observer.error(err),
+                ()  => sourceReq.observer.complete()
+            ).add(() => this.auth.undoOpChange());
     }
 }
 

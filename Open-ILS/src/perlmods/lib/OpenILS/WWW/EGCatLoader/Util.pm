@@ -27,7 +27,8 @@ our %cache = ( # cached data
     aou_tree => {en_us => undef},
     aouct_tree => {},
     eg_cache_hash => undef,
-    authority_fields => {en_us => {}}
+    authority_fields => {en_us => {}},
+    i18ns => {en_us => {}}
 );
 
 sub child_init {
@@ -314,6 +315,25 @@ sub init_ro_object_cache {
                 unless exists $cache{org_settings}{$locale}{$org_id}{$setting};
 
         return $cache{org_settings}{$locale}{$org_id}{$setting};
+    };
+
+    $locale_subs->{get_i18n_string} = sub {
+        my($string_id, $fallback_string) = @_;
+        if (not exists $cache{i18ns}{$locale}{$string_id}) {
+            my $e = new_editor();
+            my $string_obj = $e->retrieve_config_i18n_string([$string_id, {}]);
+            undef $e;
+            # try/catch causes an error here; I'm not sure why
+            eval {
+                $cache{i18ns}{$locale}{$string_id} = $string_obj->string;
+            };
+            if ($@) {
+                my $err = shift;
+                $logger->warn("get_i18n_string{$locale}{$string_id}, err = $err");
+            }
+            $cache{i18ns}{$locale}{$string_id} ||= $fallback_string || 'XXX';
+        }
+        return $cache{i18ns}{$locale}{$string_id};
     };
 
     # retrieve and cache acsaf values
@@ -796,7 +816,7 @@ sub load_copy_location_groups {
                 }
             }
         },
-        {order_by => {acplg => ['pos','name']}}
+        {order_by => [{class => "acplg", field => "pos"},{class => "acplg", field => "name"}]}
     ]);
 
     my %buckets;
@@ -853,20 +873,14 @@ sub search_lasso_orgs {
 
 sub load_lassos {
     my $self = shift;
-    my $ctx = $self->ctx;
 
-    # User can access global lassos and those at the current search lib
-    my $direct_lassos = $self->editor->search_actor_org_lasso_map(
-        { org_unit => $ctx->{search_ou} }
-    );
-    $direct_lassos = [ map { $_->lasso } @$direct_lassos];
-
-    my $lassos = $self->editor->search_actor_org_lasso(
-        { '-or' => { global => 't', @$direct_lassos ? (id => { in => $direct_lassos}) : () } }
+    $self->ctx->{lassos} = $U->simplereq(
+        'open-ils.search',
+        'open-ils.search.fetch_context_library_groups.atomic',
+        $self->ctx->{search_ou}
     );
 
-    $ctx->{lassos} = [ sort { $a->name cmp $b->name } @$lassos ];
-    $self->apache->log->info("Fetched ".scalar(@$lassos)." lassos");
+    $self->apache->log->info("Fetched ".scalar(@{$self->ctx->{lassos}})." lassos");
 }
 
 sub set_file_download_headers {

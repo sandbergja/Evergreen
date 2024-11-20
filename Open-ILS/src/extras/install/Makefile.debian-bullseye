@@ -12,10 +12,16 @@ export DEB_PGSQL_COMMON_MODS = \
 	librose-uri-perl \
 	libuuid-tiny-perl \
 	libxml-libxml-perl \
+	libmime-base32-perl \
 	libxml-libxslt-perl
 
+# NOTE: The 4 '*redis*' packages are also installed by OpenSRF+Redis
 export DEBS = \
 	$(DEB_PGSQL_COMMON_MODS) \
+	redis-server\
+	redis-tools\
+	libredis-perl\
+	libhiredis-dev\
 	apache2-dev\
 	aspell\
 	aspell-en\
@@ -39,18 +45,22 @@ export DEBS = \
 	libdbi1\
 	libemail-simple-perl\
 	libemail-mime-perl\
+	libemail-valid-perl\
 	libexcel-writer-xlsx-perl\
 	libgd-graph3d-perl\
 	libgeo-coder-osm-perl\
+	libhttp-async-perl\
 	libhttp-oai-perl\
 	liblocale-maketext-lexicon-perl\
 	liblog-log4perl-perl\
 	libmarc-charset-perl \
 	libncurses5-dev\
+	libnet-https-nb-perl\
 	libnet-ip-perl\
 	libnet-ldap-perl \
 	libnet-server-perl\
 	libnet-ssh2-perl\
+	libnet-sftp-foreign-perl\
 	libnet-z3950-simple2zoom-perl\
 	libnet-z3950-simpleserver-perl\
 	libnet-z3950-zoom-perl \
@@ -64,6 +74,8 @@ export DEBS = \
 	libsru-perl\
 	libssh2-1-dev\
 	libtemplate-plugin-posix-perl\
+	libtest-mockmodule-perl\
+	libtest-mockobject-perl\
 	libtest-warn-perl\
 	libtest-output-perl\
 	libtext-aspell-perl\
@@ -71,12 +83,13 @@ export DEBS = \
 	libuniversal-require-perl\
 	libunix-syslog-perl\
 	libyaz-dev\
-	postgresql-client-14\
+	postgresql-client-16\
 	libsoap-lite-perl\
 	libbz2-dev\
 	libparse-recdescent-perl\
 	libhtml-defang-perl\
 	libconfig-general-perl\
+	libmodule-pluggable-perl\
 	yaz
 
 export DEB_APACHE_MODS = \
@@ -98,10 +111,13 @@ export DEB_APACHE_DISCONF = \
 
 export CPAN_MODULES = \
 	Geo::Coder::Google \
+	Geo::Coder::Bing \
 	Business::OnlinePayment::PayPal \
 	String::KeyboardDistance \
 	Text::Levenshtein::Damerau::XS \
 	Email::Send \
+	Pass::OTP \
+	Authen::WebAuthn \
 	Locale::Country
 
 export CPAN_MODULES_FORCE = \
@@ -110,6 +126,7 @@ export CPAN_MODULES_FORCE = \
 
 export CPAN_MODULES_PGSQL = \
 	String::KeyboardDistance \
+	Pass::OTP \
 	Text::Levenshtein::Damerau::XS
 
 PGSQL_SERVER_DEBS_10 = \
@@ -141,6 +158,18 @@ PGSQL_SERVER_DEBS_14 = \
 	postgresql-14 \
 	postgresql-plperl-14 \
 	postgresql-server-dev-14
+
+PGSQL_SERVER_DEBS_15 = \
+	$(DEB_PGSQL_COMMON_MODS) \
+	postgresql-15 \
+	postgresql-plperl-15 \
+	postgresql-server-dev-15
+
+PGSQL_SERVER_DEBS_16 = \
+	$(DEB_PGSQL_COMMON_MODS) \
+	postgresql-16 \
+	postgresql-plperl-16 \
+	postgresql-server-dev-16
 
 # note: some prereqs are repeated in the developer/packager 
 # sections to support building Evergreen packages on servers
@@ -178,24 +207,6 @@ all:
 	make -f $(DIR)/Makefile.common install_cpan_force
 	make -f $(DIR)/Makefile.debian debian_sys_config
 
-install_postgres_server_10:
-	make -f $(DIR)/Makefile.debian DEBS="$(PGSQL_APT_REPO_DEBS)"
-	make -f $(DIR)/Makefile.debian debian_postgresql_repo
-	make -f $(DIR)/Makefile.debian DEBS="$(PGSQL_SERVER_DEBS_10)"
-	make -f $(DIR)/Makefile.common install_cpan_pgsql
-
-install_postgres_server_11:
-	make -f $(DIR)/Makefile.debian DEBS="$(PGSQL_APT_REPO_DEBS)"
-	make -f $(DIR)/Makefile.debian debian_postgresql_repo
-	make -f $(DIR)/Makefile.debian DEBS="$(PGSQL_SERVER_DEBS_11)"
-	make -f $(DIR)/Makefile.common install_cpan_pgsql
-
-install_postgres_server_12:
-	make -f $(DIR)/Makefile.debian DEBS="$(PGSQL_APT_REPO_DEBS)"
-	make -f $(DIR)/Makefile.debian debian_postgresql_repo
-	make -f $(DIR)/Makefile.debian DEBS="$(PGSQL_SERVER_DEBS_12)"
-	make -f $(DIR)/Makefile.common install_cpan_pgsql
-
 install_postgres_server_13:
 	make -f $(DIR)/Makefile.debian DEBS="$(PGSQL_APT_REPO_DEBS)"
 	make -f $(DIR)/Makefile.debian debian_postgresql_repo
@@ -206,6 +217,18 @@ install_postgres_server_14:
 	make -f $(DIR)/Makefile.debian DEBS="$(PGSQL_APT_REPO_DEBS)"
 	make -f $(DIR)/Makefile.debian debian_postgresql_repo
 	make -f $(DIR)/Makefile.debian DEBS="$(PGSQL_SERVER_DEBS_14)"
+	make -f $(DIR)/Makefile.common install_cpan_pgsql
+
+install_postgres_server_15:
+	make -f $(DIR)/Makefile.debian DEBS="$(PGSQL_APT_REPO_DEBS)"
+	make -f $(DIR)/Makefile.debian debian_postgresql_repo
+	make -f $(DIR)/Makefile.debian DEBS="$(PGSQL_SERVER_DEBS_15)"
+	make -f $(DIR)/Makefile.common install_cpan_pgsql
+
+install_postgres_server_16:
+	make -f $(DIR)/Makefile.debian DEBS="$(PGSQL_APT_REPO_DEBS)"
+	make -f $(DIR)/Makefile.debian debian_postgresql_repo
+	make -f $(DIR)/Makefile.debian DEBS="$(PGSQL_SERVER_DEBS_16)"
 	make -f $(DIR)/Makefile.common install_cpan_pgsql
 
 # note: if/when grunt-cli is available as a

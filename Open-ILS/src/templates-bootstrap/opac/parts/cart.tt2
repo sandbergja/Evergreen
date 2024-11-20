@@ -14,7 +14,7 @@
       [% END %]
       <option value="[% mkurl(ctx.opac_root _ '/mylist/clear', {}) %]">[% l('Clear Basket') %]</option>
     </select>
-    <input class="opac-button" type="button" id="do_basket_action" value="[% l('Go') %]" />
+    <input class="btn btn-action" type="button" id="do_basket_action" value="[% l('Go') %]" />
   </div>
   <div id="record_basket_icon">
      <a href="[% mkurl(ctx.opac_root _ '/mylist') %]" class="no-dec" rel="nofollow" vocab="">
@@ -26,5 +26,17 @@
          <span class="sr-only">[% l('records in basket') %]</span>
        </a>
      </div>
+    <a href="[% mkurl(ctx.opac_root _ '/mylist') %]" class="no-dec" rel="nofollow" vocab=""
+        aria-label="[%
+          IF ctx.mylist.size > 1; l('View [_0] records in basket');
+          ELSIF ctx.mylist.size == 1; l('View one record in basket');
+          ELSE; l('Basket is empty');
+          END;
+        %]">
+        <img src="[% ctx.media_prefix %]/images/cart-sm.png[% ctx.cache_key %]" alt="">
+        <div id="record_basket_count_floater">
+          <span id="record_basket_count">[% ctx.mylist.size %]</span>
+        </div>
+    </a>
   </div>
 </div>

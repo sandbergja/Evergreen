@@ -11,7 +11,7 @@
             The input IDs are there to match the labels.  
             They are not referenced in the Login controller.
           -->
-          <form ng-submit="login(args)" name="login-form" class="form-horizontal" role="form">
+          <form ng-submit="login(args)" id="login_form" name="login-form" class="form-horizontal" role="form">
             <div class="form-group">
               <label class="col-md-4 control-label" for="login-username">[% l('Username') %]</label>
               <div class="col-md-8">
@@ -24,8 +24,14 @@
             <div class="form-group">
               <label class="col-md-4 control-label" for="login-password">[% l('Password') %]</label>
               <div class="col-md-8">
-                <input type="password" id="login-password" class="form-control"
-                  placeholder="Password" ng-model="args.password"/>
+                <div class="input-group">
+                  <input type="password" id="login-password" class="form-control"
+                    placeholder="Password" autocapitalize="none" spellcheck="false" autocomplete="false" aria-description="[% l('Your password is not visible.') %]"
+                         ng-model="args.password"/>
+                  <span class="input-group-addon">
+                    <button id="show_password" type="button" role="switch" aria-label="password visibility" aria-checked="false" ><i class="glyphicon glyphicon-eye-close"></i></button>
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -67,3 +73,26 @@
     <div class="col-md-3"></div><!-- offset? -->
   </div>
 </div>
+<script>
+    // password visibility eye
+    let btn = document.getElementById('show_password');
+    let input = document.getElementById('login-password');
+    let icon = btn.querySelector('i');
+    btn.addEventListener('click', () => {
+      if(input.type == 'password'){
+        input.type = 'text';
+        icon.setAttribute('class', 'glyphicon glyphicon-eye-open');
+        btn.setAttribute('aria-checked', 'true');
+        input.setAttribute('aria-description', "[% l('Your password is visible!') %]");
+      }else {
+        input.type = 'password';
+        icon.setAttribute('class', 'glyphicon glyphicon-eye-close');
+        btn.setAttribute('aria-checked', 'false');
+        input.setAttribute('aria-description', "[% l('Your password is not visible.') %]");
+      }
+      input.focus();
+    });
+    $('#login_form').submit(()=>{
+        input.type='password'; 
+    });
+</script>

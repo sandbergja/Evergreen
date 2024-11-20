@@ -35,7 +35,10 @@ UpUp.start({
     '[% ctx.media_prefix %]/js/ui/default/staff/build/css/tablesort.css',
     '[% ctx.base_path %]/staff/css/print.css',
     '[% ctx.base_path %]/staff/css/cat.css',
+    '[% ctx.base_path %]/staff/css/styles-colors.css',
     '[% ctx.base_path %]/staff/css/style.css',
+    '[% ctx.base_path %]/staff/css/nav.css',
+    '[% ctx.base_path %]/staff/css/grid.css',
     '[% ctx.base_path %]/staff/css/circ.css',
     '[% ctx.media_prefix %]/js/dojo/opensrf/md5.js',
     '[% ctx.media_prefix %]/js/ui/default/staff/build/js/moment-with-locales.min.js',
@@ -128,6 +131,7 @@ UpUp.start({
     s.EG_WORK_LOG_FORGIVE_PAYMENT = '[% l('Forgive Payment') %]';
     s.EG_WORK_LOG_GOODS_PAYMENT = '[% l('Goods Payment') %]';
     s.EG_WORK_LOG_REQUESTED_HOLD = '[% l('Hold Request') %]';
+    s.EG_WORK_LOG_CANCELED_HOLD = '[% l('Hold Cancelation') %]';
     s.EG_CONFIRM_DELETE_RECORD_TITLE = '[% l('Confirm Record Deletion') %]';
     s.EG_CONFIRM_DELETE_RECORD_BODY = "[% l('Delete record {{id}}?') %]";
     s.OP_CHANGE_SUCCESS = "[% l('Operator Change Succeeded') %]";
@@ -159,6 +163,9 @@ UpUp.start({
     s.PAGE_TITLE_DYNAMIC_AND_CONTEXT = "[% l('[_1] - [_2]', '{{dynamic}}', '{{context}}') %]";
     s.CONFIRM_LONG_RUNNING_ACTION_MSG = "[% l('This action might take a while to complete. Continue?') %]";
     s.CONFIRM_LONG_RUNNING_ACTION_ALL_ROWS_TITLE = "[% l('Are you sure you want to load ALL items?') %]";
+    s.STOP_FINES_LOST = "[% l('Status: Lost Materials') %]";
+    s.STOP_FINES_LONGOVERDUE = "[% l('Status: Long Overdue') %]";
+    s.CIRC_OVERDUE = "[% l('Status: Overdue') %]";
     s.YES = "[% l('Yes') %]";
     s.NO = "[% l('No') %]";
   }]);

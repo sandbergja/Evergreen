@@ -391,6 +391,10 @@ angular.module('egCoreMod')
             'ui.patron.edit.au.other_phone.suggest',
             'ui.patron.edit.au.other_phone.regex',
             'ui.patron.edit.au.other_phone.example',
+            'ui.patron.edit.aus.default_phone.regex',
+            'ui.patron.edit.aus.default_phone.example',
+            'ui.patron.edit.aus.default_sms_notify.regex',
+            'ui.patron.edit.aus.default_sms_notify.example',
             'ui.patron.edit.phone.regex',
             'ui.patron.edit.phone.example',
             'ui.patron.edit.au.active.show',
@@ -409,7 +413,7 @@ angular.module('egCoreMod')
             'ui.patron.edit.au.guardian.show',
             'ui.patron.edit.au.guardian.suggest',
             'ui.patron.edit.guardian_required_for_juv',
-            'format.date',
+            'webstaff.format.dates',
             'ui.patron.edit.default_suggested',
             'opac.barcode_regex',
             'opac.username_regex',
@@ -516,7 +520,7 @@ angular.module('egCoreMod')
 
     service.searchPermGroupEntries = function(org) {
         return egCore.pcrud.search('pgtde', {org: org, parent: null},
-            {flesh: -1, flesh_fields: {pgtde: ['grp', 'children']}}, {atomic: true}
+            {flesh: -1, flesh_fields: {pgtde: ['grp', 'children']}, 'order_by':{'pgtde':'position desc'}}, {atomic: true}
         ).then(function(treeArray) {
             if (!treeArray.length && egCore.org.get(org).parent_ou()) {
                 return service.searchPermGroupEntries(egCore.org.get(org).parent_ou());
@@ -844,6 +848,52 @@ angular.module('egCoreMod')
             service.stat_cat_entry_maps[map.stat_cat.id] = map.stat_cat_entry;
         });
 
+        // fetch survey responses for this user
+        var org_ids = egCore.org.fullPath(egCore.auth.user().ws_ou(), true);
+        var svr_responses = {};
+        patron.surveys = [];
+
+        egCore.pcrud.search('asvr',
+            {usr : patron.id},
+            {flesh : 2, flesh_fields : {asvr : ['survey','question','answer']}}
+        ).then(
+            function() {
+                // All responses collected and deduplicated.
+                // Create one collection of responses per survey.
+                angular.forEach(svr_responses, function(questions, survey_id) {
+                    var collection = {responses : []};
+                    angular.forEach(questions, function(response) {
+                        collection.survey = response.survey();
+                        collection.responses.push(response);
+                    });
+                    patron.surveys.push(collection);
+                });
+            },
+            null,
+            function(response) {
+                // Discard responses for out-of-scope surveys.
+                if (org_ids.indexOf(response.survey().owner()) < 0)
+                    return;
+
+                // survey_id => question_id => response
+                var svr_id = response.survey().id();
+                var qst_id = response.question().id();
+
+                if (!svr_responses[svr_id])
+                    svr_responses[svr_id] = [];
+
+                if (!svr_responses[svr_id][qst_id]) {
+                    svr_responses[svr_id][qst_id] = response;
+                } else {
+                    // We may have multiple responses for the same question.
+                    // For this UI we only care about the most recent response.
+                    if (response.effective_date() >
+                        svr_responses[svr_id][qst_id].effective_date())
+                        svr_responses[svr_id][qst_id] = response;
+                }
+            }
+        );
+
         service.patron = patron;
         return patron;
     }
@@ -1108,7 +1158,7 @@ angular.module('egCoreMod')
         patron.expire_date(patron.expire_date().toISOString());
         patron.profile(patron.profile().id());
         if (patron.dob()) 
-            patron.dob(patron.dob().toISOString().replace(/T.*/,''));
+            patron.dob(moment(patron.dob()).format('YYYY-MM-DD'));
         if (patron.ident_type()) 
             patron.ident_type(patron.ident_type().id());
         if (patron.locale())
@@ -1206,6 +1256,11 @@ angular.module('egCoreMod')
         });
 
         if (!patron.isnew()) patron.ischanged(true);
+
+        // Make sure these are empty, we don't update them this way
+        patron.notes([]);
+        patron.usr_activity([]);
+        patron.standing_penalties([]);
 
         return egCore.net.request(
             'open-ils.actor', 
@@ -1384,7 +1439,7 @@ function($scope , $routeParams , $q , $uibModal , $window , egCore ,
     // note: angular docs say ng-pattern accepts a regexp or string,
     // but as of writing, it only works with a regexp object.
     // (Likely an angular 1.2 vs. 1.4 issue).
-    var field_patterns = {au : {}, ac : {}, aua : {}};
+    var field_patterns = {au : {}, ac : {}, aua : {}, aus: {}};
     $scope.field_pattern = function(cls, field) { 
         if (!field_patterns[cls][field])
             field_patterns[cls][field] = new RegExp('.*');
@@ -1457,6 +1512,23 @@ function($scope , $routeParams , $q , $uibModal , $window , egCore ,
 
         if ($scope.org_settings['ui.patron.edit.guardian_required_for_juv']) {
             add_juv_watcher();
+        }
+
+        // Check for duplicate values in staged users.
+        if (prs.stage_user) {
+            if (patron.first_given_name) { $scope.dupe_value_changed('name', patron.first_given_name); }
+            if (patron.family_name) { $scope.dupe_value_changed('name', patron.familiy_name); }
+            if (patron.email) { $scope.dupe_value_changed('email', patron.email); }
+            if (patron.day_phone) { $scope.dupe_value_changed('day_phone', patron.day_phone); }
+            if (patron.evening_phone) { $scope.dupe_value_changed('evening_phone', patron.evening_phone); }
+
+            patron.addresses.forEach(function (addr) {
+                $scope.dupe_value_changed('address', addr);
+                address_alert(addr);
+            });
+            if (patron.usrname) {
+                prs.check_dupe_username(patron.usrname).then((result) => $scope.dupe_username = Boolean(result));
+            }
         }
     });
 
@@ -2099,6 +2171,12 @@ function($scope , $routeParams , $q , $uibModal , $window , egCore ,
         patronRegSvc.has_perms_for_org(org_id).then(function(map) {
             angular.forEach(map, function(v, k) { $scope.perms[k] = v });
         });
+    }
+
+    $scope.clear_pulib = function() {
+        if (!$scope.user_settings) return; // still rendering
+        $scope.patron._pickup_lib = null;
+        $scope.user_settings['opac.default_pickup_location'] = null;
     }
 
     $scope.handle_pulib_changed = function(org) {

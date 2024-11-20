@@ -1,7 +1,7 @@
 import {Component, OnInit, OnDestroy, QueryList, ViewChildren, ViewChild} from '@angular/core';
 import {Router, ActivatedRoute, ParamMap} from '@angular/router';
 import {FormGroup, FormControl, Validators} from '@angular/forms';
-import {NgbTabChangeEvent, NgbTabset} from '@ng-bootstrap/ng-bootstrap';
+import {NgbNav, NgbNavChangeEvent} from '@ng-bootstrap/ng-bootstrap';
 import {Observable, from, of, Subscription} from 'rxjs';
 import { single, switchMap, tap, debounceTime } from 'rxjs/operators';
 import {PatronService} from '@eg/staff/share/patron/patron.service';
@@ -14,17 +14,18 @@ import {PatronBarcodeValidator} from '@eg/share/validators/patron_barcode_valida
 
 
 @Component({
-  templateUrl: './return.component.html'
+    templateUrl: './return.component.html'
 })
 
 export class ReturnComponent implements OnInit, OnDestroy {
     patronId: number;
     findPatron: FormGroup;
     subscriptions: Subscription[] = [];
+    patronTab: any;
 
     noSelectedRows: (rows: IdlObject[]) => boolean;
-    handleTabChange: ($event: NgbTabChangeEvent) => void;
-    @ViewChild('tabs', { static: true }) tabs: NgbTabset;
+    handleNavChange: ($event: NgbNavChangeEvent) => void;
+    @ViewChild('tabs', { static: true }) tabs: NgbNav;
     @ViewChildren(ReservationsGridComponent) grids: QueryList<ReservationsGridComponent>;
 
     constructor(
@@ -43,6 +44,10 @@ export class ReturnComponent implements OnInit, OnDestroy {
         this.route.paramMap.pipe(switchMap((params: ParamMap) => {
             return this.handleParams$(params);
         })).subscribe();
+
+        this.patronTab =
+            this.store.getItem('eg.booking.return.tab')
+            || 'patron_tab';
 
         this.findPatron = new FormGroup({
             'patronBarcode': new FormControl(null,
@@ -68,7 +73,7 @@ export class ReturnComponent implements OnInit, OnDestroy {
                     }
                 })
             )
-            .subscribe());
+                .subscribe());
 
         this.subscriptions.push(
             this.resourceBarcode.valueChanges.pipe(
@@ -83,6 +88,7 @@ export class ReturnComponent implements OnInit, OnDestroy {
                             select: {'curr_rsrcs': {'return_time': null, 'pickup_time': {'!=': null}}}
                         }).pipe(tap((resp) => {
                             if (resp.curr_rsrcs()[0].usr()) {
+                                this.tabs.select('resource');
                                 this.patronId = resp.curr_rsrcs()[0].usr();
                                 this.refreshGrids();
                             }
@@ -95,51 +101,52 @@ export class ReturnComponent implements OnInit, OnDestroy {
         );
         this.noSelectedRows = (rows: IdlObject[]) => (rows.length === 0);
 
-        this.handleTabChange = ($event) => {
+        this.handleNavChange = ($event) => {
             this.store.setItem('eg.booking.return.tab', $event.nextId)
-            .then(() => {
-                this.router.navigate(['/staff', 'booking', 'return']);
-                this.findPatron.patchValue({resourceBarcode: ''});
-                this.patronId = null;
-            });
+                .then(() => {
+                    this.router.navigate(['/staff', 'booking', 'return']);
+                    this.findPatron.patchValue({resourceBarcode: ''});
+                    this.patronId = null;
+                });
         };
     }
 
     handleParams$ = (params: ParamMap): Observable<any> => {
-      this.patronId = +params.get('patron_id');
-      if (this.patronId) {
-          return this.pcrud.search('au', {
-              'id': this.patronId,
-          }, {
-              limit: 1,
-              flesh: 1,
-              flesh_fields: {'au': ['card']}
-          }).pipe(tap(
-              (resp) => {
-                  this.findPatron.patchValue({patronBarcode: resp.card().barcode()});
-                  this.refreshGrids();
-              }, (err) => { console.debug(err); }
-          ));
-      } else {
-          return from(this.store.getItem('eg.booking.return.tab'))
-              .pipe(tap(tab => {
-                  if (tab) { this.tabs.select(tab); }
-          }));
-      }
-    }
+        this.patronId = +params.get('patron_id');
+        if (this.patronId) {
+            return this.pcrud.search('au', {
+                'id': this.patronId,
+            }, {
+                limit: 1,
+                flesh: 1,
+                flesh_fields: {'au': ['card']}
+            }).pipe(tap(
+                (resp) => {
+                    this.tabs.select('patron_tab');
+                    this.findPatron.patchValue({patronBarcode: resp.card().barcode()});
+                    this.refreshGrids();
+                }, (err: unknown) => { console.debug(err); }
+            ));
+        } else {
+            return from(this.store.getItem('eg.booking.return.tab'))
+                .pipe(tap(tab => {
+                    if (tab) { this.tabs.select(tab); }
+                }));
+        }
+    };
     refreshGrids = (): void => {
         this.grids.forEach (grid => grid.reloadGrid());
-    }
+    };
     get patronBarcode() {
-      return this.findPatron.get('patronBarcode');
+        return this.findPatron.get('patronBarcode');
     }
     get resourceBarcode() {
-      return this.findPatron.get('resourceBarcode');
+        return this.findPatron.get('resourceBarcode');
     }
 
     ngOnDestroy(): void {
-      this.subscriptions.forEach((subscription) => {
-          subscription.unsubscribe();
-      });
+        this.subscriptions.forEach((subscription) => {
+            subscription.unsubscribe();
+        });
     }
 }

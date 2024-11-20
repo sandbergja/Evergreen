@@ -1,0 +1,31 @@
+/* summary.component.css */
+
+.text-danger {
+    background-color: var(--badge-danger-bg);
+    color: var(--danger-color) !important;
+    font-weight: bold;
+    padding: 0 .25rem;
+}
+
+.text-danger:before {
+    content: "\e160";
+}
+
+.bg-warning {
+    background-color: var(--badge-warning-bg) !important;
+    color: var(--badge-warning);
+    font-weight: bold;
+}
+
+.bg-warning:before {
+    content: "\e002";
+}
+
+.bg-warning:before,
+.text-danger:before {
+    font-family: "Material Icons";
+    font-size: 1.6rem;
+    font-weight: normal;
+    line-height: 1.2rem;
+    vertical-align: middle;
+}

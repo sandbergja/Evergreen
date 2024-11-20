@@ -1,11 +1,19 @@
+mark {
+  --highlight-bg: light-dark(#B4F8D3, #002C1F);
+  --highlight-border: light-dark(#20C997, #0A3622);
+  --highlight-id-bg: light-dark(#C4F0F8, #031633);
+  --highlight-id-border: light-dark(#3DD5F3, #084298);
+}
 
 .oils_SH {
   font-weight: bolder;
-  background-color: #99ff99;
+  background: var(--highlight-bg);
+  border-bottom: 1px solid var(--highlight-border);
+  color: inherit;
 }
 
 .oils_SH.identifier {
-  font-weight: bolder;
-  background-color: #42b0f4;
+  background: var(--highlight-id-bg);
+  border-bottom: 1px solid var(--highlight-id-border);
 }
 

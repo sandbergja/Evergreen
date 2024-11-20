@@ -7,7 +7,7 @@ import {AuthService} from './auth.service';
 import {PcrudService} from './pcrud.service';
 import {DbStoreService} from './db-store.service';
 
-type OrgNodeOrId = number | IdlObject;
+type OrgNodeOrId = number | IdlObject | { id: number } | null | undefined;
 
 interface OrgFilter {
     canHaveUsers?: boolean;
@@ -40,8 +40,17 @@ export class OrgService {
     ) {}
 
     get(nodeOrId: OrgNodeOrId): IdlObject {
+        // eslint-disable-next-line eqeqeq
+        if (nodeOrId == null) {
+            return null;
+        }
         if (typeof nodeOrId === 'object') {
-            return nodeOrId;
+            if ('id' in nodeOrId && typeof nodeOrId.id === 'function') {
+                return nodeOrId as IdlObject;
+            } else if ('id' in nodeOrId && typeof nodeOrId.id !== 'function') {
+                return this.orgMap[nodeOrId.id];
+            }
+            return nodeOrId as IdlObject;
         }
         return this.orgMap[nodeOrId];
     }
@@ -153,7 +162,7 @@ export class OrgService {
     // list of org_unit objects or IDs for ancestors + me + descendants
     fullPath(nodeOrId: OrgNodeOrId, asId?: boolean): any[] {
         const list = this.ancestors(nodeOrId, false).concat(
-          this.descendants(nodeOrId, false).slice(1));
+            this.descendants(nodeOrId, false).slice(1));
         if (asId) {
             return list.map(n => n.id());
         }
@@ -193,21 +202,21 @@ export class OrgService {
         // that are not yet in use by an org unit.
         return this.pcrud.retrieveAll(
             'aout', {}, {anonymous: true, atomic: true}).toPromise()
-        .then(types => {
-            this.orgTypeList = types;
-            types.forEach(t => this.orgTypeMap[Number(t.id())] = t);
+            .then(types => {
+                this.orgTypeList = types;
+                types.forEach(t => this.orgTypeMap[Number(t.id())] = t);
 
-            return this.pcrud.search('aou', {parent_ou : null},
-                {flesh : -1, flesh_fields : {aou : ['children', 'ou_type']}},
-                {anonymous : true}
-            ).toPromise();
-        })
+                return this.pcrud.search('aou', {parent_ou : null},
+                    {flesh : -1, flesh_fields : {aou : ['children', 'ou_type']}},
+                    {anonymous : true}
+                ).toPromise();
+            })
 
-        .then(tree => {
+            .then(tree => {
             // ingest tree, etc.
-            this.orgTree = tree;
-            this.absorbTree();
-        });
+                this.orgTree = tree;
+                this.absorbTree();
+            });
     }
 
     private appendSettingsFromCache(names: string[], batch: OrgSettingsBatch) {
@@ -337,13 +346,13 @@ export class OrgService {
         names = this.settingNamesRemaining(names, batch);
 
         return this.appendSettingsFromDb(names, batch)
-        .then(_ => {
+            .then(_ => {
 
-            names = this.settingNamesRemaining(names, batch);
+                names = this.settingNamesRemaining(names, batch);
 
-            return this.appendSettingsFromNet(orgId, names, batch, auth)
-            .then(__ => this.addSettingsToDb(names, batch));
-        });
+                return this.appendSettingsFromNet(orgId, names, batch, auth)
+                    .then(__ => this.addSettingsToDb(names, batch));
+            });
     }
 
     // remove setting values cached in the indexeddb settings table.

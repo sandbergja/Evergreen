@@ -70,6 +70,7 @@ angular.module('egPatronApp', ['ngRoute', 'ui.bootstrap', 'egUserBucketMod',
             // FIXME: the following is really just for PatronMessagesCtrl
             // and PatronCtrl, so we could refactor to avoid calling it
             // for every controller
+            if (!egCore.auth.token()) return go_promise;
             return egCore.perm.hasPermFullPathAt('VIEW_USER')
             .then(function(orgList) {
                 hasPermAt['VIEW_USER'] = orgList;
@@ -242,6 +243,10 @@ function($scope,  $q , $location , $filter , egCore , egNet , egUser , egAlertDi
         return Boolean($location.path().match(/patron\/\d+\/edit$/));
     }
 
+    $scope.alert_penalties = function() {
+        return patronSvc.alert_penalties;
+    }
+
     // To support the fixed position patron edit actions bar,
     // its markup has to live outside the scope of the patron 
     // edit controller.  Insert a scope blob here that can be
@@ -250,9 +255,6 @@ function($scope,  $q , $location , $filter , egCore , egNet , egUser , egAlertDi
 
     // returns true if a redirect occurs
     function redirectToAlertPanel() {
-
-        $scope.alert_penalties = 
-            function() {return patronSvc.alert_penalties}
 
         if (patronSvc.alertsShown()) return false;
 
@@ -793,8 +795,8 @@ function($scope,  $q,  $routeParams,  $timeout,  $window,  $location,  egCore , 
  * Manages messages
  */
 .controller('PatronMessagesCtrl',
-       ['$scope','$q','$routeParams','egCore','$uibModal','patronSvc','egCirc','hasPermAt',
-function($scope , $q , $routeParams,  egCore , $uibModal , patronSvc , egCirc , hasPermAt ) {
+       ['$scope','$q','$routeParams','egCore','$uibModal','egConfirmDialog','patronSvc','egCirc','hasPermAt',
+function($scope , $q , $routeParams,  egCore , $uibModal , egConfirmDialog , patronSvc , egCirc , hasPermAt ) {
     $scope.initTab('messages', $routeParams.id);
     var usr_id = $routeParams.id;
     var org_ids = hasPermAt.VIEW_USER;
@@ -830,6 +832,10 @@ function($scope , $q , $routeParams,  egCore , $uibModal , patronSvc , egCirc , 
                     {stop_date : {'>' : 'now'}}
                 ]
             }
+        },
+        activateItem : function(selected) {
+            // activateItem returns a single row.
+            $scope.editPenalty([selected])
         }
     }
 
@@ -844,6 +850,10 @@ function($scope , $q , $routeParams,  egCore , $uibModal , patronSvc , egCirc , 
                 stop_date : {'<=' : 'now'},
                 create_date : {between : date_range()}
             };
+        },
+        activateItem : function(selected) {
+            // activateItem returns a single row.
+            $scope.editPenalty([selected])
         }
     };
 
@@ -861,95 +871,175 @@ function($scope , $q , $routeParams,  egCore , $uibModal , patronSvc , egCirc , 
     $scope.removePenalty = function(selected) {
         if (selected.length == 0) return;
 
-        // TODO: need confirmation dialog
+        function doit() {
+            var promises = [];
+            // figure out the view components
+            var aum_ids = [];
+            var ausp_ids = [];
+            angular.forEach(selected, function(s) {
+                if (s.aum_id) { aum_ids.push(s.aum_id); }
+                if (s.ausp_id) { ausp_ids.push(s.ausp_id); }
+            });
 
-        var promises = [];
-        // figure out the view components
-        var aum_ids = [];
-        var ausp_ids = [];
-        angular.forEach(selected, function(s) {
-            if (s.aum_id) { aum_ids.push(s.aum_id); }
-            if (s.ausp_id) { ausp_ids.push(s.ausp_id); }
-        });
+            // fetch all of them since trying to pull them
+            // off of patronSvc.current isn't reliable
+            if (ausp_ids.length > 0) {
+                promises.push(
+                    egCore.pcrud.search('ausp',
+                        {id : ausp_ids}, {},
+                        {atomic : true, authoritative : true}
+                    ).then(function(penalties) {
+                        return egCore.pcrud.remove(penalties);
+                    })
+                );
+            }
+            if (aum_ids.length > 0) {
+                promises.push(
+                    egCore.pcrud.search('aum',
+                        {id : aum_ids}, {},
+                        {atomic : true, authoritative : true}
+                    ).then(function(messages) {
+                        return egCore.pcrud.remove(messages);
+                    })
+                );
+            }
+            $q.all(promises).then(function() {
+                activeGrid.refresh();
+                archiveGrid.refresh();
+                // force a refresh of the user
+                patronSvc.setPrimary(patronSvc.current.id(), null, true);
+            });
+        }
 
-        // fetch all of them since trying to pull them
-        // off of patronSvc.current isn't reliable
-        if (ausp_ids.length > 0) {
-            promises.push(
-                egCore.pcrud.search('ausp',
-                    {id : ausp_ids}, {},
-                    {atomic : true, authoritative : true}
-                ).then(function(penalties) {
-                    return egCore.pcrud.remove(penalties);
-                })
-            );
-        }
-        if (aum_ids.length > 0) {
-            promises.push(
-                egCore.pcrud.search('aum',
-                    {id : aum_ids}, {},
-                    {atomic : true, authoritative : true}
-                ).then(function(messages) {
-                    return egCore.pcrud.remove(messages);
-                })
-            );
-        }
-        $q.all(promises).then(function() {
-            activeGrid.refresh();
-            archiveGrid.refresh();
-            // force a refresh of the user
-            patronSvc.setPrimary(patronSvc.current.id(), null, true);
-        });
+        egCore.audio.play('warning.circ.remove_note');
+        egConfirmDialog.open(
+            egCore.strings.CONFIRM_REMOVE_NOTE, '',
+            {   //xactIds : ''+ids,
+                ok : function() {
+                    doit();
+                }
+            }
+        );
     }
 
     $scope.archivePenalty = function(selected) {
         if (selected.length == 0) return;
 
-        // TODO: need confirmation dialog
+        function doit() {
+            var promises = [];
+            // figure out the view components
+            var aum_ids = [];
+            var ausp_ids = [];
+            angular.forEach(selected, function(s) {
+                if (s.aum_id) { aum_ids.push(s.aum_id); }
+                if (s.ausp_id) { ausp_ids.push(s.ausp_id); }
+            });
 
-        var promises = [];
-        // figure out the view components
-        var aum_ids = [];
-        var ausp_ids = [];
-        angular.forEach(selected, function(s) {
-            if (s.aum_id) { aum_ids.push(s.aum_id); }
-            if (s.ausp_id) { ausp_ids.push(s.ausp_id); }
-        });
+            // fetch all of them since trying to pull them
+            // off of patronSvc.current isn't reliable
+            if (ausp_ids.length > 0) {
+                promises.push(
+                    egCore.pcrud.search('ausp',
+                        {id : ausp_ids}, {},
+                        {atomic : true, authoritative : true}
+                    ).then(function(penalties) {
+                        angular.forEach(penalties, function(p) {
+                            p.stop_date('now');
+                        });
+                        return egCore.pcrud.update(penalties);
+                    })
+                );
+            }
+            if (aum_ids.length > 0) {
+                promises.push(
+                    egCore.pcrud.search('aum',
+                        {id : aum_ids}, {},
+                        {atomic : true, authoritative : true}
+                    ).then(function(messages) {
+                        angular.forEach(messages, function(m) {
+                            m.stop_date('now');
+                        });
+                        return egCore.pcrud.update(messages);
+                    })
+                );
+            }
+            $q.all(promises).then(function() {
+                activeGrid.refresh();
+                archiveGrid.refresh();
+                // force a refresh of the user
+                patronSvc.setPrimary(patronSvc.current.id(), null, true);
+            });
+        }
 
-        // fetch all of them since trying to pull them
-        // off of patronSvc.current isn't reliable
-        if (ausp_ids.length > 0) {
-            promises.push(
-                egCore.pcrud.search('ausp',
-                    {id : ausp_ids}, {},
-                    {atomic : true, authoritative : true}
-                ).then(function(penalties) {
-                    angular.forEach(penalties, function(p) {
-                        p.stop_date('now');
-                    });
-                    return egCore.pcrud.update(penalties);
-                })
-            );
+        egCore.audio.play('warning.circ.archive_note');
+        egConfirmDialog.open(
+            egCore.strings.CONFIRM_ARCHIVE_NOTE, '', 
+            {   //xactIds : ''+ids,
+                ok : function() {
+                    doit();
+                }
+            }
+        );
+    }
+
+    $scope.unarchivePenalty = function(selected) {
+        if (selected.length == 0) return;
+
+        function doit() {
+            var promises = [];
+            // figure out the view components
+            var aum_ids = [];
+            var ausp_ids = [];
+            angular.forEach(selected, function(s) {
+                if (s.aum_id) { aum_ids.push(s.aum_id); }
+                if (s.ausp_id) { ausp_ids.push(s.ausp_id); }
+            });
+
+            // fetch all of them since trying to pull them
+            // off of patronSvc.current isn't reliable
+            if (ausp_ids.length > 0) {
+                promises.push(
+                    egCore.pcrud.search('ausp',
+                        {id : ausp_ids}, {},
+                        {atomic : true, authoritative : true}
+                    ).then(function(penalties) {
+                        angular.forEach(penalties, function(p) {
+                            p.stop_date(null);
+                        });
+                        return egCore.pcrud.update(penalties);
+                    })
+                );
+            }
+            if (aum_ids.length > 0) {
+                promises.push(
+                    egCore.pcrud.search('aum',
+                        {id : aum_ids}, {},
+                        {atomic : true, authoritative : true}
+                    ).then(function(messages) {
+                        angular.forEach(messages, function(m) {
+                            m.stop_date(null);
+                        });
+                        return egCore.pcrud.update(messages);
+                    })
+                );
+            }
+            $q.all(promises).then(function() {
+                activeGrid.refresh();
+                archiveGrid.refresh();
+                // force a refresh of the user
+                patronSvc.setPrimary(patronSvc.current.id(), null, true);
+            });
         }
-        if (aum_ids.length > 0) {
-            promises.push(
-                egCore.pcrud.search('aum',
-                    {id : aum_ids}, {},
-                    {atomic : true, authoritative : true}
-                ).then(function(messages) {
-                    angular.forEach(messages, function(m) {
-                        m.stop_date('now');
-                    });
-                    return egCore.pcrud.update(messages);
-                })
-            );
-        }
-        $q.all(promises).then(function() {
-            activeGrid.refresh();
-            archiveGrid.refresh();
-            // force a refresh of the user
-            patronSvc.setPrimary(patronSvc.current.id(), null, true);
-        });
+
+        egCore.audio.play('warning.circ.unarchive_note');
+        egConfirmDialog.open(
+            egCore.strings.CONFIRM_UNARCHIVE_NOTE, '', 
+            {   //xactIds : ''+ids,
+                ok : function() {
+                    doit();
+                }
+            }
+        );
     }
 
     // leverage egEnv for caching
@@ -966,7 +1056,7 @@ function($scope , $q , $routeParams,  egCore , $uibModal , patronSvc , egCirc , 
     }
 
     $scope.createPenalty = function() {
-        egCirc.create_penalty(usr_id).then(function() {
+        egCirc.create_note(usr_id).then(function() {
             activeGrid.refresh();
             // force a refresh of the user, since they may now
             // have blocking penalties, etc.
@@ -1024,7 +1114,7 @@ function($scope , $q , $routeParams,  egCore , $uibModal , patronSvc , egCirc , 
         }
         $q.all(promises).then(function() {
             angular.forEach(pairs, function(pair) {
-                egCirc.edit_penalty(ausp_objs[pair.ausp_id],aum_objs[pair.aum_id]).then(function() {
+                egCirc.edit_note(ausp_objs[pair.ausp_id],aum_objs[pair.aum_id]).then(function() {
                     activeGrid.refresh();
                     // force a refresh of the user, since they may now
                     // have blocking penalties, etc.
@@ -1040,16 +1130,22 @@ function($scope , $q , $routeParams,  egCore , $uibModal , patronSvc , egCirc , 
  * Credentials tester
  */
 .controller('PatronVerifyCredentialsCtrl',
-       ['$scope','$routeParams','$location','egCore',
-function($scope,  $routeParams , $location , egCore) {
+       ['$scope','$routeParams','$location','egCore','ngToast',
+function($scope,  $routeParams , $location , egCore , ngToast) {
+    $scope.patronId = null;
     $scope.verified = null;
     $scope.focusMe = true;
+    $scope.mappedFactors = null;
+    $scope.mfaExceptions = null;
+    $scope.allFactors = {};
+    $scope.ingressTypes = [];
 
     // called with a patron, pre-populate the form args
     $scope.initTab('other', $routeParams.id).then(
         function() {
             if ($routeParams.id && $scope.patron()) {
                 $scope.prepop = true;
+                $scope.patronId = $scope.patron().id();
                 $scope.username = $scope.patron().usrname();
                 $scope.barcode = $scope.patron().card().barcode();
             } else {
@@ -1057,8 +1153,70 @@ function($scope,  $routeParams , $location , egCore) {
                 $scope.barcode = '';
                 $scope.password = '';
             }
+
+            egCore.pcrud.retrieveAll('mfaf',{},{atomic : true})
+            .then(function(factors) {
+                angular.forEach(factors, function (f) { $scope.allFactors[f.name()] = f});
+            });
+
+            if ($scope.ingressTypes.length == 0) {
+                egCore.pcrud.retrieveAll('cuat',{},{atomic : true}) .then(function(atypes) {
+                    angular.forEach(atypes, function (t) {
+                        if (t.ehow() && !$scope.ingressTypes.includes(t.ehow())) {
+                            $scope.ingressTypes.push(t.ehow());
+                        }
+                    });
+                    $scope.ingressTypes.sort();
+                });
+            }
         }
     );
+
+    $scope.hasIngressException = function(ingress) {
+        if (!$scope.mfaExceptions) return false;
+        return !!$scope.mfaExceptions.find(e => e.ingress() === ingress);
+    }
+
+    // attempt to add an MFA exception
+    $scope.addException = function(ingress) {
+        var ex = new egCore.idl.aumx();
+        ex.usr($scope.patronId);
+        ex.ingress(ingress);
+        egCore.pcrud.create(ex).then(
+            function() { return $scope.loadFactorsAndExceptions() },
+            function() {
+                ngToast.warning(egCore.strings.ADD_EXCEPTION_FAILED);
+                ex.removed = false;
+            }
+        );
+    }
+
+    // attempt to remove configured MFA exception
+    $scope.removeException = function(ex) {
+        ex.removeAttempted = true;
+        egCore.pcrud.remove(ex).then(
+            function() {
+                ex.removed = true;
+                $scope.mfaExceptions = $scope.mfaExceptions.filter(e => !(e.id() === ex.id()));
+            },
+            function() {
+                ngToast.warning(egCore.strings.REMOVE_EXCEPTION_FAILED);
+                ex.removed = false;
+            }
+        );
+    }
+
+    // attempt to remove configured factor
+    $scope.removeFactor = function(map) {
+        map.removeAttempted = true;
+        egCore.pcrud.remove(map).then(
+            function() { map.removed = true; },
+            function() {
+                ngToast.warning(egCore.strings.REMOVE_FACTOR_FAILED);
+                map.removed = false;
+            }
+        );
+    }
 
     // verify login credentials
     $scope.verify = function() {
@@ -1077,8 +1235,38 @@ function($scope,  $routeParams , $location , egCore) {
                 alert(evt);
             } else if (resp == 1) {
                 $scope.verified = true;
+                $scope.loadFactorsAndExceptions();
             } else {
                 $scope.verified = false;
+            }
+        });
+    }
+
+    $scope.loadFactorsAndExceptions = function () {
+        $scope.mappedFactors = [];
+        $scope.mfaExceptions = [];
+        return egCore.net.request(
+            'open-ils.actor',
+            'open-ils.actor.user.retrieve_id_by_barcode_or_username',
+            egCore.auth.token(), $scope.barcode, $scope.username
+        ).then(function(resp) {
+            if (Number(resp)) {
+                $scope.patronId = resp;
+                egCore.pcrud.search('aumfm',
+                    { usr: resp }, {},
+                    { atomic: true}
+                ).then(function(factors) {
+                    $scope.mappedFactors = factors
+                }).then(function() {
+                    return egCore.pcrud.search('aumx',
+                        { usr: resp }, {},
+                        { atomic: true}
+                    ).then(function(exceptions) {
+                        $scope.mfaExceptions = exceptions.sort((a,b) => {
+                            !a.ingress() ? -1 : a.ingress() < b.ingress() ? -1 : 1;
+                        });
+                    });
+                });
             }
         });
     }
@@ -1487,7 +1675,7 @@ function($scope , $location , egCore) {
 function($scope,  $routeParams,  $location , egCore , patronSvc) {
     $scope.initTab('other', $routeParams.id);
 
-    var url = $location.absUrl().replace(/\/staff.*/, '/actor/user/event_log');
+    var url = $location.absUrl().replace(/\/staff\/.*/, '/actor/user/event_log');
     url += '?patron_id=' + encodeURIComponent($routeParams.id);
 
     $scope.triggered_events_url = url;
@@ -1500,7 +1688,7 @@ function($scope,  $routeParams,  $location , egCore , patronSvc) {
     $scope.initTab('other', $routeParams.id);
 
     var url = $location.protocol() + '://' + $location.host()
-        + egCore.env.basePath.replace(/\/staff.*/,  '/actor/user/message');
+        + egCore.env.basePath.replace(/\/staff\/.*/,  '/actor/user/message');
     url += '/' + encodeURIComponent($routeParams.id);
 
     $scope.message_center_url = url;
@@ -1513,7 +1701,7 @@ function($scope , $routeParams , $window , $location , egCore) {
     $scope.initTab('other', $routeParams.id);
 
     var url = $location.absUrl().replace(
-        /\/eg\/staff.*/, '/xul/server/patron/user_edit.xhtml');
+        /\/eg\/staff\/.*/, '/xul/server/patron/user_edit.xhtml');
 
     url += '?usr=' + encodeURIComponent($routeParams.id);
 

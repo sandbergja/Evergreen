@@ -4,68 +4,71 @@
 
 <form [formGroup]="filters" class="row">
   <div class="col-sm-3">
-    <eg-org-family-select labelText="Reservation location" i18n-labelText formControlName="pickupLibraries">
+    <eg-org-family-select ariaLabel="Reservation location" i18n-ariaLabel formControlName="pickupLibraries">
     </eg-org-family-select>
   </div>
   <div class="col-sm-6 offset-sm-3">
     <div class="card">
       <h2 class="card-header" i18n>Filter reservations</h2>
-      <ngb-tabset #filterTabs [activeId]="startingTab" class="mt-1">
-        <ngb-tab id="patron">
-          <ng-template ngbTabTitle>
-            <span class="material-icons" *ngIf="patronId">filter_list</span> <span i18n>Filter by patron</span>
-          </ng-template>
-          <ng-template ngbTabContent>
+      <ul ngbNav #filterTabs="ngbNav" [(activeId)]="startingTab" [keyboard]="true" [roles]="false" role="tablist" class="nav-tabs">
+        <li role="presentation" [ngbNavItem]="'patron'">
+          <button type="button" ngbNavLink role="tab">
+            <span class="material-icons" aria-hidden="true" *ngIf="patronId">filter_list</span> <span i18n>Filter by patron</span>
+          </button>
+          <ng-template ngbNavContent>
             <div class="m-2">
               <div class="input-group m-2">
-                <div class="input-group-prepend">
-                  <label class="input-group-text" for="patron-barcode-value" i18n>Patron barcode</label>
-                </div>
                 <input type="text" id="patron-barcode-value" class="form-control" formControlName="patronBarcode">
                 <div class="input-group-button">
-                  <button *ngIf="patronBarcode.value" class="btn btn-warning" (click)="removeFilters()" i18n><span class="material-icons">delete</span> Remove filter</button>
+                  <button type="button" *ngIf="patronBarcode.value" class="btn btn-destroy" (click)="removeFilters()" i18n><span class="material-icons" aria-hidden="true">delete</span> Remove filter</button>
                 </div>
               </div>
             </div>
           </ng-template>
-        </ngb-tab>
-        <ngb-tab id="resource">
-          <ng-template ngbTabTitle>
-            <span class="material-icons" *ngIf="resourceBarcode.value">filter_list</span> <span i18n>Filter by resource</span>
-          </ng-template>
-          <ng-template ngbTabContent>
+        </li>
+        <li role="presentation" [ngbNavItem]="'resource'">
+          <button type="button" ngbNavLink role="tab">
+            <span class="material-icons" *ngIf="resourceBarcode.value" aria-hidden="true">filter_list</span> 
+            <span i18n>Filter by resource</span>
+          </button>
+          <ng-template ngbNavContent>
             <div class="m-2">
               <div class="input-group m-2">
-                <div class="input-group-prepend">
-                  <label class="input-group-text" for="resource-barcode-value" i18n>Resource barcode</label>
-                </div>
+                  <label class="form-label input-group-text" for="resource-barcode-value" i18n>Resource barcode</label>
                 <input type="text" id="resource-barcode-value" class="form-control" formControlName="resourceBarcode">
                 <div class="input-group-button">
-                  <button *ngIf="resourceBarcode.value" class="btn btn-warning" (click)="removeFilters()" i18n><span class="material-icons">delete</span> Remove filter</button>
+                  <button type="button" *ngIf="resourceBarcode.value" class="btn btn-destroy" (click)="removeFilters()">
+                    <span class="material-icons" aria-hidden="true">delete</span> 
+                    <span i18n>Remove filter</span>
+                  </button>
                 </div>
               </div>
             </div>
           </ng-template>
-        </ngb-tab>
-        <ngb-tab id="type">
-          <ng-template ngbTabTitle>
-            <span class="material-icons" *ngIf="resourceTypeForGrid">filter_list</span> <span i18n>Filter by resource type</span>
-          </ng-template>
-          <ng-template ngbTabContent>
+        </li>
+        <li role="presentation" [ngbNavItem]="'type'" *ngIf="resourceTypeForGrid">
+          <button type="button" ngbNavLink role="tab">
+            <span class="material-icons" aria-hidden="true">filter_list</span> 
+            <span i18n>Filter by resource type</span>
+          </button>
+          <ng-template ngbNavContent>
             <div class="m-2">
               <div class="input-group m-2">
-                <div class="input-group-prepend">
-                  <label class="input-group-text" for="resource-type-value" i18n>Resource type</label>
-                </div>
+                  <label class="form-label input-group-text" for="resource-type-value" i18n>Resource type</label>
                 <eg-combobox domId="resource-type-value" formControlName="resourceType" idlClass="brt" [asyncSupportsEmptyTermClick]="true"></eg-combobox>
                 <div class="input-group-button">
-                  <button class="btn btn-warning" (click)="removeFilters()" i18n><span class="material-icons">delete</span> Remove filter</button>
+                  <button type="button" class="btn btn-destroy" (click)="removeFilters()">
+                    <span class="material-icons" aria-hidden="true">delete</span> 
+                    <span i18n>Remove filter</span>
+                  </button>
                 </div>
               </div>
             </div>
           </ng-template>
-        </ngb-tab>
-      </ngb-tabset>
+        </li>
+      </ul>
+
+      <div [ngbNavOutlet]="filterTabs" class="mt-2"></div>
     </div>
   </div>
 </form>

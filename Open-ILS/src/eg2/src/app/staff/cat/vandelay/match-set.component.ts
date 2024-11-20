@@ -1,12 +1,12 @@
-import {Component, OnInit, ViewChild} from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {Router, ActivatedRoute, ParamMap} from '@angular/router';
-import {NgbTabset, NgbTabChangeEvent} from '@ng-bootstrap/ng-bootstrap';
+import {NgbNav, NgbNavChangeEvent} from '@ng-bootstrap/ng-bootstrap';
 import {IdlObject} from '@eg/core/idl.service';
 import {PcrudService} from '@eg/core/pcrud.service';
 import {OrgService} from '@eg/core/org.service';
 
 @Component({
-  templateUrl: 'match-set.component.html'
+    templateUrl: 'match-set.component.html'
 })
 export class MatchSetComponent implements OnInit {
 
@@ -36,7 +36,7 @@ export class MatchSetComponent implements OnInit {
 
     // Changing a tab in the UI means changing the route.
     // Changing the route ultimately results in changing the tab.
-    onTabChange(evt: NgbTabChangeEvent) {
+    onNavChange(evt: NgbNavChangeEvent) {
         this.matchSetTab = evt.nextId;
 
         // prevent tab changing until after route navigation

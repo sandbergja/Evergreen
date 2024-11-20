@@ -1,11 +1,11 @@
-import {Component, OnInit, ViewChild} from '@angular/core';
+import {Component} from '@angular/core';
 import {Router, ActivatedRoute, ParamMap} from '@angular/router';
-import {NgbTabset, NgbTabChangeEvent} from '@ng-bootstrap/ng-bootstrap';
+import {NgbNav, NgbNavChangeEvent} from '@ng-bootstrap/ng-bootstrap';
 import {PcrudService} from '@eg/core/pcrud.service';
 import {IdlObject} from '@eg/core/idl.service';
 
 @Component({
-  templateUrl: 'queued-record.component.html'
+    templateUrl: 'queued-record.component.html'
 })
 export class QueuedRecordComponent {
 
@@ -33,7 +33,7 @@ export class QueuedRecordComponent {
 
     // Changing a tab in the UI means changing the route.
     // Changing the route ultimately results in changing the tab.
-    onTabChange(evt: NgbTabChangeEvent) {
+    onNavChange(evt: NgbNavChangeEvent) {
         this.recordTab = evt.nextId;
 
         // prevent tab changing until after route navigation
@@ -49,7 +49,7 @@ export class QueuedRecordComponent {
     loadRecord() {
         this.queuedRecord = null;
         this.pcrud.retrieve((this.queueType === 'bib' ? 'vqbr' : 'vqar'), this.recordId)
-        .subscribe(rec => this.queuedRecord = rec);
+            .subscribe(rec => this.queuedRecord = rec);
     }
 
     handleMarcRecordSaved(saveEvent: any) {

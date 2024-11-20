@@ -1,3 +1,5 @@
+/* eslint-disable */
+/* eslint-disable no-empty, no-magic-numbers */
 import {Injectable, EventEmitter} from '@angular/core';
 import {Observable} from 'rxjs';
 import {map, tap, finalize} from 'rxjs/operators';
@@ -6,10 +8,10 @@ import {UnapiService} from '@eg/share/catalog/unapi.service';
 import {IdlService, IdlObject} from '@eg/core/idl.service';
 import {NetService} from '@eg/core/net.service';
 import {PcrudService} from '@eg/core/pcrud.service';
-import {CatalogSearchContext, CatalogSearchState} from './search-context';
+import {CatalogSearchContext, CatalogSearchState, CATALOG_CCVM_FILTERS} from './search-context';
 import {BibRecordService, BibRecordSummary} from './bib-record.service';
 import {BasketService} from './basket.service';
-import {CATALOG_CCVM_FILTERS} from './search-context';
+import { ServerStoreService } from '@eg/core/server-store.service';
 
 @Injectable()
 export class CatalogService {
@@ -17,6 +19,11 @@ export class CatalogService {
     ccvmMap: {[ccvm: string]: IdlObject[]} = {};
     cmfMap: {[cmf: string]: IdlObject} = {};
     copyLocations: IdlObject[];
+    copyLocationGroups: IdlObject[];
+    libraryGroups: IdlObject[];
+    combineLibraryAndLocationGroups: boolean;
+    useSearchHighlight: boolean;
+    useSearchHighlightDefault = true;
 
     // Keep a reference to the most recently retrieved facet data,
     // since facet data is consistent across a given search.
@@ -34,10 +41,17 @@ export class CatalogService {
         private unapi: UnapiService,
         private pcrud: PcrudService,
         private bibService: BibRecordService,
-        private basket: BasketService
-    ) {
-        this.onSearchComplete = new EventEmitter<CatalogSearchContext>();
+        private basket: BasketService,
+        private store: ServerStoreService
 
+    ) {
+        this.net.request(
+            'open-ils.search',
+            'open-ils.search.staff.location_groups_with_lassos'
+        ).toPromise().then(combine => this.combineLibraryAndLocationGroups = !!combine);
+
+        this.onSearchComplete = new EventEmitter<CatalogSearchContext>();
+        store.getItem('ui.show_search_highlight').then(result => {this.useSearchHighlight = result ?? this.useSearchHighlightDefault;});
     }
 
     search(ctx: CatalogSearchContext): Promise<void> {
@@ -122,14 +136,14 @@ export class CatalogService {
         const queryStruct = ctx.compileMarcSearchArgs();
 
         return this.net.request('open-ils.search', method, queryStruct)
-        .toPromise().then(result => {
+            .toPromise().then(result => {
             // Match the query search return format
-            result.ids = result.ids.map(id => [id]);
+                result.ids = result.ids.map(id => [id]);
 
-            this.applyResultData(ctx, result);
-            ctx.searchState = CatalogSearchState.COMPLETE;
-            this.onSearchComplete.emit(ctx);
-        });
+                this.applyResultData(ctx, result);
+                ctx.searchState = CatalogSearchState.COMPLETE;
+                this.onSearchComplete.emit(ctx);
+            });
     }
 
     termSearch(ctx: CatalogSearchContext): Promise<void> {
@@ -165,12 +179,12 @@ export class CatalogService {
                 offset : ctx.pager.offset
             }, fullQuery, true
         ).toPromise()
-        .then(result => this.applyResultData(ctx, result))
-        .then(_ => this.fetchFieldHighlights(ctx))
-        .then(_ => {
-            ctx.searchState = CatalogSearchState.COMPLETE;
-            this.onSearchComplete.emit(ctx);
-        });
+            .then(result => this.applyResultData(ctx, result))
+            .then(_ => this.fetchFieldHighlights(ctx))
+            .then(_ => {
+                ctx.searchState = CatalogSearchState.COMPLETE;
+                this.onSearchComplete.emit(ctx);
+            });
     }
 
     // When showing titles linked to a browse entry, fetch
@@ -183,7 +197,7 @@ export class CatalogService {
         const cmfId = parts[1];
 
         this.pcrud.retrieve('mbe', mbeId)
-        .subscribe(mbe => ctx.termSearch.browseEntry = mbe);
+            .subscribe(mbe => ctx.termSearch.browseEntry = mbe);
     }
 
     applyResultData(ctx: CatalogSearchContext, result: any): void {
@@ -259,8 +273,13 @@ export class CatalogService {
             (hlMap = hlMap.query_struct)    &&
             (hlMap = hlMap.additional_data) &&
             (hlMap = hlMap.highlight_map)   &&
-            (Object.keys(hlMap).length > 0)) {
+            (hlMap.length > 0)) {
         } else { return Promise.resolve(); }
+
+        // Return unmodified results if the user's settings disable highlighting
+        if (this.useSearchHighlight === false){
+            return Promise.resolve();
+        }
 
         let ids;
         if (ctx.getHighlightsFor) {
@@ -393,7 +412,7 @@ export class CatalogService {
     }
 
     iconFormatLabel(code: string): string {
-        if (this.ccvmMap && this.ccvmMap.icon_format) {
+        if (Object.keys(this.ccvmMap).length) {
             const ccvm = this.ccvmMap.icon_format.filter(
                 format => format.code() === code)[0];
             if (ccvm) {
@@ -439,6 +458,31 @@ export class CatalogService {
             {order_by: {acpl: 'name'}},
             {anonymous: true}
         ).pipe(tap(loc => this.copyLocations.push(loc))).toPromise();
+    }
+
+    fetchCopyLocationGroups(contextOrg: number | IdlObject): Promise<any> {
+        const contextOrgId: any = this.org.get(contextOrg).id();
+        const orgIds: any[] = this.org.fullPath(contextOrg, true);
+
+        this.copyLocationGroups = [];
+
+        return this.pcrud.search('acplg',
+            {opac_visible: 't', owner: orgIds},
+            {order_by: [{class: "acplg", field: "pos"}, {class: "acplg", field: "name"}]},
+            {anonymous: true}
+        ).pipe(tap(loc => this.copyLocationGroups.push(loc))).toPromise();
+    }
+
+    fetchLibraryGroups(contextOrg: number | IdlObject): Promise<any> {
+        const contextOrgId: any = this.org.get(contextOrg).id();
+
+        this.libraryGroups = [];
+
+        return this.net.request(
+            'open-ils.search',
+            'open-ils.search.fetch_context_library_groups',
+            contextOrgId
+        ).pipe(tap(loc => this.libraryGroups.push(loc))).toPromise();
     }
 
     browse(ctx: CatalogSearchContext): Observable<any> {

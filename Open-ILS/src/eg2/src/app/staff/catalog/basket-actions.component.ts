@@ -1,23 +1,22 @@
-import {Component, Input, OnInit, ViewChild} from '@angular/core';
+import {Component, ViewChild} from '@angular/core';
 import {BasketService} from '@eg/share/catalog/basket.service';
 import {Router} from '@angular/router';
 import {NetService} from '@eg/core/net.service';
 import {AuthService} from '@eg/core/auth.service';
 import {PrintService} from '@eg/share/print/print.service';
 import {CatalogService} from '@eg/share/catalog/catalog.service';
-import {CatalogSearchContext, CatalogSearchState} from '@eg/share/catalog/search-context';
 import {StaffCatalogService} from './catalog.service';
 import {BucketDialogComponent
-    } from '@eg/staff/share/buckets/bucket-dialog.component';
+} from '@eg/staff/share/buckets/bucket-dialog.component';
 import {ProgressDialogComponent} from '@eg/share/dialog/progress.component';
 
 const MAX_FROM_SEARCH_RESULTS = 1000;
 
 @Component({
-  selector: 'eg-catalog-basket-actions',
-  templateUrl: 'basket-actions.component.html'
+    selector: 'eg-catalog-basket-actions',
+    templateUrl: 'basket-actions.component.html'
 })
-export class BasketActionsComponent implements OnInit {
+export class BasketActionsComponent {
 
     basketAction: string;
 
@@ -37,9 +36,6 @@ export class BasketActionsComponent implements OnInit {
         private staffCat: StaffCatalogService
     ) {
         this.basketAction = '';
-    }
-
-    ngOnInit() {
     }
 
     basketCount(): number {
@@ -63,13 +59,14 @@ export class BasketActionsComponent implements OnInit {
 
                 this.addAllProgress.open();
 
+                // eslint-disable-next-line no-case-declarations
                 const ctx = this.staffCat.cloneContext(this.staffCat.searchContext);
                 ctx.pager.offset = 0;
                 ctx.pager.limit = MAX_FROM_SEARCH_RESULTS;
 
                 this.cat.search(ctx)
-                .then(_ => this.basket.addRecordIds(ctx.currentResultIds()))
-                .then(_ => this.addAllProgress.close());
+                    .then(_ => this.basket.addRecordIds(ctx.currentResultIds()))
+                    .then(_ => this.addAllProgress.close());
 
                 break;
 

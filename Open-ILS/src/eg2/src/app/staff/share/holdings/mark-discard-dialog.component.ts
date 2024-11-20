@@ -1,5 +1,5 @@
-import {Component, OnInit, Input, ViewChild} from '@angular/core';
-import {from, Observable, throwError} from 'rxjs';
+import {Component, Input, ViewChild} from '@angular/core';
+import {from, Observable} from 'rxjs';
 import {tap, concatMap} from 'rxjs/operators';
 import {NetService} from '@eg/core/net.service';
 import {EventService} from '@eg/core/event.service';
@@ -15,12 +15,12 @@ import {StringComponent} from '@eg/share/string/string.component';
  */
 
 @Component({
-  selector: 'eg-mark-discard-dialog',
-  templateUrl: 'mark-discard-dialog.component.html'
+    selector: 'eg-mark-discard-dialog',
+    templateUrl: 'mark-discard-dialog.component.html'
 })
 
 export class MarkDiscardDialogComponent
-    extends DialogComponent implements OnInit {
+    extends DialogComponent {
 
     @Input() copyIds: number[];
 
@@ -38,8 +38,6 @@ export class MarkDiscardDialogComponent
         private auth: AuthService) {
         super(modal); // required for subclassing
     }
-
-    ngOnInit() {}
 
     open(args: NgbModalOptions): Observable<boolean> {
         this.numSucceeded = 0;
@@ -70,8 +68,8 @@ export class MarkDiscardDialogComponent
         this.numFailed = 0;
 
         return from(this.copyIds)
-        .pipe(concatMap(copyId => this.markOneItemDiscard(copyId)))
-        .toPromise().then(_ => this.close(this.numSucceeded > 0));
+            .pipe(concatMap(copyId => this.markOneItemDiscard(copyId)))
+            .toPromise().then(_ => this.close(this.numSucceeded > 0));
     }
 }
 

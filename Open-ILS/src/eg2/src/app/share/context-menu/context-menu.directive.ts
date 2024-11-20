@@ -5,17 +5,19 @@ import {ContextMenuService, ContextMenu, ContextMenuEntry} from './context-menu.
 
 /* Import all of this stuff so we can pass it to our parent
  * class via its constructor */
+/* eslint-disable no-duplicate-imports */
 import {
-    Inject, Injector, Renderer2, ElementRef, TemplateRef, ViewContainerRef,
-    ComponentFactoryResolver, NgZone, ChangeDetectorRef, ApplicationRef
+    Inject, Injector, Renderer2, ElementRef, ViewContainerRef,
+    NgZone, ChangeDetectorRef, ApplicationRef
 } from '@angular/core';
 import {DOCUMENT} from '@angular/common';
 import {NgbPopoverConfig} from '@ng-bootstrap/ng-bootstrap';
+/* eslint-enable no-duplicate-imports */
 /* --- */
 
 @Directive({
-  selector: '[egContextMenu]',
-  exportAs: 'egContextMenu'
+    selector: '[egContextMenu]',
+    exportAs: 'egContextMenu'
 })
 export class ContextMenuDirective extends NgbPopover {
 
@@ -37,29 +39,29 @@ export class ContextMenuDirective extends NgbPopover {
 
     constructor(
         p1: ElementRef<HTMLElement>, p2: Renderer2, p3: Injector,
-        p4: ComponentFactoryResolver, p5: ViewContainerRef, p6: NgbPopoverConfig,
+        p5: ViewContainerRef, p6: NgbPopoverConfig,
         p7: NgZone, @Inject(DOCUMENT) p8: any, p9: ChangeDetectorRef,
         p10: ApplicationRef, private menuService: ContextMenuService) {
 
         // relay injected services to parent
-        super(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
+        super(p1, p2, p3, p5, p6, p7, p8, p9, p10);
 
         this.menuItemSelected = new EventEmitter<ContextMenuEntry>();
 
         this.menuService.menuItemSelected.subscribe(
             (entry: ContextMenuEntry) => {
 
-            // Only broadcast entry selection to my listeners if I'm
-            // hosting the menu where the selection occurred.
+                // Only broadcast entry selection to my listeners if I'm
+                // hosting the menu where the selection occurred.
 
-            if (this.activeMenuIsMe()) {
-                this.menuItemSelected.emit(entry);
+                if (this.activeMenuIsMe()) {
+                    this.menuItemSelected.emit(entry);
 
-                // Item selection via keyboard fails to close the menu.
-                // Force it closed.
-                this.cleanup();
-            }
-        });
+                    // Item selection via keyboard fails to close the menu.
+                    // Force it closed.
+                    this.cleanup();
+                }
+            });
     }
 
     activeMenuIsMe(): boolean {
@@ -87,7 +89,7 @@ export class ContextMenuDirective extends NgbPopover {
 
         if (!this.menuEntries ||
              this.menuEntries.length === 0) {
-             return;
+            return;
         }
 
         this.menu = new ContextMenu();

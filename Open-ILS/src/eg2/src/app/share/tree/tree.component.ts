@@ -1,4 +1,5 @@
-import {Component, OnInit, Input, Output, EventEmitter} from '@angular/core';
+/* eslint-disable */
+import {Component, Input, Output, ViewChildren, QueryList, ElementRef, EventEmitter, TemplateRef} from '@angular/core';
 import {Tree, TreeNode} from './tree';
 
 /*
@@ -6,7 +7,8 @@ Tree Widget:
 
 <eg-tree
     [tree]="myTree"
-    (nodeClicked)="nodeClicked($event)">
+    (nodeClicked)="nodeClicked($event)"
+    (stateFlagClicked)="stateFlagClicked($event)">
 </eg-tree>
 
 ----
@@ -35,9 +37,16 @@ nodeClicked(node: TreeNode) {
     templateUrl: 'tree.component.html',
     styleUrls: ['tree.component.css']
 })
-export class TreeComponent implements OnInit {
+export class TreeComponent {
 
+    _nodeList: any = [];
     _tree: Tree;
+    _prev_stateFlagClick: TreeNode;
+    _labelFilter = '';
+    _labelFilterDebounceTimeout: any = null;
+
+    @Input() showLabelFilter = false; // Allow filtering by node label
+    @Input() disabled = false; // disables /changing/ state flag or emitting selection events
     @Input() set tree(t: Tree) {
         if (t) {
             this._tree = t;
@@ -45,27 +54,200 @@ export class TreeComponent implements OnInit {
         }
     }
 
+    @ViewChildren('egTreeNode') visibleNodeList: QueryList<ElementRef>;
+
     get tree(): Tree {
         return this._tree;
     }
 
+    @Input() showSelectAll = false; // checkbox to toggle all state flags.
+    @Input() showExpandAll = true; // show the expand/collapse all arrows?
+    @Input() disableRootSelector = false; // checkbox at the top of the tree
+    @Input() disableStateFlag = false; // Hide all checkboxes
+    @Input() disableStateFlagRangeSelect = false; // Disable range selection
+    @Input() rowTrailingTemplate: TemplateRef<any>;
+
     @Output() nodeClicked: EventEmitter<TreeNode>;
+    @Output() stateFlagClicked: EventEmitter<TreeNode>;
 
     constructor() {
         this.nodeClicked = new EventEmitter<TreeNode>();
+        this.stateFlagClicked = new EventEmitter<TreeNode>();
     }
 
-    ngOnInit() {}
+    rootNode(): TreeNode {
+        return this.tree?.rootNode;
+    }
 
     displayNodes(): TreeNode[] {
         if (!this.tree) { return []; }
-        return this.tree.nodeList(true);
+        this._nodeList = this.tree.nodeList(true);
+        return this._nodeList;
+    }
+
+    updateLabelFilter() {
+        clearTimeout(this._labelFilterDebounceTimeout);
+        if (!this._labelFilter) {
+            this.tree.restrictedNodes = [];
+        } else {
+            this._labelFilterDebounceTimeout = setTimeout( () => {
+                this.tree.restrictedNodes = this.tree.findNodesByFieldAndValueSearch('label',this._labelFilter);
+                this.tree.restrictedNodes.forEach(n => this.tree.expandPathTo(n));
+            }, 250);
+        }
     }
 
     handleNodeClick(node: TreeNode) {
-        this.tree.selectNode(node);
+        if (this.disableRootSelector && node === this.rootNode()) {
+            return;
+        }
+        if (!this.disabled) {
+            this.tree.selectNode(node);
+            this.nodeClicked.emit(node);
+        }
+    }
+
+    handleStateFlagClick(node: TreeNode, $event) {
+        if (!this.disabled) {
+            node.toggleStateFlag();
+            if (!this.disableStateFlagRangeSelect) { // shift-click child selection is allowed
+                if ($event.shiftKey) { // shift-click child selection happened
+                    this.tree.visibleDescendants(node).forEach(n => n.stateFlag = node.stateFlag); // make descendants match clicked state flag
+                    if (this._prev_stateFlagClick && this._prev_stateFlagClick !== node) { // shift-click range selection, different previous node
+                        const NL = this.tree.visibleDescendants(this.rootNode());
+                        let range_start = NL.indexOf(this._prev_stateFlagClick);
+                        let range_end = NL.indexOf(node);
+
+                        if (range_start > -1 && range_end > -1) { // valid range
+                            if (range_start > range_end) { // clicked above! swap them, and shift
+                                range_end++;
+                                [range_start, range_end] = [range_end, range_start];
+                                range_end++;
+                            }
+                            NL.slice(range_start,range_end).forEach(n => n.stateFlag = node.stateFlag);
+                        }
+                    }
+                    this._prev_stateFlagClick = null; // forget last state flag click now that range selection is complete
+                } else {
+                    this._prev_stateFlagClick = node; // remember last state flag click
+                }
+            }
+            this.stateFlagClicked.emit(node);
+        }
+    }
+
+    /*  // Maybe for later
+    treeFocusEvent($event: any) {
+        console.log("Tree Focus:", $event);
+        //this.showFocusableElements($event.target);
+    }
+
+    treeBlurEvent($event: any) {
+        console.log("Tree Blur:", $event);
+        //this.hideFocusableElements($event.target);
+    }
+*/
+
+    treeKeyEvent(node: TreeNode, $event: any) {
+        const DOMind = this.displayNodes().indexOf(node);
+        const visibleNL = this.visibleNodeList.toArray();
+
+        console.log('Node index: ' + DOMind + '; Key pressed: ', $event.code);
+        if (!$event.key || $event.repeat || $event.code == 'Tab') {return;}
+
+        // arrow keys are required to operate these form fields
+        if ($event.target.tagName.toLowerCase() == 'select' || $event.target.tagName.toLowerCase() == 'textarea') {return;}
+
+        switch ($event.key) {
+            case 'Enter':
+            case 'Space':
+                this.handleNodeClick(node);
+                $event.stopPropagation();
+                $event.preventDefault();
+                break;
+            case 'ArrowRight':
+	       		if (node.children.length) {node.expanded = true;}
+                $event.stopPropagation();
+                $event.preventDefault();
+                break;
+            case 'ArrowLeft':
+	       		node.expanded = false;
+                $event.stopPropagation();
+                $event.preventDefault();
+                break;
+            case 'ArrowDown':
+                if (visibleNL.length > DOMind + 1) {
+                    const nextTargetNode = this.displayNodes()[DOMind + 1];
+                    const target = visibleNL.filter(v => v.nativeElement.id == this.tree.treeId + '-' + nextTargetNode.id)[0];
+	        		target.nativeElement.focus();
+                }
+                $event.stopPropagation();
+                $event.preventDefault();
+                break;
+            case 'ArrowUp':
+                if (DOMind > 0) {
+                    const prevTargetNode = this.displayNodes()[DOMind - 1];
+                    const target = visibleNL.filter(v => v.nativeElement.id == this.tree.treeId + '-' + prevTargetNode.id)[0];
+	        		target.nativeElement.focus();
+                }
+                $event.stopPropagation();
+                $event.preventDefault();
+                break;
+            default:
+                return false;
+        }
+    }
+
+    handleNodeCheck(node: TreeNode) {
+        // If needed, add logic here to handle the case where
+        // a node's checkbox was clicked.
+        // since ngModel is node.selected, we don't need to set it ourselves
+        // this.handleNodeClick(node);
         this.nodeClicked.emit(node);
     }
+
+    expandAll() {
+        if (this.tree) {
+            this.tree.expandAll();
+        }
+    }
+
+    collapseAll() {
+        if (this.tree) {
+            this.tree.collapseAll();
+        }
+    }
+
+    toggleStateFlags(ev: any) {
+        if (ev.target.checked) {
+            this.selectAll();
+        } else {
+            this.deselectAll();
+        }
+    }
+
+    selectAll() {
+        if (this.tree) {
+            this.tree.nodeList().forEach(node => {
+                if (!(this.disableRootSelector && (node === this.rootNode()))) {
+                    node.stateFlag = true;
+                    this.stateFlagClicked.emit(node);
+                }
+            });
+        }
+    }
+
+    deselectAll() {
+        if (this.tree) {
+            this.tree.nodeList().forEach(node => {
+                if (!(this.disableRootSelector && (node === this.rootNode()))) {
+                    node.stateFlag = false;
+                    this.stateFlagClicked.emit(node);
+                }
+            });
+        }
+    }
+
 }
 
 

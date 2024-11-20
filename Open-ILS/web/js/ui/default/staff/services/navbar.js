@@ -11,10 +11,11 @@ angular.module('egCoreMod')
                      egCore , $uibModal , ngToast , egOpChange , $element , egLovefield) {
 
                 $scope.rs = $rootScope;
+                $scope.showAngularCirc = false;
 
-                $scope.reprintLast = function (e) {
+                $scope.reprintLast = function () {
                     egCore.print.reprintLast();
-                    return e.preventDefault();
+                    return;
                 }
 
                 function navTo(path) {
@@ -68,6 +69,24 @@ angular.module('egCoreMod')
                     }
                 }
 
+
+                $scope.setColorMode = function() {
+                    if ( $scope.color_mode === 'auto') {
+                        document.documentElement.setAttribute('data-bs-theme', (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+                    }
+                    else {
+                        $window.document.documentElement.setAttribute('data-bs-theme', $scope.color_mode);
+                    }
+                }
+                
+                $scope.changeColorMode = function(mode) {
+
+                    console.log("Color mode is now: ", mode);
+                    $scope.color_mode = mode;
+                    egCore.hatch.setLocalItem('eg.ui.general.colormode', mode);
+                    $scope.setColorMode();
+                }
+
                 $scope.applyLocale = function(locale) {
                     // EGWeb.pm can change the locale for us w/ the right param
                     // Note: avoid using $location.search() to derive a new
@@ -111,9 +130,22 @@ angular.module('egCoreMod')
                     return egLovefield.cannotConnect;
                 }
 
+                // This needs to run even if egCore.startup.go() doesn't (which might only happen during offline circ?)
+                $scope.init = function() {
+                    $scope.color_mode = egCore.hatch.getLocalItem('eg.ui.general.colormode');
+                    if (!$scope.color_mode) {
+                        $scope.color_mode = 'auto';
+                    }
+                    const darkModePreference = window.matchMedia("(prefers-color-scheme: dark)");
+                    darkModePreference.addEventListener("change", $scope.setColorMode);
+                    $scope.setColorMode();
+                    
+                }
+                $scope.init();
                 egCore.startup.go().then(
                     function() {
                         if (egCore.auth.user()) {
+                            $scope.mfaAllowed = egCore.auth.mfaAllowed();
                             $scope.op_changed = egCore.auth.OCtoken() ? true : false;
                             $scope.username = egCore.auth.user().usrname();
                             $scope.user_id = egCore.auth.user().id();
@@ -122,17 +154,25 @@ angular.module('egCoreMod')
 
                             egCore.org.settings([
                                 'ui.staff.max_recent_patrons',
-                                'ui.staff.angular_catalog.enabled',
+                                'ui.staff.traditional_catalog.enabled',
+                                'ui.staff.angular_circ.enabled',
+                                'ui.staff.angular_acq_selection.enabled',
                                 'circ.curbside'
                             ]).then(function(s) {
                                 var val = s['ui.staff.max_recent_patrons'];
                                 $scope.showRecentPatron = val > 0;
                                 $scope.showRecentPatrons = val > 1;
 
-                                $scope.showAngularCatalog = 
-                                    s['ui.staff.angular_catalog.enabled'];
-                                $scope.enableCurbside = 
-                                    s['circ.curbside'];
+                                val = s['ui.staff.traditional_catalog.enabled'];
+                                $scope.showTraditionalCatalog = (val !== false);
+                                $scope.showAngularAcq =
+                                    s['ui.staff.angular_acq_selection.enabled'];
+                                $scope.enableCurbside = s['circ.curbside'];
+
+                                if (s['ui.staff.angular_circ.enabled']) {
+                                    egCore.perm.hasPermHere('ACCESS_ANGULAR_CIRC')
+                                    .then(function(yes) { $scope.showAngularCirc = yes; });
+                                }
                             }).then(function() {
                                 // need to defer initialization of hotkeys to this point
                                 // as it depends on various settings.

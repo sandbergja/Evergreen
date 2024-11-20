@@ -6,43 +6,48 @@
 </eg-string>
 <eg-string #materialEditSuccessString i18n-text text="Update of Course Material succeeded"></eg-string>
 <eg-string #materialEditFailedString i18n-text text="Update of Course Material failed or was not allowed"></eg-string>
-<eg-string #materialAddDifferentLibraryString i18n-text text="Material exists at a different library"></eg-string>
+
+<eg-alert-dialog #otherLibraryNoPermissionsAlert
+  i18n-dialogTitle i18n-dialogBody
+  dialogTitle="Insufficient permissions"
+  dialogBody="This material has {{itemCircLib}} as its circulation library, where you do not have UPDATE_COPY permissions.  You cannot attach this item without UPDATE_COPY permissions.">
+</eg-alert-dialog>
+
+<eg-confirm-dialog #confirmOtherLibraryDialog
+  i18n-dialogTitle i18n-dialogBody
+  dialogTitle="Material from a different library"
+  dialogBody="This material has {{itemCircLib}} as its circulation library. Are you sure you want to add it to {{currentCourse.course_number()}}?">
+</eg-confirm-dialog>
 
 <ng-template #dialogContent>
-  <div class="modal-header bg-info" [ngClass]="isDialog() ? 'modal-header' : 'alert mt-3'">
+  <div class="modal-header" [ngClass]="isDialog() ? 'modal-header' : 'alert mt-3'">
     <h4 class="modal-title" i18n>Course Materials</h4>
     <ng-container *ngIf="isDialog()">
-      <button type="button" class="close" i18n-aria-label aria-label="Close" (click)="close()">
-        <span aria-hidden="true">&times;</span>
-      </button>
+      <button type="button" class="btn-close btn-close-white" i18n-aria-label aria-label="Close dialog" (click)="close()">      </button>
     </ng-container>
   </div>
   <div [ngClass]="isDialog() ? 'modal-body' : ''">
     <div class="row">
       <div [ngClass]="isDialog() ? 'col-md-12' : 'col-md-4'">
-        <ul ngbNav #associateNav="ngbNav" class="nav-tabs">
-          <li ngbNavItem>
-            <a ngbNavLink i18n>Associate item</a>
+        <ul ngbNav #associateNav="ngbNav" class="nav-tabs" [keyboard]="true" [roles]="false" role="tablist">
+          <li role="presentation" ngbNavItem>
+            <a role="tab" ngbNavLink i18n>Associate item</a>
             <ng-template ngbNavContent>
               <div class="row" [ngClass]="isDialog() ? '' : 'mt-3'">
                 <div class="d-flex" [ngClass]="isDialog() ? 'col-md-6' : 'col-md-12'">
                   <div class="input-group">
-                    <div class="input-group-prepend">
-                      <label for="associate-item-barcode" class="input-group-text" i18n>Barcode</label>
-                    </div>
+                    <label for="associate-item-barcode" class="form-label input-group-text" i18n>Barcode</label>
                     <input type="text" class="flex-grow-1" id="associate-item-barcode"
                       [(ngModel)]="barcodeInput" (click)="$event.target.select()"
-                      [disabled]="currentCourse && currentCourse.is_archived() == 't'"
-                      (keyup.enter)="associateItem(barcodeInput, relationshipInput)" />
+                      [disabled]="currentCourse && (courseIsArchived || currentCourse.is_archived()) === 't'"
+                      />
                   </div>
                 </div>
                 <div class="d-flex" [ngClass]="isDialog() ? 'col-md-6' : 'col-md-12 mt-3'">
                   <div class="input-group">
-                    <div class="input-group-prepend">
-                      <span class="input-group-text" i18n>Relationship</span>
-                    </div>
-                    <input type="text" [(ngModel)]="relationshipInput"
-                      [disabled]="currentCourse && currentCourse.is_archived() == 't'" placeholder-i18n
+                    <label for="associate-item-relationship" class="form-label input-group-text" i18n>Relationship</label>
+                    <input type="text" [(ngModel)]="relationshipInput" id="associate-item-relationship"
+                      [disabled]="currentCourse && (courseIsArchived || currentCourse.is_archived()) === 't'" placeholder-i18n
                       placeholder="e.g. Required" class="flex-grow-1" />
                   </div>
                 </div>
@@ -57,41 +62,33 @@
               <div class="row mt-3">
                 <div class="d-flex" [ngClass]="isDialog() ? 'col-md-6' : 'col-md-12'">
                   <div class="input-group">
-                    <div class="input-group-prepend">
-                      <div class="input-group-text">
-                        <label for="associate-item-temp-call-number" i18n>Call Number</label>
-                      </div>
-                    </div>
-                    <input type="text" [(ngModel)]="tempCallNumber" label="associate-item-temp-call-number"
-                      [disabled]="currentCourse && currentCourse.is_archived() == 't'"
+                    <div class="input-group">
+                        <label class="form-label input-group-text" for="associate-item-temp-call-number" i18n>Call Number</label>
+                    
+                    <input type="text" [(ngModel)]="tempCallNumber" id="associate-item-temp-call-number"
+                      [disabled]="currentCourse && (courseIsArchived || currentCourse.is_archived()) === 't'"
                       (input)="isModifyingCallNumber = true" class="flex-grow-1" />
-                    <div class="input-group-append">
+                    </div>
                       <div class="input-group-text">
                         <input type="checkbox" [(ngModel)]="isModifyingCallNumber"
-                          [disabled]="currentCourse && currentCourse.is_archived() == 't'"
+                          [disabled]="currentCourse && (courseIsArchived || currentCourse.is_archived()) === 't'"
                           aria-label="Checkbox for setting a temporary Call Number" />
-                      </div>
                     </div>
                   </div>
                 </div>
                 <div class="d-flex" [ngClass]="isDialog() ? 'col-md-6' : 'col-md-12 mt-3'">
                   <div class="input-group">
-                    <div class="input-group-prepend">
-                      <div class="input-group-text">
-                        <span i18n>Circulation Modifier</span>
-                      </div>
-                    </div>
+                    <label class="form-label input-group-text" for="temp-circ-mod" i18n>Circulation Modifier</label>
                     <eg-combobox i18n-placeholder placeholder="Circulation Modifier..." idlClass="ccm" idlField="name"
-                      [displayTemplate]="idlClassLabel" [disabled]="currentCourse && currentCourse.is_archived() == 't'"
+                      [displayTemplate]="idlClassLabel" [disabled]="currentCourse && (courseIsArchived || currentCourse.is_archived()) === 't'"
                       [asyncSupportsEmptyTermClick]="true" class="flex-grow-1"
+                      domId="temp-circ-mod"
                       (onChange)="tempCircMod = $event.id; isModifyingCircMod = true">
                     </eg-combobox>
-                    <div class="input-group-append">
-                      <div class="input-group-text">
+                    <div class="input-group-text">
                         <input type="checkbox" [(ngModel)]="isModifyingCircMod"
-                          [disabled]="currentCourse && currentCourse.is_archived() == 't'"
+                          [disabled]="currentCourse && (courseIsArchived || currentCourse.is_archived()) === 't'"
                           aria-label="Checkbox for setting a temporary Circulation Modifier" />
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -99,49 +96,38 @@
               <div class="row mt-3">
                 <div class="d-flex" [ngClass]="isDialog() ? 'col-md-6' : 'col-md-12'">
                   <div class="input-group">
-                    <div class="input-group-prepend">
-                      <div class="input-group-text">
-                        <span i18n>Item Status</span>
-                      </div>
-                    </div>
+                    <label class="form-label input-group-text" for="temp-item-status" i18n>Item Status</label>
                     <eg-combobox i18n-placeholder placeholder="Item Status..." idlClass="ccs" idlField="name"
-                      [displayTemplate]="idlClassLabel" [disabled]="currentCourse && currentCourse.is_archived() == 't'"
+                      [displayTemplate]="idlClassLabel" [disabled]="currentCourse && (courseIsArchived || currentCourse.is_archived()) === 't'"
                       [asyncSupportsEmptyTermClick]="true" class="flex-grow-1"
+                      domId="temp-item-status"
                       (onChange)="tempStatus = $event.id; isModifyingStatus = true">
                     </eg-combobox>
-                    <div class="input-group-append">
-                      <div class="input-group-text">
+                    <div class="input-group-text">
                         <input type="checkbox" [(ngModel)]="isModifyingStatus"
-                          [disabled]="currentCourse && currentCourse.is_archived() == 't'"
+                          [disabled]="currentCourse && (courseIsArchived || currentCourse.is_archived()) === 't'"
                           aria-label="Checkbox for setting a temporary Item Status" />
-                      </div>
                     </div>
                   </div>
                 </div>
                 <div class="d-flex" [ngClass]="isDialog() ? 'col-md-6' : 'col-md-12 mt-3'">
                   <div class="input-group">
-                    <div class="input-group-prepend">
-                      <div class="input-group-text">
-                        <span i18n>Shelving Location</span>
-                      </div>
-                    </div>
-                    <eg-item-location-select permFilter="MANAGE_RESERVES" class="flex-grow-1"
-                      [disabled]="currentCourse && currentCourse.is_archived() == 't'" [(ngModel)]="tempLocation"
+                    <label class="form-label input-group-text" for="temp-location" i18n>Shelving Location</label>
+                    <eg-item-location-select permFilter="MANAGE_RESERVES" class="flex-grow-1" domId="temp-location"
+                      [disabled]="currentCourse && (courseIsArchived || currentCourse.is_archived()) === 't'" [(ngModel)]="tempLocation"
                       (valueChange)="isModifyingLocation = true">
                     </eg-item-location-select>
-                    <div class="input-group-append">
-                      <div class="input-group-text">
+                    <div class="input-group-text">
                         <input type="checkbox" [(ngModel)]="isModifyingLocation"
-                          [disabled]="currentCourse && currentCourse.is_archived() == 't'"
+                          [disabled]="currentCourse && (courseIsArchived || currentCourse.is_archived()) === 't'"
                           aria-label="Checkbox for setting a temporary Shelving Location" />
-                      </div>
                     </div>
                   </div>
                 </div>
               </div>
               <div class="row mt-3">
-                <div class="col-lg-12 text-right">
-                  <button class="btn btn-primary" [disabled]="currentCourse && currentCourse.is_archived() == 't'"
+                <div class="col-lg-12 text-end">
+                  <button type="button" class="btn btn-primary" [disabled]="currentCourse && (courseIsArchived || currentCourse.is_archived()) === 't'"
                     (click)="associateItem(barcodeInput, relationshipInput)" i18n [disabled]="!barcodeInput">
                     Add Material
                   </button>
@@ -149,16 +135,14 @@
               </div>
             </ng-template>
           </li>
-          <li ngbNavItem>
-            <a ngbNavLink i18n>Associate brief record</a>
+          <li role="presentation" ngbNavItem>
+            <a role="tab" ngbNavLink i18n>Associate brief record</a>
             <ng-template ngbNavContent>
               <div class="d-flex" [ngClass]="isDialog() ? 'col-md-6' : 'col-md-12 mt-3'">
                 <div class="input-group">
-                  <div class="input-group-prepend">
-                    <span class="input-group-text" i18n>Relationship</span>
-                  </div>
-                  <input type="text" [(ngModel)]="relationshipInput"
-                    [disabled]="currentCourse && currentCourse.is_archived() == 't'" placeholder-i18n
+                    <label class="form-label input-group-text" for="brief-relationship" i18n>Relationship</label>
+                  <input type="text" [(ngModel)]="relationshipInput" id="brief-relationship"
+                    [disabled]="currentCourse && (courseIsArchived || currentCourse.is_archived()) === 't'" placeholder-i18n
                     placeholder="e.g. Required" class="flex-grow-1" />
                 </div>
               </div>
@@ -180,33 +164,29 @@
               </eg-marc-simplified-editor>
             </ng-template>
           </li>
-          <li ngbNavItem>
-            <a ngbNavLink>Associate electronic resource from catalog</a>
+          <li role="presentation" ngbNavItem>
+            <a ngbNavLink role="tab">Associate electronic resource from catalog</a>
             <ng-template ngbNavContent>
               <div class="row" [ngClass]="isDialog() ? '' : 'mt-3'">
                 <div class="d-flex" [ngClass]="isDialog() ? 'col-md-6' : 'col-md-12 mt-3'">
                   <div class="input-group">
-                    <div class="input-group-prepend">
-                      <label for="bib-id" class="input-group-text" i18n>Bibliographic Record ID</label>
-                    </div>
+                      <label for="bib-id" class="form-label input-group-text" i18n>Bibliographic Record ID</label>
                     <input type="text" [(ngModel)]="bibId" id="bib-id"
-                      [disabled]="currentCourse && currentCourse.is_archived() == 't'" class="flex-grow-1" />
+                      [disabled]="currentCourse && (courseIsArchived || currentCourse.is_archived()) === 't'" class="flex-grow-1" />
                   </div>
                 </div>
                 <div class="d-flex" [ngClass]="isDialog() ? 'col-md-6' : 'col-md-12 mt-3'">
                   <div class="input-group">
-                    <div class="input-group-prepend">
-                      <span class="input-group-text" i18n>Relationship</span>
-                    </div>
-                    <input type="text" [(ngModel)]="relationshipInput"
-                      [disabled]="currentCourse && currentCourse.is_archived() == 't'" class="flex-grow-1" />
+                      <label class="form-label input-group-text" for="electronic-relationship" i18n>Relationship</label>
+                    <input type="text" [(ngModel)]="relationshipInput" id="electronic-relationship"
+                      [disabled]="currentCourse && (courseIsArchived || currentCourse.is_archived()) === 't'" class="flex-grow-1" />
                   </div>
                 </div>
               </div>
               <div class="row mt-3">
-                <div class="col-lg-12 text-right">
-                  <button class="btn btn-primary" i18n (click)="associateElectronicBibRecord()"
-                    [disabled]="currentCourse && currentCourse.is_archived() == 't'">
+                <div class="col-lg-12 text-end">
+                  <button type="button" class="btn btn-primary" i18n (click)="associateElectronicBibRecord()"
+                    [disabled]="currentCourse && (courseIsArchived || currentCourse.is_archived()) === 't'">
                     Add Material
                   </button>
                 </div>
@@ -225,13 +205,13 @@
           </eg-grid-toolbar-action>
           <eg-grid-column path="id" [index]=true [hidden]="true" label="ID" i18n-label></eg-grid-column>
           <eg-grid-column label="Barcode" i18n-label name="barcode" [cellTemplate]="barcodeCellTemplate"></eg-grid-column>
-          <eg-grid-column label="Title" i18n-label name="title" flex="3" [cellTemplate]="titleCellTemplate"></eg-grid-column>
+          <eg-grid-column label="Title" i18n-label name="title" [cellTemplate]="titleCellTemplate"></eg-grid-column>
           <eg-grid-column path="item.call_number.label" label="Call Number" i18n-label></eg-grid-column>
           <eg-grid-column path="item.call_number.prefix.label" [hidden]="true" label="Call Number Prefix" i18n-label hidden>
           </eg-grid-column>
           <eg-grid-column path="item.call_number.suffix.label" [hidden]="true" label="Call Number Suffix" i18n-label hidden>
           </eg-grid-column>
-          <eg-grid-column path="item.circ_modifier" [hidden]="true" label="Circulation Modifier" i18n-label></eg-grid-column>
+          <eg-grid-column path="item.circ_modifier.name" [hidden]="true" label="Circulation Modifier" i18n-label></eg-grid-column>
           <eg-grid-column path="item.circ_lib.shortname" label="Circulation Library" i18n-label></eg-grid-column>
           <eg-grid-column path="item.location.name" [hidden]="true" label="Shelving Location" i18n-label></eg-grid-column>
           <eg-grid-column path="item.status.name" [hidden]="true" label="Item Status" i18n-label></eg-grid-column>
@@ -246,13 +226,13 @@
 </ng-template>
 <ng-template #barcodeCellTemplate let-entry="row">
   <span *ngIf="entry.item()">
-    <a class="pl-1" href="/eg/staff/cat/item/{{entry.item().id()}}">
+    <a class="ps-1" href="/eg/staff/cat/item/{{entry.item().id()}}">
       {{entry.item().barcode()}}
     </a>
   </span>
 </ng-template>
 <ng-template #titleCellTemplate let-entry="row">
-  <a class="pl-1" routerLink="/staff/catalog/record/{{entry.record().id()}}">
+  <a class="ps-1" routerLink="/staff/catalog/record/{{entry.record().id()}}">
     {{entry.record().wide_display_entry().title()}}
   </a>
 </ng-template>

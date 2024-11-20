@@ -1,7 +1,10 @@
-<button class="btn" *ngIf="provider_id" [hidden]="!collapsed" (click)="toggleCollapse()" type="submit" i18n><span class="material-icons">expand_more</span></button>
-<button class="btn" *ngIf="provider_id" [hidden]="collapsed" (click)="toggleCollapse()" type="submit" i18n><span class="material-icons">expand_less</span></button>
+<button class="btn" (click)="toggleCollapse()" type="button" i18n-title
+  [attr.title]="collapsed? 'Show Provider Details' : 'Hide Provider Details'" i18n-aria-label
+  [attr.aria-label]="collapsed? 'Show Provider Details' : 'Hide Provider Details'">
+  <span class="material-icons">{{collapsed? 'expand_less' : 'expand_more'}}</span>
+</button>
 
-<div id="acq-provider-summary-pane" [hidden]="!provider_id || collapsed" class="pl-3 pr-3 pt-3 pb-3 mb-3">
+<div id="acq-provider-summary-pane" [hidden]="!provider_id || collapsed" class="ps-3 pe-3 pt-3 pb-3 mb-3">
 
 <ng-template #errorStrTmpl i18n>Provider Deletion Failed</ng-template>
 <eg-string #deleteSuccessString i18n-text text="Successfully deleted provider."></eg-string>
@@ -76,7 +79,7 @@
 
 <div class="row provider_active">
 <div class="col">{{provider_active_label}}</div>
-<div class="col"><eg-bool [value]="provider_active == 't'"></eg-bool></div>
+<div class="col"><eg-bool [value]="provider_active === 't'"></eg-bool></div>
 </div>
 
 <div class="row provider_prepayment_required">

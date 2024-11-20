@@ -1,19 +1,24 @@
-import {Component, OnInit, AfterViewInit, ViewChild, HostListener} from '@angular/core';
+import {Component, OnInit, ViewChild, HostListener} from '@angular/core';
 import {Router, ActivatedRoute, ParamMap} from '@angular/router';
-import {tap} from 'rxjs/operators';
+import {BehaviorSubject, from, Observable, of} from 'rxjs';
+import {catchError, finalize, switchMap, tap, map} from 'rxjs/operators';
 import {IdlObject, IdlService} from '@eg/core/idl.service';
 import {EventService} from '@eg/core/event.service';
 import {OrgService} from '@eg/core/org.service';
 import {NetService} from '@eg/core/net.service';
 import {AuthService} from '@eg/core/auth.service';
+import {PermService} from '@eg/core/perm.service';
 import {PcrudService} from '@eg/core/pcrud.service';
+import {StoreService} from '@eg/core/store.service';
 import {HoldingsService, CallNumData} from '@eg/staff/share/holdings/holdings.service';
 import {VolCopyContext} from './volcopy';
-import {ProgressInlineComponent} from '@eg/share/dialog/progress-inline.component';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
+import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
+import {VolCopyPermissionDialogComponent} from './vol-copy-permission-dialog.component';
+import {OpChangeComponent} from '@eg/staff/share/op-change/op-change.component';
 import {AnonCacheService} from '@eg/share/util/anon-cache.service';
 import {VolCopyService} from './volcopy.service';
-import {NgbNav, NgbNavChangeEvent} from '@ng-bootstrap/ng-bootstrap';
+import {NgbNavChangeEvent} from '@ng-bootstrap/ng-bootstrap';
 import {BroadcastService} from '@eg/share/util/broadcast.service';
 import {CopyAttrsComponent} from './copy-attrs.component';
 
@@ -49,11 +54,14 @@ interface EditSession {
 }
 
 @Component({
-  templateUrl: 'volcopy.component.html'
+    templateUrl: 'volcopy.component.html'
 })
 export class VolCopyComponent implements OnInit {
 
     context: VolCopyContext;
+    private contextChange = new BehaviorSubject<VolCopyContext>(null);
+    // or this.context instead of null, but subscribers will get the broadcast during init
+    contextChanged = this.contextChange.asObservable();
     loading = true;
     sessionExpired = false;
 
@@ -64,12 +72,20 @@ export class VolCopyComponent implements OnInit {
     volsCanSave = true;
     attrsCanSave = true;
     changesPending = false;
+    changesPendingForStatusBar = false;
     routingAllowed = false;
+
+    not_allowed_vols = [];
 
     @ViewChild('pendingChangesDialog', {static: false})
         pendingChangesDialog: ConfirmDialogComponent;
 
     @ViewChild('copyAttrs', {static: false}) copyAttrs: CopyAttrsComponent;
+
+    @ViewChild('permDialog') permDialog: VolCopyPermissionDialogComponent;
+    @ViewChild('uneditableItemsDialog') uneditableItemsDialog: AlertDialogComponent;
+
+    @ViewChild('volEditOpChange', {static: false}) volEditOpChange: OpChangeComponent;
 
     constructor(
         private router: Router,
@@ -79,7 +95,9 @@ export class VolCopyComponent implements OnInit {
         private org: OrgService,
         private net: NetService,
         private auth: AuthService,
+        private perm: PermService,
         private pcrud: PcrudService,
+        private store: StoreService,
         private cache: AnonCacheService,
         private broadcaster: BroadcastService,
         private holdings: HoldingsService,
@@ -87,8 +105,128 @@ export class VolCopyComponent implements OnInit {
     ) { }
 
     ngOnInit() {
+        console.log('VolCopyComponent, this',this);
         this.route.paramMap.subscribe(
             (params: ParamMap) => this.negotiateRoute(params));
+    }
+
+    orgName(orgId: number): string {
+        return this.org.get(orgId).shortname();
+    }
+
+    cnPrefixName(id_or_obj: any): string {
+        try {
+            return id_or_obj.label();
+        } catch(E) {
+            return this.volcopy.commonData.acn_prefix[id_or_obj]?.label() || '';
+        }
+    }
+
+    cnSuffixName(id_or_obj: any): string {
+        try {
+            return id_or_obj.label();
+        } catch(E) {
+            return this.volcopy.commonData.acn_suffix[id_or_obj]?.label() || '';
+        }
+    }
+
+    localOpChange(): Observable<any> {  // Use the correct type instead of `any`
+        const modalRef = this.volEditOpChange.open();
+
+        console.log('VolCopyComponent, localOpChange, modalRef', modalRef);
+
+        return modalRef.pipe(
+            tap({
+                next: res => console.log('VolCopyComponent, OpChangeComponent emission', res),
+                error: (err: unknown) => console.error('VolCopyComponent, OpChangeComponent error', err),
+                complete: () => console.log('VolCopyComponent, OpChangeComponent complete')
+            }),
+            finalize(() => {
+                const opChangeData = { instigated: true, key: this.target + ':' + this.targetId };
+                this.store.setSessionItem('opChangeInfo', opChangeData, false);
+
+                // eslint-disable-next-line no-self-assign
+                location.href = location.href; // my favorite sledgehammer
+                // since we're communicating with broadcasts, this seems safe
+            })
+        );
+    }
+
+    localOpRestore() {
+        // Restoring the original state
+        const opChangeInfo = this.store.getSessionItem('opChangeInfo');
+        console.log('VolCopyComponent, localOpRestore, opChangInfo', opChangeInfo);
+        if (opChangeInfo?.instigated && opChangeInfo.key === this.target + ':' + this.targetId) {
+            console.log('VolCopyComponent, localOpRestore, key matches');
+            // Restore original operator
+            try {
+                this.volEditOpChange.restore();
+                this.store.removeSessionItem('opChangeInfo');
+            } catch(E) {
+                window.alert(E);
+            }
+        } else {
+            console.error('VolCopyComponent, localOpRestore, key does not match');
+        }
+    }
+
+    closeWindow() {
+        this.localOpRestore();
+        window.close();
+    }
+
+    determineModal() {
+        const itemCount = this.context.copyList().length;
+        console.log('VolCopyComponent, itemCount', itemCount);
+        if (itemCount <= 1) { return; } // skip dialog if only 1 item (or zero?!)
+        from(this.perm.hasWorkPermAt(['UPDATE_COPY'], true))
+            .pipe(
+                switchMap(orgs => {
+
+                    const owning_libs = this.context.getOwningLibIds();
+                    const has_perm_for_each = owning_libs.every(owningLib => orgs['UPDATE_COPY'].includes(owningLib));
+
+                    console.log('VolCopyComponent, hasWorkPermAt', orgs);
+                    console.log('VolCopyComponent, owning libs', owning_libs);
+                    console.log('VolCopyComponent, has perm for every lib? ', has_perm_for_each);
+
+                    if (!has_perm_for_each) {
+                        return this.permDialog.open().pipe(
+                            map(dispatch => ({ dispatch, orgs }))
+                        );
+                    } else {
+                        // Return an observable that completes without emitting if no dialog is needed
+                        return of({dispatch: null, orgs});
+                    }
+                }),
+                switchMap(({dispatch, orgs}) => {
+                    console.log('VolCopyComponent, permDialog dispatch',dispatch);
+                    if (dispatch === 'option-exit') {
+                        // dialog was either X'ed out or "Exit Editor" was clicked.
+                        this.closeWindow();
+                        return of(null);
+                    } else if (dispatch === 'option-filter') {
+                        // "Only show permissible items."
+                        const allowed_vols = this.context.volNodes().filter(n => orgs['UPDATE_COPY'].includes( n.target.owning_lib()));
+                        this.not_allowed_vols = this.context.volNodes()
+                            .filter(n => !orgs['UPDATE_COPY'].includes( n.target.owning_lib()));
+                        this.not_allowed_vols.forEach(n => this.context.removeVolNode(n.target.id()));
+                        if (this.not_allowed_vols.length > 0) {
+                            this.contextChange.next(this.context);
+                        }
+                        return of(null);
+                    } else if (dispatch === 'option-changeop') {
+                        // "Change Operator and try again."
+                        return this.localOpChange();
+                    }
+                    // option-readonly ("Read-only view for all items")
+                    // is really the default behavior for mixed permissions,
+                    // so just pass through
+                    return of(null);
+                }),
+                finalize( () => {
+                })
+            ).subscribe(); // need this to start an Observable
     }
 
     negotiateRoute(params: ParamMap) {
@@ -125,7 +263,7 @@ export class VolCopyComponent implements OnInit {
         } else {
             // Avoid refetching the data during route changes.
             this.volcopy.currentContext = this.context;
-            this.load();
+            this.load().then( _ => { this.determineModal(); } );
         }
     }
 
@@ -135,20 +273,20 @@ export class VolCopyComponent implements OnInit {
         this.context.reset();
 
         return this.volcopy.load()
-        .then(_ => this.fetchHoldings(copyIds))
-        .then(_ => this.volcopy.applyVolLabels(
-            this.context.volNodes().map(n => n.target)))
-        .then(_ => this.context.sortHoldings())
-        .then(_ => this.context.setRecordId())
-        .then(_ => {
+            .then(_ => this.fetchHoldings(copyIds))
+            .then(_ => this.volcopy.applyVolLabels(
+                this.context.volNodes().map(n => n.target)))
+            .then(_ => this.context.sortHoldings())
+            .then(_ => this.context.setRecordId())
+            .then(_ => {
             // unified display has no 'attrs' tab
-            if (this.volcopy.defaults.values.unified_display
+                if (this.volcopy.defaults.values.unified_display
                 && this.tab === 'attrs') {
-                this.tab = 'holdings';
-                this.routeToTab();
-            }
-        })
-        .then(_ => this.loading = false);
+                    this.tab = 'holdings';
+                    this.routeToTab();
+                }
+            })
+            .then(_ => this.loading = false);
     }
 
     fetchHoldings(copyIds?: number[]): Promise<any> {
@@ -200,47 +338,47 @@ export class VolCopyComponent implements OnInit {
     fetchSession(session: string): Promise<any> {
 
         return this.cache.getItem(session, 'edit-these-copies')
-        .then((editSession: EditSession) => {
+            .then((editSession: EditSession) => {
 
-            if (!editSession) {
-                this.loading = false;
-                this.sessionExpired = true;
-                return Promise.reject('Session Expired');
-            }
-
-            console.debug('Edit Session', editSession);
-
-            this.context.recordId = editSession.record_id;
-
-            if (editSession.copies && editSession.copies.length > 0) {
-                return this.fetchCopies(editSession.copies);
-            }
-
-            const volsToFetch = [];
-            const volsToCreate = [];
-            editSession.raw.forEach((volData: CallNumData) => {
-                this.context.fastAdd = volData.fast_add === true;
-
-                if (volData.callnumber > 0) {
-                    volsToFetch.push(volData);
-                } else {
-                    volsToCreate.push(volData);
+                if (!editSession) {
+                    this.loading = false;
+                    this.sessionExpired = true;
+                    return Promise.reject('Session Expired');
                 }
+
+                console.debug('Edit Session', editSession);
+
+                this.context.recordId = editSession.record_id;
+
+                if (editSession.copies && editSession.copies.length > 0) {
+                    return this.fetchCopies(editSession.copies);
+                }
+
+                const volsToFetch = [];
+                const volsToCreate = [];
+                editSession.raw.forEach((volData: CallNumData) => {
+                    this.context.fastAdd = volData.fast_add === true;
+
+                    if (volData.callnumber > 0) {
+                        volsToFetch.push(volData);
+                    } else {
+                        volsToCreate.push(volData);
+                    }
+                });
+
+                let promise = Promise.resolve();
+                if (volsToFetch.length > 0) {
+                    promise = promise.then(_ =>
+                        this.fetchVolsStubCopies(volsToFetch));
+                }
+
+                if (volsToCreate.length > 0) {
+                    promise = promise.then(_ =>
+                        this.createVolsStubCopies(volsToCreate));
+                }
+
+                return promise;
             });
-
-            let promise = Promise.resolve();
-            if (volsToFetch.length > 0) {
-                promise = promise.then(_ =>
-                    this.fetchVolsStubCopies(volsToFetch));
-            }
-
-            if (volsToCreate.length > 0) {
-                promise = promise.then(_ =>
-                    this.createVolsStubCopies(volsToCreate));
-            }
-
-            return promise;
-        });
     }
 
     // Creating new vols.  Each gets a stub copy.
@@ -262,7 +400,7 @@ export class VolCopyComponent implements OnInit {
         });
 
         return this.addStubCopies(vols, volDataList)
-        .then(_ => this.volcopy.setVolClassLabels(vols));
+            .then(_ => this.volcopy.setVolClassLabels(vols));
     }
 
     // Fetch vols by ID, but instead of retrieving their copies
@@ -273,8 +411,8 @@ export class VolCopyComponent implements OnInit {
         const vols = [];
 
         return this.pcrud.search('acn', {id: volIds})
-        .pipe(tap((vol: IdlObject) => vols.push(vol))).toPromise()
-        .then(_ => this.addStubCopies(vols, volDataList));
+            .pipe(tap((vol: IdlObject) => vols.push(vol))).toPromise()
+            .then(_ => this.addStubCopies(vols, volDataList));
     }
 
     // Add a stub copy to each vol using data from the edit session.
@@ -286,7 +424,7 @@ export class VolCopyComponent implements OnInit {
                 vData => vData.callnumber === vol.id())[0];
 
             const copy =
-                this.volcopy.createStubCopy(vol, {circLib: volData.owner});
+                this.volcopy.createStubCopy(vol, {circLib: volData.owner, barcode: volData.barcode});
 
             this.context.findOrCreateCopyNode(copy);
             copies.push(copy);
@@ -299,8 +437,8 @@ export class VolCopyComponent implements OnInit {
         const ids = [].concat(copyIds);
         if (ids.length === 0) { return Promise.resolve(); }
         return this.pcrud.search('acp', {id: ids}, COPY_FLESH)
-        .pipe(tap(copy => this.context.findOrCreateCopyNode(copy)))
-        .toPromise();
+            .pipe(tap(copy => this.context.findOrCreateCopyNode(copy)))
+            .toPromise();
     }
 
     // Fetch call numbers and linked copies by call number ids.
@@ -309,13 +447,13 @@ export class VolCopyComponent implements OnInit {
         if (ids.length === 0) { return Promise.resolve(); }
 
         return this.pcrud.search('acn', {id: ids})
-        .pipe(tap(vol => this.context.findOrCreateVolNode(vol)))
-        .toPromise().then(_ => {
-             return this.pcrud.search('acp',
-                {call_number: ids, deleted: 'f'}, COPY_FLESH
-            ).pipe(tap(copy => this.context.findOrCreateCopyNode(copy))
-            ).toPromise();
-        });
+            .pipe(tap(vol => this.context.findOrCreateVolNode(vol)))
+            .toPromise().then(_ => {
+                return this.pcrud.search('acp',
+                    {call_number: ids, deleted: 'f'}, COPY_FLESH
+                ).pipe(tap(copy => this.context.findOrCreateCopyNode(copy))
+                ).toPromise();
+            });
     }
 
     // Fetch call numbers and copies by record ids.
@@ -328,6 +466,14 @@ export class VolCopyComponent implements OnInit {
         ).toPromise().then(volIds => this.fetchVols(volIds));
     }
 
+    handleClosure(copyIds) {
+        if (close) {
+            return this.openPrintLabels(copyIds)
+                .then(_ => setTimeout(() => this.closeWindow()));
+        } else {
+            return this.load(copyIds);
+        }
+    }
 
     save(close?: boolean): Promise<any> {
         this.loading = true;
@@ -368,7 +514,7 @@ export class VolCopyComponent implements OnInit {
                 }
             });
 
-           newVol.copies(copies);
+            newVol.copies(copies);
 
             if (newVol.ischanged() || newVol.isnew() || copies.length > 0) {
                 volumes.push(newVol);
@@ -417,9 +563,8 @@ export class VolCopyComponent implements OnInit {
         }
 
         return promise.then(copyIds => {
-
             // In addition to the copies edited in this update call,
-            // reload any other copies that were previously loaded.
+            // reload any other copies that were previously loaded (and permitted).
             const ids: any = {}; // dedupe
             this.context.copyList()
                 .map(c => c.id())
@@ -429,17 +574,38 @@ export class VolCopyComponent implements OnInit {
 
             copyIds = Object.keys(ids).map(id => Number(id));
 
-            if (close) {
-                return this.openPrintLabels(copyIds)
-                    .then(_ => setTimeout(() => window.close()));
-            }
+            const processCopies = () => {
+                if (close) {
+                    return this.handleClosure(copyIds);
+                }
+                return this.load(Object.keys(ids).map(id => Number(id)));
+            };
 
-            return this.load(Object.keys(ids).map(id => Number(id)));
+            if (this.not_allowed_vols.length > 0) {
+                // Open dialog and wait for it to close before continuing
+                // Alert dialogs don't emit anything, so roll our own promise for the chain
+                return new Promise(resolve => {
+                    this.uneditableItemsDialog.open().subscribe({
+                        complete: () => {
+                            resolve(processCopies());
+                        }
+                    });
+                });
+            } else {
+                return processCopies();
+            }
 
         }).then(_ => {
             this.loading = false;
             this.changesPending = false;
+            this.changesPendingForStatusBar = false;
+        }).catch(error => {
+            console.log('VolCopyComponent, save() error',error);
+            // the likely "error" has already been presented via the operator change dialog
+            this.loading = false;
+            return Promise.resolve();
         });
+
     }
 
     broadcastChanges(volumes: IdlObject[]) {
@@ -491,6 +657,9 @@ export class VolCopyComponent implements OnInit {
             this.broadcastChanges(volumes);
 
             return copyIds;
+        }).catch(error => {
+            console.log('VolCopyComponent, saveApi() error',error);
+            return Promise.reject(error);
         });
     }
 
@@ -537,11 +706,13 @@ export class VolCopyComponent implements OnInit {
     volsCanSaveChange(can: boolean) {
         this.volsCanSave = can;
         this.changesPending = true;
+        this.changesPendingForStatusBar = true;
     }
 
     attrsCanSaveChange(can: boolean) {
         this.attrsCanSave = can;
         this.changesPending = true;
+        this.changesPendingForStatusBar = true;
     }
 
     @HostListener('window:beforeunload', ['$event'])
@@ -564,6 +735,9 @@ export class VolCopyComponent implements OnInit {
         // unless new changes are made.  The 'editing' value will reset
         // since the attrs component is getting destroyed.
         this.changesPending = false;
+        // But don't do this for the indicator in the status bar, only Save does that
+        // (or reset, if that ever gets reimplemented)
+        // this.changesPendingForStatusBar = false;
 
         if ($event) { // window.onbeforeunload
             $event.preventDefault();

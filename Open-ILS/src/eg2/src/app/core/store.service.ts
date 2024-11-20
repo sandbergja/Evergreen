@@ -29,6 +29,8 @@ export class StoreService {
     loginSessionKeys: string[] = [
         'eg.auth.token',
         'eg.auth.time',
+        'eg.auth.token.provisional',
+        'eg.auth.time.provisional',
         'eg.auth.token.oc',
         'eg.auth.time.oc'
     ];
@@ -54,7 +56,9 @@ export class StoreService {
      * Add a an app-local login session key
      */
     addLoginSessionKey(key: string): void {
-        this.loginSessionKeys.push(key);
+        if (!this.loginSessionKeys.includes(key)) {
+            this.loginSessionKeys.push(key);
+        }
     }
 
     setLocalItem(key: string, val: any, isJson?: boolean): void {
@@ -65,6 +69,7 @@ export class StoreService {
     }
 
     setSessionItem(key: string, val: any, isJson?: boolean): void {
+        console.log(`Setting session item: key=${key}, value=`, val, `isJson=${isJson}`);
         if (!isJson) {
             val = JSON.stringify(val);
         }
@@ -178,7 +183,7 @@ export class StoreService {
                         console.debug(
                             'Migrating default workstation to Hatch ' + name);
                         return this.hatch.setItem(WS_DEF_KEY, name)
-                        .then(ok => name);
+                            .then(ok => name);
                     } else {
                         return null;
                     }

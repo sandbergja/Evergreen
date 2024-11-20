@@ -1,4 +1,4 @@
-import {Component, OnInit, OnDestroy, Input} from '@angular/core';
+import {Component, OnInit, OnDestroy, ViewChild, Input, HostListener} from '@angular/core';
 import {Observable, Subscription} from 'rxjs';
 import {tap, map, switchMap, distinctUntilChanged} from 'rxjs/operators';
 import {Router, ActivatedRoute, ParamMap} from '@angular/router';
@@ -12,9 +12,15 @@ import {IdlObject} from '@eg/core/idl.service';
 import {BasketService} from '@eg/share/catalog/basket.service';
 import {ServerStoreService} from '@eg/core/server-store.service';
 
+/* eslint-disable no-magic-numbers */
+const resultsCols = [10,12];
+const mobileWidth = 992;
+/* eslint-enable no-magic-numbers */
+
 @Component({
-  selector: 'eg-catalog-results',
-  templateUrl: 'results.component.html'
+    selector: 'eg-catalog-results',
+    templateUrl: 'results.component.html',
+    styleUrls: ['results.component.css']
 })
 export class ResultsComponent implements OnInit, OnDestroy {
 
@@ -30,6 +36,16 @@ export class ResultsComponent implements OnInit, OnDestroy {
     routeSub: Subscription;
     basketSub: Subscription;
     showMoreDetails = false;
+    facetsCollapsed = false;
+    facetsHorizontal =
+        window.innerWidth > mobileWidth;
+    resultsWidth = '10';
+
+    @HostListener('window:resize', ['$event'])
+    onResize(event) {
+        this.facetsHorizontal =
+        event.target.innerWidth > mobileWidth;
+    }
 
     constructor(
         private route: ActivatedRoute,
@@ -57,14 +73,14 @@ export class ResultsComponent implements OnInit, OnDestroy {
         this.routeSub =
             this.route.queryParamMap.subscribe((params: ParamMap) => {
 
-              // TODO: Angular docs suggest using switchMap(), but
-              // it's not firing for some reason.  Also, could avoid
-              // firing unnecessary searches when a param unrelated to
-              // searching is changed by .map()'ing out only the desired
-              // params and running through .distinctUntilChanged(), but
-              // .map() is not firing either.  I'm missing something.
-              this.searchByUrl(params);
-        });
+                // TODO: Angular docs suggest using switchMap(), but
+                // it's not firing for some reason.  Also, could avoid
+                // firing unnecessary searches when a param unrelated to
+                // searching is changed by .map()'ing out only the desired
+                // params and running through .distinctUntilChanged(), but
+                // .map() is not firing either.  I'm missing something.
+                this.searchByUrl(params);
+            });
 
         // After each completed search, update the record selector.
         this.searchSub = this.cat.onSearchComplete.subscribe(
@@ -77,6 +93,16 @@ export class ResultsComponent implements OnInit, OnDestroy {
         // Watch for basket changes applied by other components.
         this.basketSub = this.basket.onChange.subscribe(
             () => this.applyRecordSelection());
+
+        this.serverStore.getItem('eg.staff.catalog.results.show_sidebar').then(
+            show_sidebar => {
+                this.facetsCollapsed = !show_sidebar;
+                console.debug('Sidebar: ', show_sidebar);
+                console.debug('Collapsed: ', this.facetsCollapsed);
+                // Set how many columns the results may take.
+                this.setResultsWidth();
+            }
+        );
     }
 
     ngOnDestroy() {
@@ -87,12 +113,18 @@ export class ResultsComponent implements OnInit, OnDestroy {
         }
     }
 
-    // Jump to record page if only a single hit is returned
-    // and the jump is enabled by library setting
+    // For non-metarecord searches, jump to record page if only a
+    // single hit is returned and the jump is enabled by library setting.
+    // Unlike the OPAC version of jump-on-single-hit, the staff version
+    // does not attempt to jump to the bib if it is the single member
+    // of a sole metarecord returned by a metarecord search.
     jumpIfNecessary() {
         const ids = this.searchContext.currentResultIds();
-        if (this.staffCat.jumpOnSingleHit && ids.length === 1) {
-           // this.router.navigate(['/staff/catalog/record/' + ids[0], { queryParams: this.catUrl.toUrlParams(this.searchContext) }]);
+        if (
+            this.staffCat.jumpOnSingleHit &&
+            ids.length === 1 &&
+            !this.searchContext.termSearch.isMetarecordSearch()
+        ) {
             this.router.navigate(['/staff/catalog/record/' + ids[0]], {queryParamsHandling: 'merge'});
         }
     }
@@ -118,21 +150,23 @@ export class ResultsComponent implements OnInit, OnDestroy {
         if (this.searchContext.isSearchable()) {
 
             this.serverStore.getItem('eg.staff.catalog.results.show_more')
-            .then(showMore => {
+                .then(showMore => {
 
-                this.showMoreDetails =
+                    this.showMoreDetails =
                     this.searchContext.showResultExtras = showMore;
 
-                if (this.staffCat.prefOrg) {
-                    this.searchContext.prefOu = this.staffCat.prefOrg.id();
-                }
+                    if (this.staffCat.prefOrg) {
+                        this.searchContext.prefOu = this.staffCat.prefOrg.id();
+                    }
 
-                this.cat.search(this.searchContext)
-                .then(ok => {
-                    this.cat.fetchFacets(this.searchContext);
-                    this.cat.fetchBibSummaries(this.searchContext);
+                    this.cat.search(this.searchContext)
+                        .then(ok => {
+                            if (!this.facetsCollapsed) {
+                                this.cat.fetchFacets(this.searchContext);
+                            }
+                            this.cat.fetchBibSummaries(this.searchContext);
+                        });
                 });
-            });
         }
     }
 
@@ -141,17 +175,17 @@ export class ResultsComponent implements OnInit, OnDestroy {
 
         this.serverStore.setItem(
             'eg.staff.catalog.results.show_more', this.showMoreDetails)
-        .then(_ => {
+            .then(_ => {
 
-            this.searchContext.showResultExtras = this.showMoreDetails;
+                this.searchContext.showResultExtras = this.showMoreDetails;
 
-            if (this.showMoreDetails) {
-                this.staffCat.search();
-            } else {
+                if (this.showMoreDetails) {
+                    this.staffCat.search();
+                } else {
                 // Clear the collected copies.  No need for another search.
-                this.searchContext.result.records.forEach(rec => rec.copies = undefined);
-            }
-        });
+                    this.searchContext.result.records.forEach(rec => rec.copies = undefined);
+                }
+            });
     }
 
     searchIsDone(): boolean {
@@ -174,6 +208,27 @@ export class ResultsComponent implements OnInit, OnDestroy {
         } else {
             this.basket.removeRecordIds(ids);
         }
+    }
+
+    handleFacetShow() {
+        this.facetsCollapsed = !this.facetsCollapsed;
+        if (!this.facetsCollapsed) {
+            this.cat.fetchFacets(this.searchContext);
+        }
+        this.setResultsWidth();
+        this.serverStore.setItem('eg.staff.catalog.results.show_sidebar', !this.facetsCollapsed).then(
+            setting => {
+                console.debug('New sidebar: ', setting);
+
+            }
+        );
+    }
+
+    setResultsWidth(){
+        // results can take up the entire row
+        // when facets are not present
+        this.resultsWidth =
+             'col-lg-' + resultsCols[(!this.basket || !this.facetsCollapsed ? 0 : 1)];
     }
 }
 

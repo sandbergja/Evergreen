@@ -1,8 +1,6 @@
 import {Injectable} from '@angular/core';
-import {Observable, empty} from 'rxjs';
+import {Observable, EMPTY} from 'rxjs';
 import {map, switchMap} from 'rxjs/operators';
-import {IdlObject} from '@eg/core/idl.service';
-import {Pager} from '@eg/share/util/pager';
 import {NetService} from '@eg/core/net.service';
 import {PcrudService} from '@eg/core/pcrud.service';
 import {OrgService} from '@eg/core/org.service';
@@ -15,6 +13,7 @@ export class BrowseService {
 
     // Grid paging is disabled in this UI to support browsing in
     // both directions.  Define our own paging trackers.
+    // eslint-disable-next-line no-magic-numbers
     pageSize = 15;
     searchOffset = 0;
 
@@ -35,18 +34,18 @@ export class BrowseService {
         }
 
         this.pcrud.retrieveAll('aba', {}, {atomic: true})
-        .pipe(map(axes => {
+            .pipe(map(axes => {
                 this.authorityAxes = axes
                     .map(axis => ({id: axis.code(), label: axis.name()}))
                     .sort((a1, a2) => a1.label < a2.label ? -1 : 1);
-        })).toPromise();
+            })).toPromise();
 
     }
 
     loadAuthorities(): Observable<any> {
 
         if (!this.searchTerm || !this.authorityAxis) {
-            return empty();
+            return EMPTY;
         }
 
         return this.net.request(

@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
 import {Router, Resolve, RouterStateSnapshot,
-        ActivatedRouteSnapshot} from '@angular/router';
+    ActivatedRouteSnapshot} from '@angular/router';
 import {ServerStoreService} from '@eg/core/server-store.service';
 import {NetService} from '@eg/core/net.service';
 import {OrgService} from '@eg/core/org.service';
@@ -45,6 +45,9 @@ export class CatalogResolver implements Resolve<Promise<any[]>> {
             'eg.search.search_lib',
             'eg.search.pref_lib',
             'eg.search.adv_pane',
+            'eg.search.sort_order',
+            'eg.search.available_only',
+            'eg.search.group_formats',
             'eg.catalog.results.count',
             'cat.holdings_show_empty_org',
             'cat.holdings_show_empty',
@@ -52,6 +55,7 @@ export class CatalogResolver implements Resolve<Promise<any[]>> {
             'cat.marcedit.flateditor',
             'cat.holdings_show_copies',
             'cat.holdings_show_vols',
+            'cat.patron_view_discovery_layer_url',
             'opac.staff_saved_search.size',
             'eg.catalog.search_templates',
             'opac.staff_saved_search.size',
@@ -69,8 +73,11 @@ export class CatalogResolver implements Resolve<Promise<any[]>> {
             this.staffCat.prefOrg =
                 this.org.get(settings['eg.search.pref_lib']);
             this.staffCat.defaultTab = settings['eg.search.adv_pane'];
+            this.staffCat.defaultSortOrder = settings['eg.search.sort_order'];
+            this.staffCat.defaultAvailableOnly = settings['eg.search.available_only'];
+            this.staffCat.defaultGroupFormats = settings['eg.search.group_formats'];
             if (settings['eg.catalog.results.count']) {
-               this.staffCat.defaultSearchLimit =
+                this.staffCat.defaultSearchLimit =
                   Number(settings['eg.catalog.results.count']);
             }
             this.staffCat.enableBookplates =
@@ -81,6 +88,10 @@ export class CatalogResolver implements Resolve<Promise<any[]>> {
                 settings['opac.staff.jump_to_details_on_single_hit'] === true;
             this.staffCat.searchFilters =
                 settings['eg.staffcat.search_filters'] || CATALOG_CCVM_FILTERS;
+            if (settings['cat.patron_view_discovery_layer_url']) {
+                this.staffCat.patronViewUrl =
+                    settings['cat.patron_view_discovery_layer_url'];
+            }
         });
     }
 }

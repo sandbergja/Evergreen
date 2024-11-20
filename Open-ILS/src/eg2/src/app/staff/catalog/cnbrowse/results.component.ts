@@ -1,19 +1,20 @@
+/* eslint-disable no-magic-numbers */
 import {Component, Input, OnInit, OnDestroy} from '@angular/core';
 import {ActivatedRoute, Router, ParamMap} from '@angular/router';
 import {Subscription} from 'rxjs';
 import {IdlObject} from '@eg/core/idl.service';
 import {PcrudService} from '@eg/core/pcrud.service';
 import {CatalogService} from '@eg/share/catalog/catalog.service';
-import {BibRecordService} from '@eg/share/catalog/bib-record.service';
+import {BibRecordService, BibRecordSummary} from '@eg/share/catalog/bib-record.service';
 import {CatalogUrlService} from '@eg/share/catalog/catalog-url.service';
 import {CatalogSearchContext, CatalogSearchState} from '@eg/share/catalog/search-context';
 import {StaffCatalogService} from '../catalog.service';
-import {BibRecordSummary} from '@eg/share/catalog/bib-record.service';
 import {OrgService} from '@eg/core/org.service';
 
 @Component({
-  selector: 'eg-catalog-cn-browse-results',
-  templateUrl: 'results.component.html'
+    selector: 'eg-catalog-cn-browse-results',
+    templateUrl: 'results.component.html',
+    styleUrls: ['results.component.css']
 })
 export class CnBrowseResultsComponent implements OnInit, OnDestroy {
 
@@ -85,7 +86,7 @@ export class CnBrowseResultsComponent implements OnInit, OnDestroy {
         }
 
         return this.pcrud.search('acn',
-            {record: this.bibSummary.id, owning_lib: org},
+            {record: this.bibSummary.id, owning_lib: org, deleted: 'f'},
             {limit: 1}
         ).toPromise().then(cn =>
             this.browseCn = cn ? cn.label() : this.bibSummary.bibCallNumber
@@ -199,7 +200,7 @@ export class CnBrowseResultsComponent implements OnInit, OnDestroy {
     }
 
     orgName(orgId: number): string {
-        return this.org.get(orgId).shortname();
+        return this.org.get(orgId)?.shortname();
     }
 
     getAuthorSearchParams(summary: BibRecordSummary): any {

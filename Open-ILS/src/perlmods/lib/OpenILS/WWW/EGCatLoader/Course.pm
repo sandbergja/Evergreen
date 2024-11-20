@@ -53,6 +53,12 @@ sub load_course_browse {
     if ($cgi->param('bterm')) {
         my $bterm = $cgi->param('bterm');
         my $qtype = $cgi->param('qtype');
+        my $locg = $cgi->param('locg');
+        my $pivot = scalar($self->cgi->param('bpivot'));
+        my $limit = int(
+            $self->cgi->param('blimit') ||
+            $self->ctx->{opac_hits_per_page} || 10
+        );
         # Search term is optional. If it's empty, start at the
         # beginning. Otherwise, center results on a match.
         # Regardless, we're listing everything, so retrieve all.
@@ -115,10 +121,13 @@ sub load_course_browse {
                     'owning_lib'
                 ]},
                 "order_by" => {"acmc" => [$qtype]},
-                # TODO: We need to support the chosen library as well...
-                "where" => {'-not' => {'+acmc' => 'is_archived'}}
+                "where" => {
+                    '-not' => {'+acmc' => 'is_archived'},
+                    '+acmc' => { 'owning_lib' => $U->get_org_descendants($locg) }
+                }
             });
         }
+
         my $bterm_match = 0;
         for my $result(@$results) {
             my $value_exists = 0;
@@ -174,7 +183,7 @@ sub load_course_browse {
             if ($value_exists eq 0) {
                 # For Name/Course Number browse queries...
                 if ($bterm_match eq 0) {
-                    if ($result->{$qtype} =~ m/^$bterm./ || $result->{$qtype} eq $bterm) {
+                    if ($result->{$rqtype} =~ m/^$bterm/i || $result->{$rqtype} eq  m/^$bterm/i || $result->{$rqtype} =~  m/^$bterm./i || $result->{$rqtype} eq  m/^$bterm./i) {
                         $bterm_match = 1;
                         $entry->{'match'} = 1;
                     }
@@ -239,63 +248,10 @@ sub load_cresults {
     $ctx->{processed_search_query} = $query;
     my $search_args = {};
     my $course_numbers = ();
-    
-    my $where_clause;
-    my $and_terms = [];
-    my $or_terms = [];
-
     # Handle is_archived checkbox and Org Selector
     my $search_orgs = $U->get_org_descendants($ctx->{search_ou});
-    push @$and_terms, {'owning_lib' => $search_orgs};
-    push @$and_terms, {'-not' => {'+acmc' => 'is_archived'}} unless $query =~ qr\#include_archived\;
 
-    # Now let's push the actual queries
-    for my $query_obj (@queries) {
-        my $type = $query_obj->{'qtype'};
-        my $query = $query_obj->{'value'};
-        $query =~ s/\*//g;
-        my $bool = $query_obj->{'bool'};
-        my $contains = $query_obj->{'contains'};
-        my $operator = ($contains eq 'nocontains') ? '!~*' : '~*';
-        my $search_query;
-        if ($type eq 'instructor') {
-            my $in = ($contains eq 'nocontains') ? "not in" : "in";
-            $search_query = {'id' => {$in => {
-                'from' => 'acmcu',
-                'select' => {'acmcu' => ['course']},
-                'where' => {'usr' => {'in' => {
-                    'from' => 'au',
-                    'select' => {'au' => ['id']},
-                    'where' => {
-                        'name_kw_tsvector' => {
-                            '@@' => {'value' => [ 'plainto_tsquery', $query ] }
-                        }
-                    }
-                }}}
-            }}};
-        } else {
-            $search_query = ($contains eq 'nocontains') ?
-              {'+acmc' => { $type => {$operator => $query}}} :
-              {$type => {$operator => $query}};
-        }
-
-        if ($bool eq 'or') {
-            push @$or_terms, $search_query;
-        }
-
-        if ($bool eq 'and') {
-            push @$and_terms, $search_query;
-        }
-    }
-
-    if ($or_terms and @$or_terms > 0) {
-        if ($and_terms and @$and_terms > 0) {
-            push @$or_terms, $and_terms;
-        }
-        $where_clause = {'-or' => $or_terms};
-    } else {
-        $where_clause = {'-and' => $and_terms};
-    }
+    my $where_clause = _create_where_clause($ctx, \@queries, $search_orgs);
 
     my $hits = $e->json_query({
         "from" => "acmc",
@@ -303,6 +259,7 @@ sub load_cresults {
         "where" => $where_clause
     });
 
+    
     $results = $e->json_query({
         "from" => "acmc",
         "select" => {"acmc" => [
@@ -334,6 +291,73 @@ sub load_cresults {
     $ctx->{hit_count} = @$hits || 0;
     #$ctx->{hit_count} = 0;
     return Apache2::Const::OK;
+}
+
+sub _create_where_clause {
+    my ($ctx, $queries, $search_orgs) = @_;
+
+    my $where_clause;
+    my $and_terms = [];
+    my $or_terms = [];
+
+    push @$and_terms, {'owning_lib' => $search_orgs};
+    push @$and_terms, {'-not' => {'+acmc' => 'is_archived'}} unless $ctx->{processed_search_query} =~ qr\#include_archived\;
+
+    # Now let's push the actual queries
+    for my $query_obj (@{$queries}) {
+        my $type = $query_obj->{'qtype'};
+        my $query = $query_obj->{'value'};
+
+        # Remove punctuation except for the the * wildcard
+        $query =~ s/\w\s\*//;
+
+        # Do we have a blank query, or just wildcards and/or spaces?
+        next if $query =~ /^[\s\*]*$/;
+        my $bool = $query_obj->{'bool'};
+        my $contains = $query_obj->{'contains'};
+        my $operator = ($contains eq 'nocontains') ? '!~*' : '~*';
+        my $search_query;
+        if ($type eq 'instructor') {
+            $query =~ s/\*$/:*/; # postgres prefix matching syntax ends with :* (e.g. string:*, not string*)
+            $query =~ s/^\s+|\s+$//g; # preceding and trailing spaces have the potential to make to_tsquery mad
+            $query =~ s/\s/ \& /g; # postgres to_tsquery wants & characters between words
+            my $in = ($contains eq 'nocontains') ? "not in" : "in";
+            $search_query = {'id' => {$in => {
+                'from' => {'acmcu' => 'acmr'},
+                'select' => {'acmcu' => ['course']},
+                'where' => [
+                    {"+acmr"=>"is_public"},
+                    {"usr"=>{"in"=>
+                        {"select"=>{"au"=>["id"]},
+                        "where"=>{"name_kw_tsvector"=>
+                        {"@@"=>{"value"=>["to_tsquery",$query]}}},
+                    "from"=>"au"}}}]
+            }}};
+        } else {
+            $query =~ s/\*/.*/;
+            $search_query = ($contains eq 'nocontains') ?
+              {'+acmc' => { $type => {$operator => $query}}} :
+              {$type => {$operator => $query}};
+        }
+
+        if ($bool eq 'or') {
+            push @$or_terms, $search_query;
+        }
+
+        if ($bool eq 'and') {
+            push @$and_terms, $search_query;
+        }
+    }
+
+    if ($or_terms and @$or_terms > 0) {
+        if ($and_terms and @$and_terms > 0) {
+            push @$or_terms, $and_terms;
+        }
+        $where_clause = {'-or' => $or_terms};
+    } else {
+        $where_clause = {'-and' => $and_terms};
+    }
+    return $where_clause;
 }
 
 sub _prepare_course_search {

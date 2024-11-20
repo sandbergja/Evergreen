@@ -1,11 +1,9 @@
 import {Injectable} from '@angular/core';
 import {Observable, from} from 'rxjs';
-import {mergeMap, map, tap} from 'rxjs/operators';
+import {map} from 'rxjs/operators';
 import {OrgService} from '@eg/core/org.service';
-import {UnapiService} from '@eg/share/catalog/unapi.service';
-import {IdlService, IdlObject} from '@eg/core/idl.service';
+import {IdlObject} from '@eg/core/idl.service';
 import {NetService} from '@eg/core/net.service';
-import {PcrudService} from '@eg/core/pcrud.service';
 import {PermService} from '@eg/core/perm.service';
 
 export const NAMESPACE_MAPS = {
@@ -37,6 +35,9 @@ export class BibRecordSummary {
     id: number; // == record.id() for convenience
     metabibId: number; // If present, this is a metabib summary
     metabibRecords: number[]; // all constituent bib records
+    staffViewMetabibId: number; // to supplement a record summary
+    staffViewMetabibRecords: number[]; // to supplement a record summary
+    staffViewMetabibAttributes: any; // to supplement a record summary
     orgId: number;
     orgDepth: number;
     record: IdlObject;
@@ -45,6 +46,7 @@ export class BibRecordSummary {
     holdingsSummary: HoldingsSummary[];
     prefOuHoldingsSummary: HoldingsSummary[];
     holdCount: number;
+    recordNoteCount: number;
     bibCallNumber: string;
     firstCallNumber: string;
     net: NetService;
@@ -96,11 +98,8 @@ export class BibRecordService {
     allowUnfillableHolds: boolean;
 
     constructor(
-        private idl: IdlService,
         private net: NetService,
         private org: OrgService,
-        private unapi: UnapiService,
-        private pcrud: PcrudService,
         private perm: PermService
     ) {
         this.userCache = {};
@@ -125,24 +124,38 @@ export class BibRecordService {
         if (isStaff) { method += '.staff'; }
 
         return this.net.request('open-ils.search', method, orgId, bibIds, options)
-        .pipe(map(bibSummary => {
-            const summary = new BibRecordSummary(bibSummary.record, orgId);
-            summary.net = this.net; // inject
-            summary.display = bibSummary.display;
-            summary.attributes = bibSummary.attributes;
-            summary.holdCount = bibSummary.hold_count;
-            summary.holdingsSummary = bibSummary.copy_counts;
-            summary.eResourceUrls = bibSummary.urls;
-            summary.copies = bibSummary.copies;
-            summary.firstCallNumber = bibSummary.first_call_number;
-            summary.prefOuHoldingsSummary = bibSummary.pref_ou_copy_counts;
+            .pipe(map(bibSummary => {
+                const summary = new BibRecordSummary(bibSummary.record, orgId);
+                summary.net = this.net; // inject
+                summary.staffViewMetabibId = Number(bibSummary.staff_view_metabib_id);
+                summary.staffViewMetabibRecords = bibSummary.staff_view_metabib_records;
+                summary.staffViewMetabibAttributes = bibSummary.staff_view_metabib_attributes;
+                summary.display = bibSummary.display;
+                summary.attributes = bibSummary.attributes;
+                summary.holdCount = Number(bibSummary.hold_count);
+                summary.recordNoteCount = Number(bibSummary.record_note_count);
+                summary.holdingsSummary = bibSummary.copy_counts;
+                summary.copies = bibSummary.copies;
+                summary.firstCallNumber = bibSummary.first_call_number;
+                summary.prefOuHoldingsSummary = bibSummary.pref_ou_copy_counts;
 
-            summary.isHoldable = bibSummary.record.deleted() === 'f'
+                summary.isHoldable = bibSummary.record.deleted() === 'f'
                 && bibSummary.has_holdable_copy
                 || this.allowUnfillableHolds;
 
-            return summary;
-        }));
+                // De-duplicate urls, frequently caused by multiple subfield 9's
+                // Note that .forEach() and .every() pass their callback functions the
+                // parameters (element, index, array) such that element = array[index]
+                // and they need to be distinctly named when sharing scope.
+                bibSummary.urls.forEach(function (elb, indb, aryb) {
+                    if(summary.eResourceUrls.every((els, inds, arys) =>
+                        elb.href !== els.href || elb.note !== els.note || elb.label !== els.label)) {
+                        summary.eResourceUrls.push(elb);
+                    }
+                });
+
+                return summary;
+            }));
     }
 
     getMetabibSummaries(metabibIds: number[],
@@ -155,25 +168,25 @@ export class BibRecordService {
         if (isStaff) { method += '.staff'; }
 
         return this.net.request('open-ils.search', method, orgId, metabibIds, options)
-        .pipe(map(metabibSummary => {
-            const summary = new BibRecordSummary(metabibSummary.record, orgId);
-            summary.net = this.net; // inject
-            summary.metabibId = Number(metabibSummary.metabib_id);
-            summary.metabibRecords = metabibSummary.metabib_records;
-            summary.display = metabibSummary.display;
-            summary.attributes = metabibSummary.attributes;
-            summary.holdCount = metabibSummary.hold_count;
-            summary.holdingsSummary = metabibSummary.copy_counts;
-            summary.copies = metabibSummary.copies;
-            summary.firstCallNumber = metabibSummary.first_call_number;
-            summary.prefOuHoldingsSummary = metabibSummary.pref_ou_copy_counts;
+            .pipe(map(metabibSummary => {
+                const summary = new BibRecordSummary(metabibSummary.record, orgId);
+                summary.net = this.net; // inject
+                summary.metabibId = Number(metabibSummary.metabib_id);
+                summary.metabibRecords = metabibSummary.metabib_records;
+                summary.display = metabibSummary.display;
+                summary.attributes = metabibSummary.attributes;
+                summary.holdCount = metabibSummary.hold_count;
+                summary.holdingsSummary = metabibSummary.copy_counts;
+                summary.copies = metabibSummary.copies;
+                summary.firstCallNumber = metabibSummary.first_call_number;
+                summary.prefOuHoldingsSummary = metabibSummary.pref_ou_copy_counts;
 
-            summary.isHoldable = metabibSummary.record.deleted() === 'f'
+                summary.isHoldable = metabibSummary.record.deleted() === 'f'
                 && metabibSummary.has_holdable_copy
                 || this.allowUnfillableHolds;
 
-            return summary;
-        }));
+                return summary;
+            }));
     }
 }
 

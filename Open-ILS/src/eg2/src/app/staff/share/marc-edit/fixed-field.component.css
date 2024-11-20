@@ -1,6 +1,6 @@
 
 :host .popover {
-  font-family: 'Lucida Console', Monaco, monospace;
+  font-family: monospace;
   max-width: 550px;
 }
 
@@ -8,6 +8,7 @@
   max-height: 400px;
   overflow-y: auto;
   overflow-x: auto;
+  padding: 0;
 }
 
 :host .popover-body .menu-entry {
@@ -15,6 +16,6 @@
 }
 
 :host .popover-body .menu-entry:hover {
-  background-color: #f8f9fa; /* bootstrap color */
+  background-color: var(--popover-menu-hover); /* bootstrap color */
 }
 

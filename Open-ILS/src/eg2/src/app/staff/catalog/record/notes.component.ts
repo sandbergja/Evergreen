@@ -1,16 +1,18 @@
-import {Component, OnInit, Input, ViewChild} from '@angular/core';
+import {Component, OnInit, Input, ViewChild, EventEmitter, Output} from '@angular/core';
 import {IdlService, IdlObject} from '@eg/core/idl.service';
 import {PcrudService} from '@eg/core/pcrud.service';
 import {Pager} from '@eg/share/util/pager';
-import {OrgService} from '@eg/core/org.service';
 import {PermService} from '@eg/core/perm.service';
 import {GridDataSource} from '@eg/share/grid/grid';
 import {GridComponent} from '@eg/share/grid/grid.component';
 import {FmRecordEditorComponent} from '@eg/share/fm-editor/fm-editor.component';
+import { tap } from 'rxjs';
+import { NetService } from '@eg/core/net.service';
+import { AuthService } from '@eg/core/auth.service';
 
 @Component({
-  selector: 'eg-catalog-record-notes',
-  templateUrl: 'notes.component.html'
+    selector: 'eg-catalog-record-notes',
+    templateUrl: 'notes.component.html'
 })
 export class NotesComponent implements OnInit {
 
@@ -24,6 +26,7 @@ export class NotesComponent implements OnInit {
     canDelete: boolean;
     createNew: () => void;
     deleteSelected: (rows: IdlObject[]) => void;
+    emitNoteCount: () => void;
     permissions: {[name: string]: boolean};
 
     @Input() set recordId(id: number) {
@@ -35,15 +38,18 @@ export class NotesComponent implements OnInit {
         }
     }
 
+    @Output() noteCountUpdated: EventEmitter<number> = new EventEmitter();
+
     get recordId(): number {
         return this.recId;
     }
 
     constructor(
         private idl: IdlService,
-        private org: OrgService,
         private pcrud: PcrudService,
-        private perm: PermService
+        private perm: PermService,
+        private net: NetService,
+        private auth: AuthService
     ) {
         this.permissions = {};
         this.gridDataSource = new GridDataSource();
@@ -77,7 +83,10 @@ export class NotesComponent implements OnInit {
             };
 
             return this.pcrud.search('bren',
-                {record: this.recId, deleted: 'f'}, searchOps);
+                {record: this.recId, deleted: 'f'}, searchOps)
+                .pipe(tap({
+                    complete: this.emitNoteCount
+                }));
         };
 
         this.notesGrid.onRowActivate.subscribe(
@@ -85,6 +94,7 @@ export class NotesComponent implements OnInit {
                 this.editDialog.mode = 'update';
                 this.editDialog.recordId = note.id();
                 this.editDialog.open()
+                    // eslint-disable-next-line rxjs/no-nested-subscribe
                     .subscribe(ok => this.notesGrid.reload());
             }
         );
@@ -103,9 +113,16 @@ export class NotesComponent implements OnInit {
             notes.forEach(note => note.isdeleted(true));
             this.pcrud.autoApply(notes).subscribe(
                 val => {},
-                err => {},
+                (err: unknown) => {},
                 ()  => this.notesGrid.reload()
             );
+        };
+
+        this.emitNoteCount = () => {
+            this.net.request('open-ils.circ', 'open-ils.circ.title.has_notes',
+                this.auth.token(), this.recordId).subscribe((noteCount) => {
+                this.noteCountUpdated.emit(+noteCount);
+            });
         };
     }
 }

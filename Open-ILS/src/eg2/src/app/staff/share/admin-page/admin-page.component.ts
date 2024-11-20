@@ -1,3 +1,5 @@
+/* eslint-disable */
+/* eslint-disable rxjs/no-implicit-any-catch, rxjs/no-nested-subscribe */
 import {Component, Input, OnInit, TemplateRef, ViewChild} from '@angular/core';
 import {ActivatedRoute} from '@angular/router';
 import {Location} from '@angular/common';
@@ -7,13 +9,14 @@ import {GridDataSource, GridColumn} from '@eg/share/grid/grid';
 import {GridComponent} from '@eg/share/grid/grid.component';
 import {TranslateComponent} from '@eg/share/translate/translate.component';
 import {ToastService} from '@eg/share/toast/toast.service';
+import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 import {Pager} from '@eg/share/util/pager';
 import {PcrudService} from '@eg/core/pcrud.service';
 import {OrgService} from '@eg/core/org.service';
 import {PermService} from '@eg/core/perm.service';
 import {AuthService} from '@eg/core/auth.service';
 import {FmRecordEditorComponent, FmFieldOptions
-    } from '@eg/share/fm-editor/fm-editor.component';
+} from '@eg/share/fm-editor/fm-editor.component';
 import {StringComponent} from '@eg/share/string/string.component';
 import {OrgFamily} from '@eg/share/org-family-select/org-family-select.component';
 
@@ -41,6 +44,12 @@ export class AdminPageComponent implements OnInit {
     // that requires no special handling, filtering, etc.
     @Input() dataSource: GridDataSource;
 
+    // An alternative to a custom data source or template fields; if used,
+    // idlClass should be a view over top of idlEditClass, just perhaps with
+    // extra columns and/or filtering.  Whenever an edit, delete, undelete,
+    // or create action is taken, we'll use this class instead of idlClass.
+    @Input() idlEditClass: string;
+
     // Size of create/edito dialog.  Uses large by default.
     @Input() dialogSize: 'sm' | 'lg' = 'lg';
 
@@ -57,8 +66,26 @@ export class AdminPageComponent implements OnInit {
     // is added to the top of the page.
     @Input() orgField: string;
 
+    // This is ignored if orgField is not set, and is used to specify
+    // additional org fields to be filtered against the selected context
+    // orgs.  All specified org fields are essentially OR'ed together in
+    // the retrieval query.
+    @Input() additionalOrgFields: string[] = [];
+
     // Disable the auto-matic org unit field filter
     @Input() disableOrgFilter: boolean;
+
+    // Give the grid an option to undelete any deleted rows
+    @Input() enableUndelete: boolean;
+
+    // Remove the ability to delete rows
+    @Input() disableDelete: boolean;
+
+    // Optional: Replace the default deletion confirmation text with this
+    @Input() deleteConfirmation: string;
+
+    // Remove the ability to edit rows
+    @Input() disableEdit: boolean;
 
     // Include objects linking to org units which are ancestors
     // of the selected org unit.
@@ -71,6 +98,9 @@ export class AdminPageComponent implements OnInit {
     // following eg.grid.
     @Input() persistKey: string;
 
+    // If present, will be applied to the org selector for the grid
+    @Input() contextOrgSelectorPersistKey: string;
+
     // Optional path component to add to the generated grid persist key,
     // formatted as (for example):
     // 'eg.grid.admin.${persistKeyPfx}.config.billing_type'
@@ -79,12 +109,33 @@ export class AdminPageComponent implements OnInit {
     // Optional comma-separated list of read-only fields
     @Input() readonlyFields: string;
 
+    // Optional record label to use instead of the IDL label
+    @Input() recordLabel: string;
+
+    // Optional label to use for the New Record button
+    @Input() newRecordLabel: string;
+
+    // optional flag to hide the Apply Translations button
+    @Input() hideApplyTranslations: boolean;
+
+    // optional flag to hide the Clear Filters action for gridFilters
+    @Input() hideClearFilters: boolean;
+
+    // optional list of org fields which are allowed a default if unset
+    @Input() orgDefaultAllowed: string;
+
+    // list of org fields to receive the context org as their default for new records
+    @Input() orgFieldsDefaultingToContextOrg: string;
+
     // Optional template containing help/about text which will
     // be added to the page, above the grid.
     @Input() helpTemplate: TemplateRef<any>;
 
     // Override field options for create/edit dialog
     @Input() fieldOptions: {[field: string]: FmFieldOptions};
+
+    // Add default filters to the grid
+    @Input() initialFilterValues: {[field: string]: string};
 
     // Override default values for fm-editor
     @Input() defaultNewRecord: IdlObject;
@@ -98,6 +149,12 @@ export class AdminPageComponent implements OnInit {
     // other columns
     @Input() templateFields: TemplateField[];
 
+    // Similar to templateFields, let's you define custom GridToolBarActionComponent's
+    @Input() customActions: TemplateAction[];
+
+    // And for toolbar buttons
+    @Input() customButtons: TemplateAction[];
+
     @ViewChild('grid', { static: true }) grid: GridComponent;
     @ViewChild('editDialog', { static: true }) editDialog: FmRecordEditorComponent;
     @ViewChild('successString', { static: true }) successString: StringComponent;
@@ -106,9 +163,15 @@ export class AdminPageComponent implements OnInit {
     @ViewChild('updateFailedString', { static: true }) updateFailedString: StringComponent;
     @ViewChild('deleteFailedString', { static: true }) deleteFailedString: StringComponent;
     @ViewChild('deleteSuccessString', { static: true }) deleteSuccessString: StringComponent;
+    @ViewChild('undeleteFailedString', { static: true }) undeleteFailedString: StringComponent;
+    @ViewChild('undeleteSuccessString', { static: true }) undeleteSuccessString: StringComponent;
     @ViewChild('translator', { static: true }) translator: TranslateComponent;
+    @ViewChild('deleteConfirmDialog', { static: true })
+    private deleteConfirmDialog: ConfirmDialogComponent;
 
     idlClassDef: any;
+    idlEditClassDef: any;
+    idlLabelClassDef: any; // for the template
     pkeyField: string;
     configFields: any[]; // IDL field definitions
 
@@ -167,12 +230,23 @@ export class AdminPageComponent implements OnInit {
         }
     }
 
+    contextOrgChanged(orgEvent: any) {
+        this.grid.reload();
+        this.setDefaultNewRecordOrgFieldDefaults( orgEvent['primaryOrgId'] );
+    }
+
     ngOnInit() {
+        console.warn('AdminPageComponent, this', this);
 
         this.idlClassDef = this.idl.classes[this.idlClass];
+        this.idlLabelClassDef = this.idlClassDef;
         this.pkeyField = this.idlClassDef.pkey || 'id';
+        if (this.idlEditClass) {
+            this.idlEditClassDef = this.idl.classes[this.idlEditClass];
+            this.idlLabelClassDef = this.idlEditClassDef;
+        }
 
-        this.translatableFields =
+        this.translatableFields = // TODO: a wrinkle in the idlEditClass idea
             this.idlClassDef.fields.filter(f => f.i18n).map(f => f.name);
 
         if (!this.persistKey) {
@@ -204,7 +278,7 @@ export class AdminPageComponent implements OnInit {
             // Use the grid filters as the basis for our default
             // new record (passed to fm-editor).
             if (!this.defaultNewRecord) {
-                const rec = this.idl.create(this.idlClass);
+                const rec = this.idl.create(this.idlEditClass || this.idlClass);
                 Object.keys(this.gridFilters).forEach(field => {
                     // When filtering on the primary key of the current
                     // object type, avoid using it in the default new object.
@@ -227,15 +301,36 @@ export class AdminPageComponent implements OnInit {
         this.checkCreatePerms();
         this.applyOrgValues(Number(contextOrg));
 
+        this.setDefaultNewRecordOrgFieldDefaults( Number(contextOrg) );
+
         // If the caller provides not data source, create a generic one.
         if (!this.dataSource) {
             this.initDataSource();
         }
     }
 
+    setDefaultNewRecordOrgFieldDefaults(contextOrg: number) {
+        // however we get a defaultNewRecord, we may want to default some org fields to the context org
+        if (this.orgFieldsDefaultingToContextOrg) {
+            if (!this.defaultNewRecord) {
+                this.defaultNewRecord = this.idl.create(this.idlEditClass || this.idlClass);
+            }
+            this.orgFieldsDefaultingToContextOrg.split(/,/).forEach( field => {
+                if (this.defaultNewRecord[field] && this.pkeyField !== field) {
+                    if (contextOrg) {
+                        // since this can change often, we'll just blow away anything that might have come in a different way
+                        this.defaultNewRecord[field]( contextOrg );
+                    }
+                }
+            });
+        }
+    }
+
     checkCreatePerms() {
         this.canCreate = false;
-        const pc = this.idlClassDef.permacrud || {};
+        const pc = this.idlEditClass
+            ? (this.idlEditClassDef.permacrud || {})
+            : (this.idlClassDef.permacrud || {});
         const perms = pc.create ? pc.create.perms : [];
         if (perms.length === 0) { return; }
 
@@ -276,12 +371,21 @@ export class AdminPageComponent implements OnInit {
             }
 
             const search: any[] = new Array();
-            const orgFilter: any = {};
+            const orgFilters: any[] = [];
 
             if (this.orgField && (this.searchOrgs || this.contextOrg)) {
-                orgFilter[this.orgField] =
-                    this.searchOrgs.orgIds || [this.contextOrg.id()];
-                search.push(orgFilter);
+                const orgFields = (this.additionalOrgFields || []).concat( [ this.orgField ]);
+                orgFields.forEach( field => {
+                    const orgFilter: any = {};
+                    orgFilter[field] =
+                        this.searchOrgs.orgIds || [this.contextOrg.id()];
+                    orgFilters.push(orgFilter);
+                });
+                if (orgFilters.length == 1) {
+                    search.push(orgFilters[0]);
+                } else if (orgFilters.length > 1) {
+                    search.push( { '-or': orgFilters } );
+                }
             }
 
             Object.keys(this.dataSource.filters).forEach(key => {
@@ -308,6 +412,12 @@ export class AdminPageComponent implements OnInit {
     }
 
     showEditDialog(idlThing: IdlObject): Promise<any> {
+        if (this.disableEdit) {
+            return;
+        }
+        if (this.idlEditClass) {
+            idlThing =  this.convertIdlClass2IdlEditClass(idlThing);
+        }
         this.editDialog.mode = 'update';
         this.editDialog.recordId = idlThing[this.pkeyField]();
         return new Promise((resolve, reject) => {
@@ -318,7 +428,7 @@ export class AdminPageComponent implements OnInit {
                     this.grid.reload();
                     resolve(result);
                 },
-                error => {
+                (error: unknown) => {
                     this.updateFailedString.current()
                         .then(str => this.toast.danger(str));
                     reject(error);
@@ -340,19 +450,92 @@ export class AdminPageComponent implements OnInit {
         editOneThing(idlThings.shift());
     }
 
+    convertIdlClass2IdlEditClass(oldIdlThing: IdlObject): IdlObject {
+        if (!this.idlEditClass
+            || oldIdlThing.classname === this.idlClass
+            || oldIdlThing.classname !== this.idlEditClass) {
+            console.warn('AdminPageComponent, incorrect use of convertIdlClass2IdlEditClass',oldIdlThing);
+            return oldIdlThing;
+        }
+        const newIdlThing = this.idl.create(this.idlEditClass);
+        this.idlEditClassDef.fields.forEach( f => {
+            newIdlThing[f]( oldIdlThing[f]() );
+        });
+        return newIdlThing;
+    }
+
+    undeleteSelected(idlThings: IdlObject[]) {
+        if (this.idlEditClass) {
+            idlThings = idlThings.map( thing => this.convertIdlClass2IdlEditClass(thing) );
+        }
+        idlThings.forEach(idlThing => idlThing.deleted(false));
+        this.pcrud.update(idlThings).subscribe(
+            val => {
+                this.undeleteSuccessString.current()
+                    .then(str => this.toast.success(str));
+            },
+            (err: unknown) => {
+                this.undeleteFailedString.current()
+                    .then(str => this.toast.danger(str));
+            },
+            ()  => this.grid.reload()
+        );
+    }
+
     deleteSelected(idlThings: IdlObject[]) {
+        if (this.idlEditClass) {
+            idlThings = idlThings.map( thing => this.convertIdlClass2IdlEditClass(thing) );
+        }
+        this.deleteConfirmDialog.open().subscribe(confirmed => {
+            if ( confirmed ) {
+                this.doDelete(idlThings);
+            }
+        });
+    }
+
+    doDelete(idlThings: IdlObject[]){
         idlThings.forEach(idlThing => idlThing.isdeleted(true));
         this.pcrud.autoApply(idlThings).subscribe(
             val => {
                 this.deleteSuccessString.current()
                     .then(str => this.toast.success(str));
             },
-            err => {
+            (err: unknown) => {
                 this.deleteFailedString.current()
                     .then(str => this.toast.danger(str));
             },
             ()  => this.grid.reload()
         );
+    }
+
+    shouldDisableDelete(rows: IdlObject[]): boolean {
+        if (rows.length === 0) {
+            return true;
+        } else {
+            const deletedRows = rows.filter((row) => {
+                if (row.deleted && row.deleted() === 't') {
+                    return true;
+                } else if (row.isdeleted) {
+                    return row.isdeleted();
+                }
+            });
+            return deletedRows.length > 0;
+        }
+    }
+
+    shouldDisableUndelete(rows: IdlObject[]): boolean {
+        if (rows.length === 0) {
+            return true;
+        } else {
+            const deletedRows = rows.filter((row) => {
+                if (row.deleted && row.deleted() === 't') {
+                    return true;
+                } else if (row.isdeleted) {
+                    return row.isdeleted();
+                }
+            });
+            return deletedRows.length !== rows.length;
+        }
     }
 
     createNew() {
@@ -367,7 +550,7 @@ export class AdminPageComponent implements OnInit {
                     .then(str => this.toast.success(str));
                 this.grid.reload();
             },
-            rejection => {
+            (rejection: any) => {
                 if (!rejection.dismissed) {
                     this.createErrString.current()
                         .then(str => this.toast.danger(str));
@@ -462,9 +645,13 @@ export class AdminPageComponent implements OnInit {
 
         const localField =
             cf.reltype === 'has_many' ?
-            (linkClass.field_map[cf.key].key || this.pkeyField) : cf.name;
+                (linkClass.field_map[cf.key].key || this.pkeyField) : cf.name;
 
-        return row[localField]();
+        if (row[localField] && typeof row[localField] == 'function') {
+            return row[localField]();
+        } else {
+            return row[localField]; // aforementioned scalar
+        }
     }
 
     // Returns a URL suitable for using as an href.
@@ -500,6 +687,15 @@ export class AdminPageComponent implements OnInit {
         const url = this.configLinkBasePath + '/' + parts[0] + '/' + parts[1];
         return this.ngLocation.prepareExternalUrl(url);
     }
+
+    hasNoHistory(): boolean {
+        return history.length === 0;
+    }
+
+    goBack() {
+        history.back();
+    }
+
 }
 
 export interface TemplateField {
@@ -507,3 +703,7 @@ export interface TemplateField {
     name: string;
 }
 
+export interface TemplateAction {
+    label: string;
+    method: Function;
+}

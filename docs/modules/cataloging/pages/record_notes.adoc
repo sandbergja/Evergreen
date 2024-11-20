@@ -1,0 +1,17 @@
+= Monograph Parts =
+:toc:
+
+Bibliographic record notes can be edited from the
+Record Notes tab in a staff catalog bibliographic
+record view.  There are three permissions
+that allow users to work with record notes:
+
+* `CREATE_RECORD_NOTE`
+* `UPDATE_RECORD_NOTE`
+* `DELETE_RECORD_NOTE`
+
+These permissions must be assigned at the global
+level to grant staff access to those functions.
+
+If there are notes on a record, the Record Notes
+tab will show a count of the record's notes.

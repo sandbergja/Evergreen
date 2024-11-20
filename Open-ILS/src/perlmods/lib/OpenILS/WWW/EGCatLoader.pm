@@ -29,6 +29,7 @@ use OpenILS::WWW::EGCatLoader::Course;
 use OpenILS::WWW::EGCatLoader::Container;
 use OpenILS::WWW::EGCatLoader::SMS;
 use OpenILS::WWW::EGCatLoader::Register;
+use OpenILS::WWW::EGCatLoader::OpenAthens;
 
 my $U = 'OpenILS::Application::AppUtils';
 
@@ -180,6 +181,7 @@ sub load {
     return $self->load_password_reset if $path =~ m|opac/password_reset|;
     return $self->load_logout if $path =~ m|opac/logout|;
     return $self->load_patron_reg if $path =~ m|opac/register|;
+    return $self->load_openathens_logout if $path =~ m|opac/sso/openathens/logout$|;
 
     $self->load_simple("myopac") if $path =~ m:opac/myopac:; # A default page for myopac parts
 
@@ -269,6 +271,7 @@ sub load {
     return $self->load_myopac_update_password if $path =~ m|opac/myopac/update_password|;
     return $self->load_myopac_update_username if $path =~ m|opac/myopac/update_username|;
     return $self->load_myopac_update_locale if $path =~ m|opac/myopac/update_locale|;
+    return $self->load_myopac_update_preferred_name if $path =~ m|opac/myopac/update_preferred_name|;
     return $self->load_myopac_bookbags if $path =~ m|opac/myopac/lists|;
     return $self->load_myopac_bookbag_print if $path =~ m|opac/myopac/list/print|;
     return $self->load_myopac_bookbag_update if $path =~ m|opac/myopac/list/update|;
@@ -281,6 +284,7 @@ sub load {
     return $self->load_myopac_prefs_my_lists if $path =~ m|opac/myopac/prefs_my_lists|;
     return $self->load_myopac_prefs if $path =~ m|opac/myopac/prefs|;
     return $self->load_myopac_reservations if $path =~ m|opac/myopac/reservations|;
+    return $self->load_openathens_sso if $path =~ m|opac/sso/openathens$|;
 
     return Apache2::Const::OK;
 }
@@ -302,7 +306,7 @@ sub redirect_ssl {
 sub redirect_auth {
     my $self = shift;
 
-    my $sso_org = $ENV{sso_loc} || $self->get_physical_loc || $self->_get_search_lib();
+    my $sso_org = $self->ctx->{sso_org};
     my $sso_enabled = $self->ctx->{get_org_setting}->($sso_org, 'opac.login.shib_sso.enable');
     my $sso_native = $self->ctx->{get_org_setting}->($sso_org, 'opac.login.shib_sso.allow_native');
 
@@ -319,6 +323,7 @@ sub redirect_auth {
 # -----------------------------------------------------------------------------
 sub load_simple {
     my ($self, $page) = @_;
+
     $self->ctx->{page} = $page;
     $self->ctx->{search_ou} = $self->_get_search_lib();
 
@@ -371,6 +376,9 @@ sub load_common {
     my $geo_org = $ctx->{physical_loc} || $self->cgi->param('loc') || $ctx->{aou_tree}->()->id;
     my $geo_sort_for_org = $ctx->{get_org_setting}->($geo_org, 'opac.holdings_sort_by_geographic_proximity');
     $ctx->{geo_sort} = $geo_sort && $U->is_true($geo_sort_for_org);
+    my $part_required_flag = $e->retrieve_config_global_flag('circ.holds.api_require_monographic_part_when_present');
+    $part_required_flag = ($part_required_flag and $U->is_true($part_required_flag->enabled));
+    $ctx->{part_required_when_present_global_flag} = $part_required_flag;
 
     # capture some commonly accessed pages
     $ctx->{home_page} = $ctx->{proto} . '://' . $ctx->{hostname} . $self->ctx->{opac_root} . "/home";
@@ -470,8 +478,10 @@ sub load_common {
         return $rows;
     };
 
-    $ctx->{course_ou} = int($self->cgi->param('locg')) || $self->ctx->{physical_loc} || $self->ctx->{aou_tree}->()->id;
+    $ctx->{course_ou} = $ctx->{physical_loc} || $ctx->{aou_tree}->()->id;
     $ctx->{use_courses} = $ctx->{get_org_setting}->($ctx->{course_ou}, 'circ.course_materials_opt_in') ? 1 : 0;
+
+    $ctx->{sso_org} = $ENV{sso_loc} || $ctx->{physical_loc} || $ctx->{search_ou};
 
     return Apache2::Const::OK;
 }
@@ -550,8 +560,8 @@ sub load_login {
 
     $self->timelog("Load login begins");
 
-    my $sso_org = $ENV{sso_loc} || $self->get_physical_loc || $self->_get_search_lib();
-    $ctx->{sso_org} = $sso_org;
+    my $sso_org = $ctx->{sso_org};
+
     my $sso_enabled = $ctx->{get_org_setting}->($sso_org, 'opac.login.shib_sso.enable');
     my $sso_native = $ctx->{get_org_setting}->($sso_org, 'opac.login.shib_sso.allow_native');
     my $sso_eg_match = $ctx->{get_org_setting}->($sso_org, 'opac.login.shib_sso.evergreen_matchpoint') || 'usrname';
@@ -566,14 +576,15 @@ sub load_login {
     my $persist = $cgi->param('persist');
     my $client_tz = $cgi->param('client_tz');
 
-    my $sso_user_match_value;
+    my $sso_user_match_value = $ENV{$sso_shib_match};
     my $response;
     my $sso_logged_in;
     $self->timelog("SSO is enabled") if ($sso_enabled);
     if ($sso_enabled
-        and $sso_user_match_value = $ENV{$sso_shib_match}
-        and !$self->cgi->cookie(COOKIE_SHIB_LOGGEDOUT)
+        and $sso_user_match_value
+        and (!$self->cgi->cookie(COOKIE_SHIB_LOGGEDOUT) or $self->{_ignore_shib_logged_out_cookie})
     ) { # we have a shib session, and have not cleared a previous shib-login cookie
+        $self->{_ignore_shib_logged_out_cookie} = 0; # only set by an intermediate call that internally redirected here
         $self->timelog("Have an SSO user match value: $sso_user_match_value");
 
         if ($sso_eg_match eq 'barcode') { # barcode is special
@@ -709,21 +720,52 @@ sub load_login {
         );
     }
 
-    return $self->generic_redirect(
-        $cgi->param('redirect_to') || $acct,
-        $cookie_list
-    );
+    # TODO: maybe move this logic to generic_redirect()?
+    my $redirect_to = $cgi->param('redirect_to') || $acct;
+    if (my $login_redirect_gf = $self->editor->retrieve_config_global_flag('opac.login_redirect_domains')) {
+        if ($login_redirect_gf->enabled eq 't') {
+
+            my @redir_hosts = ();
+            if ($login_redirect_gf->value) {
+                @redir_hosts = map { '(?:[^/.]+\.)*' . quotemeta($_) } grep { $_ } split(/,\s*/, $login_redirect_gf->value);
+            }
+            unshift @redir_hosts, quotemeta($ctx->{hostname});
+
+            my $hn = join('|', @redir_hosts);
+            my $relative_redir = qr#^(?:(?:(?:(?:f|ht)tps?:)?(?://(?:$hn))(?:/|$))|/$|/[^/]+)#;
+
+            if ($redirect_to !~ $relative_redir) {
+                $logger->warn(
+                    "Login redirection of [$redirect_to] ".
+                    "disallowed based on Global Flag opac.".
+                    "login_redirect_domains RE [$relative_redir]"
+                );
+                $redirect_to = $acct; # fall back to myopac/main
+            }
+        }
+    }
+
+    return
+        $self->_perform_any_sso_required($response, $redirect_to, $cookie_list)
+        || $self->generic_redirect(
+            $redirect_to,
+            $cookie_list
+        );
 }
 
 sub load_manual_shib_login {
     my $self = shift;
     my $redirect_to = shift || $self->cgi->param('redirect_to');
 
-    my $sso_org = $ENV{sso_loc} || $self->get_physical_loc || $self->_get_search_lib();
+    my $sso_org = $self->ctx->{sso_org};
     my $sso_entity_id = $self->ctx->{get_org_setting}->($sso_org, 'opac.login.shib_sso.entityId');
     my $sso_shib_match = $self->ctx->{get_org_setting}->($sso_org, 'opac.login.shib_sso.shib_matchpoint') || 'uid';
 
-    return $self->load_login if ($ENV{$sso_shib_match});
+
+    if ($ENV{$sso_shib_match}) {
+        $self->{_ignore_shib_logged_out_cookie} = 1;
+        return $self->load_login;
+    }
 
     my $url = '/Shibboleth.sso/Login?target=' . ($redirect_to || $self->ctx->{home_page});
     if ($sso_entity_id) {
@@ -747,15 +789,19 @@ sub load_manual_shib_login {
 # -----------------------------------------------------------------------------
 sub load_logout {
     my $self = shift;
-    my $redirect_to = shift || $self->cgi->param('redirect_to');
+    my $redirect_to = shift || $self->cgi->param('redirect_to')
+        || $self->ctx->{home_page};
     my $active_logout = $self->cgi->param('active_logout');
 
-    my $sso_org = $ENV{sso_loc} || $self->get_physical_loc || $self->_get_search_lib();
-    $self->ctx->{sso_org} = $sso_org;
+    my $sso_org = $self->ctx->{sso_org};
+
     my $sso_enabled = $self->ctx->{get_org_setting}->($sso_org, 'opac.login.shib_sso.enable');
     my $sso_entity_id = $self->ctx->{get_org_setting}->($sso_org, 'opac.login.shib_sso.entityId');
     my $sso_logout = $self->ctx->{get_org_setting}->($sso_org, 'opac.login.shib_sso.logout');
-    if ($sso_enabled && $sso_logout) {
+
+    # If using SSO, and actively logging out of EG /or/ opac.login.shib_sso.logout is true then
+    # log out of the SP (and, depending on Shib config, maybe the IdP or globally).
+    if ($sso_enabled and ($sso_logout or $active_logout)) {
         $redirect_to = '/Shibboleth.sso/Logout?return=' . ($redirect_to || $self->ctx->{home_page});
         if ($sso_entity_id) {
             $redirect_to .= '&entityID=' . $sso_entity_id;
@@ -774,35 +820,66 @@ sub load_logout {
         );
     } catch Error with {};
 
-    return $self->generic_redirect(
-        $redirect_to || $self->ctx->{home_page},
-        [
-            # clear value of and expire both of these login-related cookies
-            $self->cgi->cookie(
-                -name => COOKIE_SES,
-                -path => '/',
-                -value => '',
-                -expires => '-1h'
-            ),
-            $self->cgi->cookie(
-                -name => COOKIE_LOGGEDIN,
-                -path => '/',
-                -value => '',
-                -expires => '-1h'
-            ),
-            ($active_logout ? ($self->cgi->cookie(
-                -name => COOKIE_SHIB_LOGGEDOUT,
-                -path => '/',
-                -value => '1',
-                -expires => '2147483647'
-            )) : ()),
-            $self->cgi->cookie(
-                -name => COOKIE_SHIB_LOGGEDIN,
-                -path => '/',
-                -value => '0',
-                -expires => '-1h'
-            )
-        ]
+    # clear value of and expire both of these login-related cookies
+    my $cookie_list = [
+        $self->cgi->cookie(
+            -name => COOKIE_SES,
+            -path => '/',
+            -value => '',
+            -expires => '-1h'
+        ),
+        $self->cgi->cookie(
+            -name => COOKIE_LOGGEDIN,
+            -path => '/',
+            -value => '',
+            -expires => '-1h'
+        ),
+        ($active_logout ? ($self->cgi->cookie(
+            -name => COOKIE_SHIB_LOGGEDOUT,
+            -path => '/',
+            -value => '1',
+            -expires => '2147483647'
+        )) : ()),
+        $self->cgi->cookie(
+            -name => COOKIE_SHIB_LOGGEDIN,
+            -path => '/',
+            -value => '0',
+            -expires => '-1h'
+        )
+    ];
+
+    return 
+        $self->_perform_any_sso_signout_required($redirect_to, $cookie_list)
+        || $self->generic_redirect(
+            $redirect_to,
+            $cookie_list
+        );
+}
+
+# -----------------------------------------------------------------------------
+# Signs the user in to any third party services that their org unit is
+# configured for.
+# -----------------------------------------------------------------------------
+sub _perform_any_sso_required {
+    my ($self, $auth_response, $redirect_to, $cookie_list) = @_;
+
+    return $self->perform_openathens_sso_if_required(
+        $auth_response,
+        $redirect_to,
+        $cookie_list
+    );
+}
+
+# -----------------------------------------------------------------------------
+# Signs the user out of any third party services that their org unit is
+# configured for.
+# -----------------------------------------------------------------------------
+sub _perform_any_sso_signout_required {
+    my ($self, $redirect_to, $cookie_list) = @_;
+
+    return $self->perform_openathens_signout_if_required(
+        $redirect_to,
+        $cookie_list
     );
 }
 

@@ -1,74 +1,167 @@
-[[reporter_folders]]
-= Folders =
+[[reports_folders]]
+= Reports Folders =
 :toc:
 
-indexterm:[reports, folders]
+indexterm:[reports, report folders, folders]
 
-There are three main components to reports: _Templates_, _Reports_, and _Output_. 
-Each of these components must be stored in a folder. Folders can be private 
-(accessible to your login only) or shared with other staff at your library, 
-other libraries in your system or consortium. It is also possible to selectively 
-share 
-only certain folders and/or subfolders.
+The folders pane in the reporter is divided into two sections:
 
-There are two parts to the folders pane. The _My Folders_ section contains folders 
-created with your Evergreen account. Folders that other users have shared with 
-you appear in the _Shared Folders_ section under the username of the sharing 
-account.
+* _My Folders_ which contains the folders created with your Evergreen account.
+* _Shared Folders_ which contains folders shared with you by other users.
 
-image::media/folder-1.png[folder-1]
+image::reporter_folder/reports_first_login.png["Screenshot of Evergreen Reports page. Two tabs at the top, Browse and Search. Below the tabs 'My Folders' with three link; Templates, Reports, Outputs. Below that is 'Shared Folders' with the same three links. There is a caret next to the shared Templates and Reports."]
 
-[[reporter_creating_folders]]
+There are three main components used by the reporter which each must be stored
+ in a separate folder:
+
+* _Templates_ which tell Evergreen what fields to offer as filters and what 
+columns to display in the results file.
+* _Reports_ which tell Evergreen what values to filter on, how often to run the
+ report, and what file formats to output the results in.
+* _Outputs_ which is the final results file from Evergreen with the information
+ from the database.
+
+To work with templates, reports, and outputs in the reporter you must
+ have at least one folder created under each component.
+
+[[creating_folders]]
 == Creating Folders ==
 
+indexterm:[creating folders, report folders, reports]
 
-indexterm:[reports, folders, creating]
+[TIP] 
+=====
+It is recommended to use a parallel naming scheme for folders in Templates, 
+Reports, and Outputs to help keep your reports organized and easier to find, 
+i.e., you might create a folder named 'Monthly Statistics' under Templates and 
+then make matching 'Monthly Statistics' folders under Reports and Outputs.
+=====
 
-Whether you are creating a report from scratch or working from a shared template 
-you must first create at least one folder.
+To create a folder within _Templates_, _Reports_, or _Outputs_:
 
-The steps for creating folders are similar for each reporting function. It is 
-easier to create folders for templates, reports, and output all at once at the 
-beginning, though it is possible to do it before each step. This example 
-demonstrates creating a folder for a template.
+. Navigate to *Administration -> Reports*.
+. In the _My Folders_ section click on the folder you would like to create a 
+subfolder in. You may need to click on the caret(s) to expand the relevant 
+folder tree.
++
+image::reporter_folder/reports_subfolders.png[Screenshot of the Templates under My Folders. A subfolder labeled Monthly Statistics has been highlighted. To the right is the folder name followed by a number of buttons. Button four is Add Subfolder.]
++
+. Select the button *Add Subfolder*.
++
+image::reporter_folder/create_template_folder.png["Screenshot of the Create a Template Folder modal. It reads Enter a name for the subfolder of Monthly Statistics. Collections is entered in the folder name field. There are two buttons on the modal, Confirm and Cancel."]
++
+. Enter a name for the folder.
+. Select the _Confirm_ button.
+. The folder can now be seen in the appropriate folder tree.
++
+image::reporter_folder/folder_tree["Updated folder tree showing three levels; Templates, sub-folder Monthly Statistics, and sub- sub-folders Patrons and Collections."]
 
-. Click on _Templates_ in the _My Folders_ section.
-. Name the folder. Select _Share_ or _Do not share_ from the dropdown menu.
-. If you want to share your folder, select who you want to share this folder 
-with from the dropdown menu.
-. Click _Create Sub Folder_.
-. Click _OK_.
-. Next, create a folder for the report definition to be saved to. Click on 
-_Reports_.
-. Repeat steps 2-5 to create a Reports folder also called _Circulation_.
-. Finally, you need to create a folder for the report’s output to be saved in. 
-Click on _Output_.
-. Repeat steps 2-5 to create an Output folder named _Circulation_.
+[NOTE]
+======
+When creating folders at the top level (directly under _Templates_, _Reports_, 
+or _Outputs_) Evergreen will only display a button to add a top-level folder. 
 
+image::reporter_folder/create_top-level_template_folder.png["Screenshot of just the My Folders area. The Templates link is highlighted. To the right is a button labeled, Add top-level template folder."]
+======
 
-TIP: Using a parallel naming scheme for folders in Templates, Reports, 
-and Output helps keep your reports organized and easier to find
-
-The folders you just created will now be visible by clicking the arrows in _My 
-Folders_. Bracketed after the folder name is whom the folder is shared with. For 
-example, _Circulation (BNCLF)_ is shared with the North Coast Library Federation. 
-If it is not a shared folder there will be nothing after the folder name. You 
-may create as many folders and sub-folders as you like.
-
+[[managing_folders]]
 == Managing Folders ==
 
-indexterm:[reports, folders, managing]
+indexterm:[reports folders, managing folders]
 
-Once a folder has been created you can change the name, delete it, create a new 
-subfolder, or change the sharing settings. This example demonstrates changing a 
-folder name; the other choices follow similar steps
+[TIP]
+=====
+Clicking the blue text of a folder name displays the contents of the folder in 
+the righthand pane. Clicking the caret in front of a folder name displays its 
+subfolders.
+=====
 
-. Click on the folder that you wish to rename.
-. Click _Manage Folder_.
-. Select _Change folder name_ from the dropdown menu and click _Go_.
-. Enter the new name and click _Submit_.
-. Click _OK_.
-. You will get a confirmation box that the _Action Succeeded_. Click _OK_.
+Once a folder has been created, you can change the name, delete the folder, 
+create a new subfolder, or change the sharing settings. 
 
+. Navigate to *Administration -> Reports*.
+. In the _My Folders_ section select the name of the folder that you wish to manage.
+. Use the buttons at the top of the righthand pane to perform actions.
++
+image::reporter_folder/file_management_buttons.png[Screenshot of the name of a folder with buttons below.]
++
+. You can:
+.. Remove filters
+.. Create a new template
+.. Rename the folder
+.. Create a new subfolder (see above)
+.. Share or hide the folder (see below)
 
+[[sharing_folders]]
+== Sharing Folders ==
 
+indexterm:[sharing reports, reports folders]
+
+_Templates_, _Reports_, and _Outputs_ folders can be private (accessible only to
+ the user who created the folder) or shared with other staff at the library or 
+ other libraries within your system or consortium who have reporter permissions.
+ Templates in a shared folder are searchable using the _Search Templates_ feature
+ by anyone with permissions to see that folder.
+
+[[sharing_your_folders]]
+=== Sharing Your Folders ===
+
+Folders can be shared at any time after they are created.
+
+. Navigate to *Administration -> Reports*.
+. In the _My Folders_ section select the name of the folder that you wish to share.
+. Select the *Share Folder* button.
+. Select the Org Unit for the level at which you would like to share your folder, 
+e.g., other staff at your branch, your whole system, anyone in your consortium. 
+All users with reports permissions at the selected level will be able to access
+ and search for templates in your shared folder.
+. Select *Save*.
+. The folder will now show under _My Folders_ with the library code of the 
+organizational unit it is shared within parentheses. 
++
+image::reporter_folder/sharing_a_folder.png[Screenshot of "My Folders" area showing the top level Templates folder and the subfolder named "Monthly Statistics." In parentheses next to the "Monthly Statistics" folder is BR2.]
++
+. If you wish to change the sharing scope for the folder, you must first unshare
+ the folder and then re-share it with the new share scope. See below for information
+ on unsharing folders.
+
+[NOTE]
+=========
+A subfolder may be shared even if the parent folder is not shared. The shared
+ subfolder will act as a floating folder for other users and will attach itself
+ under the parent group, e.g., Templates.
+=========
+
+[[hiding_your_folders]]
+=== Hiding Your Folders ===
+
+indexterm:[hiding report folders, sharing reports, reports]
+
+Folders are hidden (unshared) by default. Folders that have been shared can be
+ unshared later.
+
+. Navigate to *Administration -> Reports*.
+. In the _My Folders_ pane select the name of the folder that you wish to hide.
+. Select the *Unshare Folder* button.
+. The folder will now show under _My Folders_ without a library code in parentheses.
+ 
+[[viewing_shared_folders]]
+=== Viewing Shared Folders ===
+
+indexterm:[shared report folders, report folders, reports]
+
+Folders that are shared with your org unit display in the _Shared Folders_
+section.
+
+image::reporter_folder/shared_folders.png[Screenshot of the Shared Folders tree displaying a folder labeled BCO (CONS) under Templates and Mike (CONS) under Reports.]
+
+The top level of shared folders displays the username of the account that has 
+shared the folder.
+
+While it is most common for users to share template folders, reports and outputs
+ folders can be shared
+as well.
+
+You can only view the contents of the shared folders. To make edits, you must 
+xref:reports:reporter_cloning_shared_templates.adoc[clone the templates] into 
+your own folders.

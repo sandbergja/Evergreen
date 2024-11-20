@@ -1,9 +1,7 @@
-import {Component, OnInit, Input, ViewChild} from '@angular/core';
+import {Component, Input, ViewChild} from '@angular/core';
 import {Observable, throwError, from} from 'rxjs';
 import {switchMap} from 'rxjs/operators';
-import {NetService} from '@eg/core/net.service';
 import {IdlService, IdlObject} from '@eg/core/idl.service';
-import {EventService} from '@eg/core/event.service';
 import {ToastService} from '@eg/share/toast/toast.service';
 import {AuthService} from '@eg/core/auth.service';
 import {PcrudService} from '@eg/core/pcrud.service';
@@ -12,6 +10,7 @@ import {StringComponent} from '@eg/share/string/string.component';
 import {DialogComponent} from '@eg/share/dialog/dialog.component';
 import {NgbModal, NgbModalOptions} from '@ng-bootstrap/ng-bootstrap';
 import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
+import {ServerStoreService} from '@eg/core/server-store.service';
 
 /**
  * Dialog for managing copy alerts.
@@ -23,16 +22,16 @@ export interface CopyAlertsChanges {
 }
 
 @Component({
-  selector: 'eg-copy-alerts-dialog',
-  templateUrl: 'copy-alerts-dialog.component.html'
+    selector: 'eg-copy-alerts-dialog',
+    templateUrl: 'copy-alerts-dialog.component.html'
 })
 
 export class CopyAlertsDialogComponent
-    extends DialogComponent implements OnInit {
+    extends DialogComponent {
 
-    // If there are multiple copyIds, only new alerts may be applied.
-    // If there is only one copyId, then alerts may be applied or removed.
     @Input() copyIds: number[] = [];
+    copies: IdlObject[];
+    alertIdMap: { [key: number]: any };
 
     mode: string; // create | manage
 
@@ -40,16 +39,17 @@ export class CopyAlertsDialogComponent
     // database.  It's assumed this takes place in the calling code.
     @Input() inPlaceCreateMode = false;
 
-    // In 'create' mode, we may be adding notes to multiple copies.
-    copies: IdlObject[];
-    // In 'manage' mode we only handle a single copy.
-    copy: IdlObject;
+    // This will not contain "real" alerts, but a deduped set of alert
+    // proxies in a batch context that match on alert_type, temp, note,
+    // and null/not-null for ack_time.
+    alertsInCommon: IdlObject[] = [];
 
     alertTypes: ComboboxEntry[];
     newAlert: IdlObject;
     newAlerts: IdlObject[];
     autoId = -1;
     changesMade: boolean;
+    defaultAlertType = 1; // default default :-)
 
     @ViewChild('successMsg', { static: true }) private successMsg: StringComponent;
     @ViewChild('errorMsg', { static: true }) private errorMsg: StringComponent;
@@ -57,17 +57,31 @@ export class CopyAlertsDialogComponent
     constructor(
         private modal: NgbModal, // required for passing to parent
         private toast: ToastService,
-        private net: NetService,
         private idl: IdlService,
         private pcrud: PcrudService,
         private org: OrgService,
-        private auth: AuthService) {
+        private auth: AuthService,
+        private serverStore: ServerStoreService) {
         super(modal); // required for subclassing
         this.copyIds = [];
         this.copies = [];
+        this.alertIdMap = {};
     }
 
-    ngOnInit() {}
+    prepNewAlert(): IdlObject {
+        const newAlert = this.idl.create('aca');
+        newAlert.alert_type(this.defaultAlertType);
+        newAlert.create_staff(this.auth.user().id());
+        return newAlert;
+    }
+
+    hasCopy(): Boolean {
+        return this.copies.length > 0;
+    }
+
+    inBatch(): Boolean {
+        return this.copies.length > 1;
+    }
 
     /**
      * Fetch the item/record, then open the dialog.
@@ -75,30 +89,27 @@ export class CopyAlertsDialogComponent
      * the mark-damanged action occured or was dismissed.
      */
     open(args: NgbModalOptions): Observable<CopyAlertsChanges> {
-        this.copy = null;
         this.copies = [];
-        this.newAlert = this.idl.create('aca');
         this.newAlerts = [];
-        this.newAlert.create_staff(this.auth.user().id());
+        this.newAlert = this.prepNewAlert();
 
         if (this.copyIds.length === 0 && !this.inPlaceCreateMode) {
             return throwError('copy ID required');
         }
 
-        // In manage mode, we can only manage a single copy.
-        // But in create mode, we can add alerts to multiple copies.
-        // We can only manage copies that already exist in the database.
-        if (this.copyIds.length === 1 && this.copyIds[0] > 0) {
-            this.mode = 'manage';
-        } else {
-            this.mode = 'create';
-        }
+        // We're removing the distinction between 'manage' and 'create'
+        // modes and are implementing batch edit for existing alerts
+        // that match on alert_type, temp, note, and whether ack_time
+        // is set or not set.
+        this.mode = 'manage';
 
         // Observerify data loading
         const obs = from(
             this.getAlertTypes()
-            .then(_ => this.getCopies())
-            .then(_ => this.mode === 'manage' ? this.getCopyAlerts() : null)
+                .then(_ => this.getCopies())
+                .then(_ => this.getCopyAlerts())
+                .then(_ => this.getDefaultAlertType())
+                .then(_ => { if (this.defaultAlertType) { this.newAlert.alert_type(this.defaultAlertType); } })
         );
 
         // Return open() observable to caller
@@ -109,9 +120,9 @@ export class CopyAlertsDialogComponent
         if (this.alertTypes) { return Promise.resolve(); }
 
         return this.pcrud.retrieveAll('ccat',
-        {   active: true,
-            scope_org: this.org.ancestors(this.auth.user().ws_ou(), true)
-        }, {atomic: true}
+            {   active: true,
+                scope_org: this.org.ancestors(this.auth.user().ws_ou(), true)
+            }, {atomic: true}
         ).toPromise().then(alerts => {
             this.alertTypes = alerts.map(a => ({id: a.id(), label: a.name()}));
         });
@@ -124,13 +135,10 @@ export class CopyAlertsDialogComponent
         if (ids.length === 0) { return Promise.resolve(); }
 
         return this.pcrud.search('acp', {id: this.copyIds}, {}, {atomic: true})
-        .toPromise().then(copies => {
-            this.copies = copies;
-            copies.forEach(c => c.copy_alerts([]));
-            if (this.mode === 'manage') {
-                this.copy = copies[0];
-            }
-        });
+            .toPromise().then(copies => {
+                this.copies = copies;
+                copies.forEach(c => c.copy_alerts([]));
+            });
     }
 
     // Copy alerts for the selected copies which have not been
@@ -142,12 +150,46 @@ export class CopyAlertsDialogComponent
         return this.pcrud.search('aca',
             {copy: this.copyIds, ack_time: null, alert_type: typeIds},
             {}, {atomic: true})
-        .toPromise().then(alerts => {
-            alerts.forEach(a => {
-                const copy = this.copies.filter(c => c.id() === a.copy())[0];
-                copy.copy_alerts().push(a);
+            .toPromise().then(alerts => {
+                alerts.forEach(a => {
+                    const copy = this.copies.filter(c => c.id() === a.copy())[0];
+                    this.alertIdMap[a.id()] = a;
+                    copy.copy_alerts().push(a);
+                });
+                if (this.inBatch()) {
+                    let potentialMatches = this.copies[0].copy_alerts();
+
+                    this.copies.slice(1).forEach(copy => {
+                        potentialMatches = potentialMatches.filter(alertFromFirstCopy =>
+                            copy.copy_alerts().some(alertFromCurrentCopy =>
+                                this.compositeMatch(alertFromFirstCopy, alertFromCurrentCopy)
+                            )
+                        );
+                    });
+
+                    // potentialMatches now contains alerts that have a "match" in every copy
+                    this.alertsInCommon = potentialMatches.map( match => this.cloneAlertForBatchProxy(match) );
+                }
             });
-        });
+    }
+
+    getDefaultAlertType(): Promise<any> {
+        // TODO fetching the default item alert type from holdings editor
+        //      defaults had previously been handled via methods from
+        //      VolCopyService. However, as described in LP#2044051, this
+        //      caused significant issues with dependency injection.
+        //      Consequently, some refactoring may be in order so that
+        //      such default values can be managed via a more self-contained
+        //      service.
+        return this.serverStore.getItem('eg.cat.volcopy.defaults').then(
+            (defaults) => {
+                console.log('eg.cat.volcopy.defaults',defaults);
+                if (defaults?.values?.item_alert_type) {
+                    console.log('eg.cat.volcopy.defaults, got here for item_alert_type',defaults.values.item_alert_type);
+                    this.defaultAlertType = defaults.values.item_alert_type;
+                }
+            }
+        );
     }
 
     getAlertTypeLabel(alert: IdlObject): string {
@@ -164,25 +206,79 @@ export class CopyAlertsDialogComponent
 
     // Add the in-progress new note to all copies.
     addNew() {
-        if (!this.newAlert.alert_type()) { return; }
 
         this.newAlert.id(this.autoId--);
         this.newAlert.isnew(true);
         this.newAlerts.push(this.newAlert);
 
-        this.newAlert = this.idl.create('aca');
+        this.newAlert = this.prepNewAlert();
 
+    }
+
+    compositeMatch(a: IdlObject, b: IdlObject): boolean {
+        return a.alert_type() === b.alert_type()
+            && a.temp() === b.temp()
+            && a.note() === b.note()
+            && (
+                (a.ack_time() === null && b.ack_time() === null)
+                    || (a.ack_time() !== null && b.ack_time() !== null)
+            );
+    }
+
+    setAlert(target: IdlObject, source: IdlObject) {
+        target.ack_staff(source.ack_staff());
+        if (source.ack_time() === 'now') {
+            target.ack_time('now');
+            target.ack_staff(this.auth.user().id());
+        }
+        target.ischanged(true);
+        target.alert_type(source.alert_type());
+        target.temp(source.temp());
+        target.ack_time(source.ack_time());
+        target.note(source.note());
+    }
+
+    // clones everything but copy, create_time, and create_staff
+    // This is serving as a reference alert for the other matching alerts
+    cloneAlertForBatchProxy(source: IdlObject): IdlObject {
+        const target = this.idl.create('aca');
+        target.id( source.id() );
+        target.alert_type(source.alert_type());
+        target.temp(source.temp());
+        target.ack_time(source.ack_time());
+        target.ack_staff(source.ack_staff());
+        target.note(source.note());
+        return target;
     }
 
     applyChanges() {
 
-        const changedAlerts = this.copy ?
-            this.copy.copy_alerts().filter(a => a.ischanged()) :
-            [];
+        const changedAlerts = [];
+        const changes = this.hasCopy()
+            ? (
+                this.inBatch()
+                    ? this.alertsInCommon.filter(a => a.ischanged())
+                    : this.copies[0].copy_alerts().filter(a => a.ischanged())
+            )
+            : [];
+        console.log('applyChanges, changes', changes);
 
-        changedAlerts.forEach(alrt => {
-            if (alrt.ack_time() === 'now') {
-                alrt.ack_staff(this.auth.user().id());
+        changes.forEach(change => {
+            if (this.inBatch()) {
+                this.copies.forEach(copy => {
+                    copy.copy_alerts().forEach(realAlert => {
+                        // compare against the unchanged version of the reference alert
+                        if (realAlert.id() !== change.id() && this.compositeMatch(realAlert, this.alertIdMap[ change.id() ])) {
+                            this.setAlert(realAlert, change);
+                            changedAlerts.push(realAlert);
+                        }
+                    });
+                });
+                // now change the original reference alert as well
+                this.setAlert(this.alertIdMap[ change.id() ], change);
+                changedAlerts.push( this.alertIdMap[ change.id() ] );
+            } else {
+                changedAlerts.push(change);
             }
         });
 
@@ -190,28 +286,28 @@ export class CopyAlertsDialogComponent
             this.close({ newAlerts: this.newAlerts, changedAlerts: changedAlerts });
             return;
         }
+        console.log('changedAlerts.length, newAlerts.length', changedAlerts.length,this.newAlerts.length);
+        const pendingAlerts = changedAlerts;
 
-        const alerts = [];
         this.newAlerts.forEach(alert => {
             this.copies.forEach(c => {
                 const a = this.idl.clone(alert);
                 a.isnew(true);
                 a.id(null);
                 a.copy(c.id());
-                alerts.push(a);
+                pendingAlerts.push(a);
             });
         });
-        if (this.mode === 'manage') {
-            changedAlerts.forEach(alert => {
-                alerts.push(alert);
-            });
-        }
-        this.pcrud.autoApply(alerts).toPromise().then(
+
+        this.pcrud.autoApply(pendingAlerts).toPromise().then(
             ok => {
                 this.successMsg.current().then(msg => this.toast.success(msg));
                 this.close({ newAlerts: this.newAlerts, changedAlerts: changedAlerts });
             },
-            err => this.errorMsg.current().then(msg => this.toast.danger(msg))
+            err => {
+                this.errorMsg.current().then(msg => this.toast.danger(msg));
+                console.error('pcrud error', err);
+            }
         );
     }
 }

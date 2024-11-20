@@ -1,24 +1,37 @@
-import {Component, OnInit, Renderer2} from '@angular/core';
+import {
+    Component,
+    ElementRef,
+    OnInit,
+    Renderer2,
+    ViewChild
+} from '@angular/core';
 import {Location} from '@angular/common';
 import {Router, ActivatedRoute} from '@angular/router';
 import {AuthService, AuthWsState} from '@eg/core/auth.service';
 import {StoreService} from '@eg/core/store.service';
 import {OrgService} from '@eg/core/org.service';
+import {OfflineService} from '@eg/staff/share/offline.service';
 
 @Component({
-  templateUrl : './login.component.html'
+    styleUrls: ['./login.component.css'],
+    templateUrl : './login.component.html'
 })
-
 export class StaffLoginComponent implements OnInit {
 
+    @ViewChild('password')
+        passwordInput: ElementRef;
     workstations: any[];
     loginFailed: boolean;
+    routeTo: string;
+    pendingXactsDate: Date;
+    passwordVisible: boolean;
+    singleFactor = true;
 
     args = {
-      username : '',
-      password : '',
-      workstation : '',
-      type : 'staff'
+        username : '',
+        password : '',
+        workstation : '',
+        type : 'staff'
     };
 
     constructor(
@@ -28,10 +41,21 @@ export class StaffLoginComponent implements OnInit {
       private renderer: Renderer2,
       private auth: AuthService,
       private org: OrgService,
-      private store: StoreService
+      private store: StoreService,
+      private offline: OfflineService
     ) {}
 
     ngOnInit() {
+        this.routeTo = this.route.snapshot.queryParamMap.get('routeTo');
+
+        if (this.routeTo) {
+            if (this.routeTo.match(/^[a-z]+:\/\//i)) {
+                console.warn(
+                    'routeTo must contain only path information: ', this.routeTo);
+                this.routeTo = null;
+            }
+        }
+
         // clear out any stale auth data
         this.auth.logout();
 
@@ -39,13 +63,15 @@ export class StaffLoginComponent implements OnInit {
         this.renderer.selectRootElement('#username').focus();
 
         this.store.getWorkstations()
-        .then(wsList => {
-            this.workstations = wsList;
-            return this.store.getDefaultWorkstation();
-        }).then(def => {
-            this.args.workstation = def;
-            this.applyWorkstation();
-        });
+            .then(wsList => {
+                this.workstations = wsList;
+                return this.store.getDefaultWorkstation();
+            }).then(def => {
+                this.args.workstation = def;
+                this.applyWorkstation();
+            });
+
+        this.offline.pendingXactsDate().then(d => this.pendingXactsDate = d);
     }
 
     applyWorkstation() {
@@ -62,22 +88,28 @@ export class StaffLoginComponent implements OnInit {
 
     handleSubmit() {
 
+        this.passwordVisible = false;
+
         // post-login URL
-        let url: string = this.auth.redirectUrl || '/staff/splash';
+        let url: string = this.routeTo || '/staff/splash';
 
         // prevent sending the user back to the login page
-        if (url.startsWith('/staff/login')) {
-            url = '/staff/splash';
-        }
+        if (url.match('/staff/login')) { url = '/staff/splash'; }
 
         const workstation: string = this.args.workstation;
 
         this.loginFailed = false;
         this.auth.login(this.args).then(
             ok => {
-                this.auth.redirectUrl = null;
 
-                if (this.auth.workstationState === AuthWsState.NOT_FOUND_SERVER) {
+                if (this.auth.provisional()) {
+                    // The server is requiring MFA. Trigger that UI change.
+                    this.singleFactor = false;
+                    this.router.navigate(['/staff/mfa'], {
+                        queryParamsHandling:'merge',
+                        queryParams: { routeTo : url }
+                    });
+                } else if (this.auth.workstationState === AuthWsState.NOT_FOUND_SERVER) {
                     // User attempted to login with a workstation that is
                     // unknown to the server. Redirect to the WS admin page.
                     // Reset the WS state to avoid looping back to WS removal
@@ -88,17 +120,17 @@ export class StaffLoginComponent implements OnInit {
 
                 } else {
 
-                    // Initial login clears cached org unit setting values
-                    // and user/workstation setting values
-                    this.org.clearCachedSettings().then(_ => {
+                    this.offline.refreshOfflineData()
+                    // Initial login clears cached org unit settings.
+                        .then(_ => this.org.clearCachedSettings())
+                        .then(_ => {
 
-                        // Force reload of the app after a successful login.
-                        // This allows the route resolver to re-run with a
-                        // valid auth token and workstation.
-                        window.location.href =
+                            // Force reload of the app after a successful login.
+                            // This allows the route resolver to re-run with a
+                            // valid auth token and workstation.
+                            window.location.href =
                             this.ngLocation.prepareExternalUrl(url);
-
-                    });
+                        });
                 }
             },
             notOk => {
@@ -106,6 +138,15 @@ export class StaffLoginComponent implements OnInit {
             }
         );
     }
+
+    handleMFA() {
+    }
+
+    togglePasswordVisibility() {
+        this.passwordVisible = !this.passwordVisible;
+        this.passwordInput.nativeElement.focus();
+    }
+
 }
 
 

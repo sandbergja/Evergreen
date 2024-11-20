@@ -1,21 +1,18 @@
 <eg-staff-banner i18n-bannerText bannerText="Mark Item Missing Pieces">
 </eg-staff-banner>
 
-<eg-patron-penalty-dialog #penaltyDialog></eg-patron-penalty-dialog>
+<eg-patron-note-dialog #noteDialog></eg-patron-note-dialog>
 
 <div class="row">
-  <div class="col-lg-12 form-inline">
+  <div class="col-lg-4 form-inline">
     <div class="input-group">
-      <div class="input-group-prepend">
-        <span class="input-group-text" id='barcode-label' i18n>Barcode</span>
-      </div>
+      <label class="input-group-text" for='item-barcode-input' i18n>Barcode</label>
       <input type="text" class="form-control" id="item-barcode-input" 
         (keydown)="noSuchItem=false; true;"
-        (keyup.enter)="getItemByBarcode()" [(ngModel)]="itemBarcode" 
-        aria-describedby="barcode-label"/>
+        (keyup.enter)="getItemByBarcode()" [(ngModel)]="itemBarcode" />
+      <button type="submit" class="btn btn-outline-dark"
+        (click)="getItemByBarcode()" i18n>Submit</button>
     </div>
-    <button class="btn btn-outline-dark" 
-      (click)="getItemByBarcode()" i18n>Submit</button>
   </div>
 </div>
 
@@ -34,10 +31,12 @@
   </div>
   <div class="row mt-2">
     <div class="col-lg-12">
-      <button class="btn btn-success" (click)="processItem()" i18n>
+      <button type="button" class="btn btn-success" (click)="processItem()" i18n>
         Mark Item as Missing Pieces?
       </button>
-      <button class="btn btn-warning ml-2" (click)="reset()">
+      <button type="button" class="btn ms-2" (click)="reset()"
+        [ngClass]="{'btn-destroy': itemProcessed,
+                    'btn-normal': !itemProcessed }">
         <ng-container *ngIf="!itemProcessed" i18n>Cancel</ng-container>
         <ng-container *ngIf="itemProcessed" i18n>Reset Form</ng-container>
       </button>
@@ -71,7 +70,7 @@
 <div *ngIf="letter">
   <div class="row">
     <div class="col-lg-3">
-      <button class="btn btn-outline-dark" (click)="printLetter()" i18n>
+      <button type="button" class="btn btn-outline-dark" (click)="printLetter()" i18n>
         Print Letter
       </button>
     </div>

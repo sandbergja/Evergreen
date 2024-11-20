@@ -9,13 +9,13 @@
   </div>
   <div class="modal-body">
     <div class="col-md-12">
-      <input ng-keyup="$event.keyCode == 13 ? ok() : null" type='text' ng-model="args.value" class="form-control" focus-me="focus"/>
+      <input ng-keydown="$event.keyCode == 13 ? ok() : null" type='text' ng-model="args.value" class="form-control" focus-me="focus"/>
     </div>
   </div>
   <div class="modal-footer">
     [% dialog_footer %]
     <input type="submit" class="btn btn-primary" 
       ng-click="ok()" value="[% l('OK/Continue') %]"/>
-    <button class="btn btn-warning" ng-click="cancel()">[% l('Cancel') %]</button>
+    <button class="btn btn-normal" ng-click="cancel()">[% l('Cancel') %]</button>
   </div>
 </div>

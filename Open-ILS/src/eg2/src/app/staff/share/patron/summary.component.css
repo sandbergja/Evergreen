@@ -1,0 +1,177 @@
+
+.patron-summary-container {
+  background-color: light-dark(var(--bs-body-bg), var(--bs-body-bg-alt));
+  border-radius: 0.5rem;
+  box-shadow: 
+    0.25rem 1px  1rem light-dark(rgba(0,0,100,0.2), rgba(0,0,0,0.8)), 
+    0.25rem 1rem 1rem light-dark(rgba(0,0,100,0.1), rgba(0,0,0,0.5));
+  padding: 1rem;
+}
+
+.account-details .row:nth-child(odd):not(.alert) {
+    background: var(--bs-body-bg);
+    border-color: var(--border);
+    color: var(--bs-body-color);
+}
+
+.account-sections {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 2rem;
+}
+
+.account-col {
+  flex-basis: calc(25% - 2rem);
+}
+
+.account-col dl {
+  column-gap: 1rem;
+  display: grid;
+  grid-template-columns: max-content auto;
+}
+
+.account-col dl > div {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  margin: 0 0 0.15rem;
+  padding: 0 0.25rem;
+}
+
+.account-col dt {
+  font-weight: normal;
+  grid-column: 1;
+  margin: 0;
+}
+
+.account-col dd {
+  grid-column: 2;
+  margin: 0;
+  text-align: end;
+}
+
+.datetime,
+.numeric {
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.alert-danger,
+.alert-danger .material-icons {
+  background: light-dark(var(--bs-red-100), var(--bs-red-900));
+  color: light-dark(var(--bs-red-800), var(--bs-red-200));
+}
+
+dl .alert {
+  margin-bottom: 0;
+}
+
+.account-address address {
+  font-style: normal;
+}
+
+.account-address .material-icons {
+  font-size: 1.2rem;
+}
+
+.address-type {
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.alert-penalties {
+  background: light-dark(rgba(0,0,100,0.08), var(--bs-gray-800));
+  border-radius: 0.35rem;
+  color: light-dark(var(--bs-gray-900), var(--bs-gray-200));
+  margin: 0 0 1rem;
+  padding: 0.25rem;
+}
+
+.alert-penalties h3 {
+  font-weight: 600;
+  margin: 0.25rem 0 0.5rem;
+}
+
+.alert-penalties .row {
+  padding: 0.25rem 0;
+}
+
+
+/* PATRON STATUS COLORS */
+
+.patron-status .badge {
+  font-size: inherit;
+  margin: 0 .5rem .5rem 0;
+}
+/* --badge-info */
+.PATRON_HAS_NOTES { 
+  background: light-dark(var(--bs-cyan-100), var(--bs-cyan-900));
+  color: light-dark(var(--bs-cyan-900), var(--bs-cyan-100));;
+}
+ /* BS Purple */
+.PATRON_EXCEEDS_LOST_COUNT,
+.PATRON_EXCEEDS_CHECKOUT_COUNT,
+.PATRON_EXCEEDS_OVERDUE_COUNT,
+.PATRON_EXCEEDS_LONGOVERDUE_COUNT,
+.PATRON_EXCEEDS_FINES  { 
+  background: light-dark(var(--bs-purple-100), var(--bs-purple-800));
+  color: light-dark(var(--bs-purple-800), var(--bs-purple-100)); 
+}
+/* --badge-success */
+.NO_PENALTIES {
+  background: var(--success-text-light);
+  color: var(--success-text-dark);
+}
+/* --badge-warning */
+.ONE_PENALTY,
+.PATRON_HAS_BILLS,
+.PATRON_HAS_OVERDUES,
+.INVALID_PATRON_ADDRESS
+.INVALID_PATRON_EMAIL_ADDRESS,
+.INVALID_PATRON_DAY_PHONE,
+.INVALID_PATRON_EVENING_PHONE,
+.INVALID_PATRON_OTHER_PHONE {
+  background: light-dark(var(--bs-yellow-100), var(--bs-yellow-800));
+  color: light-dark(var(--bs-orange-800), var(--bs-yellow-100));
+}
+/* Bootstrap orange */
+.MULTIPLE_PENALTIES,
+.PATRON_HAS_LOST,
+.PATRON_IN_COLLECTIONS { 
+  background: light-dark(var(--bs-orange-100), var(--bs-yellow-800));
+  color: light-dark(var(--bs-orange-800), var(--bs-yellow-100));
+}
+/* --badge-secondary */
+.PATRON_INACTIVE,
+.PATRON_EXPIRED  { 
+  background: light-dark(var(--bs-gray-300), var(--bs-gray-900));
+  color: light-dark(var(--bs-gray-900), var(--bs-gray-300));
+}
+/* --badge-danger */
+.PATRON_BARRED,
+.PATRON_HAS_ALERT,
+.PATRON_HAS_STAFF_ALERT  { 
+  background: light-dark(var(--bs-red-100), var(--bs-red-800));
+  color: light-dark(var(--bs-red-800), var(--bs-red-100));
+}
+.PATRON_BARRED {
+  font-weight: bold;
+}
+/* --badge-primary */
+.PATRON_JUVENILE  { 
+  background: light-dark(var(--bs-blue-100), var(--bs-blue-800));
+  color: light-dark(var(--bs-blue-800), var(--bs-blue-100));
+}
+
+/* Statuses with warning icon */
+.PATRON_HAS_STAFF_ALERT:not(:is(dl > *)):before,
+.PATRON_BARRED:not(:is(dl > *)):before,
+.PATRON_HAS_ALERT:not(:is(dl > *)):before,
+.PATRON_EXPIRED:not(:is(dl > *)):before {
+    content: "\e002";
+    font-family: "Material Icons";
+    font-size: inherit;
+    font-weight: normal;
+    line-height: .75;
+    margin-right: .25rem;
+}
+

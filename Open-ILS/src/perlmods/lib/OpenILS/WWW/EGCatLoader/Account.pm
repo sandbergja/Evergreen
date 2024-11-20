@@ -18,6 +18,9 @@ use DateTime;
 use DateTime::Format::ISO8601;
 my $U = 'OpenILS::Application::AppUtils';
 use List::MoreUtils qw/uniq/;
+use LWP::UserAgent;
+use HTTP::Request::Common qw(POST GET);
+use CGI;
 
 sub prepare_extended_user_info {
     my $self = shift;
@@ -37,8 +40,9 @@ sub prepare_extended_user_info {
         {
             flesh => 2,
             flesh_fields => {
-                au => [qw/card home_ou addresses ident_type locale billing_address waiver_entries/, @extra_flesh],
-                "aou" => ["billing_address"]
+                au => [qw/card home_ou addresses ident_type locale billing_address waiver_entries stat_cat_entries/, @extra_flesh],
+                "aou" => ["billing_address"],
+                "actscecm" => ["stat_cat"]
             }
         }
     ]);
@@ -843,6 +847,7 @@ sub load_myopac_prefs_settings {
         opac.default_search_location
         opac.default_pickup_location
         opac.temporary_list_no_warn
+        ui.show_search_highlight
     /;
 
     my $stat = $self->_load_user_with_prefs;
@@ -887,6 +892,15 @@ sub load_myopac_prefs_settings {
         my $val = $self->cgi->param($key);
         $settings{$key}= $val unless $$set_map{$key} eq $val;
     }
+
+    # Set search highlight to a boolean so it's simple to check after retrieval
+    # Also set it to false if we didn't receive it because html form didn't send it,
+    # but the user would've seen the setting and saved with it false
+
+    if ($settings{'ui.show_search_highlight'} eq 'on'){
+        $settings{'ui.show_search_highlight'} = JSON::true; }
+    else {
+        $settings{'ui.show_search_highlight'} = JSON::false;}
 
     # Used by the settings update form when warning on history delete.
     my $clear_circ_history = 0;
@@ -1502,6 +1516,7 @@ sub load_place_hold {
 
     $logger->info("Looking at hold_type: " . $ctx->{hold_type} . " and targets: @targets");
 
+    $ctx->{any_part_label} = $ctx->{get_i18n_string}->(1, 'All Parts');
     $ctx->{staff_recipient} = $self->editor->retrieve_actor_user([
         $e->requestor->id,
         {
@@ -1618,21 +1633,53 @@ sub load_place_hold {
                     {record => $rec->id}
                 );
 
-                # T holds on records that have parts are OK, but if the record has
-                # no non-part copies, the hold will ultimately fail.  When that
-                # happens, require the user to select a part.
+                # T holds on records that have parts are normally OK, but if the record has
+                # no non-part copies, the hold will ultimately fail.  When that happens,
+                # require the user to select a part.
+                #
+                # If the global flag circ.holds.api_require_monographic_part_when_present is
+                # enabled, or the library setting circ.holds.ui_require_monographic_part_when_present
+                # is active for any item owning library associated with the bib, then any configured
+                # parts for the bib is enough to disallow title holds (aka require part selection).
                 my $part_required = 0;
                 if (@$parts) {
-                    my $np_copies = $e->json_query({
-                        select => { acp => [{column => 'id', transform => 'count', alias => 'count'}]},
-                        from => {acp => {acn => {}, acpm => {type => 'left'}}},
-                        where => {
-                            '+acp' => {deleted => 'f'},
-                            '+acn' => {deleted => 'f', record => $rec->id},
-                            '+acpm' => {id => undef}
+                    $part_required = $ctx->{part_required_when_present_global_flag};
+                    if (!$part_required) {
+                        my $resp = $e->json_query({
+                            select => {
+                                acn => ['owning_lib']
+                            },
+                            from => {acn => {acp => {type => 'left'}}},
+                            where => {
+                                '+acp' => {
+                                    '-or' => [
+                                        {deleted => 'f'},
+                                        {id => undef} # left join
+                                    ]
+                                },
+                                '+acn' => {deleted => 'f', record => $rec->id}
+                            },
+                            distinct => 't'
+                        });
+                        my $org_ids = [map {$_->{owning_lib}} @$resp];
+                        foreach my $org (@$org_ids) { # FIXME: worth shortcutting/optimizing?
+                            if ($self->ctx->{get_org_setting}->($org, 'circ.holds.ui_require_monographic_part_when_present')) {
+                                $part_required = 1;
+                            }
                         }
-                    });
-                    $part_required = 1 if $np_copies->[0]->{count} == 0;
+                    }
+                    if (!$part_required) {
+                        my $np_copies = $e->json_query({
+                            select => { acp => [{column => 'id', transform => 'count', alias => 'count'}]},
+                            from => {acp => {acn => {}, acpm => {type => 'left'}}},
+                            where => {
+                                '+acp' => {deleted => 'f'},
+                                '+acn' => {deleted => 'f', record => $rec->id},
+                                '+acpm' => {id => undef}
+                            }
+                        });
+                        $part_required = 1 if $np_copies->[0]->{count} == 0;
+                    }
                 }
 
                 push(@hold_data, $data_filler->({
@@ -2322,21 +2369,108 @@ sub load_myopac_payment_form {
 
     $r = $self->prepare_fines(undef, undef, [$self->cgi->param('xact'), $self->cgi->param('xact_misc')]);
 
-    if ( ! $self->cgi->param('last_chance') # only do this once
-        && $self->ctx->{get_org_setting}->($e->requestor->home_ou, 'credit.processor.stripe.enabled')
-        && $self->ctx->{get_org_setting}->($e->requestor->home_ou, 'credit.processor.default') eq 'Stripe') {
-        my $skey = $self->ctx->{get_org_setting}->($e->requestor->home_ou, 'credit.processor.stripe.secretkey');
-        my $currency = $self->ctx->{get_org_setting}->($e->requestor->home_ou, 'credit.processor.stripe.currency');
-        my $stripe = Business::Stripe->new(-api_key => $skey);
-        my $intent = $stripe->api('post', 'payment_intents',
-            amount                => $self->ctx->{fines}->{balance_owed} * 100,
-            currency              => $currency || 'usd'
-        );
-        if ($stripe->success) {
-            $self->ctx->{stripe_client_secret} = $stripe->success()->{client_secret};
-        } else {
-            $logger->error('Error initializing Stripe: ' . Dumper($stripe->error));
-            $self->ctx->{cc_configuration_error} = 1;
+    if ( ! $self->cgi->param('last_chance')) { # only do this once
+        if ($self->ctx->{get_org_setting}->($e->requestor->home_ou, 'credit.processor.default') eq 'Stripe') {
+            if ($self->ctx->{get_org_setting}->($e->requestor->home_ou, 'credit.processor.stripe.enabled')) {
+                my $skey = $self->ctx->{get_org_setting}->($e->requestor->home_ou, 'credit.processor.stripe.secretkey');
+                my $currency = $self->ctx->{get_org_setting}->($e->requestor->home_ou, 'credit.processor.stripe.currency');
+                my $amount = $self->ctx->{fines}->{balance_owed} * 100;
+
+                # generate an idempotency key from the list of transactions to prevent duplicates;
+                # if the list is empty, use (userID, YYYY-mm-dd, amount)
+                my @payment_xacts = ($self->cgi->param('xact'), $self->cgi->param('xact_misc'));
+                my $idempotency_key = md5_hex(scalar(@payment_xacts)
+                    ? join(',', sort(@payment_xacts))
+                    : join(',', $self->ctx->{user}->id, DateTime->now->strftime('%F'), $amount));
+                my $default_headers = HTTP::Headers->new('Idempotency-Key' => $idempotency_key);
+                my $stripe = Business::Stripe->new(-api_key => $skey, -ua_args => { default_headers => $default_headers } );
+
+                my $intent = $stripe->api('post', 'payment_intents',
+                    amount                => $amount,
+                    currency              => $currency || 'usd',
+                    description           => 'User Database ID: ' . $self->ctx->{user}->id
+                );
+                if ($stripe->success) {
+                    $self->ctx->{stripe_client_secret} = $stripe->success()->{client_secret};
+                } else {
+                    $logger->error('Error initializing Stripe: ' . Dumper($stripe->error));
+                    $self->ctx->{cc_configuration_error} = 1;
+                }
+            }
+        } elsif ($self->ctx->{get_org_setting}->($e->requestor->home_ou, 'credit.processor.default') eq 'SmartPAY') {
+            if ($self->ctx->{get_org_setting}->($e->requestor->home_ou, 'credit.processor.smartpay.enabled')) {
+                my $location_id =  CGI::escapeHTML($self->ctx->{get_org_setting}->($e->requestor->home_ou, 'credit.processor.smartpay.location_id'));
+                $self->ctx->{smartpay_locationid} = $location_id;
+                my $customer_id =  CGI::escapeHTML($self->ctx->{get_org_setting}->($e->requestor->home_ou, 'credit.processor.smartpay.customer_id'));
+                $self->ctx->{smartpay_customerid} = $customer_id;
+                my $login = CGI::escapeHTML($self->ctx->{get_org_setting}->($e->requestor->home_ou, 'credit.processor.smartpay.login'));
+                my $password = CGI::escapeHTML($self->ctx->{get_org_setting}->($e->requestor->home_ou, 'credit.processor.smartpay.password'));
+                my $api_key = CGI::escapeHTML($self->ctx->{get_org_setting}->($e->requestor->home_ou, 'credit.processor.smartpay.api_key'));
+                my $server = CGI::escapeHTML($self->ctx->{get_org_setting}->($e->requestor->home_ou, 'credit.processor.smartpay.server'));
+                my $port = CGI::escapeHTML($self->ctx->{get_org_setting}->($e->requestor->home_ou, 'credit.processor.smartpay.port'));
+                my $base_target = "https://$server";
+                $base_target .= ":$port" if $port;
+                $base_target .= "/SMARTPAYAPI/WEBSMARTPAY.dll";
+                
+                # first api call
+                my $target = $base_target . "?RequestSessionKey";
+                $target .= "&CustomerID=$customer_id";
+                $target .= "&LocationID=$location_id";
+                $target .= "&UserName=$login";
+                $target .= "&Password=$password";
+                $target .= "&APIKey=$api_key";
+
+                my @payment_xacts = ($self->cgi->param('xact'), $self->cgi->param('xact_misc'));
+
+                # generate a temporary cache token for our secret
+                my $token = 'smartpay_' . md5_hex($$ . time() . rand());
+                $target .= "&Secret=$token";
+
+                my $ua = new LWP::UserAgent;
+
+                # there has been API flux with whether to send API-Key and Secret as HTTP headers or URL params
+                #my $req = GET($target, 'API-Key' => "$api_key", 'Secret' => "$token");
+                my $req = GET($target);
+                my $response = $ua->request($req);
+
+                if ($response->is_success() && $response->content() !~ /HTML/) {
+                    $logger->info('SmartPAY initialized for ' . $self->editor->authtoken . ' with ' . $token);
+
+                    my $session_key = $response->content();
+
+                    # we'll test this secret key again in the create payment method and grab the payment_xacts in main_pay_init
+                    my $cache_args = {
+                        user => $self->ctx->{user}->id,
+                        session_key => $session_key,
+                        xacts => \@payment_xacts
+                    };
+                    my $cache = OpenSRF::Utils::Cache->new('global');
+                    $cache->put_cache($token, $cache_args, 3600); # 1 hour
+
+                    # this will be for our follow-up call client-side
+
+                    $self->ctx->{smartpay_target} = $base_target . '?GetCreditForm';
+                    $self->ctx->{smartpay_target} .= '&SessionKey=' . $session_key;
+                    $self->ctx->{smartpay_target} .= "&CustomerID=$customer_id";
+                    $self->ctx->{smartpay_target} .= "&LocationID=$location_id";
+                    $self->ctx->{smartpay_target} .= '&PatronID=' . $self->ctx->{user}->id; # $e->requestor->id;
+                    my $psuedo_invoice_number = $self->cgi->param('xact') . ',' . $self->cgi->param('xact_misc');
+                    $psuedo_invoice_number =~ s/^,//;
+                    $self->ctx->{smartpay_target} .= "&InvNum=$psuedo_invoice_number";
+                    $self->ctx->{smartpay_target} .= '&Amount=' . sprintf("%.2f",$self->ctx->{fines}->{balance_owed});
+                    $self->ctx->{smartpay_target} .= '&URLPostBack=' . CGI::escapeHTML( $self->ctx->{hostname} );
+                    #$self->ctx->{smartpay_target} .= '&ScriptPostBack=' .  CGI::escapeHTML('/cgi-bin/offline/echo1.pl');
+                    $self->ctx->{smartpay_target} .= '&URLReturn=' .  CGI::escapeHTML( $self->ctx->{opac_root} . '/myopac/main_pay_init' );
+                    $self->ctx->{smartpay_target} .= '&URLCancel=' .  CGI::escapeHTML( 'https://' . $self->ctx->{hostname} . $self->ctx->{opac_root} . '/myopac/main');
+                    $self->ctx->{smartpay_target} .= '&UserName=&Password=&Field1=smartpay&Field2=&Field3=&ItemsData=';
+
+                } else {
+                    my $error = $response->content();
+                    $error =~ s/[\r\n]//g;
+                    $logger->error("Error initializing SmartPAY: $error");
+                    $self->ctx->{cc_configuration_error} = 1;
+                }
+            }
         }
     }
 
@@ -2388,16 +2522,21 @@ sub load_myopac_pay_init {
     my @payment_xacts = ($self->cgi->param('xact'), $self->cgi->param('xact_misc'));
 
     if (!@payment_xacts) {
-        # for consistency with load_myopac_payment_form() and
-        # to preserve backwards compatibility, if no xacts are
-        # selected, assume all (applicable) transactions are wanted.
-        my $stat = $self->prepare_fines(undef, undef, [$self->cgi->param('xact'), $self->cgi->param('xact_misc')]);
-        return $stat if $stat;
-        @payment_xacts =
-            map { $_->{xact}->id } (
-                @{$self->ctx->{fines}->{circulation}},
-                @{$self->ctx->{fines}->{grocery}}
-        );
+        if ($self->cgi->param('Secret')) { # we stashed the xacts in the cache for SmartPAY
+            my $smartpay_cache = $cache->get_cache($self->cgi->param('Secret'));
+            @payment_xacts = @{$smartpay_cache->{xacts}};
+        } else {
+            # for consistency with load_myopac_payment_form() and
+            # to preserve backwards compatibility, if no xacts are
+            # selected, assume all (applicable) transactions are wanted.
+            my $stat = $self->prepare_fines(undef, undef, [$self->cgi->param('xact'), $self->cgi->param('xact_misc')]);
+            return $stat if $stat;
+            @payment_xacts =
+                map { $_->{xact}->id } (
+                    @{$self->ctx->{fines}->{circulation}},
+                    @{$self->ctx->{fines}->{grocery}}
+            );
+        }
     }
 
     return $self->generic_redirect unless @payment_xacts;
@@ -2409,6 +2548,20 @@ sub load_myopac_pay_init {
         billing_last billing_address billing_city billing_state
         billing_zip stripe_payment_intent stripe_client_secret
     /);
+
+    # mapping SmartPAY CGI parameters
+    if ($self->cgi->param('Result')) {
+        $cc_args->{smartpay_result} = $self->cgi->param('Result');
+    }
+    if ($self->cgi->param('Secret')) {
+        $cc_args->{smartpay_secret} = $self->cgi->param('Secret');
+    }
+    if ($self->cgi->param('SessionKey')) {
+        $cc_args->{smartpay_session} = $self->cgi->param('SessionKey');
+    }
+    if ($self->cgi->param('CCNumber')) {
+        $cc_args->{number} = $self->cgi->param('CCNumber');
+    }
 
     my $cache_args = {
         cc_args => $cc_args,
@@ -2850,6 +3003,48 @@ sub load_myopac_update_password {
     $url =~ s/update_password/prefs/;
 
     return $self->generic_redirect($url);
+}
+
+sub load_myopac_update_preferred_name {
+    my $self = shift;
+    my $e = $self->editor;
+    my $ctx = $self->ctx;
+
+    $self->prepare_extended_user_info;
+
+    return Apache2::Const::OK
+        unless $self->cgi->request_method eq 'POST';
+
+    my $current_pw = $self->cgi->param('current_pw') || '';
+
+    my %opac_vals = ();
+
+    foreach(qw/ pref_prefix pref_first_given_name pref_second_given_name pref_family_name pref_suffix/ ){
+        $opac_vals{$_} = $self->cgi->param($_) if($self->cgi->param($_) && $self->cgi->param($_) ne '');
+    }
+
+    my $evt = $U->simplereq('open-ils.actor', 'open-ils.actor.user.preferred_name.update',
+        $e->authtoken, \%opac_vals, $current_pw);
+
+    if($U->event_equals($evt, 'INCORRECT_PASSWORD')) {
+        $ctx->{password_incorrect} = 1;
+        return Apache2::Const::OK;
+    }
+
+    if($U->event_equals($evt, 'BAD_PARAM')) {
+        $ctx->{bad_param} = 1;
+        return Apache2::Const::OK;
+    }
+
+    foreach(qw/ pref_prefix pref_first_given_name pref_second_given_name pref_family_name pref_suffix/ ){
+        $self->ctx->{user}->$_($opac_vals{$_});
+    }
+
+    my $url = $self->apache->unparsed_uri;
+    $url =~ s/update_preferred_name/prefs/;
+
+    return $self->generic_redirect($url);
+
 }
 
 sub _update_bookbag_metadata {

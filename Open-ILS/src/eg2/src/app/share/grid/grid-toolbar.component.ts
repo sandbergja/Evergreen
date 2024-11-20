@@ -1,51 +1,58 @@
-import {Component, Input, OnInit} from '@angular/core';
+import {AfterViewInit, ChangeDetectorRef, Component, Input, OnInit} from '@angular/core';
+import {Router} from '@angular/router';
 import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
 import {GridToolbarButton, GridToolbarAction, GridContext} from '@eg/share/grid/grid';
-import {GridColumnWidthComponent} from './grid-column-width.component';
 import {GridPrintComponent} from './grid-print.component';
+import {GridColumn} from './grid';
 
 @Component({
-  selector: 'eg-grid-toolbar',
-  templateUrl: 'grid-toolbar.component.html'
+    selector: 'eg-grid-toolbar',
+    templateUrl: 'grid-toolbar.component.html',
+    styleUrls: ['grid-toolbar.component.css']
 })
 
-export class GridToolbarComponent implements OnInit {
+export class GridToolbarComponent implements OnInit, AfterViewInit {
 
     @Input() gridContext: GridContext;
-    @Input() colWidthConfig: GridColumnWidthComponent;
     @Input() gridPrinter: GridPrintComponent;
     @Input() disableSaveSettings = false;
 
-    renderedGroups: {[group: string]: boolean};
+    renderedGroups: {[group: string]: boolean} = {};
 
     csvExportInProgress: boolean;
     csvExportUrl: SafeUrl;
     csvExportFileName: string;
 
-    constructor(private sanitizer: DomSanitizer) {
-        this.renderedGroups = {};
-    }
+    constructor(
+        private router: Router,
+        private sanitizer: DomSanitizer,
+        private cd: ChangeDetectorRef
+    ) {}
 
     ngOnInit() {
         this.sortActions();
+    }
+
+    ngAfterViewInit(): void {
+        this.cd.detectChanges();
     }
 
     sortActions() {
         const actions = this.gridContext.toolbarActions;
 
         const unGrouped = actions.filter(a => !a.group)
-        .sort((a, b) => {
-            return a.label < b.label ? -1 : 1;
-        });
+            .sort((a, b) => {
+                return a.label < b.label ? -1 : 1;
+            });
 
         const grouped = actions.filter(a => Boolean(a.group))
-        .sort((a, b) => {
-            if (a.group === b.group) {
-                return a.label < b.label ? -1 : 1;
-            } else {
-                return a.group < b.group ? -1 : 1;
-            }
-        });
+            .sort((a, b) => {
+                if (a.group === b.group) {
+                    return a.label < b.label ? -1 : 1;
+                } else {
+                    return a.group < b.group ? -1 : 1;
+                }
+            });
 
         // Insert group markers for rendering
         const seen: any = {};
@@ -70,20 +77,26 @@ export class GridToolbarComponent implements OnInit {
         // depending on perms.
 
         this.gridContext.saveGridConfig().then(
-            // hide the with config after saving
-            ok => this.colWidthConfig.isVisible = false,
             err => console.error(`Error saving columns: ${err}`)
         );
     }
 
     performButtonAction(button: GridToolbarButton) {
         const rows = this.gridContext.getSelectedRows();
-        button.onClick.emit(rows);
-        if (button.action) { button.action(); }
+        if (button.routerLink) {
+            this.router.navigate([button.routerLink]);
+        } else {
+            button.onClick.emit(rows);
+            if (button.action) { button.action(); }
+        }
     }
 
     printHtml() {
         this.gridPrinter.printGrid();
+    }
+
+    printSelectedRows(): void {
+        this.gridPrinter.printSelectedRows();
     }
 
     generateCsvExportUrl($event) {
@@ -96,7 +109,7 @@ export class GridToolbarComponent implements OnInit {
                 this.csvExportUrl = null;
                 this.csvExportFileName = '';
                 this.csvExportInProgress = false;
-               }, 500
+            }, 500 // eslint-disable-line no-magic-numbers
             );
             return;
         }
@@ -121,6 +134,13 @@ export class GridToolbarComponent implements OnInit {
         });
 
         $event.preventDefault();
+    }
+
+    toggleVisibility(col: GridColumn) {
+        col.visible = !col.visible;
+        if (this.gridContext.reloadOnColumnChange) {
+            this.gridContext.reloadWithoutPagerReset();
+        }
     }
 }
 

@@ -40,6 +40,11 @@ BEGIN
         RAISE EXCEPTION
             'Copy location % contains active copies and cannot be deleted', acpl_id;
     END IF;
+
+    IF acpl_id = 1 THEN
+        RAISE EXCEPTION
+            'Copy location 1 cannot be deleted';
+    END IF;
 END;
 $FUNK$ LANGUAGE plpgsql;
 
@@ -53,8 +58,22 @@ CREATE RULE protect_copy_location_delete AS
         DELETE FROM asset.copy_location_group_map WHERE location = OLD.id;
         DELETE FROM config.circ_limit_set_copy_loc_map WHERE copy_loc = OLD.id;
     );
-    
-CREATE RULE protect_acl_id_1 AS ON UPDATE TO asset.copy_location WHERE OLD.id = 1 DO INSTEAD NOTHING;
+
+CREATE OR REPLACE FUNCTION asset.copy_location_validate_edit()
+  RETURNS trigger
+  LANGUAGE plpgsql
+AS $function$
+BEGIN
+    IF OLD.id = 1 THEN
+        IF OLD.owning_lib != NEW.owning_lib OR NEW.deleted THEN
+            RAISE EXCEPTION 'Copy location 1 cannot be moved or deleted';
+        END IF;
+    END IF;
+    RETURN NEW;
+END;
+$function$;
+
+CREATE TRIGGER acpl_validate_edit BEFORE UPDATE ON asset.copy_location FOR EACH ROW EXECUTE PROCEDURE asset.copy_location_validate_edit();
 
 CREATE RULE protect_mono_part_delete AS
     ON DELETE TO biblio.monograph_part DO INSTEAD (
@@ -277,6 +296,10 @@ ALTER TABLE asset.copy_template ADD CONSTRAINT asset_copy_template_floating_fkey
 
 ALTER TABLE config.marc_field ADD CONSTRAINT config_marc_field_owner_fkey FOREIGN KEY (owner) REFERENCES actor.org_unit(id) DEFERRABLE INITIALLY DEFERRED;
 ALTER TABLE config.marc_subfield ADD CONSTRAINT config_marc_subfield_owner_fkey FOREIGN KEY (owner) REFERENCES actor.org_unit(id) DEFERRABLE INITIALLY DEFERRED;
+
+ALTER TABLE config.openathens_identity ADD CONSTRAINT config_openathens_identity_ou_fkey
+FOREIGN KEY (org_unit) REFERENCES actor.org_unit (id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED;
+
 
 ALTER TABLE config.copy_tag_type ADD CONSTRAINT copy_tag_type_owner_fkey FOREIGN KEY (owner) REFERENCES  actor.org_unit(id) DEFERRABLE INITIALLY DEFERRED;
 

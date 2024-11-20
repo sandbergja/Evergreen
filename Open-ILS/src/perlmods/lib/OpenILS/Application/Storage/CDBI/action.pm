@@ -94,11 +94,28 @@ __PACKAGE__->table('action_hold_request');
 __PACKAGE__->columns(Primary => 'id');
 __PACKAGE__->columns(Essential => qw/request_time capture_time fulfillment_time
                      prev_check_time expire_time requestor usr cancel_cause
-                     hold_type holdable_formats target cancel_time shelf_time
+                     hold_type holdable_formats target cancel_time canceled_by canceling_ws shelf_time
                      phone_notify email_notify sms_notify sms_carrier selection_depth cancel_note
                      pickup_lib current_copy request_lib frozen thaw_date mint_condition
                      fulfillment_staff fulfillment_lib selection_ou cut_in_line
                      shelf_expire_time current_shelf_lib behind_desk/);
+
+#-------------------------------------------------------------------------------
+
+package action::hold_request_reset_reason_entry;
+use base qw/action/;
+__PACKAGE__->table('action_hold_request_reset_reason_entry');
+__PACKAGE__->columns(Primary => 'id');
+__PACKAGE__->columns(Essential => qw/hold reset_reason note reset_time
+                     previous_copy requestor requestor_workstation/);
+
+#-------------------------------------------------------------------------------
+
+package action::hold_request_reset_reason;
+use base qw/action/;
+__PACKAGE__->table('action_hold_request_reset_reason');
+__PACKAGE__->columns(Primary => 'id');
+__PACKAGE__->columns(Essential => qw/manual name/);
 
 #-------------------------------------------------------------------------------
 

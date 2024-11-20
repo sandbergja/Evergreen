@@ -1,0 +1,67 @@
+.patron-search-container {
+  container-type: inline-size;
+}
+
+/* mobile-first layout: flexbox */
+.patron-search-form {
+  padding-top: 0.75rem;
+}
+
+/* Setting flex size manually because Bootstrap doesn't support 5 columns */
+.patron-search-form .row-cols-auto > .col.form-group {
+  flex: 0 0 100%; /* mobile */
+}
+
+@media screen and (min-width: 540px) {
+  .patron-search-form .row-cols-auto > .col.form-group {
+    flex: 0 0 50%; /* tablet */
+  }
+}
+
+@media screen and (min-width: 820px) {
+  .patron-search-form .row-cols-auto > .col.form-group {
+    flex: 0 0 20%; /* desktop */
+  }
+}
+
+.patron-search-form .form-label {
+  font-weight: 600;
+  margin-bottom: 0.1rem;
+}
+
+.patron-search-options {
+  gap: 0.5rem;
+}
+
+.patron-id .input-group-text {
+  padding: 0.15rem 0.5rem;
+}
+
+.input-group-text svg {
+  max-height: 1lh;
+  font-size: 1rem;
+}
+
+/* Each DOB field is its own flexbox using order to place labels below inputs */
+.patron-dob {
+  display: flex;
+  flex-basis: min-content;
+  flex-grow: 0;
+  flex-wrap: wrap;
+  width: auto;
+}
+
+.patron-dob label {
+  order: 2;
+  width: 100%;
+  margin-inline-start: 0.25rem;
+}
+
+.patron-dob input {
+  order: 1;
+}
+
+.patron-dob .form-text {
+  color: var(--bs-body-color);
+  font-weight: normal;
+}

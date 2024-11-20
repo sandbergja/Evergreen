@@ -837,35 +837,10 @@ sub retrieve_holds {
 
     if($self->api_name =~ /canceled/) {
 
-        # Fetch the canceled holds
-        # order cancelled holds by cancel time, most recent first
+        $holds_query->{order_by} = 
+            [{class => 'ahr', field => 'cancel_time', direction => 'desc'}];
 
-        $holds_query->{order_by} = [{class => 'ahr', field => 'cancel_time', direction => 'desc'}];
-
-        my $cancel_age;
-        my $cancel_count = $U->ou_ancestor_setting_value(
-                $e->requestor->ws_ou, 'circ.holds.canceled.display_count', $e);
-
-        unless($cancel_count) {
-            $cancel_age = $U->ou_ancestor_setting_value(
-                $e->requestor->ws_ou, 'circ.holds.canceled.display_age', $e);
-
-            # if no settings are defined, default to last 10 cancelled holds
-            $cancel_count = 10 unless $cancel_age;
-        }
-
-        if($cancel_count) { # limit by count
-
-            $holds_query->{where}->{cancel_time} = {'!=' => undef};
-            $holds_query->{limit} = $cancel_count;
-
-        } elsif($cancel_age) { # limit by age
-
-            # find all of the canceled holds that were canceled within the configured time frame
-            my $date = DateTime->now->subtract(seconds => OpenILS::Utils::DateTime->interval_to_seconds($cancel_age));
-            $date = $U->epoch2ISO8601($date->epoch);
-            $holds_query->{where}->{cancel_time} = {'>=' => $date};
-        }
+        recently_canceled_holds_filter($e, $holds_query);
 
     } else {
 
@@ -911,6 +886,45 @@ sub retrieve_holds {
 
     return \@holds;
 }
+
+
+# Creates / augments a set of query filters to search for canceled holds
+# based on circ.holds.canceled.* org settings.
+sub recently_canceled_holds_filter {
+    my ($e, $filters) = @_;
+    $filters ||= {};
+    $filters->{where} ||= {};
+
+    my $cancel_age;
+    my $cancel_count = $U->ou_ancestor_setting_value(
+            $e->requestor->ws_ou, 'circ.holds.canceled.display_count', $e);
+
+    unless($cancel_count) {
+        $cancel_age = $U->ou_ancestor_setting_value(
+            $e->requestor->ws_ou, 'circ.holds.canceled.display_age', $e);
+
+        # if no settings are defined, default to last 10 cancelled holds
+        $cancel_count = 10 unless $cancel_age;
+    }
+
+    if($cancel_count) { # limit by count
+
+        $filters->{where}->{cancel_time} = {'!=' => undef};
+        $filters->{limit} = $cancel_count;
+
+    } elsif($cancel_age) { # limit by age
+
+        # find all of the canceled holds that were canceled within the configured time frame
+        my $date = DateTime->now->subtract(seconds => 
+            OpenILS::Utils::DateTime->interval_to_seconds($cancel_age));
+
+        $date = $U->epoch2ISO8601($date->epoch);
+        $filters->{where}->{cancel_time} = {'>=' => $date};
+    }
+
+    return $filters;
+}
+
 
 
 __PACKAGE__->register_method(
@@ -1025,6 +1039,7 @@ sub uncancel_hold {
     $hold->clear_shelf_expire_time;
     $hold->clear_current_shelf_lib;
 
+    _create_reset_reason_entry($e, $hold, OILS_HOLD_UNCANCELED);
     $e->update_action_hold_request($hold) or return $e->die_event;
     $e->commit;
 
@@ -1106,6 +1121,21 @@ sub cancel_hold {
     $hold->cancel_time('now');
     $hold->cancel_cause($cause);
     $hold->cancel_note($note);
+    $hold->canceled_by($e->requestor->id);
+    $hold->canceling_ws($e->requestor->wsid);
+    my $note_body = "";
+    if($cause) {
+        my $cancel_reason = "ID $cause";
+        my $cancel_cause = $e->retrieve_action_hold_request_cancel_cause($cause);
+        $cancel_reason = $cancel_cause->label if $cancel_cause;
+        $note_body .= "Cancel Cause: $cancel_reason";
+    }
+    else {
+        $note_body .= "Cancel reason unknown";
+    }
+    $note_body .= "," unless $note_body eq "" || $note eq "";
+    $note_body .= " Cancel Note: \"$note\"" unless $note eq "";
+    _create_reset_reason_entry($e, $hold, OILS_HOLD_CANCELED, $note_body);
     $e->update_action_hold_request($hold)
         or return $e->die_event;
 
@@ -1206,6 +1236,8 @@ sub update_hold_impl {
     my($self, $e, $hold, $values) = @_;
     my $hold_status;
     my $need_retarget = 0;
+    my $reset_reason = OILS_HOLD_UPDATED;
+    my $note_body = "";
 
     unless($hold) {
         $hold = $e->retrieve_action_hold_request($values->{id})
@@ -1217,9 +1249,13 @@ sub update_hold_impl {
                 if (defined $values->{$k} && defined $hold->$k() && $values->{$k} ne $hold->$k()) {
                     # Value changed? RETARGET!
                     $need_retarget = 1;
+                    $reset_reason = OILS_HOLD_UPDATED;
+                    $note_body .= "$k value changed.";
                 } elsif (defined $hold->$k() != defined $values->{$k}) {
                     # Value being set or cleared? RETARGET!
                     $need_retarget = 1;
+                    $reset_reason = OILS_HOLD_UPDATED;
+                    $note_body .= "$k value cleared.";
                 }
             }
             if (defined $values->{$k}) {
@@ -1328,6 +1364,7 @@ sub update_hold_impl {
 
     if($U->is_true($hold->frozen)) {
         $logger->info("clearing current_copy and check_time for frozen hold ".$hold->id);
+        _create_reset_reason_entry($e, $hold, OILS_HOLD_FROZEN, $note_body) unless $U->is_true($orig_hold->frozen);
         $hold->clear_current_copy;
         $hold->clear_prev_check_time;
         # Clear expire_time to prevent frozen holds from expiring.
@@ -1349,17 +1386,20 @@ sub update_hold_impl {
     }
 
     $e->update_action_hold_request($hold) or return $e->die_event;
+    _create_reset_reason_entry($e,$hold, $reset_reason, $note_body) if $need_retarget;
     $e->commit;
 
     if(!$U->is_true($hold->frozen) && $U->is_true($orig_hold->frozen)) {
         $logger->info("Running targeter on activated hold ".$hold->id);
+        $U->simplereq('open-ils.circ',
+            'open-ils.circ.hold_reset_reason_entry.create', $e->authtoken,$hold->id, OILS_HOLD_UNFROZEN);
         $U->simplereq('open-ils.hold-targeter', 
             'open-ils.hold-targeter.target', {hold => $hold->id});
     }
 
     # a change to mint-condition changes the set of potential copies, so retarget the hold;
     if($U->is_true($hold->mint_condition) and !$U->is_true($orig_hold->mint_condition)) {
-        _reset_hold($self, $e->requestor, $hold)
+        _reset_hold($self, $e->requestor, $hold, OILS_HOLD_UPDATED, "Item quality was changed.");
     } elsif($need_retarget && !defined $hold->capture_time()) { # If needed, retarget the hold due to changes
         $U->simplereq('open-ils.hold-targeter', 
             'open-ils.hold-targeter.target', {hold => $hold->id});
@@ -1450,6 +1490,7 @@ sub update_hold_if_frozen {
     } else {
         if($U->is_true($orig_hold->frozen)) {
             $logger->info("Running targeter on activated hold ".$hold->id);
+            _create_reset_reason_entry($e, $hold,OILS_HOLD_UNFROZEN, "Running targeter on activated hold");
             $U->simplereq('open-ils.hold-targeter', 
                 'open-ils.hold-targeter.target', {hold => $hold->id});
         }
@@ -2021,7 +2062,7 @@ sub print_hold_pull_list_stream {
                         "field" => "id",
                         "fkey" => "current_copy",
                         "filter" => {
-                            "circ_lib" => $$params{org_id}, "status" => [0,7]
+                            "circ_lib" => $$params{org_id}
                         },
                         "join" => {
                             "acn" => {
@@ -2044,6 +2085,14 @@ sub print_hold_pull_list_stream {
                                 "type" => "left",
                                 "filter" => {
                                     "location" => {"=" => {"+acp" => "location"}}
+                                }
+                            },
+                            "ccs" => {
+                                "field" => "id",
+                                "fkey" => "status",
+                                "filter" => {
+                                    "holdable" => "t",
+                                    "is_available" => "t"
                                 }
                             }
                         }
@@ -2204,8 +2253,64 @@ sub reset_hold {
     return $evt if $evt;
     ($reqr, $evt) = $U->checksesperm($auth, 'UPDATE_HOLD');
     return $evt if $evt;
-    $evt = _reset_hold($self, $reqr, $hold);
+    $evt = _reset_hold($self, $reqr, $hold, OILS_HOLD_MANUAL_RESET);
     return $evt if $evt;
+    return 1;
+}
+
+__PACKAGE__->register_method(
+    method   => 'create_reset_reason_entry',
+    api_name => 'open-ils.circ.hold_reset_reason_entry.create'
+);
+
+sub create_reset_reason_entry {
+    my($self, $conn, $auth, $hold, $reset_reason, $note, $previous_copy) = @_;
+    my $e = new_editor(authtoken => $auth, xact => 1);
+    #checkauth to set the requestor (if available)
+    $e->checkauth;
+    my @holds;
+    if(ref $hold eq 'ARRAY') {
+        @holds = @{$hold};
+    }
+    else {
+        @holds = ($hold);
+    }
+    for my $holdid (@holds){
+        my ($hold, $evt) = $U->fetch_hold($holdid);
+        _create_reset_reason_entry(
+            $e,
+            $hold,
+            $reset_reason,
+            $note,
+            $previous_copy)
+        unless $evt;
+    }
+    $e->commit;
+    return 1;
+}
+
+sub _create_reset_reason_entry {
+    my($e, $hold, $reset_reason, $note, $previous_copy) = @_;
+    eval {
+        my $ts = DateTime->now;
+        my $entry = Fieldmapper::action::hold_request_reset_reason_entry->new;
+        $logger->info("Creating reset reason entry for hold #" . $hold->id);
+        my $last_copy = defined $previous_copy ? $previous_copy : $hold->current_copy;
+        $entry->hold($hold->id);
+        $entry->reset_reason($reset_reason);
+        $entry->reset_time('now');
+        $entry->previous_copy($last_copy);
+        $entry->note($note) if defined $note;
+        $entry->requestor($e->requestor->id) if defined $e->requestor;
+        $entry->requestor_workstation($e->requestor->wsid)  if defined $e->requestor;
+        $e->create_action_hold_request_reset_reason_entry($entry) or return $e->die_event;
+        1;
+    }
+    or do {
+        my $tmp_error = $@ || 'Unknown failure';
+        $logger->error("circulate: create reset reason failed with $tmp_error");
+        undef $tmp_error;
+    };
     return 1;
 }
 
@@ -2236,46 +2341,57 @@ sub reset_hold_batch {
 
 
 sub _reset_hold {
-    my ($self, $reqr, $hold) = @_;
+    my ($self, $reqr, $hold, $reset_reason, $reset_note) = @_;
 
     my $e = new_editor(xact =>1, requestor => $reqr);
-
-    $logger->info("reseting hold ".$hold->id);
-
     my $hid = $hold->id;
-
-    if( $hold->capture_time and $hold->current_copy ) {
-
+    $logger->info("reseting hold ".$hid." requestor was ".$reqr->usrname." (ID ".$reqr->id.")");
+    $reset_reason = (defined $reset_reason) ? $reset_reason : OILS_HOLD_MANUAL_RESET;
+    $reset_note = (defined $reset_note) ? $reset_note : "";
+    if( $hold->current_copy ) {
         my $copy = $e->retrieve_asset_copy($hold->current_copy)
             or return $e->die_event;
+        if( $hold->capture_time ) {
+            if( $copy->status == OILS_COPY_STATUS_ON_HOLDS_SHELF ) {
+                $logger->info("setting copy to status 'reshelving' on hold retarget");
+                $reset_note.=" set copy to status 'reshelving'.";
+                $copy->status(OILS_COPY_STATUS_RESHELVING);
+                $copy->editor($e->requestor->id);
+                $copy->edit_date('now');
+                $e->update_asset_copy($copy) or return $e->die_event;
 
-        if( $copy->status == OILS_COPY_STATUS_ON_HOLDS_SHELF ) {
-            $logger->info("setting copy to status 'reshelving' on hold retarget");
-            $copy->status(OILS_COPY_STATUS_RESHELVING);
-            $copy->editor($e->requestor->id);
-            $copy->edit_date('now');
-            $e->update_asset_copy($copy) or return $e->die_event;
+            } elsif( $copy->status == OILS_COPY_STATUS_IN_TRANSIT ) {
 
-        } elsif( $copy->status == OILS_COPY_STATUS_IN_TRANSIT ) {
+                $logger->warn("! reseting hold [$hid] that is in transit");
+                my $transid = $e->search_action_hold_transit_copy({hold=>$hold->id,cancel_time=>undef},{idlist=>1})->[0];
 
-            $logger->warn("! reseting hold [$hid] that is in transit");
-            my $transid = $e->search_action_hold_transit_copy({hold=>$hold->id,cancel_time=>undef},{idlist=>1})->[0];
-
-            if( $transid ) {
-                my $trans = $e->retrieve_action_transit_copy($transid);
-                if( $trans ) {
-                    $logger->info("Aborting transit [$transid] on hold [$hid] reset...");
-                    my $evt = OpenILS::Application::Circ::Transit::__abort_transit($e, $trans, $copy, 1, 1);
-                    $logger->info("Transit abort completed with result $evt");
-                    unless ("$evt" eq 1) {
-                        $e->rollback;
-                        return $evt;
+                if( $transid ) {
+                    my $trans = $e->retrieve_action_transit_copy($transid);
+                    if( $trans ) {
+                        $logger->info("Aborting transit [$transid] on hold [$hid] reset...");
+                        my $evt = OpenILS::Application::Circ::Transit::__abort_transit($e, $trans, $copy, 1, 1);
+                        $logger->info("Transit abort completed with result $evt");
+                        $reset_note.=" Transit abort completed with result $evt.";
+                        unless ("$evt" eq 1) {
+                            $e->rollback;
+                            return $evt;
+                        }
                     }
                 }
             }
         }
+        if( $copy->status == OILS_COPY_STATUS_MISSING ) {
+            $reset_note.=" Copy marked missing.";
+
+        } elsif( $copy->status == OILS_COPY_STATUS_DAMAGED ) {
+            $reset_note.=" Copy marked damaged.";
+
+        } elsif( $copy->status == OILS_COPY_STATUS_DISCARD ) {
+            $reset_note.=" Copy marked discarded.";
+        }
     }
 
+    _create_reset_reason_entry($e, $hold, $reset_reason, $reset_note) if $reset_reason;
     $hold->clear_capture_time;
     $hold->clear_current_copy;
     $hold->clear_shelf_time;
@@ -2863,6 +2979,47 @@ sub _check_title_hold_is_possible {
     # $holdable_formats is now unused. We pre-filter the MR's records.
 
     my $e = new_editor();
+
+    # T holds on records that have parts are normally OK, but if the record has
+    # no non-part copies, the hold will ultimately fail, so let's test for that.
+    #
+    # If the global flag circ.holds.api_require_monographic_part_when_present is
+    # enabled, then any configured parts for the bib is enough to disallow title holds.
+    my $part_required = 0;
+    my $parts = $e->search_biblio_monograph_part(
+        {
+            record => $titleid,
+            deleted => 'f'
+        }, {idlist=>1} );
+
+    if (@$parts) {
+        my $part_required_flag = $e->retrieve_config_global_flag('circ.holds.api_require_monographic_part_when_present');
+        $part_required = ($part_required_flag and $U->is_true($part_required_flag->enabled));
+        if (!$part_required) {
+            my $np_copies = $e->json_query({
+                select => { acp => [{column => 'id', transform => 'count', alias => 'count'}]},
+                from => {acp => {acn => {}, acpm => {type => 'left'}}},
+                where => {
+                    '+acp' => {deleted => 'f'},
+                    '+acn' => {deleted => 'f', record => $titleid},
+                    '+acpm' => {id => undef}
+                }
+            });
+            $part_required = 1 if $np_copies->[0]->{count} == 0;
+        }
+    }
+    if ($part_required) {
+        $logger->info("title hold when monographic part required");
+        return (
+            0, 0, [
+                new OpenILS::Event(
+                    "TITLE_HOLD_WHEN_MONOGRAPHIC_PART_REQUIRED",
+                    "payload" => {"fail_part" => "monographic_part_required"}
+                )
+            ]
+        );
+    }
+
     my %org_filter = create_ranged_org_filter($e, $selection_ou, $depth);
 
     # this monster will grab the id and circ_lib of all of the "holdable" copies for the given record
@@ -3415,6 +3572,42 @@ sub find_nearest_permitted_hold {
         "open-ils.storage.action.hold_request.nearest_hold.atomic", 
         $user->ws_ou, $copy, 100, $hold_stall_interval, $fifo );
 
+    if ($hold_stall_interval) {
+        my $adjacent_target_while_stalling = $U->ou_ancestor_setting_value(
+            $user->ws_ou, 'circ.holds.adjacent_target_while_stalling'
+        );
+
+        if ($adjacent_target_while_stalling) {
+            my $my_cns = $editor->search_asset_call_number({
+                record  => $copy->call_number->record,
+                deleted => 'f'
+            });
+
+            my $other_copies = $editor->search_asset_copy({
+                call_number => [map {$_->id} @$my_cns],
+                circ_lib    => $copy->circ_lib,
+                deleted     => 'f',
+                status      => 0,
+                id          => { '<>' => $copy->id }
+            });
+
+            my $other_holds = $editor->search_action_hold_request({
+                current_copy => [ map {$_->id} @$other_copies],
+                cancel_time  => undef,
+                capture_time => undef
+            });
+
+            my $adjacent_hold_maps = $editor->search_action_hold_copy_map({
+                hold => [map {$_->id} @$other_holds],
+                target_copy => $copy->id
+            });
+
+            for my $other_hold (@$other_holds) {
+                push(@$old_holds, $other_hold) if ( grep { $other_hold->id == $_->hold } @$adjacent_hold_maps );
+            }
+        }
+    }
+
     # Add any pre-targeted holds to the list too? Unless they are already there, anyway.
     if ($old_holds) {
         for my $holdid (@$old_holds) {
@@ -3493,8 +3686,15 @@ sub find_nearest_permitted_hold {
     # re-target any other holds that already target this copy
     for my $old_hold (@$old_holds) {
         next if $old_hold->id eq $best_hold->id; # don't re-target the hold we want
+        next unless $old_hold->current_copy eq $copy->id; # don't re-target adjacent-copy holds
         $logger->info("circulator: clearing current_copy and prev_check_time on hold ".
             $old_hold->id." after a better hold [".$best_hold->id."] was found");
+        _create_reset_reason_entry(
+            $editor,
+            $old_hold,
+            OILS_HOLD_BETTER_HOLD,
+            "Old hold was reset. Last check time was " . $old_hold->prev_check_time.". a better hold [" . $best_hold->id . "] was found"
+        );
         $old_hold->clear_current_copy;
         $old_hold->clear_prev_check_time;
         $editor->update_action_hold_request($old_hold)
@@ -3636,37 +3836,51 @@ __PACKAGE__->register_method(
 );
 
 sub stream_wide_holds {
-    my($self, $client, $auth, $restrictions, $order_by, $limit, $offset) = @_;
+    my($self, $client, $auth, $restrictions, $order_by, $limit, $offset, $options) = @_;
+    $options ||= {};
 
     my $e = new_editor(authtoken=>$auth);
     $e->checkauth or return $e->event;
     $e->allowed('VIEW_HOLD') or return $e->event;
 
+    if ($options->{recently_canceled}) {
+        # Map the the recently canceled holds filter into values 
+        # wide-stream understands.
+        my $filter = recently_canceled_holds_filter($e);
+        $restrictions->{$_} =
+            $filter->{where}->{$_} for keys %{$filter->{where}};
+
+        $limit = $filter->{limit} if $filter->{limit};
+    }
+
+    my $filters = OpenSRF::Utils::JSON->perl2JSON($restrictions);
+    $logger->info("WIDE HOLD FILTERS: $filters");
+
     my $st = OpenSRF::AppSession->create('open-ils.storage');
     my $req = $st->request(
-        'open-ils.storage.action.live_holds.wide_hash',
+        'open-ils.storage.action.live_holds.wide_hash.atomic',
         $restrictions, $order_by, $limit, $offset
     );
 
-    my $count = $req->recv;
-    if(!$count) {
+    my $results = $req->recv;
+    if(!$results) {
         return 0;
     }
 
-    if(UNIVERSAL::isa($count,"Error")) {
-        throw $count ($count->stringify);
+    if(UNIVERSAL::isa($results,"Error")) {
+        throw OpenSRF::EX::ERROR ("Error fetch hold shelf list");
     }
 
-    $count = $count->content;
+    my @rows = @{ $results->content };
 
     # Force immediate send of count response
     my $mbc = $client->max_bundle_count;
     $client->max_bundle_count(1);
-    $client->respond($count);
+    $client->respond(shift @rows);
     $client->max_bundle_count($mbc);
 
-    while (my $hold = $req->recv) {
-        $client->respond($hold->content) if $hold->content;
+    foreach my $hold (@rows) {
+        $client->respond($hold) if $hold;
     }
 
     $client->respond_complete;
@@ -3707,7 +3921,7 @@ sub uber_hold_impl {
     my($e, $hold_id, $args) = @_;
     $args ||= {};
 
-    my $flesh_fields = ['current_copy', 'usr', 'notes'];
+    my $flesh_fields = ['current_copy', 'usr', 'notes', 'canceling_ws'];
     push (@$flesh_fields, 'requestor') if $args->{include_requestor};
     push (@$flesh_fields, 'cancel_cause') if $args->{include_cancel_cause};
     push (@$flesh_fields, 'sms_carrier') if $args->{include_sms_carrier};
@@ -4170,10 +4384,10 @@ sub hold_has_copy_at {
                     filter => { holdable => 't', deleted => 'f' },
                     fkey => 'location'
                 },
-                ccs  => {field => 'id', filter => { holdable => 't'}, fkey => 'status'  }
+                ccs  => {field => 'id', filter => {holdable => 't', is_available => 't'}, fkey => 'status'}
             }
         },
-        where => {'+acp' => { circulate => 't', deleted => 'f', holdable => 't', circ_lib => $org_unit, status => [0,7]}},
+        where => {'+acp' => { circulate => 't', deleted => 'f', holdable => 't', circ_lib => $org_unit }},
         limit => 1
     };
 
@@ -4395,7 +4609,7 @@ sub change_hold_title {
 
     $e->commit;
 
-    _reset_hold($self, $e->requestor, $_) for @$holds;
+    _reset_hold($self, $e->requestor, $_, OILS_HOLD_UPDATED, "title hold target change") for @$holds;
 
     return 1;
 }
@@ -4432,7 +4646,7 @@ sub change_hold_title_for_specific_holds {
 
     $e->commit;
 
-    _reset_hold($self, $e->requestor, $_) for @$holds;
+    _reset_hold($self, $e->requestor, $_, OILS_HOLD_UPDATED, "title hold target change") for @$holds;
 
     return 1;
 }
@@ -5125,6 +5339,7 @@ sub hold_metadata {
             issuance => $issuance,
             part => $part,
             parts => [],
+            part_required => 'f',
             bibrecord => $bre,
             metarecord => $metarecord,
             metarecord_filters => {}
@@ -5150,6 +5365,56 @@ sub hold_metadata {
                     {order_by => {bmp => 'label_sortkey'}}
                 ]
             );
+
+            # T holds on records that have parts are normally OK, but if the record has
+            # no non-part copies, the hold will ultimately fail.  When that happens,
+            # require the user to select a part.
+            #
+            # If the global flag circ.holds.api_require_monographic_part_when_present is
+            # enabled, or the library setting circ.holds.ui_require_monographic_part_when_present
+            # is true for any involved owning_library, then also require part selection.
+            my $part_required = 0;
+            if ($meta->{parts}) {
+                my $part_required_flag = $e->retrieve_config_global_flag('circ.holds.api_require_monographic_part_when_present');
+                $part_required = ($part_required_flag and $U->is_true($part_required_flag->enabled));
+                if (!$part_required) {
+                    my $resp = $e->json_query({
+                        select => {
+                            acn => ['owning_lib']
+                        },
+                        from => {acn => {acp => {type => 'left'}}},
+                        where => {
+                            '+acp' => {
+                                '-or' => [
+                                    {deleted => 'f'},
+                                    {id => undef} # left join
+                                ]
+                            },
+                            '+acn' => {deleted => 'f', record => $bre->id}
+                        },
+                        distinct => 't'
+                    });
+                    my $org_ids = [map {$_->{owning_lib}} @$resp];
+                    foreach my $org (@$org_ids) { # FIXME: worth shortcutting/optimizing?
+                        if ($U->ou_ancestor_setting_value($org, 'circ.holds.ui_require_monographic_part_when_present')) {
+                            $part_required = 1;
+                        }
+                    }
+                }
+                if (!$part_required) {
+                    my $np_copies = $e->json_query({
+                        select => { acp => [{column => 'id', transform => 'count', alias => 'count'}]},
+                        from => {acp => {acn => {}, acpm => {type => 'left'}}},
+                        where => {
+                            '+acp' => {deleted => 'f'},
+                            '+acn' => {deleted => 'f', record => $bre->id},
+                            '+acpm' => {id => undef}
+                        }
+                    });
+                    $part_required = 1 if $np_copies->[0]->{count} == 0;
+                }
+            }
+            $meta->{part_required} = $part_required;
         }
 
         if ($meta->{metarecord}) {

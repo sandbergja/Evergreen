@@ -101,7 +101,7 @@
             </div><!-- col -->
             <div class="col-md-4">
               <span class="pad-right-min">
-                <button class="btn btn-warning" 
+                <button class="btn btn-destroy" 
                   ng-click="resetPrinterSettings(context)">
                   [% l('Reset Form') %]
                 </button>
@@ -449,7 +449,7 @@ ng-init="htmlPrintContent='
   <style>p { color: blue }</style>
   <h2>[% l('Test HTML Print') %]</h2>
   <br/>
-  <img src=\'https://[% ctx.hostname %]/opac/images/main_logo.png\' width=\'140\' height=\'24\'/>
+  <img src=\'https://[% ctx.hostname %]/images/evergreen-logo.svg\' width=\'140\' height=\'24\'/>
   <p>[% l('Welcome, Stranger!') %]</p>
   <p>{{value1}}</p>
   <p>{{value2}}</p>

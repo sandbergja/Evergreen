@@ -14,6 +14,11 @@ RewriteRule ^/$ %{REQUEST_SCHEME}://%{HTTP_HOST}/eg/opac/home [R=301,L]
 RewriteRule ^/eg/staff$ https://%{HTTP_HOST}/eg/staff/ [R=301,L]
 
 # ----------------------------------------------------------------------------------
+# Redirect legacy reporter interface to the Angular version
+# ----------------------------------------------------------------------------------
+RewriteRule ^/eg/staff/reporter/legacy/main$ https://%{HTTP_HOST}/eg2/staff/reporter/full [R=301,L]
+
+# ----------------------------------------------------------------------------------
 # Point / to the IP address redirector
 # ----------------------------------------------------------------------------------
 #<LocationMatch ^/$>
@@ -403,23 +408,10 @@ RewriteRule .? - [E=locale:%{HTTP:Accept-Language}]
 	
 	
 # ----------------------------------------------------------------------------------
-# XXX Note, it's important to explicitly set the JSON encoding style 
-# (OSRFGatewayLegacyJSON), since the default encoding style will likely change 
-# with OpenSRF 1.0
-# ----------------------------------------------------------------------------------
-# OpenSRF JSON legacy gateway
-# ----------------------------------------------------------------------------------
-<Location /gateway>
-    SetHandler osrf_json_gateway_module
-    OSRFGatewayLegacyJSON "true"
-    Require all granted 
-</Location>
-# ----------------------------------------------------------------------------------
-# New-style OpenSRF JSON gateway
+# OpenSRF JSON gateway
 # ----------------------------------------------------------------------------------
 <Location /osrf-gateway-v1>
     SetHandler osrf_json_gateway_module
-    OSRFGatewayLegacyJSON "false"
     Require all granted 
 </Location>
 
@@ -517,11 +509,17 @@ RewriteRule .? - [E=locale:%{HTTP:Accept-Language}]
     AuthName "Report Login"
     PerlOptions +GlobalRequest
     PerlSetVar OILSProxyPermissions "VIEW_REPORT_OUTPUT"
+    PerlSetVar OILSProxyContextMode "reporter"
     PerlAuthenHandler OpenILS::WWW::Proxy::Authen
     Require valid-user
     Options +ExecCGI
     PerlSendHeader On
 </Location>
+
+# Currently required for access to reports when Shibboleth is enabled; may not be necessary once Angularized?
+<IfModule mod_shib>
+    ShibCompatValidUser On
+</IfModule>
 
 # ----------------------------------------------------------------------------------
 # Reports GUI
@@ -632,6 +630,13 @@ RewriteRule ^/conify/([a-z]{2}-[A-Z]{2})/global/(.*)$ /conify/global/$2 [E=local
     PerlHandler OpenILS::WWW::Vandelay::spool_jacket
     Options +ExecCGI
     Require all granted 
+</Location>
+
+<Location /sip2-mediator>
+    SetHandler perl-script
+    PerlHandler OpenILS::WWW::SIP2Mediator
+    Options +ExecCGI
+    Require all granted
 </Location>
 
 # OpenURL 0.1 searching based on OpenSearch

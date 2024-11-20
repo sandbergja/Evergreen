@@ -41,6 +41,8 @@ if ($config->need_ids()) {
     }
 }
 
+die "IDs required but none entered, exiting\n" if ($config->need_ids() && !@ids);
+
 my $exporter;
 if ($config->option_value('type') eq 'authority') {
     $exporter = Marque::Authority->new(\@ids);
@@ -73,38 +75,46 @@ sub new {
 
     # set some default values
     $opts{'format'} = 'USMARC';
-    $opts{'encoding'} = 'MARC8';
+    $opts{'encoding'} = 'UTF-8';
     $opts{'type'} = 'biblio';
     $opts{'money'} = '$';
     $opts{'timeout'} = 0;
     $opts{'config'} = '@sysconfdir@/opensrf_core.xml';
     $opts{'store'} = 'reporter';
+    $opts{'852b'} = 'both';
+    $opts{'batch-size'} = 10000;
 
     GetOptions(\%opts,
                'help',
                'items',
+               '852b=s',
+               'exclude-hidden',
                'mfhd',
                'all',
                'replace_001',
+               'strip=s@',
                'location=s',
                'money=s',
                'config=s',
                'format=s',
                'type=s',
                'xml-idl=s',
-               'encoding=s',
+               'encoding|e=s',
                'timeout=i',
                'library=s@',
                'descendants=s@',
                'since=s',
                'store=s',
                'uris',
-               'debug');
+               'debug',
+               'pipe',
+               'batch-size=i',
+               'check-leader');
 
     if ($opts{help}) {
         print <<"HELP";
 This script exports MARC authority, bibliographic, and serial holdings
-records from an Evergreen database. 
+records from an Evergreen database.
 
 Input to this script can consist of a list of record IDs, with one record ID
 per line, corresponding to the record ID in the Evergreen database table of
@@ -120,18 +130,38 @@ Usage: $0 [options]
  --help or -h       This screen.
  --config or -c     Configuration file [@sysconfdir@/opensrf_core.xml]
  --format or -f     Output format (USMARC, UNIMARC, XML, BRE, ARE) [USMARC]
- --encoding or -e   Output encoding (UTF-8, ISO-8859-?, MARC8) [MARC8]
+ --encoding or -e   Output encoding (UTF-8, ISO-8859-?, MARC8) [UTF-8]
  --xml-idl or -x    Location of the IDL XML
  --timeout          Remains for backward compatibility. No longer used.
  --type or -t       Record type (BIBLIO, AUTHORITY) [BIBLIO]
  --all or -a        Export all records; ignores input list
  --replace_001      Replace the 001 field value with the record ID
+ --strip tagRE/subRE
+                    Strip fields or subfields matching regular expressions
  --store            Use the given storage backend to connect to the database.
                     Choices are (reporter, cstore, storage) [reporter]
  --since            Export records modified since a certain date and time.
+ --pipe             Force record ids to be read from list on standard input,
+                    despite other options to the contrary
+ --batch-size       Number of records to fetch at a time for processing
+                    (default 10000). This option can be adjusted
+                    depending on your database performance or
+                    environment. Doing smaller batch sizes can
+                    sometimes speed up the extraction. Finding the
+                    best value for your situation requires
+                    experimentation.
+--check-leader      Ensure all leaders are exactly 24 characters long
+                    via adding or removing characters to maximize compatibility
+                    with other systems.
 
  Additional options for type = 'BIBLIO':
  --items or -i      Include items (holdings) in the output
+ --852b             Accepts 'owning_lib', 'circ_lib', or 'both' to
+                    control whether the 852$b in exported embedded
+                    holdings has the owning library, the circulation
+                    library, or both in separate repeats of the $b.
+                    If not supplied, defaults to 'both', which is the
+                    legacy behavior.
  --money            Currency symbol to use in item price field [\$]
  --mfhd             Export serial MFHD records for associated bib records
                     Not compatible with --format=BRE
@@ -145,6 +175,14 @@ Usage: $0 [options]
                     specified org. unit and all of its descendants in
                     the tree.
  --uris or -u       Include records with located URIs in the output
+ --exclude-hidden   Exclude records and items if the item is not
+                    OPAC-visible per its org unit, status, shelving,
+                    location, or flag on the item record. This option
+                    is effective only if the --library and/or --items
+                    flags are supplied. This option takes precedence;
+                    for example, if the org unit specified by --library
+                    is not OPAC-visible, its records will not be included
+                    in the export.
 
 Examples:
 
@@ -162,6 +200,14 @@ libraries with the short names "BR1" and "BR2":
 
   $0 --library BR1 --library BR2 --encoding UTF-8 > sys1_bibs.mrc
 
+The --strip option can be used more than once which implies an "OR" operation.
+If the field argument is omitted (e.g., "/0", it is treated like "..." (all fields).
+If the subfield argument is omitted (e.g. "100/", it is treated like "."
+(all subfields).  Examples:
+
+  --strip /0      Remove all 0 subfields
+  --strip 1[23].  Remove fields with tags 120 through 139, inclusive.
+  --strip 856/x   Remove subfield x from 856 tags
 HELP
         exit;
     }
@@ -181,17 +227,51 @@ HELP
         die('Incompatible arguments: you cannot combine a request for all ' .
                 'records with a request for records added or changed since a certain date');
     }
+    if ($opts{all} && $opts{pipe}) {
+        die('Incompatible arguments: you cannot combine a request for all ' .
+                'records with the option to read record ids via standard input');
+    }
+    if ($opts{since} && $opts{pipe}) {
+        die('Incompatible arguments: you cannot combine a request for records added or '.
+                'changed since a certain date with ' .
+                'the option to read record ids via standard input');
+    }
     $opts{type} = lc($opts{type});
     if (none {$_ eq $opts{type}} (TYPES)) {
         die "Please select a supported type.  ".
             "Right now that means one of [".
-                join('|',(FORMATS)). "]\n";
+                join('|',(TYPES)). "]\n";
     }
     $opts{format} = uc($opts{format});
     if (none {$_ eq $opts{format}} (FORMATS)) {
         die "Please select a supported format.  ".
             "Right now that means one of [".
                 join('|',(FORMATS)). "]\n";
+    }
+    # Process --strip arguments.  They are in the form tagRE/subRE.  Note
+    # that the RE pieces cannot contain a slash (/), as this would create
+    # ambiguity.  If there is no /subRE, then it's OK, and just the tagRE
+    # is specified.
+    # $opts{strip} is an array-ref for this multi-valued option.
+    my @strip = ();
+
+    foreach my $strip_value (@{$opts{strip}}) {
+        my $trec = {};
+        if ($strip_value eq "/") {
+            print STDERR "Ignoring empty --strip parameter; all records would be empty.\n";
+            next;
+        }
+        if ($strip_value =~ /\//) {
+            $trec->{tag} = $`;
+            $trec->{tag} = "..." if ($` eq "");
+            $trec->{subfield} = $';
+            $trec->{subfield} = "." if ($' eq "");
+        } else {
+            # No slash case
+            $trec->{tag} = $strip_value;
+            $trec->{subfield} = '';
+        }
+        push @strip, $trec;
     }
 
     if ($opts{format} eq 'ARE' && $opts{type} ne 'authority') {
@@ -210,6 +290,12 @@ HELP
         } elsif ($opts{format} eq 'BRE') {
             die "MFHD export incompatible with format BRE.";
         }
+    }
+
+    if ($opts{'852b'} ne 'circ_lib' &&
+        $opts{'852b'} ne 'owning_lib' &&
+        $opts{'852b'} ne 'both') {
+        die "Invalid value '" . $opts{'852b'} . "' for --852b; must be 'circ_lib', 'owning_lib', or 'both'";
     }
 
     $opts{store} = lc($opts{store});
@@ -234,6 +320,8 @@ HELP
     }
     $opts{encoding} = uc($opts{encoding});
 
+    $opts{strip} = \@strip;
+
     $self->{'options'} = \%opts;
     bless $self, $class;
     return $self;
@@ -253,10 +341,13 @@ sub need_ids {
     my $self = shift;
     my $rv = 1;
 
-    $rv = 0 if ($self->{options}->{all});
     $rv = 0 if ($self->{options}->{since});
     $rv = 0 if ($self->{options}->{library});
     $rv = 0 if ($self->{options}->{descendants});
+    # --pipe trumps the above.
+    $rv = 1 if ($self->{options}->{pipe});
+    # --all trumps --pipe, but we should throw an error before we get here.
+    $rv = 0 if ($self->{options}->{all});
 
     return $rv;
 }
@@ -305,7 +396,7 @@ sub db_date {
 
 # ------------------------------------------------------------------
 # You would typically have the next two packages inherit from a common
-# superclass, but ineritance doesn't seem to work when all packages
+# superclass, but inheritance doesn't seem to work when all packages
 # are in single file, so we have some duplicated code between these
 # two.
 
@@ -328,6 +419,8 @@ sub new {
     $self->{breClass} = Fieldmapper::class_for_hint('bre');
     $self->{acnClass} = Fieldmapper::class_for_hint('acn');
     $self->{acpClass} = Fieldmapper::class_for_hint('acp');
+    $self->{acpnClass} = Fieldmapper::class_for_hint('acpn');
+    $self->{acptClass} = Fieldmapper::class_for_hint('acpt');
     $self->{sreClass} = Fieldmapper::class_for_hint('sre');
     $self->{acnpClass} = Fieldmapper::class_for_hint('acnp');
     $self->{acnsClass} = Fieldmapper::class_for_hint('acns');
@@ -338,7 +431,11 @@ sub new {
     $self->{libs} = [];
     if ($Marque::config->option_value('library')) {
         # This is done not only for speed, but to prevent SQL injection.
-        my $sth = $self->{handle}->prepare('select id from actor.org_unit where shortname=any(?::text[])');
+        my $query = 'select id from actor.org_unit where shortname=any(?::text[])';
+        if ($Marque::config->option_value('exclude-hidden')) {
+            $query .= ' AND opac_visible';
+        }
+        my $sth = $self->{handle}->prepare($query);
         if ($sth->execute($Marque::config->option_value('library'))) {
             my $r = $sth->fetchall_arrayref();
             my @ids = map {$_->[0]} @{$r};
@@ -349,12 +446,17 @@ sub new {
     # Ditto for descendants.  We don't worry about redundancy, the db can deal with it.
     if ($Marque::config->option_value('descendants')) {
         # Unlike the above, we're looping to make this simpler in the database.
-        my $sth = $self->{handle}->prepare(
-                'select id from actor.org_unit_descendants((select id from actor.org_unit where shortname=?))');
+        my $query = 'select id, opac_visible from actor.org_unit_descendants((select id from actor.org_unit where shortname=?))';
+        my $sth = $self->{handle}->prepare($query);
         foreach my $shortname (@{$Marque::config->option_value('descendants')}) {
             if ($sth->execute($shortname)) {
                 my $r = $sth->fetchall_arrayref();
-                my @ids = map {$_->[0]} @{$r};
+                my @ids = ();
+                if ($Marque::config->option_value('exclude-hidden')) {
+                    @ids = map {$_->[0]} grep {$_->[1]} @{$r};
+                } else {
+                    @ids = map {$_->[0]} @{$r};
+                }
                 push(@{$self->{libs}}, @ids);
                 $sth->finish();
             }
@@ -410,10 +512,14 @@ ACN_JOIN
     if ($Marque::config->option_value('items')) {
         unless ($acn_joined) {
             $from .= "\njoin $acnTable on $acnTable.record = $breTable.id";
+            if ($Marque::config->option_value('exclude-hidden')) {
+                $from .= "\n AND $acnTable.owning_lib in (select id from actor.org_unit where opac_visible)";
+            }
             $from .= "\nand $acnTable.deleted = 'f'" unless ($Marque::config->option_value('since'));
         }
         $from .= "\njoin $acpTable on $acpTable.call_number = $acnTable.id";
         $from .= "\nand $acpTable.deleted = 'f'" unless ($Marque::config->option_value('since'));
+        $from .= "\nand $acpTable.opac_visible" if ($Marque::config->option_value('exclude-hidden'));
         $from .= "\nleft outer join $acnpTable on $acnTable.prefix = $acnpTable.id";
         $from .= "\nleft outer join $acnsTable on $acnTable.suffix = $acnsTable.id";
     }
@@ -457,12 +563,18 @@ ACN_JOIN
 
     $self->{query} = $select . "\n" . $from . "\n" . $where;
     $self->{query} .= $uri_union if ($uri_union);
+    $self->{query} .= "\n" . "order by id"; #sort results by bre id.
 }
 
 sub execute_query {
     my $self = shift;
     $self->build_query() unless ($self->{query});
-    $self->{sth} = $self->{handle}->prepare($self->{query});
+    unless ($self->{cursor}) {
+        $self->{cursor} = 'DECLARE bibs CURSOR WITH HOLD FOR ' . $self->{query};
+        $self->{handle}->do($self->{cursor});
+        $self->{fetchcmd} = 'fetch ' . $Marque::config->option_value('batch-size') . ' from bibs';
+    }
+    $self->{sth} = $self->{handle}->prepare($self->{fetchcmd});
     return $self->{sth}->execute;
 }
 
@@ -495,6 +607,14 @@ sub next {
         }
     } else {
         my $data = $self->{sth}->fetchrow_hashref;
+
+        unless ($data){
+            # We ran out of data, so fetch the next batch.
+            if ($self->execute_query()) {
+                $data = $self->{sth}->fetchrow_hashref;
+            }
+        }
+
         if ($data) {
             $r = $self->{breClass}->from_bare_hash($data);
             if ($Marque::config->option_value('format') eq 'BRE') {
@@ -515,6 +635,24 @@ sub next {
                     import MARC::File::XML; # Reset SAX Parser.
                     return $self->next();
                 }
+
+                # Set the Leader to 24 characters if needed
+                if (length($marc->leader()) != 24 && $Marque::config->option_value('check-leader')) {
+                    warn("Warning: modifying Leader of record " . $r->id());
+                    # Don't try to be too smart, but if it's over 20 characters we throw out
+                    # everything after that to make sure the last 4 characters are '4500' and
+                    # the indicator count and subfield size ('22') are in the correct place
+                    my $tmplleader = '00000nam a2200000u  4500';
+                    my $fixleader = $marc->leader();
+
+                    if (length($fixleader) > 20) {
+                        $fixleader = substr $fixleader, 0, 20;
+                    }
+                    $fixleader = $fixleader . substr $tmplleader, (length($fixleader) - length($tmplleader));
+                    $fixleader = (substr $fixleader, 0, 10) . '22' . (substr $fixleader, -12);
+                    $marc->leader($fixleader);
+                }
+
                 if ($Marque::config->option_value('replace_001')) {
                     my $tcn = $marc->field('001');
                     if ($tcn) {
@@ -524,10 +662,56 @@ sub next {
                         $marc->insert_fields_ordered($tcn);
                     }
                 }
+
+                my $strip_arg_ref = $Marque::config->option_value('strip');
+                my @strip = @{$strip_arg_ref};
+                foreach my $strip_ref (@strip) {
+                    my $tagRE = $strip_ref->{tag};
+                    my $subfieldRE = $strip_ref->{subfield};
+
+                    if ( $subfieldRE eq "") {
+                        # Case 1: Field only check, e.g. "--strip 5.[0,1]"
+                        # If the supplied regexp matches the field, then
+                        # delete that field.
+                        foreach my $test_field ($marc->fields()) {
+                            if ($test_field->tag() =~ /$tagRE/) {
+                                # A hit!
+                                $marc->delete_field($test_field);
+                            }
+                        }
+                    } elsif ($subfieldRE ne "" && $tagRE ne "") {
+                        # Case 2: Field & subfield supplied.
+                        # Note a blank tag will be wildcarded to "*".
+                        # Traverse fields, then traverse subfields if match
+                        # is found.
+                        foreach my $test_field ($marc->fields()) {
+                            if ( !$test_field->is_control_field() &&
+                                 $test_field->tag() =~ /$tagRE/) {
+                                # Traverse all subfields:
+                                foreach my $test_subfield ($test_field->subfields()) {
+                                    my $sfcode = @{$test_subfield}[0];
+                                    if ($sfcode =~ /$subfieldRE/) {
+                                        $test_field->delete_subfield($sfcode);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
                 if ($Marque::config->option_value('items')) {
+                    # If --items was passed discard any static 852 fields; they're either dupes, out-of-sync, or junk.
+                    $marc->delete_fields($marc->field('852'));
                     my @acps = $self->acps_for_bre($r);
+                    my @itemtags = ();
+                    my $itemcount = 0;
+
                     foreach my $acp (@acps) {
                         next unless ($acp);
+                        if ($Marque::config->option_value('exclude-hidden')) {
+                            next unless $U->is_true($acp->status()->opac_visible());
+                            next unless $U->is_true($acp->location()->opac_visible());
+                        }
                         my $location = $Marque::config->option_value('location');
                         my $price = ($acp->price() ? $Marque::config->option_value('money').$acp->price() : '');
                         my $prefix = $acp->call_number()->prefix()->label();
@@ -539,26 +723,48 @@ sub next {
                                     . shift;
                                 warn($message);
                             };
-                            $marc->insert_grouped_field(
-                            MARC::Field->new(
-                                '852', '4', ' ',
-                                ($location ? ('a' => $location) : ()),
-                                b => Encode::decode_utf8($acp->call_number()->owning_lib()->shortname()),
-                                b => Encode::decode_utf8($acp->circ_lib()->shortname()),
-                                c => Encode::decode_utf8($acp->location()->name()),
-                                ($prefix ? (k => Encode::decode_utf8($prefix)) : ()),
-                                j => Encode::decode_utf8($acp->call_number()->label()),
-                                ($suffix ? (m => Encode::decode_utf8($suffix)) : ()),
-                                ($acp->circ_modifier() ? (g => Encode::decode_utf8($acp->circ_modifier())) : ()),
-                                p => Encode::decode_utf8($acp->barcode()),
-                                s => Encode::decode_utf8($status),
-                                ($price ? (y => Encode::decode_utf8($price)) : ()),
-                                ($acp->copy_number() ? (t => $acp->copy_number()) : ()),
-                                ($U->is_true($acp->ref()) ? (x => 'reference') : ()),
-                                (!$U->is_true($acp->holdable()) ? (x => 'unholdable') : ()),
-                                (!$U->is_true($acp->circulate()) ? (x => 'noncirculating') : ()),
-                                (!$U->is_true($acp->opac_visible()) ? (x => 'hidden') : ())
-                            ));
+
+                            my @sfb = ();
+                            my $f852b_option = $Marque::config->option_value('852b');
+                            if      ($f852b_option eq 'owning_lib') {
+                                @sfb = (
+                                    b => Encode::decode_utf8($acp->call_number()->owning_lib()->shortname()),
+                                );
+                            } elsif ($f852b_option eq 'circ_lib') {
+                                @sfb = (
+                                    b => Encode::decode_utf8($acp->circ_lib()->shortname()),
+                                );
+                            } else {
+                                @sfb = (
+                                    b => Encode::decode_utf8($acp->call_number()->owning_lib()->shortname()),
+                                    b => Encode::decode_utf8($acp->circ_lib()->shortname()),
+                                );
+                            }
+
+                            $itemcount++;
+                            push(
+                                @itemtags,
+                                MARC::Field->new(
+                                    '852', '4', ' ',
+                                    ($location ? ('a' => $location) : ()),
+                                    @sfb,
+                                    c => Encode::decode_utf8($acp->location()->name()),
+                                    ($prefix ? (k => Encode::decode_utf8($prefix)) : ()),
+                                    j => Encode::decode_utf8($acp->call_number()->label()),
+                                    ($suffix ? (m => Encode::decode_utf8($suffix)) : ()),
+                                    ($acp->circ_modifier() ? (g => Encode::decode_utf8($acp->circ_modifier())) : ()),
+                                    p => Encode::decode_utf8($acp->barcode()),
+                                    s => Encode::decode_utf8($status),
+                                    ($price ? (y => Encode::decode_utf8($price)) : ()),
+                                    ($acp->copy_number() ? (t => $acp->copy_number()) : ()),
+                                    ($U->is_true($acp->ref()) ? (x => 'reference') : ()),
+                                    (!$U->is_true($acp->holdable()) ? (x => 'unholdable') : ()),
+                                    (!$U->is_true($acp->circulate()) ? (x => 'noncirculating') : ()),
+                                    (!$U->is_true($acp->opac_visible()) ? (x => 'hidden') : ()),
+                                    ((defined($acp->tags()) && @{$acp->tags()}) ? map {($_->url()) ? (u => $_->url()) : ()} @{$acp->tags()} : ()),
+                                    ((defined($acp->tags()) && @{$acp->tags()}) ? map {(z => $_->value())} @{$acp->tags()} : ()),
+                                    ((defined($acp->notes()) && @{$acp->notes()}) ? map {(z => ($_->title()) ? $_->title() . ": " . $_->value() : $_->value())} @{$acp->notes()} : ())
+                                ));
                         };
                         if ($@) {
                             warn("Error in bibliographic record " . $r->id() . ": $@");
@@ -566,6 +772,19 @@ sub next {
                             return $self->next();
                         }
                     }
+                    my $firsttag = shift @itemtags;
+                    if ($firsttag) {
+                        $marc->insert_grouped_field($firsttag);
+                        if (@itemtags) {
+                            $marc->insert_fields_after($firsttag,@itemtags);
+                        }
+                    }
+
+                    #Check if no items are visible, skip bib if empty and exclude-hidden is enabled
+                    #Finally check if there are located uris and skip excluding the bib
+                    return $self->next() if (!$itemcount
+                                             and $Marque::config->option_value('exclude-hidden')
+                                             and !($Marque::config->option_value('uris') and $self->uris_exist_for_bre($r)));
                 }
                 if ($Marque::config->option_value('mfhd')) {
                     $self->{mfhds} = [$self->sres_for_bre($r)];
@@ -626,10 +845,10 @@ sub next {
     return $output;
 }
 
-# Returns a list of aou objects in an array.
+# Returns a hash reference to aou objects in a hash, id as key.
 sub orgs {
     my $self = shift;
-    unless ($self->{orgs} && @{$self->{orgs}}) {
+    unless ($self->{orgs} && %{$self->{orgs}}) {
         my $fmClass = Fieldmapper::class_for_hint('aou');
         my @classFields = $fmClass->real_fields();
         my $classTable = $fmClass->Table();
@@ -637,88 +856,127 @@ sub orgs {
         $query .= "\nfrom $classTable";
         my $sth = $self->{handle}->prepare($query);
         if ($sth->execute()) {
-            my $result = $sth->fetchall_arrayref({});
-            my @orgs = map {$fmClass->from_bare_hash($_)} @{$result};
-            $self->{orgs} = \@orgs;
+            my $result = $sth->fetchall_hashref('id');
+            my %orgs = map {$_ => $fmClass->from_bare_hash($$result{$_})} keys %{ $result }; #translate with fieldmapper
+            $self->{orgs} = \%orgs;
+            #print STDERR Data::Dumper->new([\%orgs],[qw(orgs)])->Indent(3)->Quotekeys(0)->Dump;
         } else {
-            $self->{orgs} = [];
+            $self->{orgs} = {};
         }
     }
-    return @{$self->{orgs}};
+    return $self->{orgs};
 }
 
-# Returns an array of acpl objects.
+# Returns a reference to a hash of acpl objects, id as key.
 sub shelves {
     my $self = shift;
 
-    unless ($self->{shelves} && @{$self->{shelves}}) {
+    unless ($self->{shelves} && %{$self->{shelves}}) {
         my $fmClass = Fieldmapper::class_for_hint('acpl');
         my @classFields = $fmClass->real_fields();
         my $classTable = $fmClass->Table();
         my $query = 'select ' . join(',', @classFields);
         $query .= "\nfrom $classTable";
-        my $result = $self->{handle}->selectall_arrayref($query, {Slice=>{}});
-        my @shelves = map {$fmClass->from_bare_hash($_)} @{$result};
-        $self->{shelves} = \@shelves;
+        #my $result = $self->{handle}->selectall_arrayref($query, {Slice=>{}});
+        my $result = $self->{handle}->selectall_hashref($query, 'id');
+        #Translate into fieldmapper objects
+        my %shelves = map {$_ => $fmClass->from_bare_hash($$result{$_})} keys %{ $result };
+        $self->{shelves} = \%shelves;
     }
 
-    return @{$self->{shelves}};
+    return $self->{shelves};
 }
 
-# Returns an array of ccs objects.
+# Returns an reference to a hash of ccs objects.
 sub statuses {
     my $self = shift;
 
-    unless ($self->{statuses} && @{$self->{statuses}}) {
+    unless ($self->{statuses} && %{$self->{statuses}}) {
         my $fmClass = Fieldmapper::class_for_hint('ccs');
         my @classFields = $fmClass->real_fields();
         my $classTable = $fmClass->Table();
         my $query = 'select ' . join(',', @classFields);
         $query .= "\nfrom $classTable";
-        my $result = $self->{handle}->selectall_arrayref($query, {Slice=>{}});
-        my @statuses = map {$fmClass->from_bare_hash($_)} @{$result};
-        $self->{statuses} = \@statuses;
+        my $result = $self->{handle}->selectall_hashref($query, 'id');
+        my %statuses = map {$_ => $fmClass->from_bare_hash($$result{$_})} keys %{ $result };
+        $self->{statuses} = \%statuses;
     }
 
-    return @{$self->{statuses}};
+    return $self->{statuses};
 }
 
-# Returns an array of acnp objects.
+# Returns a reference to a hash of acnp objects, id as key.
 sub prefixes {
     my $self = shift;
 
-    unless ($self->{prefixes} && @{$self->{prefixes}}) {
+    unless ($self->{prefixes} && %{$self->{prefixes}}) {
         my $fmClass = Fieldmapper::class_for_hint('acnp');
         my @classFields = $fmClass->real_fields();
         my $classTable = $fmClass->Table();
         my $query = 'select ' . join(',', @classFields);
         $query .= "\nfrom $classTable";
-        my $result = $self->{handle}->selectall_arrayref($query, {Slice=>{}});
-        my @prefixes = map {$fmClass->from_bare_hash($_)} @{$result};
-        $self->{prefixes} = \@prefixes;
+        my $result = $self->{handle}->selectall_hashref($query, 'id');
+        my %prefixes = map {$_ => $fmClass->from_bare_hash($$result{$_})} keys %{ $result };
+        $self->{prefixes} = \%prefixes;
     }
 
-    return @{$self->{prefixes}};
+    return $self->{prefixes};
 }
 
-# Returns an array of acns objects.
+# Returns a reference to a hash of acns objects, id as key
 sub suffixes {
     my $self = shift;
 
-    unless ($self->{suffixes} && @{$self->{suffixes}}) {
+    unless ($self->{suffixes} && %{$self->{suffixes}}) {
         my $fmClass = Fieldmapper::class_for_hint('acns');
         my @classFields = $fmClass->real_fields();
         my $classTable = $fmClass->Table();
         my $query = 'select ' . join(',', @classFields);
         $query .= "\nfrom $classTable";
-        my $result = $self->{handle}->selectall_arrayref($query, {Slice=>{}});
-        my @suffixes = map {$fmClass->from_bare_hash($_)} @{$result};
-        $self->{suffixes} = \@suffixes;
+        my $result = $self->{handle}->selectall_hashref($query, 'id');
+        my %suffixes = map {$_ => $fmClass->from_bare_hash($$result{$_})} keys %{ $result };
+        $self->{suffixes} = \%suffixes;
     }
 
-    return @{$self->{suffixes}};
+    return $self->{suffixes};
 }
 
+# Return true if an in scope uri exists for the given bre object or id.
+# Purpose is prevent excluding a bib if it has no copies but it does have scoped uris
+# Assumptions - --uris is in use, --items is in use and --exclude-hidden is in use
+sub uris_exist_for_bre {
+    my $self = shift;
+    my $bre = shift;
+    $bre = $bre->id() if (ref($bre));
+
+    unless ($self->{acnUriHandle}) {
+        my $acnTable = $self->{acnClass}->Table();
+        my $auricnmTable = $self->{auricnmClass}->Table();
+
+        my $query = "select 1";
+        $query .= "\nfrom $acnTable";
+        $query .= "\njoin $auricnmTable on $auricnmTable.call_number = $acnTable.id";
+        $query .= "\nwhere";
+        $query .= "\n$acnTable.record = ?";
+        $query .= "\nand $acnTable.owning_lib in (select id from actor.org_unit where opac_visible)";
+        if (@{$self->{libs}}) {
+                $query .= "\nand owning_lib in (";
+                $query .= join(',', @{$self->{libs}}) . ")";
+        }
+        $query .= "\nand deleted = 'f'" unless($Marque::config->option_value('since'));
+        $query .= "\nlimit 1";
+        $self->{acnUriHandle} = $self->{handle}->prepare($query);
+    }
+
+    if ($self->{acnUriHandle}->execute($bre)) {
+        (my $result) = $self->{acnUriHandle}->fetchrow_array();
+        return 1 if $result;
+    }
+
+    # If for some reason, we don't find anything.
+    return undef;
+
+}
 # Returns an array of acn objects for a given bre object or id.
 sub acns_for_bre {
     my $self = shift;
@@ -732,6 +990,8 @@ sub acns_for_bre {
         if (@{$self->{libs}}) {
             $query .= "\nand owning_lib in (";
             $query .= join(',', @{$self->{libs}}) . ")";
+        } elsif ($Marque::config->option_value('exclude-hidden')) {
+            $query .= "\nand owning_lib in (select id from actor.org_unit where opac_visible)";
         }
         $query .= "\nand deleted = 'f'" unless($Marque::config->option_value('since'));
         $self->{acnHandle} = $self->{handle}->prepare($query);
@@ -752,45 +1012,54 @@ sub acps_for_bre {
     my $bre = shift;
     $bre = $bre->id() if (ref($bre));
 
-    my @orgs = $self->orgs();
-    my @locations = $self->shelves();
-    my @prefixes = $self->prefixes();
-    my @suffixes = $self->suffixes();
-    my @statuses = $self->statuses();
+    my $orgs = $self->orgs();
+    my $locations = $self->shelves();
+    my $prefixes = $self->prefixes();
+    my $suffixes = $self->suffixes();
+    my $statuses = $self->statuses();
 
     my @acns = $self->acns_for_bre($bre);
     if (@acns) {
-        my $query = 'select ' . join(',', $self->{acpClass}->real_fields());
-        $query .= "\nfrom " . $self->{acpClass}->Table();
-        $query .= "\nwhere call_number in (";
-        $query .= join(',', map {$_->id()} @acns);
-        $query .= ")";
-        $query .= "\nand deleted = 'f'" unless ($Marque::config->option_value('since'));
-        my $result = $self->{handle}->selectall_arrayref($query, {Slice=>{}});
+
+        #Setup a prepared statement for the first call
+        unless ($self->{acpHandle}) {
+            my $query = 'select ' . join(',', $self->{acpClass}->real_fields());
+            $query .= "\nfrom " . $self->{acpClass}->Table();
+            $query .= "\nwhere call_number = ANY(?::INT[])";
+            #$query .= join(',', map {$_->id()} @acns);
+            #$query .= ")";
+            $query .= "\nand deleted = 'f'" unless ($Marque::config->option_value('since'));
+            $query .= "\nand opac_visible" if ($Marque::config->option_value('exclude-hidden'));
+            $self->{acpHandle} = $self->{handle}->prepare($query);
+        }
+
+        #Use the prepared statement
+        my $result;
+        my @acnsa = map {$_->id()} @acns;
+        if ($self->{acpHandle}->execute( \@acnsa )) {
+            $result = $self->{acpHandle}->fetchall_arrayref( {} );
+        }
+
         if ($result && @{$result}) {
             my @acps = map {$self->{acpClass}->from_bare_hash($_)} @{$result};
             foreach (@acps) {
                 my $cn = $_->call_number();
-                my $clib = $_->circ_lib();
-                my $loc = $_->location();
-                my $stat = $_->status();
-                my ($org) = grep {$_->id() == $clib} @orgs;
                 my ($acn) = grep {$_->id() == $cn} @acns;
-                my ($location) = grep {$_->id() == $loc} @locations;
-                my $olib = $acn->owning_lib();
-                my $pre = $acn->prefix();
-                my $suf = $acn->suffix();
-                my ($ccs) = grep {$_->id() == $stat} @statuses;
-                my ($acnp) = grep {$_->id() == $pre} @prefixes;
-                my ($acns) = grep {$_->id() == $suf} @suffixes;
-                my ($owner) = grep {$_->id() == $olib} @orgs;
-                $acn->owning_lib($owner);
+                $acn->owning_lib($orgs->{$acn->owning_lib()});
                 $_->call_number($acn);
-                $_->circ_lib($org);
-                $_->location($location);
-                $_->call_number->prefix($acnp);
-                $_->call_number->suffix($acns);
-                $_->status($ccs);
+                $_->circ_lib($orgs->{$_->circ_lib()});
+                $_->location($locations->{$_->location()});
+                $_->status($statuses->{$_->status()});
+                $_->call_number->prefix($prefixes->{$acn->prefix()});
+                $_->call_number->suffix($suffixes->{$acn->suffix()});
+                my @acpts = $self->public_acpts_for_acp($_);
+                if (@acpts) {
+                    $_->tags(\@acpts);
+                }
+                my @acpns = $self->public_acpns_for_acp($_);
+                if (@acpns) {
+                    $_->notes(\@acpns);
+                }
             }
             return @acps;
         }
@@ -800,7 +1069,51 @@ sub acps_for_bre {
     return undef;
 }
 
-# Retreive an array for sre objects when the --mfhd option is used.
+# Retrieves an array of public copy notes for a given copy
+sub public_acpns_for_acp {
+    my $self = shift;
+    my $acp = shift;
+    $acp = $acp->id() if (ref($acp));
+    unless ($self->{acpnHandle}) {
+        my $query = "select " . join(',', $self->{acpnClass}->real_fields());
+        $query .= " from asset.copy_note where pub is true";
+        $query .= " and owning_copy = ? and value <> ''";
+        $self->{acpnHandle} = $self->{handle}->prepare($query);
+    }
+    if ($self->{acpnHandle}->execute($acp)) {
+        my $result = $self->{acpnHandle}->fetchall_arrayref( {} );
+        if ($result && @{$result}) {
+            return map {$self->{acpnClass}->from_bare_hash($_)} @{$result};
+        }
+    }
+    return ();
+}
+
+# Retrieves an array of public copy tags for a given copy
+sub public_acpts_for_acp {
+    my $self = shift;
+    my $acp = shift;
+    $acp = $acp->id() if (ref($acp));
+    unless ($self->{acptHandle}) {
+        my $query = "select " . join(',', map {"copy_tag." . $_} $self->{acptClass}->real_fields());
+        $query .= " from asset.copy_tag join asset.copy_tag_copy_map as map";
+        $query .= " on copy_tag.id = map.tag and map.copy = ?";
+        $query .= " join config.copy_tag_type on copy_tag_type.code = copy_tag.tag_type";
+        $query .= " where pub is true and value <> ''";
+        $query .= " order by url nulls last";
+        $query =~ s/copy_tag\.value/copy_tag_type.label || ': ' || copy_tag.value as "value"/;
+        $self->{acptHandle} = $self->{handle}->prepare($query);
+    }
+    if ($self->{acptHandle}->execute($acp)) {
+        my $result = $self->{acptHandle}->fetchall_arrayref( {} );
+        if ($result && @{$result}) {
+            return map {$self->{acptClass}->from_bare_hash($_)} @{$result};
+        }
+    }
+    return ();
+}
+
+# Retrieve an array of sre objects when the --mfhd option is used.
 sub sres_for_bre {
     my $self = shift;
     my $bre = shift;
@@ -870,10 +1183,16 @@ sub build_query {
     $self->{query} = $select . "\n" . $from . "\n" . $where;
 }
 
+
 sub execute_query {
     my $self = shift;
     $self->build_query() unless ($self->{query});
-    $self->{sth} = $self->{handle}->prepare($self->{query});
+    unless ($self->{cursor}) {
+        $self->{cursor} = 'DECLARE auths CURSOR WITH HOLD FOR ' . $self->{query};
+        $self->{handle}->do($self->{cursor});
+        $self->{fetchcmd} = 'fetch ' . $Marque::config->option_value('batch-size') . ' from auths';
+    }
+    $self->{sth} = $self->{handle}->prepare($self->{fetchcmd});
     return $self->{sth}->execute;
 }
 
@@ -881,6 +1200,13 @@ sub next {
     my $self = shift;
     my $output;
     my $data = $self->{sth}->fetchrow_hashref;
+
+    unless ($data) {
+        # We ran out of data, so try fetching the next batch.
+        if ($self->execute_query()) {
+            $data = $self->{sth}->fetchrow_hashref();
+        }
+    }
 
     if ($data) {
         my $format = $Marque::config->option_value('format');
@@ -904,6 +1230,24 @@ sub next {
                 import MARC::File::XML; # Reset SAX Parser.
                 return $self->next();
             }
+
+            # Set the Leader to 24 characters if needed
+            if (length($marc->leader()) != 24 && $Marque::config->option_value('check-leader')) {
+                warn("Warning: Modifying Leader of record " . $r->id());
+                # Don't try to be too smart, but if it's over 20 characters we throw out
+                # everything after that to make sure the last 4 characters are '4500' and
+                # the indicator count and subfield size ('22') are in the correct place
+                my $tmplleader = '00000nz  a2200000o  4500';
+                my $fixleader = $marc->leader();
+
+                if (length($fixleader) > 20) {
+                    $fixleader = substr $fixleader, 0, 20;
+                }
+                $fixleader = $fixleader . substr $tmplleader, (length($fixleader) - length($tmplleader));
+                $fixleader = (substr $fixleader, 0, 10) . '22' . (substr $fixleader, -12);
+                $marc->leader($fixleader);
+            }
+
             if ($Marque::config->option_value('replace_001')) {
                 my $tcn = $marc->field('001');
                 if ($tcn) {
@@ -913,6 +1257,44 @@ sub next {
                     $marc->insert_fields_ordered($tcn);
                 }
             }
+
+            my $strip_arg_ref = $Marque::config->option_value('strip');
+            my @strip = @{$strip_arg_ref};
+
+            foreach my $strip_ref (@strip) {
+                my $tagRE = $strip_ref->{tag};
+                my $subfieldRE = $strip_ref->{subfield};
+
+                if ( $subfieldRE eq "") {
+                    # Case 1: Field only check, e.g. "--strip 5.[0,1]"
+                    # If the supplied regexp matches the field, then
+                    # delete that field.
+                    foreach my $test_field ($marc->fields()) {
+                        if ($test_field->tag() =~ /$tagRE/) {
+                            # A hit!
+                            $marc->delete_field($test_field);
+                        }
+                    }
+                } elsif ($subfieldRE ne "" && $tagRE ne "") {
+                    # Case 2: Field & subfield supplied.
+                    # Note a blank tag will be wildcarded to "*".
+                    # Traverse fields, then traverse subfields if match
+                    # is found.
+                    foreach my $test_field ($marc->fields()) {
+                        if ( !$test_field->is_control_field() &&
+                             $test_field->tag() =~ /$tagRE/) {
+                            # Traverse all subfields:
+                            foreach my $test_subfield ($test_field->subfields()) {
+                                my $sfcode = @{$test_subfield}[0];
+                                if ($sfcode =~ /$subfieldRE/) {
+                                    $test_field->delete_subfield($sfcode);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             if ($Marque::config->option_value('since')) {
                 my $leader = $marc->leader();
                 if ($U->is_true($r->deleted())) {

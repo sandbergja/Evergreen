@@ -1,7 +1,8 @@
-import {Component, Input, ViewChild, OnInit} from '@angular/core';
+/* eslint-disable eqeqeq, max-len, no-magic-numbers */
+import {Component, ViewChild, OnInit} from '@angular/core';
 import {Tree, TreeNode} from '@eg/share/tree/tree';
 import {IdlService, IdlObject} from '@eg/core/idl.service';
-import {NgbTabset, NgbTabChangeEvent} from '@ng-bootstrap/ng-bootstrap';
+import {NgbNavChangeEvent} from '@ng-bootstrap/ng-bootstrap';
 import {OrgService} from '@eg/core/org.service';
 import {AuthService} from '@eg/core/auth.service';
 import {PcrudService} from '@eg/core/pcrud.service';
@@ -9,17 +10,20 @@ import {ToastService} from '@eg/share/toast/toast.service';
 import {StringComponent} from '@eg/share/string/string.component';
 import {StringService} from '@eg/share/string/string.service';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
-import {FmRecordEditorComponent} from '@eg/share/fm-editor/fm-editor.component';
 import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
+import {PermService} from '@eg/core/perm.service';
 
 @Component({
-    templateUrl: './org-unit.component.html'
+    templateUrl: './org-unit.component.html',
+    styleUrls: [ './org-unit.component.css' ],
 })
 export class OrgUnitComponent implements OnInit {
 
     tree: Tree;
     selected: TreeNode;
-    winHeight = 500;
+    orgUnitTab: string;
+
+    hasClosedDatePerms: boolean;
 
     @ViewChild('editString', { static: true }) editString: StringComponent;
     @ViewChild('errorString', { static: true }) errorString: StringComponent;
@@ -31,15 +35,29 @@ export class OrgUnitComponent implements OnInit {
         private auth: AuthService,
         private pcrud: PcrudService,
         private strings: StringService,
-        private toast: ToastService
+        private toast: ToastService,
+        private perm: PermService,
     ) {}
 
 
     ngOnInit() {
         this.loadAouTree(this.org.root().id());
+
+        // Check once on init if user could be linked to closed date editor (don't want them to land on a page that does nothing and think it's broken)
+        const neededClosedDatesPerms = ['actor.org_unit.closed_date.create',
+            'actor.org_unit.closed_date.update',
+            'actor.org_unit.closed_date.delete'];
+
+        this.perm.hasWorkPermAt(neededClosedDatesPerms, true).then((perm) => {
+            // Set true once if they have every permission they need to change closed dates
+            this.hasClosedDatePerms = neededClosedDatesPerms.every(element => {
+                return perm[element].length > 0;
+            });
+        });
+
     }
 
-    tabChanged(evt: NgbTabChangeEvent) {
+    navChanged(evt: NgbNavChangeEvent) {
         const tab = evt.nextId;
         // stubbing out in case we need it.
     }
@@ -74,9 +92,6 @@ export class OrgUnitComponent implements OnInit {
             const node = this.tree.findNode(selectNodeId);
             this.selected = node;
             this.tree.selectNode(node);
-
-            // Subtract out the menu bar plus a bit more.
-            this.winHeight = window.innerHeight * 0.8;
         });
     }
 
@@ -106,10 +121,10 @@ export class OrgUnitComponent implements OnInit {
             // by name suffices and bypasses the need the wait
             // for all of the labels to interpolate.
             orgNode.children()
-            .sort((a, b) => a.name() < b.name() ? -1 : 1)
-            .forEach(childNode =>
-                treeNode.children.push(handleNode(childNode))
-            );
+                .sort((a, b) => a.name() < b.name() ? -1 : 1)
+                .forEach(childNode =>
+                    treeNode.children.push(handleNode(childNode))
+                );
 
             return treeNode;
         };
@@ -138,7 +153,7 @@ export class OrgUnitComponent implements OnInit {
     // if a 'value' is passed, it will be applied to the optional
     // hours-of-operation object, otherwise the hours on the currently
     // selected org unit.
-    hours(dow: number, which: 'open' | 'close', value?: string, hoo?: IdlObject): string {
+    hours(dow: number, which: 'open' | 'close' | 'note', value?: string, hoo?: IdlObject): string {
         if (!hoo && !this.selected) { return null; }
 
         const hours = hoo || this.selected.callerData.orgUnit.hours_of_operation();
@@ -158,6 +173,45 @@ export class OrgUnitComponent implements OnInit {
         );
     }
 
+    // Is the org closed every day of the week?
+    allClosed(): boolean{
+        return [0, 1, 2, 3, 4, 5, 6].every(dow => this.isClosed(dow));
+    }
+
+    getNote(dow: number, hoo?: IdlObject) {
+        if (!hoo && !this.selected) { return null; }
+
+        const hours = hoo || this.selected.callerData.orgUnit.hours_of_operation();
+
+        return hours['dow_' + dow + '_note']();
+    }
+
+    setNote(dow: number, value?: string, hoo?: IdlObject) {
+        console.log(value);
+        if (!hoo && !this.selected) { return null; }
+
+        const hours = hoo || this.selected.callerData.orgUnit.hours_of_operation();
+
+        hours['dow_' + dow + '_note'](value);
+        hours.ischanged(true);
+
+        return hours['dow_' + dow + '_note']();
+    }
+
+    note(dow: number, which: 'note', value?: string, hoo?: IdlObject) {
+        if (!hoo && !this.selected) { return null; }
+
+        const hours = hoo || this.selected.callerData.orgUnit.hours_of_operation();
+        if (!value) {
+            hours[`dow_${dow}_${which}`]('');
+            hours.ischanged(true);
+        } else if (value != hours[`dow_${dow}_${which}`]()) {
+            hours[`dow_${dow}_${which}`](value);
+            hours.ischanged(true);
+        }
+        return hours[`dow_${dow}_${which}`]();
+    }
+
     closedOn(dow: number) {
         this.hours(dow, 'open', '00:00:00');
         this.hours(dow, 'close', '00:00:00');
@@ -172,7 +226,7 @@ export class OrgUnitComponent implements OnInit {
                 this.editString.current()
                     .then(msg => this.toast.success(msg));
             },
-            error => {
+            (error: unknown) => {
                 this.errorString.current()
                     .then(msg => this.toast.danger(msg));
             },
@@ -211,11 +265,12 @@ export class OrgUnitComponent implements OnInit {
 
             const org = this.selected.callerData.orgUnit;
 
+            // eslint-disable-next-line rxjs/no-nested-subscribe
             this.pcrud.remove(org).subscribe(
                 ok2 => {},
-                err => {
+                (err: unknown) => {
                     this.errorString.current()
-                      .then(str => this.toast.danger(str));
+                        .then(str => this.toast.danger(str));
                 },
                 ()  => {
                     // Avoid updating until we know the entire

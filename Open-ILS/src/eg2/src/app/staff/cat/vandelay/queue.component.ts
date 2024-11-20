@@ -1,4 +1,5 @@
-import {Component, OnInit, AfterViewInit, ViewChild} from '@angular/core';
+/* eslint-disable no-unused-expressions */
+import {Component, AfterViewInit, ViewChild} from '@angular/core';
 import {Observable} from 'rxjs';
 import {map, filter} from 'rxjs/operators';
 import {Router, ActivatedRoute, ParamMap} from '@angular/router';
@@ -11,13 +12,12 @@ import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 import {ProgressDialogComponent} from '@eg/share/dialog/progress.component';
 import {GridComponent} from '@eg/share/grid/grid.component';
 import {GridDataSource, GridColumn, GridCellTextGenerator} from '@eg/share/grid/grid';
-import {VandelayService, VandelayImportSelection,
-    VANDELAY_EXPORT_PATH} from './vandelay.service';
+import {VandelayService, VandelayImportSelection} from './vandelay.service';
 
 @Component({
-  templateUrl: 'queue.component.html'
+    templateUrl: 'queue.component.html'
 })
-export class QueueComponent implements OnInit, AfterViewInit {
+export class QueueComponent implements AfterViewInit {
 
     queueId: number;
     queueType: string; // bib / authority
@@ -61,12 +61,10 @@ export class QueueComponent implements OnInit, AfterViewInit {
 
         this.cellTextGenerator = {
             '+matches': row => row.matches.length + '',
+            // eslint-disable-next-line eqeqeq
             'import_error': row => (row.import_error == null) ? '' : row.import_error,
             'imported_as': row => row.imported_as + ''
         };
-    }
-
-    ngOnInit() {
     }
 
     limitToMatches(checked: boolean) {
@@ -98,16 +96,17 @@ export class QueueComponent implements OnInit, AfterViewInit {
     }
 
     openRecord(row: any) {
+        const link_type = 'bib';
         if (this.queueType === 'auth') {
             this.queueType = 'authority';
         }
         const url =
-          `/staff/cat/vandelay/queue/${this.queueType}/${this.queueId}/record/${row.id}/marc`;
+          `/staff/cat/vandelay/queue/${link_type}/${this.queueId}/record/${row.id}/marc`;
         this.router.navigate([url]);
     }
 
     applyQueueType() {
-        this.queuedRecClass = this.queueType.match(/bib/) ? 'vqbr' : 'vqar';
+        this.queuedRecClass = this.queueType.match(/auth/) ? 'vqar' : 'vqbr';
         this.vandelay.getAttrDefs(this.queueType).then(
             attrs => {
                 this.attrDefs = attrs;
@@ -128,7 +127,7 @@ export class QueueComponent implements OnInit, AfterViewInit {
     }
 
     qtypeShort(): string {
-        return this.queueType === 'bib' ? 'bib' : 'auth';
+        return this.queueType.match(/auth/) ? 'auth' : 'bib';
     }
 
     loadQueueSummary(): Promise<any> {
@@ -137,7 +136,7 @@ export class QueueComponent implements OnInit, AfterViewInit {
 
         return this.net.request(
             'open-ils.vandelay', method, this.auth.token(), this.queueId)
-        .toPromise().then(sum => this.queueSummary = sum);
+            .toPromise().then(sum => this.queueSummary = sum);
     }
 
     loadQueueRecords(pager: Pager): Observable<any> {
@@ -153,41 +152,41 @@ export class QueueComponent implements OnInit, AfterViewInit {
 
         return this.vandelay.getQueuedRecords(
             this.queueId, this.queueType, options, this.filters.matches).pipe(
-        filter(rec => {
+            filter(rec => {
             // avoid sending mishapen data to the grid
             // this happens (among other reasons) when the grid
             // no longer exists
-            const e = this.evt.parse(rec);
-            if (e) { console.error(e); return false; }
-            return true;
-        }),
-        map(rec => {
-            const recHash: any = {
-                id: rec.id(),
-                import_error: rec.import_error(),
-                error_detail: rec.error_detail(),
-                import_time: rec.import_time(),
-                imported_as: rec.imported_as(),
-                import_items: [],
-                error_items: [],
-                matches: rec.matches()
-            };
+                const e = this.evt.parse(rec);
+                if (e) { console.error(e); return false; }
+                return true;
+            }),
+            map(rec => {
+                const recHash: any = {
+                    id: rec.id(),
+                    import_error: rec.import_error(),
+                    error_detail: rec.error_detail(),
+                    import_time: rec.import_time(),
+                    imported_as: rec.imported_as(),
+                    import_items: [],
+                    error_items: [],
+                    matches: rec.matches()
+                };
 
-            if (this.queueType === 'bib') {
-                recHash.import_items = rec.import_items();
-                recHash.error_items = rec.import_items().filter(i => i.import_error());
-            }
+                if (!this.queueType.match(/auth/)) {
+                    recHash.import_items = rec.import_items();
+                    recHash.error_items = rec.import_items().filter(i => i.import_error());
+                }
 
-            // Link the record attribute values to the root record
-            // object so the grid can find them.
-            rec.attributes().forEach(attr => {
-                const def =
+                // Link the record attribute values to the root record
+                // object so the grid can find them.
+                rec.attributes().forEach(attr => {
+                    const def =
                     this.attrDefs.filter(d => d.id() === attr.field())[0];
-                recHash[def.code()] = attr.attr_value();
-            });
+                    recHash[def.code()] = attr.attr_value();
+                });
 
-            return recHash;
-        }));
+                return recHash;
+            }));
     }
 
     findOrCreateImportSelection() {

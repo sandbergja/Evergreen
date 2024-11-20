@@ -6,6 +6,7 @@ use OpenSRF::AppSession;
 use OpenSRF::Utils::SettingsClient;
 use OpenSRF::Utils::Logger qw(:logger);
 use OpenSRF::Utils::Config;
+use OpenILS::Utils::CStoreEditor qw/:funcs/;
 use OpenILS::Const qw/:const/;
 use OpenILS::Application::AppUtils;
 use DateTime;
@@ -1305,6 +1306,23 @@ sub run_indb_circ_test {
     my $self = shift;
     return $self->matrix_test_result if $self->matrix_test_result;
 
+    # Before we run the database function, let's make sure that the patron's
+    # threshold-based penalties are up-to-date, so that the database function
+    # can take them into consideration.
+    #
+    # This takes place in a separate cstore editor and db transaction, so that
+    # even if the circulation fails and its transaction is rolled back, any
+    # newly calculated penalties remain on the patron's account.
+    #
+    # Note that this depends on the PostgreSQL transaction isolation level
+    # being "read committed" (which it is by default); if it were "repeatable
+    # read" or "serializable", the in-DB circ/renew test that follows would not
+    # see the updated penalties.
+    my $penalty_editor = new_editor(xact => 1, authtoken => $self->editor->authtoken);
+    return $penalty_editor->event unless( $penalty_editor->checkauth );
+    OpenILS::Utils::Penalty->calculate_penalties($penalty_editor, $self->patron->id, $self->circ_lib);
+    $penalty_editor->commit;
+
     my $dbfunc = ($self->is_renewal) ? 
         'action.item_user_renew_test' : 'action.item_user_circ_test';
 
@@ -1660,8 +1678,8 @@ sub do_checkout {
     return if $self->bail_out;
 
     # ------------------------------------------------------------------------------
-    # Update the patron penalty info in the DB.  Run it for permit-overrides 
-    # since the penalties are not updated during the permit phase
+    # Update the patron penalty info in the DB, now that the item is checked out and
+    # may cause the patron to reach certain thresholds.
     # ------------------------------------------------------------------------------
     OpenILS::Utils::Penalty->calculate_penalties($self->editor, $self->patron->id, $self->circ_lib);
 
@@ -1869,6 +1887,13 @@ sub handle_checkout_holds {
         $logger->info("circulator: un-targeting hold ".$hold->id.
             " because copy ".$copy->id." is getting checked out");
 
+        $U->simplereq('open-ils.circ',
+            'open-ils.circ.hold_reset_reason_entry.create',
+            $e->authtoken,
+            $hold->id,
+            OILS_HOLD_CHECK_OUT,
+            "Checked out to patron #".$patron->id
+        );
         $hold->clear_prev_check_time; 
         $hold->clear_current_copy;
         $hold->clear_capture_time;
@@ -1892,6 +1917,7 @@ sub handle_checkout_holds {
     $logger->debug("circulator: checkout fulfilling hold " . $hold->id);
 
     # if the hold was never officially captured, capture it.
+    $hold->clear_hopeless_date;
     $hold->current_copy($copy->id);
     $hold->capture_time('now') unless $hold->capture_time;
     $hold->fulfillment_time('now');
@@ -2345,6 +2371,8 @@ sub apply_modified_due_date {
       # if the due_date lands on a day when the location is closed
       return unless $copy and $circ->due_date;
 
+        $self->extend_renewal_due_date if $self->is_renewal;
+
         #my $org = (ref $copy->circ_lib) ? $copy->circ_lib->id : $copy->circ_lib;
 
         # due-date overlap should be determined by the location the item
@@ -2373,6 +2401,66 @@ sub apply_modified_due_date {
    }
 }
 
+sub extend_renewal_due_date {
+    my $self = shift;
+    my $circ = $self->circ;
+    my $matchpoint = $self->circ_matrix_matchpoint;
+
+    return unless $U->is_true($matchpoint->renew_extends_due_date);
+
+    my $prev_circ = $self->editor->retrieve_action_circulation($self->parent_circ);
+
+    my $start_time = DateTime::Format::ISO8601->new
+        ->parse_datetime(clean_ISO8601($prev_circ->xact_start))->epoch;
+
+    my $prev_due_date = DateTime::Format::ISO8601->new
+        ->parse_datetime(clean_ISO8601($prev_circ->due_date));
+
+    my $due_date = DateTime::Format::ISO8601->new
+        ->parse_datetime(clean_ISO8601($circ->due_date));
+
+    my $prev_due_time = $prev_due_date->epoch;
+
+    my $now_time = DateTime->now->epoch;
+
+    return if $prev_due_time < $now_time; # Renewed circ was overdue.
+
+    if (my $interval = $matchpoint->renew_extend_min_interval) {
+
+        my $min_duration = OpenILS::Utils::DateTime->interval_to_seconds($interval);
+        my $checkout_duration = $now_time - $start_time;
+
+        if ($checkout_duration < $min_duration) {
+            # Renewal occurred too early in the cycle to result in an
+            # extension of the due date on the renewal.
+
+            # If the new due date falls before the due date of
+            # the previous circulation, use the due date of the prev.
+            # circ so the patron does not lose time.
+            my $due = $due_date < $prev_due_date ? $prev_due_date : $due_date;
+            $circ->due_date($due->strftime('%FT%T%z'));
+
+            return;
+        }
+    }
+
+    # Item was checked out long enough during the previous circulation
+    # to consider extending the due date of the renewal to cover the gap.
+
+    # Amount of the previous duration that was left unused.
+    my $remaining_duration = $prev_due_time - $now_time;
+
+    $due_date->add(seconds => $remaining_duration);
+
+    # If the calculated due date falls before the due date of the previous 
+    # circulation, use the due date of the prev. circ so the patron does
+    # not lose time.
+    my $due = $due_date < $prev_due_date ? $prev_due_date : $due_date;
+
+    $logger->info("circulator: renewal due date extension landed on due date: $due");
+
+    $circ->due_date($due->strftime('%FT%T%z'));
+}
 
 
 sub create_due_date {
@@ -2650,6 +2738,8 @@ sub checkin_retarget {
                 next if ($_->{hold_type} eq 'P');
             }
             # So much for easy stuff, attempt a retarget!
+            $U->simplereq('open-ils.circ',
+            'open-ils.circ.hold_reset_reason_entry.create', $self->editor->authtoken, $_->{id},OILS_HOLD_BETTER_HOLD);
             my $tresult = $U->simplereq(
                 'open-ils.hold-targeter',
                 'open-ils.hold-targeter.target', 
@@ -2669,6 +2759,9 @@ sub do_checkin {
     return $self->bail_on_events(
         OpenILS::Event->new('ASSET_COPY_NOT_FOUND')) 
         unless $self->copy;
+
+    # Never capture a deleted copy for a hold.
+    $self->capture('nocapture') if $U->is_true($self->copy->deleted);
 
     $self->fix_broken_transit_status; # if applicable
     $self->check_transit_checkin_interval;
@@ -3289,6 +3382,7 @@ sub attempt_checkin_hold_capture {
 
     $logger->info("circulator: found permitted hold ".$hold->id." for copy, capturing...");
 
+    $hold->clear_hopeless_date;
     $hold->current_copy($copy->id);
     $hold->capture_time('now');
     $self->put_hold_on_shelf($hold) 
@@ -3303,6 +3397,8 @@ sub attempt_checkin_hold_capture {
     $hold->clear_cancel_time;
     $hold->clear_prev_check_time unless $hold->prev_check_time;
 
+    $U->simplereq('open-ils.circ',
+    'open-ils.circ.hold_reset_reason_entry.create', $self->editor->authtoken, $hold->id, OILS_HOLD_CHECK_IN);
     $self->bail_on_events($self->editor->event)
         unless $self->editor->update_action_hold_request($hold);
     $self->hold($hold);
@@ -3447,6 +3543,10 @@ sub retarget_holds {
     $logger->info("circulator: retargeting holds @{$self->retarget} after opportunistic capture");
     my $ses = OpenSRF::AppSession->create('open-ils.hold-targeter');
     $ses->request('open-ils.hold-targeter.target', {hold => $self->retarget});
+
+    my $cses = OpenSRF::AppSession->create('open-ils.circ');
+    $cses->request('open-ils.circ.hold_reset_reason_entry.create', $self->editor->authtoken, $self->retarget,OILS_HOLD_BETTER_HOLD);
+
     # no reason to wait for the return value
     return;
 }

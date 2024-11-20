@@ -6,6 +6,7 @@ module.exports = function(config){
     logLevel: config.LOG_INFO,
 
     files : [
+      'build/js/lovefield.min.js',
       'build/js/vendor.bundle.js',
       'build/js/core.bundle.js',
       'node_modules/angular-mocks/angular-mocks.js', // testing only
@@ -26,6 +27,7 @@ module.exports = function(config){
       'services/grid.js',
       'services/patron_search.js',
       'services/user-bucket.js',
+      'services/batch_promises.js',
 
       // load app scripts
       'app.js',
@@ -37,6 +39,10 @@ module.exports = function(config){
       'test/unit/egOrg.js', 
       'test/unit/**/*.js'
     ],
+
+    proxies: {
+        '/js/ui/default/staff/offline-db-worker.js' : 'offline-db-worker.js'
+    },
 
     // test results reporter to use
     // possible values: 'dots', 'progress', 'junit', 'growl', 'coverage'
@@ -59,6 +65,10 @@ module.exports = function(config){
             flags: [
                 '-headless',
             ],
+            prefs: {
+                'privacy.resistFingerprinting': false,
+                'general.useragent.override': 'FirefoxHeadless'
+            },
         }
     },
 

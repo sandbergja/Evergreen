@@ -20,7 +20,7 @@ use constant EBOOK_API_OU => 1;
 
 # Patrons.
 use constant EBOOK_API_PATRON_USERNAME  => '99999359616';
-use constant EBOOK_API_PATRON_PASSWORD  => 'andreac1234';
+use constant EBOOK_API_PATRON_PASSWORD  => 'demo123';
 use constant EBOOK_API_PATRON_NOT_FOUND => 'patron-not-found';
 
 my $script = OpenILS::Utils::TestUtils->new();
@@ -91,13 +91,13 @@ is($title_004_avail, undef, 'Availability check 3/3 (not found)');
 my $title_001_holdings_req = $ebook_api->request(
     'open-ils.ebook_api.title.holdings', $session_id, '001');
 my $title_001_holdings = $title_001_holdings_req->recv->content;
-ok(ref($title_001_holdings) && $title_001_holdings->{copies_owned} == 1 && $title_001_holdings->{copies_available} == 0 && $title_001_holdings->{formats}->[0] eq 'ebook', 'Holdings check 1/3 (1 owned, 0 available)');
+ok(ref($title_001_holdings) && $title_001_holdings->{copies_owned} == 1 && $title_001_holdings->{copies_available} == 0 && $title_001_holdings->{formats}->[0]->{name} eq 'ebook', 'Holdings check 1/3 (1 owned, 0 available)');
 
 # Title has holdings, one copy available.
 my $title_003_holdings_req = $ebook_api->request(
     'open-ils.ebook_api.title.holdings', $session_id, '003');
 my $title_003_holdings = $title_003_holdings_req->recv->content;
-ok(ref($title_003_holdings) && $title_003_holdings->{copies_owned} == 1 && $title_003_holdings->{copies_available} == 1 && $title_003_holdings->{formats}->[0] eq 'ebook', 'Holdings check 2/3 (1 owned, 1 available)');
+ok(ref($title_003_holdings) && $title_003_holdings->{copies_owned} == 1 && $title_003_holdings->{copies_available} == 1 && $title_003_holdings->{formats}->[0]->{name} eq 'ebook', 'Holdings check 2/3 (1 owned, 1 available)');
 
 # Title not found, no holdings.
 my $title_004_holdings_req = $ebook_api->request(

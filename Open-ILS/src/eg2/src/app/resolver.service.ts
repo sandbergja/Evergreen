@@ -1,12 +1,13 @@
 import {Injectable} from '@angular/core';
 import {Router, Resolve, RouterStateSnapshot,
-        ActivatedRouteSnapshot} from '@angular/router';
+    ActivatedRouteSnapshot} from '@angular/router';
 import {IdlService} from '@eg/core/idl.service';
 import {OrgService} from '@eg/core/org.service';
 import {LocaleService} from '@eg/core/locale.service';
+import {PcrudService} from '@eg/core/pcrud.service';
 
 // For locale application
-declare var OpenSRF;
+declare let OpenSRF;
 
 @Injectable()
 export class BaseResolver implements Resolve<Promise<void>> {
@@ -15,6 +16,7 @@ export class BaseResolver implements Resolve<Promise<void>> {
         private router: Router,
         private idl: IdlService,
         private org: OrgService,
+        private pcrud: PcrudService,
         private locale: LocaleService
     ) {}
 
@@ -30,7 +32,8 @@ export class BaseResolver implements Resolve<Promise<void>> {
         OpenSRF.locale = this.locale.currentLocaleCode();
 
         this.idl.parseIdl();
+        this.pcrud.setAuthoritative();
 
-        return this.org.fetchOrgs(); // anonymous PCRUD.
+        return this.org.fetchOrgs();
     }
 }

@@ -1,0 +1,44 @@
+.striped {
+  background-color: var(--bills-striped-bg);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.num-receipts {
+  width: 4em;
+}
+
+/* TODO: redo as grid when Chrome/Mac ships subgrid support */
+
+.patron-bills-summary {
+  columns: 4;
+  column-gap: 1rem;
+  margin: 1rem 0 2rem;
+}
+
+.patron-bills-summary li {
+  display: flex;
+  align-items: flex-end; /* align money totals to the bottom of their labels */
+  padding: .25rem .5rem;
+}
+
+.patron-bills-summary li:nth-child(3n+1),
+.patron-bills-summary li:nth-child(3n+3) {
+  background-color: var(--bs-body-bg-alt);
+}
+
+.patron-bills-summary li span:first-child {
+  margin-right: .5rem;
+}
+
+.money {
+  font-variant-numeric: lining-nums tabular-nums;
+  margin-left: auto;
+  text-align: end;
+}
+
+.balance_owed .money,
+.pending .money {
+  font-weight: bold;
+}
+

@@ -17,18 +17,23 @@ export class CoursePageComponent implements OnInit {
 
     currentCourse: IdlObject;
     courseId: any;
+    courseIsArchived: String;
 
     // Materials Tab
     @ViewChild('courseMaterialDialog', {static: true})
-        private courseMaterialDialog: CourseAssociateMaterialComponent;
+    private courseMaterialDialog: CourseAssociateMaterialComponent;
     @ViewChild('courseUserDialog', {static: true})
-        private courseUserDialog: CourseAssociateUsersComponent;
+    private courseUserDialog: CourseAssociateUsersComponent;
 
     // Edit Tab
     @ViewChild('archiveFailedString', { static: true })
         archiveFailedString: StringComponent;
     @ViewChild('archiveSuccessString', { static: true })
         archiveSuccessString: StringComponent;
+    @ViewChild('unarchiveFailedString', { static: true })
+        unarchiveFailedString: StringComponent;
+    @ViewChild('unarchiveSuccessString', { static: true })
+        unarchiveSuccessString: StringComponent;
 
     constructor(
         private course: CourseService,
@@ -42,6 +47,8 @@ export class CoursePageComponent implements OnInit {
         this.courseId = +this.route.snapshot.paramMap.get('id');
         this.course.getCourses([this.courseId]).then(course => {
             this.currentCourse = course[0];
+            this.courseIsArchived = course[0].is_archived();
+            console.log(this.courseIsArchived);
         });
     }
 
@@ -50,11 +57,28 @@ export class CoursePageComponent implements OnInit {
         this.course.disassociateMaterials([this.currentCourse]).then(res => {
             this.currentCourse.is_archived('t');
             this.pcrud.update(this.currentCourse).subscribe(val => {
+                this.courseIsArchived = 't';
                 console.debug('archived: ' + val);
                 this.archiveSuccessString.current()
                     .then(str => this.toast.success(str));
-            }, err => {
+            }, (err: unknown) => {
                 this.archiveFailedString.current()
+                    .then(str => this.toast.danger(str));
+            });
+        });
+    }
+
+    unarchiveCourse() {
+        this.course.disassociateMaterials([this.currentCourse]).then(res => {
+            this.currentCourse.is_archived('f');
+            this.pcrud.update(this.currentCourse).subscribe(val => {
+                this.courseIsArchived = 'f';
+                console.debug('archived: ' + val);
+                this.course.removeNonPublicUsers(this.currentCourse.id());
+                this.unarchiveSuccessString.current()
+                    .then(str => this.toast.success(str));
+            }, (err: unknown) => {
+                this.unarchiveFailedString.current()
                     .then(str => this.toast.danger(str));
             });
         });

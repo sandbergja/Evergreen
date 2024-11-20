@@ -1,3 +1,4 @@
+/* eslint-disable no-shadow */
 import {OrgService} from '@eg/core/org.service';
 import {IdlObject} from '@eg/core/idl.service';
 import {Pager} from '@eg/share/util/pager';
@@ -191,13 +192,21 @@ export class CatalogTermContext {
     joinOp: string[];
     matchOp: string[];
     format: string;
-    available = false;
+    locationGroupOrLasso = '';
+    lasso: string;
+
+    // Need this to start as unitialized so catalog service knows whether to apply the defaults over it
+    available : boolean;
+    defaultAvailable = false;
+    onReserveFilter = false;
+    onReserveFilterNegated = false;
     ccvmFilters: {[ccvmCode: string]: string[]};
     facetFilters: FacetFilter[];
     copyLocations: string[]; // ID's, but treated as strings in the UI.
 
     // True when searching for metarecords
     groupByMetarecord: boolean;
+    defaultGroupByMetarecord : boolean;
 
     // Filter results by records which link to this metarecord ID.
     fromMetarecord: number;
@@ -337,6 +346,7 @@ export class CatalogSearchContext {
 
     // Attributes that are used across different contexts.
     sort: string;
+    defaultSort: string;
     isStaff: boolean;
     showBasket: boolean;
     searchOrg: IdlObject;
@@ -417,7 +427,7 @@ export class CatalogSearchContext {
      */
     reset(): void {
         this.pager.offset = 0;
-        this.sort = '';
+        this.sort = '' || this.defaultSort;
         this.showBasket = false;
         this.result = new CatalogSearchResults();
         this.resultIds = [];
@@ -561,7 +571,7 @@ export class CatalogSearchContext {
     }
 
     stripAnchors(query: string): string {
-        return query.replace(/[\^\$]/g, '');
+        return query.replace(/[\^$]/g, '');
     }
 
     addQuotes(query: string): string {
@@ -577,6 +587,14 @@ export class CatalogSearchContext {
 
         if (ts.available) {
             str += '#available';
+        }
+
+        if (ts.onReserveFilter) {
+            str += ' ';
+            if (ts.onReserveFilterNegated) {
+                str += '-';
+            }
+            str += 'on_reserve(' + this.searchOrg.id() + ')';
         }
 
         if (ts.excludeElectronic) {
@@ -607,6 +625,8 @@ export class CatalogSearchContext {
                     }
             }
         }
+
+        str = str.trimStart();
 
         // -------
         // Compile boolean sub-query components
@@ -660,7 +680,11 @@ export class CatalogSearchContext {
             str += ' locations(' + ts.copyLocations + ')';
         }
 
-        str += ' site(' + this.searchOrg.shortname() + ')';
+        if (ts.locationGroupOrLasso !== '') {
+            str += ' ' + ts.locationGroupOrLasso;
+        } else {
+            str += ' site(' + this.searchOrg.shortname() + ')';
+        }
 
         Object.keys(ts.ccvmFilters).forEach(field => {
             if (ts.ccvmFilters[field][0] !== '') {

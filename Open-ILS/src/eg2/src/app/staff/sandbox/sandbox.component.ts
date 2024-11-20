@@ -1,5 +1,6 @@
+/* eslint-disable no-magic-numbers */
 
-import {timer as observableTimer, Observable, of} from 'rxjs';
+import {timer as observableTimer, Observable} from 'rxjs';
 import {Component, OnInit, ViewChild, Input, TemplateRef} from '@angular/core';
 import {ProgressDialogComponent} from '@eg/share/dialog/progress.component';
 import {ToastService} from '@eg/share/toast/toast.service';
@@ -17,18 +18,20 @@ import {FmRecordEditorComponent} from '@eg/share/fm-editor/fm-editor.component';
 import {NgbDate} from '@ng-bootstrap/ng-bootstrap';
 import {FormGroup, FormControl} from '@angular/forms';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
+import {PatronNoteDialogComponent} from '@eg/staff/share/patron/note-dialog.component';
 import {FormatService} from '@eg/core/format.service';
 import {StringComponent} from '@eg/share/string/string.component';
 import {GridComponent} from '@eg/share/grid/grid.component';
 import * as Moment from 'moment-timezone';
 import {SampleDataService} from '@eg/share/util/sample-data.service';
 import {HtmlToTxtService} from '@eg/share/util/htmltotxt.service';
+import {Z3950SearchComponent} from '@eg/staff/share/z3950-search/z3950-search.component';
 
 @Component({
-  templateUrl: 'sandbox.component.html',
-  styles: ['.date-time-input.ng-invalid {border: 5px purple solid;}',
-    '.date-time-input.ng-valid {border: 5px green solid; animation: slide 5s linear 1s infinite alternate;}',
-    '@keyframes slide {0% {margin-left:0px;} 50% {margin-left:200px;}}']
+    templateUrl: 'sandbox.component.html',
+    styles: ['.date-time-input.ng-invalid {border: 5px purple solid;}',
+        '.date-time-input.ng-valid {border: 5px green solid; animation: slide 5s linear 1s infinite alternate;}',
+        '@keyframes slide {0% {margin-left:0px;} 50% {margin-left:200px;}}']
 })
 export class SandboxComponent implements OnInit {
 
@@ -52,7 +55,7 @@ export class SandboxComponent implements OnInit {
     @ViewChild('bresvEditor', { static: true })
     private bresvEditor: FmRecordEditorComponent;
 
-    @ViewChild('penaltyDialog', {static: false}) penaltyDialog;
+    @ViewChild('noteDialog', {static: false}) noteDialog: PatronNoteDialogComponent;
 
 
     // @ViewChild('helloStr') private helloStr: StringComponent;
@@ -117,6 +120,9 @@ export class SandboxComponent implements OnInit {
     aLocation: IdlObject; // acpl
     orgClassCallback: (orgId: number) => string;
 
+    circDaily: IdlObject;
+    circHourly: IdlObject;
+
     constructor(
         private idl: IdlService,
         private org: OrgService,
@@ -149,7 +155,7 @@ export class SandboxComponent implements OnInit {
                     } else {
                         return null;
                     }
-            } )
+                } )
         });
 
         this.ranganathan = new FormGroup({
@@ -157,9 +163,9 @@ export class SandboxComponent implements OnInit {
                 // An Angular custom validator
                 if ('wrong' === c.value.id || c.value.freetext) {
                     return { notALaw: 'That\'s not a real law of library science!' };
-                    } else {
-                        return null;
-                    }
+                } else {
+                    return null;
+                }
             } )
         });
 
@@ -180,10 +186,10 @@ export class SandboxComponent implements OnInit {
         ];
 
         this.pcrud.retrieveAll('cmrcfld', {order_by: {cmrcfld: 'name'}})
-        .subscribe(format => {
-            if (!this.cbEntries) { this.cbEntries = []; }
-            this.cbEntries.push({id: format.id(), label: format.name()});
-        });
+            .subscribe(format => {
+                if (!this.cbEntries) { this.cbEntries = []; }
+                this.cbEntries.push({id: format.id(), label: format.name()});
+            });
 
         this.cbAsyncSource = term => {
             return this.pcrud.search(
@@ -243,12 +249,12 @@ export class SandboxComponent implements OnInit {
             });
             return this.pcrud.search('acp',
                 query, {
-                flesh: 1,
-                flesh_fields: {acp: ['location', 'status', 'creator', 'editor']},
-                offset: pager.offset,
-                limit: pager.limit,
-                order_by: orderBy
-            });
+                    flesh: 1,
+                    flesh_fields: {acp: ['location', 'status', 'creator', 'editor']},
+                    offset: pager.offset,
+                    limit: pager.limit,
+                    order_by: orderBy
+                });
         };
 
         this.eventsDataSource.getRows = (pager: Pager, sort: any[]) => {
@@ -300,15 +306,15 @@ export class SandboxComponent implements OnInit {
         this.notOneSelectedRow = (rows: IdlObject[]) => (rows.length !== 1);
 
         this.pcrud.retrieve('bre', 1, {}, {fleshSelectors: true})
-        .subscribe(bib => {
+            .subscribe(bib => {
             // Format service will automatically find the selector
             // value to display from our fleshed metarecord field.
-            this.aMetarecord = this.format.transform({
-                value: bib.metarecord(),
-                idlClass: 'bre',
-                idlField: 'metarecord'
+                this.aMetarecord = this.format.transform({
+                    value: bib.metarecord(),
+                    idlClass: 'bre',
+                    idlField: 'metarecord'
+                });
             });
-        });
 
         const b = this.idl.create('bresv');
         b.cancel_time('2019-03-25T11:07:59-0400');
@@ -320,19 +326,31 @@ export class SandboxComponent implements OnInit {
                 // An Angular custom validator
                 if (c.value.year() < 2019) {
                     return { tooLongAgo: 'That\'s before 2019' };
-                    } else {
-                        return null;
-                    }
+                } else {
+                    return null;
+                }
             } )
         });
 
         const str = 'C&#xe9;sar&nbsp;&amp;&nbsp;Me';
         console.log(this.h2txt.htmlToTxt(str));
+
+        const org =
+            this.org.list().filter(o => o.ou_type().can_have_vols() === 't')[0];
+        this.circDaily = this.idl.create('circ');
+        this.circDaily.duration('1 day');
+        this.circDaily.due_date(new Date().toISOString());
+        this.circDaily.circ_lib(org.id());
+
+        this.circHourly = this.idl.create('circ');
+        this.circHourly.duration('1 hour');
+        this.circHourly.due_date(new Date().toISOString());
+        this.circHourly.circ_lib(org.id());
     }
 
     sbChannelHandler = msg => {
         setTimeout(() => { this.sbChannelText = msg.data.msg; });
-    }
+    };
 
     sendMessage($event) {
         this.sbChannel.postMessage({msg : $event.target.value});
@@ -346,7 +364,7 @@ export class SandboxComponent implements OnInit {
     openEditor() {
         this.fmRecordEditor.open({size: 'lg'}).subscribe(
             pcrudResult => console.debug('Record editor performed action'),
-            err => console.error(err),
+            (err: unknown) => console.error(err),
             () => console.debug('Dialog closed')
         );
     }
@@ -414,7 +432,7 @@ export class SandboxComponent implements OnInit {
             take(11)
         ).subscribe(
             val => this.progressDialog.update({value: val, max: 100}),
-            err => {},
+            (err: unknown) => {},
             ()  => this.progressDialog.close()
         );
     }
@@ -435,9 +453,9 @@ export class SandboxComponent implements OnInit {
     }
 
     confirmNumber(num: number): void {
-      this.numThings = num;
-      console.log(this.numThings);
-      this.numConfirmDialog.open();
+        this.numThings = num;
+        console.log(this.numThings);
+        this.numConfirmDialog.open();
     }
 
     showEditDialog(idlThing: IdlObject): Promise<any> {
@@ -451,7 +469,7 @@ export class SandboxComponent implements OnInit {
                     this.acpGrid.reloadWithoutPagerReset();
                     resolve(ok);
                 },
-                rejection => {
+                (rejection: unknown) => {
                     this.updateFailedString.current()
                         .then(str => this.toast.danger(str));
                     reject(rejection);
@@ -488,9 +506,9 @@ export class SandboxComponent implements OnInit {
         });
     }
 
-    openPenalty() {
-        this.penaltyDialog.open()
-        .subscribe(val => console.log('penalty value', val));
+    openNote() {
+        this.noteDialog.open()
+            .subscribe(val => console.log('note value', val));
     }
 }
 

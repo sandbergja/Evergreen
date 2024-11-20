@@ -1,10 +1,9 @@
+/* eslint-disable */
 import {Component, OnInit, Input, ViewChild,
     Output, EventEmitter, TemplateRef} from '@angular/core';
 import {NgForm} from '@angular/forms';
 import {IdlService, IdlObject} from '@eg/core/idl.service';
 import {Observable} from 'rxjs';
-import {map} from 'rxjs/operators';
-import {AuthService} from '@eg/core/auth.service';
 import {PcrudService} from '@eg/core/pcrud.service';
 import {OrgService} from '@eg/core/org.service';
 import {DialogComponent} from '@eg/share/dialog/dialog.component';
@@ -16,6 +15,7 @@ import {FormatService} from '@eg/core/format.service';
 import {TranslateComponent} from '@eg/share/translate/translate.component';
 import {FmRecordEditorActionComponent} from './fm-editor-action.component';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
+import {BooleanSelectComponent} from '@eg/share/boolean-select/boolean-select.component';
 import {Directive, HostBinding} from '@angular/core';
 import {AbstractControl, NG_VALIDATORS, ValidationErrors, Validator, Validators} from '@angular/forms';
 
@@ -84,6 +84,12 @@ export interface FmFieldOptions {
     // from the default set of form inputs.
     customTemplate?: CustomFieldTemplate;
 
+    // Follow the normal field rendering with this custom template
+    appendTemplate?: CustomFieldTemplate;
+
+    // Use this persistKey if the field is an org field
+    persistKey?: StringComponent;
+
     // help text to display via a popover
     helpText?: StringComponent;
 
@@ -93,10 +99,9 @@ export interface FmFieldOptions {
 }
 
 @Component({
-  selector: 'eg-fm-record-editor',
-  templateUrl: './fm-editor.component.html',
-  /* align checkboxes when not using class="form-check" */
-  styles: ['input[type="checkbox"] {margin-left: 0px;}']
+    selector: 'eg-fm-record-editor',
+    templateUrl: './fm-editor.component.html',
+    styleUrls: ['fm-editor.component.css']
 })
 export class FmRecordEditorComponent
     extends DialogComponent implements OnInit {
@@ -154,8 +159,20 @@ export class FmRecordEditorComponent
     // for displayMode === 'inline'
     @Input() hideBanner: boolean;
 
+    // In case you want to put your Save action outside of the editor
+    @Input() hideSave: boolean;
+
     // do not close dialog on error saving record
-    @Input() remainOpenOnError: false;
+    @Input() remainOpenOnError = false;
+
+    // Avoid making any pcrud calls.  Instead return the modified object
+    // to the caller via recordSaved Output and dialog close().
+    @Input() inPlaceMode = false;
+
+    // if date fields need to be in a specific order (e.g.
+    // start date before end date), specify them in a comma-
+    // separated list here.
+    @Input() dateFieldOrderList: '';
 
     // Emit the modified object when the save action completes.
     @Output() recordSaved = new EventEmitter<IdlObject>();
@@ -195,7 +212,7 @@ export class FmRecordEditorComponent
 
     // custom function for munging the record before it gets saved;
     // will get passed mode and the record itself
-    @Input() preSave: Function;
+    @Input() preSave: (mode: string, recToSave: IdlObject) => void;
 
     // recordId and record getters and setters.
     // Note that setting the this.recordId to NULL does not clear the
@@ -254,12 +271,11 @@ export class FmRecordEditorComponent
     constructor(
       private modal: NgbModal, // required for passing to parent
       private idl: IdlService,
-      private auth: AuthService,
       private toast: ToastService,
       private format: FormatService,
       private org: OrgService,
       private pcrud: PcrudService) {
-      super(modal);
+        super(modal);
     }
 
     // Avoid fetching data on init since that may lead to unnecessary
@@ -271,9 +287,10 @@ export class FmRecordEditorComponent
 
         this.listifyInputs();
         this.idlDef = this.idl.classes[this.idlClass];
-        this.recordLabel = this.idlDef.label;
+        this.recordLabel = this.recordLabel || this.idlDef.label;
 
         // Add some randomness to the generated DOM IDs to ensure against clobbering
+        // eslint-disable-next-line no-magic-numbers
         this.idPrefix = 'fm-editor-' + Math.floor(Math.random() * 100000);
 
         if (this.isDialog()) {
@@ -421,9 +438,10 @@ export class FmRecordEditorComponent
             if (field.datatype === 'bool') {
                 if (rec[field.name]() === true) {
                     rec[field.name]('t');
-                // } else if (rec[field.name]() === false) {
-                } else { // TODO: some bools can be NULL
+                } else if (rec[field.name]() === false) {
                     rec[field.name]('f');
+                } else {
+                    rec[field.name](null);
                 }
             } else if (field.datatype === 'org_unit') {
                 const org = rec[field.name]();
@@ -455,13 +473,14 @@ export class FmRecordEditorComponent
         switch (field.class) {
             case 'acmc':
                 return fm.course_number() + ': ' + fm.name();
-                break;
             case 'acqf':
                 return fm.code() + ' (' + fm.year() + ')'
                        + ' (' + this.getOrgShortname(fm.org()) + ')';
-                break;
             case 'acpl':
                 return fm.name() + ' (' + this.getOrgShortname(fm.owning_lib()) + ')';
+                break;
+            case 'acqpro':
+                return fm.name() + ' (' + this.getOrgShortname(fm.owner()) + ')';
                 break;
             default:
                 // no equivalent of idlIncludeLibraryInLabel yet
@@ -518,6 +537,11 @@ export class FmRecordEditorComponent
             };
         }
 
+        if (fieldOptions.appendTemplate) {
+            field.append_template = fieldOptions.appendTemplate.template;
+            field.append_context = fieldOptions.appendTemplate.context;
+        }
+
         if (fieldOptions.customTemplate) {
             field.template = fieldOptions.customTemplate.template;
             field.context = fieldOptions.customTemplate.context;
@@ -564,6 +588,9 @@ export class FmRecordEditorComponent
         } else if (field.datatype === 'org_unit') {
             field.orgDefaultAllowed =
                 this.orgDefaultAllowedList.includes(field.name);
+            if (fieldOptions.persistKey) {
+                field.persistKey = fieldOptions.persistKey;
+            }
         }
 
         if (fieldOptions.helpText) {
@@ -590,6 +617,13 @@ export class FmRecordEditorComponent
             },  fieldDef.context || {}
         );
     }
+    appendTemplateFieldContext(fieldDef: any): CustomFieldContext {
+        return Object.assign(
+            {   record : this.record,
+                field: fieldDef // from this.fields
+            },  fieldDef.append_context || {}
+        );
+    }
 
     save() {
         const recToSave = this.idl.clone(this.record);
@@ -597,6 +631,19 @@ export class FmRecordEditorComponent
             this.preSave(this.mode, recToSave);
         }
         this.convertDatatypesToIdl(recToSave);
+
+        if (this.inPlaceMode) {
+            this.recordSaved.emit(recToSave);
+            if (this.fmEditForm) {
+                this.fmEditForm.form.markAsPristine();
+            }
+            if (this.isDialog()) {
+                this.record = undefined;
+                this.close(recToSave);
+            }
+            return;
+        }
+
         this.pcrud[this.mode]([recToSave]).toPromise().then(
             result => {
                 this.recordSaved.emit(result);
@@ -658,6 +705,10 @@ export class FmRecordEditorComponent
             return 'timestamp-timepicker';
         }
 
+        if (this.idlDef.pkey === field.name && !this.pkeyIsEditable) {
+            return 'readonly';
+        }
+
         // Some widgets handle readOnly for us.
         if (   field.datatype === 'timestamp'
             || field.datatype === 'org_unit'
@@ -714,6 +765,23 @@ export class FmRecordEditorComponent
                 }
             }
         );
+    }
+
+    isSafeToNull(field) {
+        if (field.datatype == 'id') {
+            return false;
+        }
+        if (field.readOnly) {
+            return false;
+        }
+        if (field.isRequired()) {
+            return false;
+        }
+        return true;
+    }
+
+    setToNull(field) {
+        this.record[field.name](null);
     }
 }
 

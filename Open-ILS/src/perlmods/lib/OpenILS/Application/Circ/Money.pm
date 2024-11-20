@@ -23,6 +23,7 @@ my $U = "OpenILS::Application::AppUtils";
 my $CC = "OpenILS::Application::Circ::CircCommon";
 
 use OpenSRF::EX qw(:try);
+use OpenSRF::Utils::JSON;
 use OpenILS::Perm;
 use Data::Dumper;
 use OpenILS::Event;
@@ -35,6 +36,9 @@ use OpenILS::Const qw/:const/;
 use OpenILS::Utils::DateTime qw/:datetime/;
 use DateTime::Format::ISO8601;
 my $parser = DateTime::Format::ISO8601->new;
+
+my $cache;
+my $cache_timeout;
 
 sub get_processor_settings {
     my $e = shift;
@@ -100,6 +104,7 @@ sub process_stripe_or_bop_payment {
         unless $psettings->{enabled};
 
     # Now we branch. Stripe is one thing, and everything else is another.
+    # TODO: rename/refactor these methods, we're layering in Smartpay as well
 
     if ($cc_args->{processor} eq 'Stripe') { # Stripe
         my $stripe = Business::Stripe->new(-api_key => $psettings->{secretkey});
@@ -136,6 +141,54 @@ sub process_stripe_or_bop_payment {
             );
         }
 
+    } elsif ($cc_args->{processor} eq 'SmartPAY') { # SmartPAY
+        my $smartpay_secret = $cc_args->{smartpay_secret};
+        my $smartpay_session = $cc_args->{smartpay_session};
+        if ($smartpay_secret =~ /^smartpay/) {
+            my $cache = OpenSRF::Utils::Cache->new('global');
+            my $secret_data = $cache->get_cache( $smartpay_secret );
+            $logger->debug("SmartPAY secret_data: " . Dumper($secret_data));
+            my $sessionA = $secret_data->{session_key};
+            my $sessionB = $smartpay_session;
+            if ($sessionA =~ /([A-Za-z0-9]+)/) {
+                $sessionA = $1;
+            }
+            if ($sessionB =~ /([A-Za-z0-9]+)/) {
+                $sessionB = $1;
+            }
+            if ($sessionA ne $sessionB) {
+                $logger->info("SmartPAY payment failed: session_key mismatch: <$sessionA> vs <$sessionB>");
+                return OpenILS::Event->new(
+                    'CREDIT_PROCESSOR_DECLINED_TRANSACTION',
+                    payload => { 'result' => 'session_key mismatch' }
+                );
+            }
+            if ($cc_args->{smartpay_result} == 1) {
+                $logger->info('SmartPAY payment succeeded');
+                return OpenILS::Event->new(
+                    'SUCCESS', payload => {
+                        invoice => 'N/A',
+                        customer => 'N/A',
+                        balance_transaction => 'N/A',
+                        id => 'N/A',
+                        created => 'N/A',
+                        card => 'N/A'
+                    }
+                );
+            } else {
+                $logger->info('SmartPAY payment failed: ' . $cc_args->{smartpay_result});
+                return OpenILS::Event->new(
+                    'CREDIT_PROCESSOR_DECLINED_TRANSACTION',
+                    payload => { 'result' => $cc_args->{Result} }
+                );
+            }
+        } else {
+            $logger->info('SmartPAY payment failed: secret key malformed');
+            return OpenILS::Event->new(
+                'CREDIT_PROCESSOR_DECLINED_TRANSACTION',
+                payload => { 'result' => 'secret key malformed' }
+            );
+        }
     } else { # B::OP style (Paypal/PayflowPro/AuthorizeNet)
         return OpenILS::Event->new('BAD_PARAMS', note => 'Need CC number')
             unless $cc_args->{number};
@@ -285,9 +338,13 @@ sub make_payments {
 
     my $patron = $e->retrieve_actor_user($user_id) or return $e->die_event;
 
+    # If a Stripe payment intent gets here, it has succeeded and the patron's cc has been charged
+    # Apply the payment regardless of differing last_xact_id (lp2077343)
     if($patron->last_xact_id ne $last_xact_id) {
-        $e->rollback;
-        return OpenILS::Event->new('INVALID_USER_XACT_ID');
+	if (!exists $cc_args->{stripe_payment_intent}) {
+            $e->rollback;
+            return OpenILS::Event->new('INVALID_USER_XACT_ID');
+        }
     }
 
     # A user is allowed to make credit card payments on his/her own behalf
@@ -1361,8 +1418,44 @@ sub retrieve_statement {
         $line->{note} = $line->{note} ? [split(/\n/, $line->{note})] : [];
     }
 
+    my $xact = $e->retrieve_money_billable_transaction([
+        $xact_id, {
+            flesh => 5,
+            flesh_fields => {
+                mbt =>  [qw/circulation grocery/],
+                circ => [qw/target_copy/],
+                acp =>  [qw/call_number location status age_protect total_circ_count/],
+                acn =>  [qw/record prefix suffix/],
+                bre =>  [qw/wide_display_entry/]
+            },
+            select => {bre => ['id']} 
+        }
+    ]);
+
+    my $title;
+    my $billing_location;
+    my $title_id;
+    if ($xact->circulation) {
+        $billing_location = $xact->circulation->circ_lib;
+        my $copy = $xact->circulation->target_copy;
+        if ($copy->call_number->id == -1) {
+            $title = $copy->dummy_title;
+        } else {
+            $title_id = $copy->call_number->record->id;
+            $title = OpenSRF::Utils::JSON->JSON2perl(
+                $copy->call_number->record->wide_display_entry->title);
+        }
+    } else {
+        $billing_location = $xact->grocery->billing_location;
+        $title = $xact->grocery->note;
+    }
+
     return {
         xact_id => $xact_id,
+        xact => $xact,
+        title => $title,
+        title_id => $title_id,
+        billing_location => $billing_location,
         summary => {
             balance_due => $totals{billing} - ($totals{payment} + $totals{account_adjustment} + $totals{void}),
             billing_total => $totals{billing},

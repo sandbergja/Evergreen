@@ -55,6 +55,7 @@ export interface HoldRequestTarget {
     copy?: IdlObject;
     issuance?: IdlObject;
     metarecord_filters?: any;
+    part_required?: boolean;
 }
 
 /** Service for performing various hold-related actions */
@@ -135,10 +136,10 @@ export class HoldsService {
             target.callNum = meta.volume; // map to client terminology
 
             return this.bib.getBibSummary(target.bibId)
-            .pipe(map(sum => {
-                target.bibSummary = sum;
-                return target;
-            }));
+                .pipe(map(sum => {
+                    target.bibSummary = sum;
+                    return target;
+                }));
         }));
     }
 

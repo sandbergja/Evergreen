@@ -1,5 +1,5 @@
 import {Component, OnInit, Input, ViewChild} from '@angular/core';
-import {Observable, throwError, from, empty} from 'rxjs';
+import {Observable, throwError, from, EMPTY} from 'rxjs';
 import {tap, map, switchMap} from 'rxjs/operators';
 import {NetService} from '@eg/core/net.service';
 import {IdlService, IdlObject} from '@eg/core/idl.service';
@@ -23,8 +23,8 @@ export interface CopyTagChanges {
 }
 
 @Component({
-  selector: 'eg-copy-tags-dialog',
-  templateUrl: 'copy-tags-dialog.component.html'
+    selector: 'eg-copy-tags-dialog',
+    templateUrl: 'copy-tags-dialog.component.html'
 })
 
 export class CopyTagsDialogComponent
@@ -73,8 +73,8 @@ export class CopyTagsDialogComponent
 
     ngOnInit() {
 
-       this.tagDataSource = term => {
-            if (!this.curTagType) { return empty(); }
+        this.tagDataSource = term => {
+            if (!this.curTagType) { return EMPTY; }
 
             return this.pcrud.search(
                 'acpt', {
@@ -82,7 +82,8 @@ export class CopyTagsDialogComponent
                     '-or': [
                         {value: {'ilike': `%${term}%`}},
                         {label: {'ilike': `%${term}%`}}
-                    ]
+                    ],
+                    owner: this.org.ancestors(this.auth.user().ws_ou(), true)
                 },
                 {order_by: {acpt: 'label'}}
             ).pipe(map(copyTag => {
@@ -139,12 +140,12 @@ export class CopyTagsDialogComponent
                 acp: ['tags'], acptcm: ['tag'], acpt: ['tag_type']}},
             {atomic: true}
         )
-        .toPromise().then(copies => {
-            this.copies = copies;
-            if (copies.length === 1) {
-                this.copy = copies[0];
-            }
-        });
+            .toPromise().then(copies => {
+                this.copies = copies;
+                if (copies.length === 1) {
+                    this.copy = copies[0];
+                }
+            });
     }
 
     removeTag(tag: IdlObject) {

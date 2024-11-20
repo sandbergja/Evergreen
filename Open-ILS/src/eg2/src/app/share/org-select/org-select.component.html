@@ -9,16 +9,19 @@
 </ng-container>
 
 <ng-container *ngIf="!readOnly">
-
   <input type="text" 
     class="form-control"
-    [attr.id]="domId.length ? domId : null"
+    id="{{domId}}"
+    [name]="name"
+    [attr.aria-label]="ariaLabel"
     [placeholder]="placeholder"
     [disabled]="disabled"
+    [required]="required"
     [(ngModel)]="selected" 
     [ngbTypeahead]="filter"
     [resultTemplate]="displayTemplate"
     [inputFormatter]="formatter"
+    (blur)="handleBlur()"
     (click)="click$.next($event.target.value)"
     (selectItem)="orgChanged($event)"
     container="body"

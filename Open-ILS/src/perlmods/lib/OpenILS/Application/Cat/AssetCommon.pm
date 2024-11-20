@@ -13,7 +13,6 @@ use OpenILS::Utils::Penalty;
 use OpenILS::Application::Circ::CircCommon;
 my $U = 'OpenILS::Application::AppUtils';
 
-
 # ---------------------------------------------------------------------------
 # Shared copy mangling code.  Do not publish methods from here.
 # ---------------------------------------------------------------------------
@@ -49,6 +48,9 @@ sub fix_copy_price {
 
 sub create_copy {
     my($class, $editor, $vol, $copy) = @_;
+
+    return $editor->event unless
+        $editor->allowed('CREATE_COPY', $class->copy_perm_org($vol, $copy));
 
     my $existing = $editor->search_asset_copy(
         { barcode => $copy->barcode, deleted => 'f' } );
@@ -204,6 +206,8 @@ sub update_copy_parts {
             my $new_part = Fieldmapper::biblio::monograph_part->new();
             $new_part->record( $incoming_part->record );
             $new_part->label( $incoming_part->label );
+            $new_part->creator($incoming_part->creator);
+            $new_part->editor($incoming_part->editor);
             $incoming_part = $editor->create_biblio_monograph_part($new_part)
                 or return $editor->event;
         }
@@ -403,33 +407,55 @@ sub check_hold_retarget {
     push(@$retarget_holds, @$hold_ids);
 }
 
+# TODO: get Booking.pm to use this shared method
+sub fetch_copies_by_ids {
+    my ($class, $e, $copy_ids) = @_;
+    my $results = $e->search_asset_copy([
+        {id => $copy_ids},
+        {flesh => 1, flesh_fields => {acp => ['call_number']}}
+    ]);
+    return $results if ref($results) eq 'ARRAY';
+    return [];
+}
 
 # this does the actual work
 sub update_fleshed_copies {
     my($class, $editor, $override, $vol, $copies, $delete_stats, $retarget_holds, $force_delete_empty_bib, $create_parts) = @_;
-
+    
     $override = { all => 1 } if($override && !ref $override);
     $override = { all => 0 } if(!ref $override);
 
     my $evt;
-    my $fetchvol = ($vol) ? 0 : 1;
 
     my %cache;
     $cache{$vol->id} = $vol if $vol;
 
-    for my $copy (@$copies) {
+    sub process_copy {
+        my ($original_copy, $cache_ref, $editor, $class, $logger) = @_;
 
-        my $copyid = $copy->id;
+        my $copyid = $original_copy->id;
         $logger->info("vol-update: inspecting copy $copyid");
 
-        if( !($vol = $cache{$copy->call_number}) ) {
-            $vol = $cache{$copy->call_number} = 
-                $editor->retrieve_asset_call_number($copy->call_number);
-            return $editor->event unless $vol;
+        my $vol = $cache_ref->{$original_copy->call_number};
+        if (!defined $vol) {
+            $vol = $editor->retrieve_asset_call_number($original_copy->call_number);
+            return (undef, $editor->event) unless defined $vol;
+            $cache_ref->{$original_copy->call_number} = $vol;
         }
+        return (undef, $editor->event) unless $editor->allowed('UPDATE_COPY', $class->copy_perm_org($vol, $original_copy));
 
-        return $editor->event unless 
-            $editor->allowed('UPDATE_COPY', $class->copy_perm_org($vol, $copy));
+        return ($vol, undef); # return vol and undef if all checks pass
+    }
+
+    my $original_copies = $class->fetch_copies_by_ids( $editor, map { $_->id } @$copies );
+    for my $original_copy (@$original_copies) {
+        my ($vol, $event) = process_copy($original_copy, \%cache, $editor, $class, $logger);
+        return $event if $event;
+    }
+
+    for my $copy (@$copies) {
+        my ($vol, $event) = process_copy($copy, \%cache, $editor, $class, $logger);
+        return $event if $event;
 
         $copy->editor($editor->requestor->id);
         $copy->edit_date('now');
@@ -469,6 +495,32 @@ sub update_fleshed_copies {
 
         $copy->stat_cat_entries( $sc_entries );
         $evt = $class->update_copy_stat_entries($editor, $copy, $delete_stats);
+
+
+        # Have to watch out for multiple items creating the same new part or the whole update will fail
+        # This volume isn't necessarily the only volume with the same new part in this batch, so we have to check against the actual database.
+        # Grab all the parts on the same record and then check the potentially new part against them all.
+        my $preexisting_parts = $editor->search_biblio_monograph_part({
+            record => $vol->record,
+            label => (map { $_->label } @$parts),
+            deleted => 'f'
+        });
+
+        for my $part (@$parts) {
+            next unless $part->isnew;
+
+            # Second check in case we hit a part matching a different part in this batch
+            my @existing = grep { $_->label eq $part->label && $_->record == $part->record } @$preexisting_parts;
+            if (@existing) {
+                # We've created this part previously, don't want to do that again.
+                my $oldnewthing = $existing[0];
+                if ($oldnewthing->id) {
+                    $part->id($oldnewthing->id);
+                    $part->isnew(0);
+                    $part->ischanged(0);
+                }
+            }
+        }
 
         $copy->parts( $parts );
         # probably okay to use $delete_stats here for simplicity
@@ -575,6 +627,10 @@ sub cancel_hold_list {
         $hold->cancel_cause(1); # un-targeted expiration.  Do we need an alternate "target deleted" cause?
         $editor->update_action_hold_request($hold) or return $editor->die_event;
 
+        # Update our copy of the hold to pick up the cancel_time
+        # before we pass it off to A/T.
+        $hold = $editor->retrieve_action_hold_request($hold->id);
+
         # tell A/T the hold was cancelled.  Don't wait for a response..
         my $at_ses = OpenSRF::AppSession->create('open-ils.trigger');
         $at_ses->request(
@@ -586,7 +642,12 @@ sub cancel_hold_list {
     return undef;
 }
 
-
+sub test_perm_against_original_owning_lib {
+    my($class, $editor, $perm, $vid) = @_;
+    my $vol = $editor->retrieve_asset_call_number($vid) or return $editor->event;
+    return $editor->die_event unless $editor->allowed($perm, $vol->owning_lib);
+    return 1;
+}
 
 sub create_volume {
     my($class, $override, $editor, $vol) = @_;
@@ -618,10 +679,12 @@ sub create_volume {
     );
 
     my $label = undef;
+    my $labelexists = undef;
     if(@$vols) {
       # we've found an exising volume
         if($override->{all} || grep { $_ eq 'VOLUME_LABEL_EXISTS' } @{$override->{events}}) {
             $label = $vol->label;
+            $labelexists = 1;
         } else {
             return (
                 undef, 
@@ -632,7 +695,7 @@ sub create_volume {
 
     # create a temp label so we can create the new volume, 
     # then de-dup it with the existing volume
-    $vol->label( "__SYSTEM_TMP_$$".time) if $label;
+    $vol->label( "__SYSTEM_TMP_$$".time) if $labelexists;
 
     $vol->creator($editor->requestor->id);
     $vol->create_date('now');
@@ -642,7 +705,7 @@ sub create_volume {
 
     $editor->create_asset_call_number($vol) or return (undef, $editor->die_event);
 
-    if($label) {
+    if($labelexists) {
         # now restore the label and merge into the existing record
         $vol->label($label);
         return OpenILS::Application::Cat::Merge::merge_volumes($editor, [$vol], $$vols[0]);
@@ -680,7 +743,7 @@ sub find_or_create_volume {
     # -----------------------------------------------------------------
     # Otherwise, create a new volume with the given attributes
     # -----------------------------------------------------------------
-    return (undef, $e->die_event) unless $e->allowed('UPDATE_VOLUME', $org_id);
+    return (undef, $e->die_event) unless $e->allowed('CREATE_VOLUME', $org_id);
 
     $vol = Fieldmapper::asset::call_number->new;
     $vol->owning_lib($org_id);

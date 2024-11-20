@@ -1,4 +1,4 @@
-import {Component, OnInit, Input, ViewChild} from '@angular/core';
+import {Component, Input, ViewChild} from '@angular/core';
 import {Observable, throwError, from} from 'rxjs';
 import {switchMap} from 'rxjs/operators';
 import {NetService} from '@eg/core/net.service';
@@ -13,20 +13,25 @@ import {DialogComponent} from '@eg/share/dialog/dialog.component';
 import {NgbModal, NgbModalOptions} from '@ng-bootstrap/ng-bootstrap';
 import {BibRecordService, BibRecordSummary} from '@eg/share/catalog/bib-record.service';
 import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
+import {BillingService} from '@eg/staff/share/billing/billing.service';
 
 /**
  * Dialog for marking items damaged and asessing related bills.
  */
 
 @Component({
-  selector: 'eg-mark-damaged-dialog',
-  templateUrl: 'mark-damaged-dialog.component.html'
+    selector: 'eg-mark-damaged-dialog',
+    templateUrl: 'mark-damaged-dialog.component.html'
 })
 
 export class MarkDamagedDialogComponent
-    extends DialogComponent implements OnInit {
+    extends DialogComponent {
 
     @Input() copyId: number;
+
+    // If the item is checked out, ask the API to check it in first.
+    @Input() handleCheckin = false;
+
     copy: IdlObject;
     bibSummary: BibRecordSummary;
     billingTypes: ComboboxEntry[];
@@ -51,13 +56,11 @@ export class MarkDamagedDialogComponent
         private evt: EventService,
         private pcrud: PcrudService,
         private org: OrgService,
+        private billing: BillingService,
         private bib: BibRecordService,
         private auth: AuthService) {
         super(modal); // required for subclassing
-        this.billingTypes = [];
     }
-
-    ngOnInit() {}
 
     /**
      * Fetch the item/record, then open the dialog.
@@ -82,29 +85,22 @@ export class MarkDamagedDialogComponent
 
     // Fetch-cache billing types
     getBillingTypes(): Promise<any> {
-        if (this.billingTypes.length > 1) {
-            return Promise.resolve();
-        }
-        return this.pcrud.search('cbt',
-            {owner: this.org.fullPath(this.auth.user().ws_ou(), true)},
-            {}, {atomic: true}
-        ).toPromise().then(bts => {
-            this.billingTypes = bts
-                .sort((a, b) => a.name() < b.name() ? -1 : 1)
-                .map(bt => ({id: bt.id(), label: bt.name()}));
+        return this.billing.getUserBillingTypes().then(types => {
+            this.billingTypes =
+                types.map(bt => ({id: bt.id(), label: bt.name()}));
         });
     }
 
     getData(): Promise<any> {
         return this.pcrud.retrieve('acp', this.copyId,
             {flesh: 1, flesh_fields: {acp: ['call_number']}}).toPromise()
-        .then(copy => {
-            this.copy = copy;
-            return this.bib.getBibSummary(
-                copy.call_number().record()).toPromise();
-        }).then(summary => {
+            .then(copy => {
+                this.copy = copy;
+                return this.bib.getBibSummary(
+                    copy.call_number().record()).toPromise();
+            }).then(summary => {
                 this.bibSummary = summary;
-        });
+            });
     }
 
     reset() {
@@ -123,10 +119,14 @@ export class MarkDamagedDialogComponent
     markDamaged(args: any) {
         this.chargeResponse = null;
 
-        if (args && args.apply_fines === 'apply') {
+        if (args.apply_fines === 'apply') {
             args.override_amount = this.newCharge;
             args.override_btype = this.newBtype;
             args.override_note = this.newNote;
+        }
+
+        if (this.handleCheckin) {
+            args.handle_checkin = true;
         }
 
         this.net.request(
@@ -150,7 +150,7 @@ export class MarkDamagedDialogComponent
                     this.newCharge = this.chargeResponse.charge;
                 }
             },
-            err => {
+            (err: unknown) => {
                 this.errorMsg.current().then(m => this.toast.danger(m));
                 console.error(err);
             }

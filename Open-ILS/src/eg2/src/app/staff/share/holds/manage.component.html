@@ -1,5 +1,5 @@
 
-<form #holdManageForm role="form" *ngIf="hold"
+<form #holdManageForm *ngIf="hold"
   class="form-validated common-form striped-odd">
 
   <div class="form-group row d-flex">
@@ -11,11 +11,13 @@
             name="active_pickup_lib" [(ngModel)]="activeFields.pickup_lib"/>
         </div>
       </div>
-      <div class="flex-1"><label i18n>Pickup Library:</label></div>
+      <div class="flex-1"><label for="pickupLibSelect" class="form-label" i18n>Pickup Library:</label></div>
     </div>
     <div class="col-lg-4">
       <!-- TODO: filter orgs as needed -->
-      <eg-org-select [initialOrgId]="hold.pickup_lib()"
+      <eg-org-select 
+        domId="pickupLibSelect"
+        [initialOrgId]="hold.pickup_lib()"
         [disabled]="isBatch() && !activeFields.pickup_lib"
         (onChange)="pickupLibChanged($event)">
       </eg-org-select>
@@ -29,7 +31,7 @@
         </div>
       </div>
       <div class="flex-1">
-        <label i18n>Desired Item Condition:</label>
+        <label for="mint-condition" class="form-label" i18n>Desired Item Condition:</label>
       </div>
     </div>
     <div class="col-lg-4">
@@ -37,9 +39,9 @@
         <input class="form-check-input" type="checkbox" id="mint-condition"
           name="mint" value="mint"
           [disabled]="isBatch() && !activeFields.mint_condition"
-          [ngModel]="hold.mint_condition() == 't'"
+          [ngModel]="hold.mint_condition() === 't'"
           (ngModelChange)="hold.mint_condition($event ? 't' : 'f')">
-        <label class="form-check-label" for="mint-condition">
+        <label class="form-label form-check-label" for="mint-condition">
           Good Condition Only
         </label>
       </div>
@@ -56,7 +58,7 @@
         </div>
       </div>
       <div class="flex-1">
-        <label for="frozen" i18n>Hold is Suspended:</label>
+        <label class="form-label" for="frozen" i18n>Hold is Suspended:</label>
       </div>
     </div>
     <div class="col-lg-4">
@@ -64,7 +66,7 @@
         <input class="form-check-input" type="checkbox"
           id="frozen" name="frozen"
           [disabled]="isBatch() && !activeFields.frozen"
-          [ngModel]="hold.frozen() == 't'"
+          [ngModel]="hold.frozen() === 't'"
           (ngModelChange)="hold.frozen($event ? 't' : 'f')">
       </div>
     </div>
@@ -77,7 +79,7 @@
         </div>
       </div>
       <div class="flex-1">
-        <label for="cut_in_line" i18n>Top of Queue:</label>
+        <label class="form-label" for="cut_in_line" i18n>Top of Queue:</label>
       </div>
     </div>
     <div class="col-lg-4">
@@ -85,7 +87,7 @@
         <input class="form-check-input" type="checkbox"
           id="cut_in_line" name="cut_in_line"
           [disabled]="isBatch() && !activeFields.cut_in_line"
-          [ngModel]="hold.cut_in_line() == 't'"
+          [ngModel]="hold.cut_in_line() === 't'"
           (ngModelChange)="hold.cut_in_line($event ? 't' : 'f')">
       </div>
     </div>
@@ -103,7 +105,7 @@
               name="active_thaw_date" [(ngModel)]="activeFields.thaw_date"/>
           </div>
         </div>
-        <div class="flex-1"><label for="thaw_date" i18n>Activate Date:</label></div>
+        <div class="flex-1"><label class="form-label" for="thaw_date" i18n>Activate Date:</label></div>
       </div>
       <div class="col-lg-4">
         <eg-date-select
@@ -121,7 +123,7 @@
               name="active_request_time" [(ngModel)]="activeFields.request_time"/>
           </div>
         </div>
-        <div class="flex-1"><label for="request_time" i18n>Request Date:</label></div>
+        <div class="flex-1"><label class="form-label" for="request_time" i18n>Request Date:</label></div>
       </div>
       <div class="col-lg-4">
         <eg-date-select
@@ -142,7 +144,7 @@
               name="active_expire_time" [(ngModel)]="activeFields.expire_time"/>
           </div>
         </div>
-        <div class="flex-1"><label for="expire_time" i18n>Expire Date:</label></div>
+        <div class="flex-1"><label class="form-label" for="expire_time" i18n>Expire Date:</label></div>
       </div>
       <div class="col-lg-4">
         <eg-date-select
@@ -160,7 +162,7 @@
               name="active_shelf_expire_time" [(ngModel)]="activeFields.shelf_expire_time"/>
           </div>
         </div>
-        <div class="flex-1"><label for="shelf_expire_time" i18n>Shelf Expire Date:</label></div>
+        <div class="flex-1"><label class="form-label" for="shelf_expire_time" i18n>Shelf Expire Date:</label></div>
       </div>
       <div class="col-lg-4">
         <eg-date-select
@@ -182,12 +184,12 @@
             name="active_email_notify" [(ngModel)]="activeFields.email_notify"/>
         </div>
       </div>
-      <div class="flex-1"><label for="email" i18n>Send Emails:</label></div>
+      <div class="flex-1"><label class="form-label" for="email" i18n>Send Emails:</label></div>
     </div>
     <div class="col-lg-4">
       <div class="form-check form-check-inline">
         <input class="form-check-input" type="checkbox" id="email"
-          name="email" [ngModel]="hold.email_notify() == 't'"
+          name="email" [ngModel]="hold.email_notify() === 't'"
           [disabled]="isBatch() && !activeFields.email_notify"
           (ngModelChange)="hold.email_notify($event ? 't' : 'f')"/>
       </div>
@@ -200,7 +202,7 @@
             name="active_phone_notify" [(ngModel)]="activeFields.phone_notify"/>
         </div>
       </div>
-      <div class="flex-1"><label for="phone" i18n>Phone Number:</label></div>
+      <div class="flex-1"><label class="form-label" for="phone" i18n>Phone Number:</label></div>
     </div>
     <div class="col-lg-4">
       <input type="text" class="form-control" name="phone" id="phone"
@@ -221,7 +223,7 @@
               name="active_sms_notify" [(ngModel)]="activeFields.sms_notify"/>
           </div>
         </div>
-        <div class="flex-1"><label for="sms_notify" i18n>Text/SMS Number:</label></div>
+        <div class="flex-1"><label class="form-label" for="sms_notify" i18n>Text/SMS Number:</label></div>
       </div>
       <div class="col-lg-4">
         <input type="text" class="form-control" name="sms_notify" id="sms_notify"
@@ -239,7 +241,7 @@
           </div>
         </div>
         <div class="flex-1">
-          <label for="sms_carrier" i18n>Text/SMS Number:</label>
+          <label class="form-label" for="sms_carrier" i18n>Text/SMS Number:</label>
         </div>
       </div>
       <div class="col-lg-4">
@@ -258,10 +260,10 @@
 
   <div class="row d-flex justify-content-end">
     <div>
-      <button type="button" class="btn btn-warning" (click)="exit()" i18n>
+      <button type="button" class="btn btn-normal" (click)="exit()" i18n>
         Cancel
       </button>
-      <button type="button" class="btn btn-success ml-2" (click)="save()" i18n>
+      <button type="button" class="btn btn-success ms-2" (click)="save()" i18n>
         Apply
       </button>
     </div>

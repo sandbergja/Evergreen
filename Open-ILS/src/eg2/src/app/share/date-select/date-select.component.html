@@ -2,13 +2,16 @@
   {{initialDate | formatValue:'timestamp'}}
 </ng-container>
 <ng-container *ngIf="!readOnly">
-  <div class="input-group eg-date-select form-validated">
+  <div class="input-group eg-date-select form-validated p-0" 
+    [ngClass]="{'date-select-width': !noMaxWidth}">
     <input 
       class="form-control"
       type="text"
       ngbDatepicker
       #datePicker="ngbDatepicker"
       [attr.id]="domId.length ? domId : null"
+      aria-label="Enter date"
+      i18n-aria-label
       placeholder="yyyy-mm-dd"
       class="form-control"
       container="body"
@@ -17,14 +20,14 @@
       [required]="required"
       (blur)="propagateTouch(); onDateEnter()"
       [(ngModel)]="current"
+      (ngModelChange)="inputChanged($event)"
       (keyup.enter)="onDateEnter()"
       (dateSelect)="onDateSelect($event)"/>
-    <div class="input-group-append">
-      <button class="btn btn-outline-secondary" [disabled]="disabled"
+      
+      <button class="input-group-text" [disabled]="disabled"
+        title="Select Date" i18n-title aria-label="Select Date" i18n-aria-label
         (click)="datePicker.toggle()" type="button">
-        <span title="Select Date" i18n-title
-          class="material-icons mat-icon-in-button">event</span>
+        <span class="material-icons mat-icon-in-button" aria-hidden="true">event</span>
       </button>
-    </div>
   </div>
 </ng-container>

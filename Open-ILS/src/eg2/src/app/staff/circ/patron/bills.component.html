@@ -1,0 +1,350 @@
+<eg-prompt-dialog #annotateDialog
+  i18n-dialogBody dialogBody="Please Annotate This Payment">
+</eg-prompt-dialog>
+
+<eg-alert-dialog #maxPayDialog
+  i18n-dialogBody dialogBody="Payments over 100,000 are denied by policy.">
+</eg-alert-dialog>
+
+<eg-alert-dialog #errorDialog i18n-dialogTitle dialogTitle="Error">
+</eg-alert-dialog>
+
+<eg-confirm-dialog #warnPayDialog
+  i18n-dialogBody i18n-dialogTitle dialogTitle="Confirm Payment Amount"
+  dialogBody="Are you sure you want to apply a payment of {{paymentAmount | currency}}?">
+</eg-confirm-dialog>
+
+<eg-confirm-dialog #voidBillsDialog
+  i18n-dialogBody i18n-dialogTitle dialogTitle="Void Billings"
+  dialogBody="Are you sure you would like to void {{voidAmount | currency}} 
+    in bills for the selected transactions?">
+</eg-confirm-dialog>
+
+<eg-confirm-dialog #adjustToZeroDialog *ngIf="billGrid"
+  i18n-dialogBody i18n-dialogTitle dialogTitle="Adjust To Zero"
+  dialogBody="Are you sure you would like to adjust to zero the balance 
+    on transactions {{billGrid.context.rowSelector.selected().join(',')}}?">
+</eg-confirm-dialog>
+
+<eg-confirm-dialog #refundDialog *ngIf="billGrid"
+  i18n-dialogBody i18n-dialogTitle dialogTitle="Adjust To Zero"
+  dialogBody="Are you sure you would like to refund excess payment on 
+    transaction(s) {{billGrid.context.rowSelector.selected().join(',')}}? 
+    This action will simply put the amount in the Payment Pending column as 
+    a negative value.  You must still select Apply Payment!  Certain types of 
+    payments may not be refunded.  The refund may be applied to checked 
+    transactions that follow the refunded transaction.">
+</eg-confirm-dialog>
+
+
+<eg-credit-card-dialog [patron]="patron()" #creditCardDialog>
+</eg-credit-card-dialog>
+
+<eg-add-billing-dialog [patronId]="patronId" #billingDialog>
+</eg-add-billing-dialog>
+
+<!-- SUMMARY  -->
+
+<ng-container *ngIf="summary">
+  <ul class="list-unstyled patron-bills-summary">
+    <li [ngClass]="{'balance_owed' : summary.balance_owed() > 0}">
+      <span i18n>Total Owed:</span>
+      <span class="money">{{summary.balance_owed() || 0 | currency}}</span>
+    </li>
+    <li>
+      <span i18n>Total Billed:</span>
+      <span class="money">{{summary.total_owed() || 0 | currency}}</span>
+    </li>
+    <li>
+      <span i18n>Total Paid/Credited:</span>
+      <span class="money">{{summary.total_paid() || 0 | currency}}</span>
+    </li>
+    <li>
+      <span i18n>Owed for Selected:</span>
+      <span class="money">{{owedSelected() | currency}}</span>
+    </li>
+    <li>
+      <span i18n>Billed for Selected:</span>
+      <span class="money">{{billedSelected() | currency}}</span>
+    </li>
+    <li>
+      <span i18n>Paid/Credited for Selected:</span>
+      <span class="money">{{paidSelected() | currency}}</span>
+    </li>
+    <li>
+      <span i18n>Refunds Available:</span>
+      <span class="money">{{refundsAvailable() | currency}}</span>
+    </li>
+    <li>
+      <span i18n>Credit Available:</span>
+      <span class="money">{{patron().credit_forward_balance() | currency}}</span>
+    </li>
+    <li>
+      <span i18n>Session Voided:</span>
+      <span class="money">{{sessionVoided | currency}}</span>
+    </li>
+    <li class="pending">
+      <span i18n>Pending Payment:</span>
+      <span class="money">{{pendingPayment() | currency}}</span>
+    </li>
+    <li>
+      &nbsp;
+    </li>
+    <li class="pending">
+      <span i18n>Pending Change:</span>
+      <span class="money">{{pendingChange() | currency}}</span>
+    </li>
+  </ul>
+</ng-container>
+
+<!-- BILL PAY FORM -->
+
+<div class="row row-cols-auto g-2 align-items-end py-2 mt-2 mb-4 payment-form form-validated">
+  <div class="col-12">
+    <h3 i18n>Pay Bill</h3>
+  </div>
+  <div class="col-3">
+    <label class="form-label" for="payment-type" i18n>Payment Type:</label>
+    <select [(ngModel)]="paymentType" class="form-control" id="payment-type">
+      <option value="cash_payment" i18n>Cash</option>
+      <option value="check_payment" i18n>Check</option>
+      <option value="credit_card_payment" i18n>Credit Card</option>
+      <option value="debit_card_payment" i18n>Debit Card</option>
+      <option value="credit_payment" i18n>Patron Credit</option>
+      <option value="work_payment" i18n>Work</option>
+      <option value="forgive_payment" i18n>Forgive</option>
+      <option value="goods_payment" i18n>Goods</option>
+    </select>
+  </div>
+  <div class="col-3">
+    <label class="form-label" for="check-number" i18n>Check Number:</label>
+    <input type="text" class="form-control" [(ngModel)]="checkNumber"
+      id="check-number" [disabled]="paymentType !== 'check_payment'"/>
+  </div>
+  <div class="col-3">
+    <label class="form-label" for="pay-amount" i18n>Payment Received:</label>
+    <input type="number" class="form-control" [(ngModel)]="paymentAmount"
+      (ngModelChange)="updatePendingColumn()" id="pay-amount" [min]="0"/>
+  </div>
+  <div class="col">
+    <div class="form-check form-check-inline">
+      <input class="form-check-input" type="checkbox"
+      (ngModelChange)="applySetting('eg.circ.bills.annotatepayment', $event)"
+      id="annotate" [(ngModel)]="annotatePayment"/>
+    <label class="form-label form-check-label" for="annotate" i18n>Annotate</label>
+    </div>
+  </div>
+  <div class="col">
+    <button type="button" class="btn" (click)="applyPayment()"
+      [ngClass]="{'btn-success': !disablePayment(),
+                  'btn-normal': disablePayment()}"
+      [disabled]="disablePayment()" i18n>Apply Payment</button>
+  </div>
+</div>
+
+<!-- BILLS GRID -->
+
+<ng-template #titleTemplate let-r="row">
+  <ng-container *ngIf="r.record_id">
+    <a routerLink="/staff/catalog/record/{{r.record_id}}">{{r.title}}</a>
+  </ng-container>
+  <ng-container *ngIf="!r.record_id">{{r.title}}</ng-container>
+</ng-template>
+
+<ng-template #barcodeTemplate let-r="row">
+  <ng-container *ngIf="r.copy_id">
+    <a href="/eg/staff/cat/item/{{r.copy_id}}">{{r.copy_barcode}}</a>
+  </ng-container>
+</ng-template>
+
+<eg-grid #billGrid idlClass="mbt" [dataSource]="gridDataSource"
+  persistKey="circ.patron.bills" [sortable]="true" [disablePaging]="true"
+  (onRowActivate)="showStatement($event)"
+  [cellClassCallback]="cellClassCallback"
+  [reloadOnColumnChange]="true"
+  [showDeclaredFieldsOnly]="true"
+  [rowClassCallback]="rowClassCallback"
+  [rowFlairIsEnabled]="true"
+  [rowFlairCallback]="rowFlairCallback"
+  flairColumnHeader="Account Status" 
+  i18n-flairColumnHeader="Patron billing table icon column header"
+  [cellTextGenerator]="cellTextGenerator">
+
+  <eg-grid-toolbar-button i18n-label label="Add Billing"
+    (onClick)="addBilling()"></eg-grid-toolbar-button>
+
+  <eg-grid-toolbar-button i18n-label label="History"
+    routerLink="/staff/circ/patron/{{patronId}}/bills/history/transactions">
+  </eg-grid-toolbar-button>
+
+  <eg-grid-toolbar-button i18n-label label="Select All Refunds"
+    (onClick)="selectRefunds()"></eg-grid-toolbar-button>
+
+  <!-- ACTIONS FOR SELECTED -->
+
+  <eg-grid-toolbar-action
+    i18n-label label="Full Details" (onClick)="showStatement($event[0])">
+  </eg-grid-toolbar-action>
+
+  <eg-grid-toolbar-action
+    i18n-label label="Print Bills" (onClick)="printBills($event)">
+  </eg-grid-toolbar-action>
+
+  <eg-grid-toolbar-action
+    i18n-label label="Void All Billings" (onClick)="voidBillings($event)">
+  </eg-grid-toolbar-action>
+
+  <eg-grid-toolbar-action
+    i18n-label label="Adjust To Zero" (onClick)="adjustToZero($event)">
+  </eg-grid-toolbar-action>
+
+  <eg-grid-toolbar-action
+    i18n-label label="Add Billing" (onClick)="addBillingForXact($event)">
+  </eg-grid-toolbar-action>
+
+  <eg-grid-toolbar-action i18n-label label="Refund" (onClick)="refund($event)">
+  </eg-grid-toolbar-action>
+
+  <!-- COLUMNS -->
+
+  <eg-grid-column name="balance_owed" path="summary.balance_owed" datatype="money"
+    [required]="true" label="Balance Owed" i18n-label></eg-grid-column>
+
+  <eg-grid-column name="total_owed" path="summary.total_owed" 
+    datatype="money" [required]="true" label="Total Billed" i18n-label></eg-grid-column>
+
+  <eg-grid-column name="total_paid" path="summary.total_paid" datatype="money" 
+    [required]="true" label="Total Paid" i18n-label></eg-grid-column>
+
+  <eg-grid-column path="summary.xact_type"
+    label="Type" i18n-label></eg-grid-column>
+
+  <eg-grid-column name="last_billing_ts" path="summary.last_billing_ts" 
+    [required]="true" label="Last Billed" i18n-label>
+  </eg-grid-column>
+
+  <eg-grid-column name="copy_barcode" label="Item Barcode" i18n-label
+    path="circulation.target_copy.barcode" [cellTemplate]="barcodeTemplate">
+  </eg-grid-column>
+
+  <eg-grid-column name="call_number_label"
+    path="circulation.target_copy.call_number.label" 
+    i18n-label label="Call Number" [hidden]="true"></eg-grid-column>
+
+  <eg-grid-column path="circulation.due_date" label="Due Date" i18n-label                   
+    timezoneContextOrg="circulation.circ_lib" dateOnlyIntervalField="circulation.duration"   
+    datatype="timestamp" [required]="true"></eg-grid-column>  
+
+  <eg-grid-column path="circulation.stop_fines" [required]="true"
+    label="Stop Fines" i18n-label></eg-grid-column>
+
+  <eg-grid-column i18n-label label="Title" name="title" 
+    [cellTemplate]="titleTemplate"
+    path="circulation.target_copy.call_number.record.simple_record.title">
+  </eg-grid-column>
+
+  <eg-grid-column name="last_billing_note" path="summary.last_billing_note" 
+    [required]="true" label="Last Billing Note" i18n-label></eg-grid-column>
+
+  <eg-grid-column name="paymentPending" datatype="money"
+    label="Payment Pending" i18n-label></eg-grid-column>
+
+  <!-- -->
+
+  <eg-grid-column path="id" [index]="true" [required]="true" 
+    [hidden]="true" label="Bill #" i18n-label> </eg-grid-column>
+
+  <eg-grid-column path="xact_start" datatype="timestamp" [datePlusTime]="true"
+    [required]="true" [hidden]="true" label="Start" i18n-label></eg-grid-column>
+
+  <eg-grid-column name="last_billing_type" path="summary.last_billing_type" 
+    [hidden]="true" [required]="true" label="Last Billing Type" i18n-label></eg-grid-column>
+
+  <eg-grid-column name="last_payment_type" path="summary.last_payment_type" 
+    [hidden]="true" [required]="true" label="Last Payment Type" i18n-label></eg-grid-column>
+
+  <eg-grid-column name="last_payment_ts" path="summary.last_payment_ts" 
+    [hidden]="true" [required]="true" [datePlusTime]="true" label="Last Payment Time" i18n-label>
+  </eg-grid-column>
+
+  <eg-grid-column name="billingLocation"
+    [hidden]="true" label="Billing Location" i18n-label></eg-grid-column>
+
+  <eg-grid-column path="circulation.target_copy.call_number.prefix.label" 
+    i18n-label label="CN Prefix" [hidden]="true"></eg-grid-column>
+  <eg-grid-column path="circulation.target_copy.call_number.suffix.label" 
+    i18n-label label="CN Suffix" [hidden]="true"></eg-grid-column>
+
+  <eg-grid-column i18n-label label="Owning Library" [hidden]="true"
+    path="circulation.target_copy.call_number.owning_lib.shortname">
+  </eg-grid-column>
+
+  <eg-grid-column i18n-label label="Checkout/Renewal Library" [hidden]="true"
+    path="circulation.circ_lib.shortname">
+  </eg-grid-column>
+
+  <eg-grid-column i18n-label label="Checkin Date" [hidden]="true"
+    path="circulation.checkin_time">
+  </eg-grid-column>
+
+  <eg-grid-column name="copy_id" path="circulation.target_copy.id" 
+    [required]="true" [hidden]="true"></eg-grid-column>
+
+  <eg-grid-column path="circulation.target_copy.location.name" 
+    [hidden]="true" label="Shelving Location" i18n-label></eg-grid-column>
+
+
+  <eg-grid-column name="record_id" 
+    path="circulation.target_copy.call_number.record.id" 
+    [required]="true" [hidden]="true"></eg-grid-column>
+
+
+  <eg-grid-column [hidden]="true" label="Author" i18n-label
+    path="circulation.target_copy.call_number.record.simple_record.author">
+  </eg-grid-column>
+
+  <eg-grid-column [hidden]="true" label="Grocery Billing Location" 
+    [required]="true" i18n-label path="grocery.billing_location.shortname">
+  </eg-grid-column>
+
+  <eg-grid-column [hidden]="true" label="Circulation Billing Location" 
+    [required]="true" i18n-label path="circulation.circ_lib.shortname">
+  </eg-grid-column>
+
+  <eg-grid-column path="usr" [hidden]="true"></eg-grid-column>
+  <eg-grid-column path="unrecovered" [hidden]="true"></eg-grid-column>
+
+</eg-grid>
+
+<div class="row mt-2">
+  <div class="col-lg-12 d-flex">
+    <div class="d-flex flex-column ms-auto align-items-center justify-content-end">
+      <div class="form-check form-check-inline">
+      <input class="form-check-input" type="checkbox" id="patron-credit-cbox"
+        [(ngModel)]="convertChangeToCredit"/>
+      <label class="form-label form-check-label" for="patron-credit-cbox" i18n>
+        Convert Change To Patron Credit
+      </label>
+      </div>
+    </div>
+    <div class="d-flex flex-column justify-content-end">
+      <div class="form-check form-check-inline ms-2">
+      <input class="form-check-input" type="checkbox" id="receipt-on-payment-cbox"
+        (ngModelChange)="applySetting('circ.bills.receiptonpay', $event)"
+        [(ngModel)]="receiptOnPayment"/>
+      <label class="form-label form-check-label" for="receipt-on-payment-cbox" i18n>
+        Receipt On Payment
+      </label>
+      </div>
+    </div>
+    <div class="form-inline ms-2">
+      <div class="input-group">
+        <label for="numreceipts" class="form-label input-group-text" i18n># Receipts</label>
+        <input type="number" class="form-control num-receipts" id="numreceipts" [(ngModel)]="numReceipts"/>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+

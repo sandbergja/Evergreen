@@ -8,7 +8,6 @@ import {PcrudService} from './pcrud.service';
 import {StoreService} from './store.service';
 import {OrgService} from './org.service';
 import {LocaleService} from './locale.service';
-import {Location} from '@angular/common';
 import {FormatService} from './format.service';
 import {HatchService} from './hatch.service';
 import {SpyLocation} from '@angular/common/testing';
@@ -30,7 +29,7 @@ describe('FormatService', () => {
     let dbStoreService: DbStoreService;
     let localeService: LocaleService;
     let hatchService: HatchService;
-    // tslint:disable-next-line:prefer-const
+    // eslint-disable-next-line prefer-const
     let location: SpyLocation;
     let service: FormatService;
 
@@ -43,7 +42,7 @@ describe('FormatService', () => {
         storeService = new StoreService(null /* CookieService */, hatchService);
         netService = new NetService(evtService);
         authService = new AuthService(evtService, netService, storeService);
-        pcrudService = new PcrudService(idlService, netService, authService);
+        pcrudService = new PcrudService(idlService, null, netService, authService);
         dbStoreService = new DbStoreService();
         orgService = new OrgService(dbStoreService, netService, authService, pcrudService);
         localeService = new LocaleService(location, null, pcrudService);
@@ -52,6 +51,7 @@ describe('FormatService', () => {
             decimalPipe,
             idlService,
             orgService,
+            authService,
             localeService
         );
     });
@@ -131,7 +131,7 @@ describe('FormatService', () => {
     it('should transform long Angular format strings to a valid MomentJS one using Angular locale ar-JO', () => {
         registerLocaleData(localeArJO);
         const momentVersion = service['makeFormatParseable']('long', 'ar-JO');
-        expect(momentVersion).toBe('D MMMM Y h:mm:ss a [GMT]Z');
+        expect(momentVersion).toBe('D MMMM Y في h:mm:ss a [GMT]Z');
     });
     it('can create a valid Momentjs object given a valid datetime string and correct format', () => {
         const moment = service['momentize']('7/3/12, 6:06 PM', 'M/D/YY, h:mm a', 'Africa/Addis_Ababa', false);
@@ -141,6 +141,11 @@ describe('FormatService', () => {
         service['dateTimeFormat'] = 'M/D/YY, h:mm a';
         const moment = service.momentizeDateTimeString('7/3/12, 6:06 PM', 'Africa/Addis_Ababa', false, 'fr-CA');
         expect(moment.isValid()).toBe(true);
+    });
+    it('can momentize ISO strings', () => {
+        const moment = service.momentizeIsoString('2022-07-29T17:56:00.000Z', 'America/New_York');
+        expect(moment.isValid()).toBe(true);
+        expect(moment.format('YYYY')).toBe('2022');
     });
 
 });

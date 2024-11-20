@@ -1,0 +1,51 @@
+[%  PROCESS "opac/parts/header.tt2";
+    PROCESS "opac/parts/misc_util.tt2";
+    WRAPPER "opac/parts/myopac/base.tt2";
+    myopac_page = "prefs"  %]
+<div id='myopac_summary_div' style="padding:0px;">
+
+    <h2>[% l('Update Preferred Name') %]</h2>
+
+[% IF ctx.password_incorrect %]
+    <div class='account-password-error' id="account-password-error" role="status">
+        [% |l %]Your current password was not correct.[% END %]
+    </div>
+
+[% END %]
+
+<form method='post' id='account-update-preferred-name' [% IF ctx.is_staff %] autocomplete='off' [% END %]>
+    <div class="form-grid">
+        <label for="preferred_name">[% l('Current Preferred Name') %]</label>
+            <output id="preferred_name" role="status">[% l(HUMAN_NAME_FORMAT,
+                ctx.user.pref_prefix || ctx.user.prefix,
+                ctx.user.pref_first_given_name || ctx.user.first_given_name,
+                ctx.user.pref_second_given_name || ctx.user.second_given_name,
+                ctx.user.pref_family_name || ctx.user.family_name,
+                ctx.user.pref_suffix || ctx.user.suffix) | html %]
+            </output>
+
+        <label for="current_pw">[% l('Current Password') %]</label>
+        <input type='password' name='current_pw' id='current_pw' class="form-control" autocomplete="current-password" aria-describedby="account-password-error" />
+
+        <label for='pref-prefix'>[% l('Preferred Prefix') %]</label>
+        <input type='text' name='pref_prefix' id='pref_prefix' class="form-control" value="[% ctx.user.pref_prefix | html %]" autocomplete="honorific-prefix" />
+
+        <label for='pref-first-given-name'>[% l('Preferred First Name') %]</label>
+        <input type='text' name='pref_first_given_name' id='pref_first_given_name' class="form-control" value="[% ctx.user.pref_first_given_name | html %]" autocomplete="given-name" />
+
+        <label for='pref-second-given-name'>[% l('Preferred Second Name') %]</label>
+        <input type='text' name='pref_second_given_name' id='pref_second_given_name' class="form-control" value="[% ctx.user.pref_second_given_name | html %]" autocomplete="additional-name" />
+
+        <label for='pref-family-name'>[% l('Preferred Family Name') %]</label>
+        <input type='text' name='pref_family_name' id='pref_family_name' class="form-control" value="[% ctx.user.pref_family_name | html %]" autocomplete="family-name" />
+
+        <label for='pref-suffix'>[% l('Preferred Suffix') %]</label>
+        <input type='text' name='pref_suffix' id='pref_suffix' class="form-control" value="[% ctx.user.pref_suffix | html %]" autocomplete="honorific-suffix" />
+
+        <button class="btn btn-confirm m-2" type='submit'>
+            <i class="fas fa-save"></i> [% l('Save Changes') %]
+        </button>
+    </div>
+</form>
+
+[% END %]

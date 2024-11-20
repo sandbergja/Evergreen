@@ -6,6 +6,7 @@ use Unicode::Normalize;
 use OpenSRF::EX qw/:try/;
 use OpenSRF::AppSession;
 use OpenSRF::Utils::SettingsClient;
+use OpenSRF::Utils::JSON;
 use OpenSRF::Utils::Cache;
 use OpenILS::Utils::Fieldmapper;
 use OpenILS::Utils::CStoreEditor qw/:funcs/;
@@ -52,6 +53,65 @@ my %record_types = (
 
 sub initialize {}
 sub child_init {}
+
+sub create_background_import {
+    my $self = shift;
+    my $client = shift;
+    my $auth = shift;
+    my $params = shift;
+
+    return OpenILS::Event->new('Spool upload session key required for background import') 
+        unless ($params and $$params{session_key});
+
+    return OpenILS::Event->new('Import type required for background import') 
+        unless ($params and $$params{import_type});
+
+
+    my $data = OpenSRF::Utils::Cache->new->get_cache(
+        'vandelay_import_spool_' . $$params{session_key}
+    );
+
+    return OpenILS::Event->new('Could not find spool upload session '.$$params{session_key}) 
+        unless ($data);
+
+    # We pull the important bits off and store them here so that we don't
+    # need memcache to persist for an unbounded time frame.
+    $$params{upload_purpose} = $data->{purpose};
+    $$params{spool_filename} = $data->{path};
+    $$params{bib_source} ||= $data->{bib_source};
+
+    my $e = new_editor(authtoken => $auth, xact => 1);
+
+    return $e->die_event unless $e->checkauth;
+    return $e->die_event unless $e->allowed('CREATE_BACKGROUND_IMPORT');
+
+    my $job = new Fieldmapper::vandelay::background_import();
+    $job->owner( $e->requestor->id );
+    $job->workstation( $e->requestor->wsid );
+    $job->import_type( $$params{import_type} );
+    $job->email( $$params{background_email} );
+    $job->params( OpenSRF::Utils::JSON->perl2JSON($params) );
+
+    my $new_job = $e->create_vandelay_background_import( $job );
+    return $e->die_event unless ($new_job);
+    $e->commit;
+
+    $U->simplereq(
+        'open-ils.trigger',
+        'open-ils.trigger.event.autocreate',
+        'vandelay.background_import.requested',
+        $new_job,
+        $e->requestor->ws_ou
+    ) if $new_job->email;
+
+    return $new_job;
+}
+__PACKAGE__->register_method(  
+    api_name   => "open-ils.vandelay.background_import.create",
+    method     => "create_background_import",
+    api_level  => 1,
+    argc       => 3,
+);                      
 
 # --------------------------------------------------------------------------------
 # Biblio ingest
@@ -241,8 +301,6 @@ sub process_spool {
     my $bib_source = shift;
     my $session_name = shift;
     my $exit_early = shift;
-
-    $client->max_chunk_count($self->{max_bundle_count}) if (!$client->can('max_bundle_count') && $self->{max_bundle_count});
 
     my $e = new_editor(authtoken => $auth, xact => 1);
     return $e->die_event unless $e->checkauth;
@@ -832,7 +890,6 @@ __PACKAGE__->register_method(
 
 sub import_queue {
     my($self, $conn, $auth, $q_id, $options) = @_;
-    $conn->max_chunk_count($self->{max_bundle_count}) if (!$conn->can('max_bundle_count') && $self->{max_bundle_count});
 
     my $e = new_editor(authtoken => $auth, xact => 1);
     return $e->die_event unless $e->checkauth;
@@ -993,7 +1050,7 @@ sub import_record_list_impl {
         exit_early => $exit_early
     };
 
-    $conn->max_chunk_count(1) if (!$conn->can('max_bundle_size') && $conn->can('max_chunk_size') && $$args{report_all});
+    $conn->max_bundle_count(1) if ($$args{report_all});
 
     my $auto_overlay_exact = $$args{auto_overlay_exact};
     my $auto_overlay_1match = $$args{auto_overlay_1match};

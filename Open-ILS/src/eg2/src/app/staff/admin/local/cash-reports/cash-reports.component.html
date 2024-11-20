@@ -1,0 +1,281 @@
+<eg-staff-banner bannerText="Cash Reports" i18n-bannerText>
+</eg-staff-banner>
+
+<div class="mb-5">
+  <form #criteria="ngForm" egDateFieldOrderList="startDate,endDate">
+    <div class="row">
+      <div class="col-lg-3">
+        <div class="input-group">
+          <label class="input-group-text" i18n for="start-date">Start Date</label>
+          <eg-date-select [initialDate]="startDate" domId="start-date" name="startDate" [(ngModel)]="startDate"></eg-date-select>
+        </div>
+      </div>
+      <div class="col-lg-3">
+        <div class="input-group">
+          <label class="input-group-text" i18n for="end-date">End Date</label>
+          <eg-date-select [initialDate]="startDate" domId="end-date" name="endDate" [(ngModel)]="endDate"></eg-date-select>
+        </div>
+      </div>
+      <div class="col-lg-3">
+        <div class="input-group">
+          <label for="ou" class="input-group-text" i18n>View reports for</label>
+          <eg-org-select domId="ou" [applyDefault]="true" [disableOrgs]="disabledOrgs" (onChange)="onOrgChange($event)"></eg-org-select>
+        </div>
+      </div>
+      <div class="col-lg-2">
+        <button type="button" class="btn btn-primary" (click)="searchForData()" [disabled]="!criteria.valid">Submit</button>
+      </div>
+    </div>
+    <div role="alert" class="alert alert-danger" id="dateOutOfOrderAlert" *ngIf="criteria.errors?.['datesOutOfOrder'] && (criteria.touched || criteria.dirty)">
+      <span class="material-icons" aria-hidden="true">error</span>
+      <span i18n>Start date must be before end date</span>
+    </div>
+  </form>
+</div>
+
+<ul ngbNav #cashReportsNav="ngbNav" class="nav-tabs"  [keyboard]="true" [roles]="false" role="tablist"
+  [destroyOnHide]="false" activeId="deskPayments" (navChange)="eraseUserGrid()">
+  <li role="presentation" ngbNavItem="deskPayments">
+    <a role="tab" ngbNavLink i18n>Desk Payments</a>
+    <ng-template ngbNavContent>
+      <div class="mt-3">
+        <table class="table w-auto">
+          <tbody>
+            <tr>
+              <th class="fw-normal" scope="row" i18n>Total Cash Payments</th>
+              <td class="fw-bold text-end">{{deskTotals.cash_payment | currency}}</td>
+            </tr>
+            <tr>
+              <th class="fw-normal" scope="row" i18n>Total Check Payments</th>
+              <td class="fw-bold text-end">{{deskTotals.check_payment | currency}}</td>
+            </tr>
+            <tr>
+              <th class="fw-normal" scope="row" i18n>Total Credit Card Payments</th>
+              <td class="fw-bold text-end">{{deskTotals.credit_card_payment | currency}}</td>
+            </tr>
+            <tr>
+              <th class="fw-normal" scope="row" i18n>Total Debit Card Payments</th>
+              <td class="fw-bold text-end">{{deskTotals.debit_card_payment | currency}}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <eg-grid #deskPaymentGrid
+          persistKey="admin.local.cash_reports.desk_payments"
+          [disableSelect]="true"
+          [disablePaging]="true"
+          [dataSource]="deskPaymentDataSource"
+          [sortable]="false">
+          <eg-grid-toolbar-button [disabled]="!deskPaymentDataSource.data.length"
+            i18n-label label="Print"
+            (onClick)="printDeskPayments()">
+          </eg-grid-toolbar-button>
+          <eg-grid-column label="Workstation" name="workstation" [index]="true" i18n-label></eg-grid-column>
+          <eg-grid-column label="Cash Payment" name="cash_payment" i18n-label datatype="money"></eg-grid-column>
+          <eg-grid-column label="Check Payment" name="check_payment" i18n-label datatype="money"></eg-grid-column>
+          <eg-grid-column label="Credit Card Payment" name="credit_card_payment" i18n-label datatype="money"></eg-grid-column>
+          <eg-grid-column label="Debit Card Payment" name="debit_card_payment" i18n-label datatype="money"></eg-grid-column>
+        </eg-grid>
+      </div>
+    </ng-template>
+  </li>
+  <li role="presentation" ngbNavItem="userPayments">
+    <a role="tab" ngbNavLink i18n>Staff User Payments</a>
+    <ng-template ngbNavContent>
+      <div class="mt-3">
+        <table class="table w-auto">
+          <tbody>
+            <tr>
+              <th class="fw-normal" scope="row" i18n>Total Patron Credit Payments</th>
+              <td class="fw-bold text-end">{{userTotals.credit_payment | currency}}</td>
+            </tr>
+            <tr>
+              <th class="fw-normal" scope="row" i18n>Total Forgive Payments</th>
+              <td class="fw-bold text-end">{{userTotals.forgive_payment | currency}}</td>
+            </tr>
+            <tr>
+              <th class="fw-normal" scope="row" i18n>Total Work Payments</th>
+              <td class="fw-bold text-end">{{userTotals.work_payment | currency}}</td>
+            </tr>
+            <tr>
+              <th class="fw-normal" scope="row" i18n>Total Goods Payments</th>
+              <td class="fw-bold text-end">{{userTotals.goods_payment | currency}}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <ng-template #cardTmpl let-row="row">
+          <a target="_blank" href="/eg/staff/circ/patron/{{row.user.id()}}/checkout">
+            {{row.user.card()}}
+          </a>
+        </ng-template>
+        <eg-grid #userPaymentGrid
+          persistKey="admin.local.cash_reports.user_payments"
+          [disableSelect]="true"
+          [disablePaging]="true"
+          [dataSource]="userPaymentDataSource"
+          [sortable]="false">
+          <eg-grid-toolbar-button [disabled]="!userPaymentDataSource.data.length"
+            i18n-label label="Print"
+            (onClick)="printUserPayments()">
+          </eg-grid-toolbar-button>
+          <eg-grid-column label="User" name="usr" [index]="true" i18n-label></eg-grid-column>
+          <eg-grid-column label="Credit Payment" name="credit_payment" i18n-label datatype="money"></eg-grid-column>
+          <eg-grid-column label="Debit Payment" name="debit_payment" i18n-label datatype="money"></eg-grid-column>
+          <eg-grid-column label="Forgive Payment" name="forgive_payment" i18n-label datatype="money"></eg-grid-column>
+          <eg-grid-column label="Work Payment" name="work_payment" i18n-label datatype="money"></eg-grid-column>
+          <eg-grid-column label="Goods Payment" name="goods_payment" i18n-label datatype="money"></eg-grid-column>
+          <eg-grid-column label="Staff Card" name="card" i18n-label [cellTemplate]="cardTmpl"></eg-grid-column>
+          <eg-grid-column label="Staff Email" path="user.email" i18n-label></eg-grid-column>
+          <eg-grid-column label="Staff First Name" path="user.first_given_name" i18n-label></eg-grid-column>
+          <eg-grid-column label="Staff Family Name" path="user.family_name" i18n-label></eg-grid-column>
+          <eg-grid-column label="Staff Home OU" path="user.home_ou" i18n-label></eg-grid-column>
+        </eg-grid>
+      </div>
+    </ng-template>
+  </li>
+</ul>
+<div [ngbNavOutlet]="cashReportsNav"></div>
+
+<ng-template #deskPrintTmpl>
+  <style>
+    .print-table {
+      border-collapse: collapse;
+    }
+    .print-totals {
+      margin-bottom: 15px;
+    }
+    .print-table th,
+    .print-table td {
+      border: 1px solid #aaa;
+      padding: 2px 4px;
+    }
+  </style>
+
+  <table class="print-table print-totals">
+    <thead>
+      <tr>
+        <th colspan="2">
+          {{loadedRange.org}} <ng-container i18n>Desk Payments</ng-container>:
+          {{loadedRange.start | date:'shortDate'}} - {{loadedRange.end | date:'shortDate'}}
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td i18n>Total Cash Payments</td>
+        <td>{{deskTotals.cash_payment | currency}}</td>
+      </tr>
+      <tr>
+        <td i18n>Total Check Payments</td>
+        <td>{{deskTotals.check_payment | currency}}</td>
+      </tr>
+      <tr>
+        <td i18n>Total Credit Card Payments</td>
+        <td>{{deskTotals.credit_card_payment | currency}}</td>
+      </tr>
+      <tr>
+        <td i18n>Total Debit Card Payments</td>
+        <td>{{deskTotals.debit_card_payment | currency}}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <table class="print-table">
+    <thead>
+      <tr>
+        <th i18n>Workstation</th>
+        <th i18n>Cash Payment</th>
+        <th i18n>Check Payment</th>
+        <th i18n>Credit Card Payment</th>
+        <th i18n>Debit Card Payment</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let mwps of deskPaymentDataSource.data">
+        <td>{{mwps.workstation()}}</td>
+        <td>{{mwps.cash_payment() | currency}}</td>
+        <td>{{mwps.check_payment() | currency}}</td>
+        <td>{{mwps.credit_card_payment() | currency}}</td>
+        <td>{{mwps.debit_card_payment() | currency}}</td>
+      </tr>
+    </tbody>
+  </table>
+</ng-template>
+
+<ng-template #userPrintTmpl>
+  <style>
+    .print-table {
+      border-collapse: collapse;
+      margin-bottom: 15px;
+    }
+    .print-totals {
+      margin-bottom: 15px;
+    }
+    .print-table th,
+    .print-table td {
+      border: 1px solid #aaa;
+      padding: 2px 4px;
+    }
+  </style>
+
+  <table class="print-table print-totals">
+    <thead>
+      <tr>
+        <th colspan="2">
+          {{loadedRange.org}} <ng-container i18n>Staff User Payments</ng-container>:
+          {{loadedRange.start | date:'shortDate'}} - {{loadedRange.end | date:'shortDate'}}
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td i18n>Total Patron Credit</td>
+        <td>{{userTotals.credit_payment | currency}}</td>
+      </tr>
+      <tr>
+        <td i18n>Total Forgive Payments</td>
+        <td>{{userTotals.forgive_payment | currency}}</td>
+      </tr>
+      <tr>
+        <td i18n>Total Work Payments</td>
+        <td>{{userTotals.work_payment | currency}}</td>
+      </tr>
+      <tr>
+        <td i18n>Total Goods Payments</td>
+        <td>{{userTotals.goods_payment | currency}}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <table class="print-table">
+    <thead>
+      <tr>
+        <th i18n>User</th>
+        <th i18n>Credit Payment</th>
+        <th i18n>Forgive Payment</th>
+        <th i18n>Work Payment</th>
+        <th i18n>Goods Payment</th>
+        <th i18n>Staff Card</th>
+        <th i18n>Staff Email</th>
+        <th i18n>Staff First Name</th>
+        <th i18n>Staff Family Name</th>
+        <th i18n>Staff Home OU</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let mups of userPaymentDataSource.data">
+        <td>{{mups.usr()}}</td>
+        <td>{{mups.credit_payment() | currency}}</td>
+        <td>{{mups.forgive_payment() | currency}}</td>
+        <td>{{mups.work_payment() | currency}}</td>
+        <td>{{mups.goods_payment() | currency}}</td>
+        <td>{{mups.user.card()}}</td>
+        <td>{{mups.user.email()}}</td>
+        <td>{{mups.user.first_given_name()}}</td>
+        <td>{{mups.user.family_name()}}</td>
+        <td>{{mups.user.home_ou()}}</td>
+      </tr>
+    </tbody>
+  </table>
+</ng-template>

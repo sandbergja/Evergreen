@@ -35,12 +35,23 @@ sub handler {
     my $apache = shift;
 
     my $ltype = $apache->dir_config('OILSProxyLoginType');
+    my $context_mode = $apache->dir_config('OILSProxyContextMode');
     my $perms = [ split ' ', $apache->dir_config('OILSProxyPermissions') ];
 
     return Apache2::Const::NOT_FOUND unless (@$perms);
 
     my $cgi = new CGI;
-    my $auth_ses = $cgi->param('ses') || $cgi->cookie('ses');
+    my $auth_ses = $cgi->param('ses') || $cgi->cookie('ses') || $cgi->cookie('eg.auth.token');
+    if ($auth_ses =~ /^"(.+)"$/) { # came from eg2 login, is json encoded
+        $auth_ses = $1;
+    }
+
+    # Note that the handler accepts an eg.auth.token from the web staff
+    # client but will not set it if it has to ask the user for
+    # credentials (it will only set 'ses'). As of 2022-11, it works this
+    # way to avoid this authen handler from becoming a way to create
+    # a staff login session that does not have a workstation set.
+
     my $ws_ou = $apache->dir_config('OILSProxyLoginOU') || $cgi->param('ws_ou') || $cgi->cookie('ws_ou');
 
     my $url = $cgi->url;
@@ -95,6 +106,18 @@ sub handler {
                 ->request('open-ils.actor.user.perm.check', $auth_ses, $user->id, $ws_ou, $perms)
                 ->gather(1);
     
+            if ($context_mode eq 'reporter') {
+                my @uri_parts = split '/', $apache->uri;
+                my $output_id = $uri_parts[-2]; # /reporter/$tid/$rid/$oid/part.of.the.output.html
+                $logger->debug("Additionally checking output visibility of $output_id for user " . $user->id);
+
+                my $is_visible = OpenSRF::AppSession
+                    ->create('open-ils.reporter')
+                    ->request('open-ils.reporter.output_visible', $auth_ses, $output_id, @$perms)
+                    ->gather(1);
+                push(@$failures, 1) if (!$is_visible);
+            }
+
             if (@$failures > 0) {
                 $cookie = $cgi->cookie(
                         -name=>'ses',

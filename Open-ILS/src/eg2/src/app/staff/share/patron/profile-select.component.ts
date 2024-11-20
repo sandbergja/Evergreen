@@ -8,7 +8,7 @@ import {OrgService} from '@eg/core/org.service';
 import {AuthService} from '@eg/core/auth.service';
 import {PcrudService} from '@eg/core/pcrud.service';
 import {ComboboxEntry, ComboboxComponent
-    } from '@eg/share/combobox/combobox.component';
+} from '@eg/share/combobox/combobox.component';
 
 /* User permission group select comoboxbox.
  *
@@ -22,13 +22,13 @@ import {ComboboxEntry, ComboboxComponent
 const PAD_SPACE = ' '; // U+2007
 
 @Component({
-  selector: 'eg-profile-select',
-  templateUrl: './profile-select.component.html',
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => ProfileSelectComponent),
-    multi: true
-  }]
+    selector: 'eg-profile-select',
+    templateUrl: './profile-select.component.html',
+    providers: [{
+        provide: NG_VALUE_ACCESSOR,
+        useExisting: forwardRef(() => ProfileSelectComponent),
+        multi: true
+    }]
 })
 export class ProfileSelectComponent implements ControlValueAccessor, OnInit {
 
@@ -43,7 +43,14 @@ export class ProfileSelectComponent implements ControlValueAccessor, OnInit {
 
     @ViewChild('combobox', {static: false}) cbox: ComboboxComponent;
 
-    initialValue: number;
+    // Set the initial value by ID
+    @Input() initialGroupId: number;
+
+    @Input() required = false;
+
+    // Pass domId to combobox if given
+    @Input() domId?: string;
+
     cboxEntries: ComboboxEntry[] = [];
     profiles: {[id: number]: IdlObject} = {};
 
@@ -53,13 +60,34 @@ export class ProfileSelectComponent implements ControlValueAccessor, OnInit {
 
     constructor(
         private org: OrgService,
+        private idl: IdlService,
         private auth: AuthService,
         private pcrud: PcrudService) {
         this.profileChange = new EventEmitter<IdlObject>();
     }
 
     ngOnInit() {
-        this.collectGroups().then(grps => this.sortGroups(grps));
+        this.collectGroups().then(grps => this.sortGroups(grps))
+            .then(_ => this.fetchInitialGroup())
+            .then(_ => this.cbox.selectedId = this.initialGroupId);
+    }
+
+    // If the initial group is not included in our set of groups because
+    // we are using a custom display tree, fetch the group so we can
+    // add it to our tree.
+    fetchInitialGroup(): Promise<any> {
+        if (!this.initialGroupId || this.profiles[this.initialGroupId]) {
+            return Promise.resolve();
+        }
+
+        return this.pcrud.retrieve('pgt', this.initialGroupId).toPromise()
+            .then(grp => {
+                this.profiles[grp.id()] = grp;
+                grp.parent(null);
+                this.cboxEntries.push(
+                    {id: grp.id(), label: this.grpLabel([], grp)});
+            });
+
     }
 
     collectGroups(): Promise<IdlObject[]> {
@@ -70,7 +98,7 @@ export class ProfileSelectComponent implements ControlValueAccessor, OnInit {
 
         return this.pcrud.search('pgtde',
             {org: this.org.ancestors(this.auth.user().ws_ou(), true)},
-            {flesh: 1, flesh_fields: {'pgtde': ['grp']}},
+            {flesh: 1, flesh_fields: {'pgtde': ['grp', 'children']}, 'order_by':{'pgtde':'position desc'}},
             {atomic: true}
 
         ).toPromise().then(groups => {
@@ -88,17 +116,21 @@ export class ProfileSelectComponent implements ControlValueAccessor, OnInit {
                     closestOrg = org;
                 }
             });
+
             groups = groups.filter(g => g.org() === closestOrg.id());
 
-            // Link the display entry to its pgt.
-            const pgtList = [];
+            // Translate the display entries into a 'pgt' tree
+
+            const tree: IdlObject[] = [];
+
             groups.forEach(display => {
-                const pgt = display.grp();
-                pgt._display = display;
-                pgtList.push(pgt);
+                const grp = display.grp();
+                const displayParent = groups.filter(g => g.id() === display.parent())[0];
+                grp.parent(displayParent ? displayParent.grp().id() : null);
+                tree.push(grp);
             });
 
-            return pgtList;
+            return tree;
         });
     }
 
@@ -111,7 +143,7 @@ export class ProfileSelectComponent implements ControlValueAccessor, OnInit {
         let depth = 0;
 
         do {
-            const pid = tmp._display ? tmp._display.parent() : tmp.parent();
+            const pid = tmp.parent();
             if (!pid) { break; } // top of the tree
 
             // Should always produce a value unless a perm group
@@ -125,7 +157,20 @@ export class ProfileSelectComponent implements ControlValueAccessor, OnInit {
         return PAD_SPACE.repeat(depth) + grp.name();
     }
 
-    sortGroups(groups: IdlObject[], grp?: IdlObject) {
+    sortGroups(groups: IdlObject[]) {
+
+        // When using display entries, there can be multiple groups
+        // with no parent.
+
+        groups.forEach(grp => {
+            if (grp.parent() === null) {
+                this.sortOneGroup(groups, grp);
+            }
+        });
+    }
+
+    sortOneGroup(groups: IdlObject[], grp: IdlObject) {
+
         if (!grp) {
             grp = groups.filter(g => g.parent() === null)[0];
         }
@@ -143,7 +188,7 @@ export class ProfileSelectComponent implements ControlValueAccessor, OnInit {
                     return a.name() < b.name() ? -1 : 1;
                 }
             })
-            .forEach(child => this.sortGroups(groups, child));
+            .forEach(child => this.sortOneGroup(groups, child));
     }
 
     writeValue(pgt: IdlObject) {
@@ -152,7 +197,7 @@ export class ProfileSelectComponent implements ControlValueAccessor, OnInit {
             this.cbox.selectedId = id;
         } else {
             // Will propagate to cbox after its instantiated.
-            this.initialValue = id;
+            this.initialGroupId = id;
         }
     }
 

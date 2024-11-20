@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
 import {Observable} from 'rxjs';
-import {tap, map} from 'rxjs/operators';
+import {tap} from 'rxjs/operators';
 import {HttpClient} from '@angular/common/http';
 import {saveAs} from 'file-saver';
 import {IdlService, IdlObject} from '@eg/core/idl.service';
@@ -10,7 +10,6 @@ import {AuthService} from '@eg/core/auth.service';
 import {PcrudService} from '@eg/core/pcrud.service';
 import {PermService} from '@eg/core/perm.service';
 import {EventService} from '@eg/core/event.service';
-import {ProgressDialogComponent} from '@eg/share/dialog/progress.component';
 
 export const VANDELAY_EXPORT_PATH = '/exporter';
 export const VANDELAY_UPLOAD_PATH = '/vandelay-upload';
@@ -22,8 +21,8 @@ export class VandelayImportSelection {
     overlayMap: {[qrId: number]: /* breId */ number};
 
     constructor() {
-       this.recordIds = [];
-       this.overlayMap = {};
+        this.recordIds = [];
+        this.overlayMap = {};
     }
 }
 
@@ -70,15 +69,15 @@ export class VandelayService {
         if (this.attrDefs[dtype]) {
             return Promise.resolve(this.attrDefs[dtype]);
         }
-        const cls = (dtype === 'bib') ? 'vqbrad' : 'vqarad';
+        const cls = !dtype.match(/auth/) ? 'vqbrad' : 'vqarad';
         const orderBy = {};
         orderBy[cls] = 'id';
         return this.pcrud.retrieveAll(cls,
             {order_by: orderBy}, {atomic: true}).toPromise()
-        .then(list => {
-            this.attrDefs[dtype] = list;
-            return list;
-        });
+            .then(list => {
+                this.attrDefs[dtype] = list;
+                return list;
+            });
     }
 
     getMergeProfiles(): Promise<IdlObject[]> {
@@ -89,10 +88,10 @@ export class VandelayService {
         const owners = this.org.ancestors(this.auth.user().ws_ou(), true);
         return this.pcrud.search('vmp',
             {owner: owners}, {order_by: {vmp: ['name']}}, {atomic: true})
-        .toPromise().then(profiles => {
-            this.mergeProfiles = profiles;
-            return profiles;
-        });
+            .toPromise().then(profiles => {
+                this.mergeProfiles = profiles;
+                return profiles;
+            });
     }
 
     // Returns a promise resolved with the list of queues.
@@ -103,11 +102,18 @@ export class VandelayService {
             this.allQueues[qtype] = [];
         }
 
+        const filter = {};
+        let real_qtype = qtype;
+        if (qtype === 'acq') {
+            real_qtype = 'bib';
+            filter['queue_type'] = qtype;
+        }
+
         // could be a big list, invoke in streaming mode
         return this.net.request(
             'open-ils.vandelay',
-            `open-ils.vandelay.${qtype}_queue.owner.retrieve`,
-            this.auth.token()
+            `open-ils.vandelay.${real_qtype}_queue.owner.retrieve`,
+            this.auth.token(),null,filter
         ).pipe(tap(
             queue => this.allQueues[qtype].push(queue)
         )).toPromise().then(() => this.allQueues[qtype]);
@@ -119,8 +125,8 @@ export class VandelayService {
         }
 
         return this.pcrud.retrieveAll('cbs',
-          {order_by: {cbs: 'id'}},
-          {atomic: true}
+            {order_by: {cbs: 'id'}},
+            {atomic: true}
         ).toPromise().then(sources => {
             this.bibSources = sources;
             return sources;
@@ -134,10 +140,10 @@ export class VandelayService {
 
         const owners = this.org.ancestors(this.auth.user().ws_ou(), true);
         return this.pcrud.search('viiad', {owner: owners}, {}, {atomic: true})
-        .toPromise().then(defs => {
-            this.importItemAttrDefs = defs;
-            return defs;
-        });
+            .toPromise().then(defs => {
+                this.importItemAttrDefs = defs;
+                return defs;
+            });
     }
 
     // todo: differentiate between biblio and authority a la queue api
@@ -155,10 +161,10 @@ export class VandelayService {
 
         return this.pcrud.search('vms',
             {owner: owners, mtype: mstype}, {}, {atomic: true})
-        .toPromise().then(sets => {
-            this.matchSets[mtype] = sets;
-            return sets;
-        });
+            .toPromise().then(sets => {
+                this.matchSets[mtype] = sets;
+                return sets;
+            });
     }
 
     getBibBuckets(): Promise<IdlObject[]> {
@@ -181,10 +187,10 @@ export class VandelayService {
             return Promise.resolve(this.copyStatuses);
         }
         return this.pcrud.retrieveAll('ccs', {}, {atomic: true})
-        .toPromise().then(stats => {
-            this.copyStatuses = stats;
-            return stats;
-        });
+            .toPromise().then(stats => {
+                this.copyStatuses = stats;
+                return stats;
+            });
     }
 
     getBibTrashGroups(): Promise<any> {
@@ -213,17 +219,17 @@ export class VandelayService {
         matchSet: number,
         matchBucket: number): Promise<number> {
 
-        const method = `open-ils.vandelay.${recordType}_queue.create`;
-
-        let qType = recordType;
-        if (recordType.match(/bib_acq/)) {
-            qType = 'acq';
+        let real_recordType = recordType;
+        if (recordType === 'acq') {
+            real_recordType = 'bib';
         }
+
+        const method = `open-ils.vandelay.${real_recordType}_queue.create`;
 
         return new Promise((resolve, reject) => {
             this.net.request(
                 'open-ils.vandelay', method,
-                this.auth.token(), queueName, null, qType,
+                this.auth.token(), queueName, null, recordType,
                 matchSet, importDefId, matchBucket
             ).subscribe(queue => {
                 const e = this.evt.parse(queue);
@@ -232,7 +238,7 @@ export class VandelayService {
                 } else {
                     // createQueue is always called after queues have
                     // been fetched and cached.
-                    this.allQueues[qType].push(queue);
+                    this.allQueues[recordType].push(queue);
                     resolve(queue.id());
                 }
             });
@@ -240,9 +246,9 @@ export class VandelayService {
     }
 
     getQueuedRecords(queueId: number, queueType: string,
-      options?: any, limitToMatches?: boolean): Observable<any> {
+        options?: any, limitToMatches?: boolean): Observable<any> {
 
-        const qtype = queueType.match(/bib/) ? 'bib' : 'auth';
+        const qtype = queueType.match(/auth/) ? 'auth' : 'bib';
 
         let method =
           `open-ils.vandelay.${qtype}_queue.records.retrieve`;
@@ -280,7 +286,7 @@ export class VandelayService {
                     saveName
                 );
             },
-            err  => {
+            (err: unknown)  => {
                 console.error(err);
             }
         );
@@ -304,6 +310,7 @@ export class VandelayService {
                 if (tracker && tracker.state() === 'active') {
                     observer.next(tracker);
                     setTimeout(() =>
+                        // eslint-disable-next-line no-magic-numbers
                         this.getNextSessionTracker(id, observer), 2000);
                 } else {
                     console.debug(

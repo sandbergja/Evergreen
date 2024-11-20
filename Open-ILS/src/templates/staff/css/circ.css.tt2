@@ -6,26 +6,33 @@
 }
 
 /** style to make a grid look like a striped table */
-#patron-summary-grid div.row {padding: 3px; border-right: 2px solid rgb(248, 248, 248);}
-#patron-summary-grid div.row:nth-child(odd) {background-color: rgb(248, 248, 248);}
+#patron-summary-grid div.row {
+  padding: 3px; 
+  border-right: 2px solid var(--common-form-border);
+}
+#patron-summary-grid div.row:nth-child(odd) {
+  background-color: var(--common-form-bg);
+}
 
-/* there are bootstrap tyles for error, warning, etc., 
-but the ones I'm finding aren't quite cutting it..*/
-.patron-summary-alert {color: red; font-weight:bold}
-.patron-summary-alert-small {color: red; background-color: white;}
-.patron-summary-divider { border-top: 1px solid #CCC}
+.patron-summary-alert:not(.active .patron-summary-alert), 
+.patron-summary-alert-small:not(.active .patron-summary-alert-small) {
+  background-color: var(--badge-danger-bg);
+  color: var(--badge-danger-color);
+  font-weight:bold;
+}
+.patron-summary-divider { border-top: 1px solid var(--border);}
 .patron-summary-act-link {font-size: .8em;}
 .patron-summary-has-notes:hover, .patron-summary-has-notes:visited{ text-decoration: none; }
 
 .patron-summary-pref-name {
   padding-left: 6px;
-  color: #5cb85c;
+  color: light-dark(var(--bs-green-600), var(--bs-green-400));
 }
 
 /* Tag icon used for name keywords shouldn't look like a link */
 
 .glyphicon-tags, .glyphicon-tags:hover, .glyphicon-tags:focus {
-  color: #333;
+  color: var(--bs-body-color);
   text-decoration: none;
 }
 
@@ -40,7 +47,7 @@ but the ones I'm finding aren't quite cutting it..*/
 
 #patron-fixed-tabs {
     z-index: 4;
-    background-color: rgba(255,255,255,1);
+    background-color: var(--bs-body-bg);
 }
 
 .patron-name-header {
@@ -48,8 +55,6 @@ but the ones I'm finding aren't quite cutting it..*/
 }
 
 /* let search form elements fill their containers w/ slight padding */
-#patron-search-form-row {margin-left: 0px;}
-#patron-search-form div.col-md-2 { padding: 2px; }
 #patron-search-form input:not([type="checkbox"]) { width: 100%; }
 #patron-search-form .eg-org-selector,
 #patron-search-form .eg-org-selector button,
@@ -59,6 +64,63 @@ but the ones I'm finding aren't quite cutting it..*/
   text-align: left
 }
 
+.patron-search-container {
+  container-type: inline-size;
+  position: relative;
+  z-index: 1;
+}
+
+/* mobile-first layout: flexbox */
+.patron-search-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: start;
+  gap: 0.5rem;
+}
+
+/* Bootstrap sm breakpoint */
+@container (min-width: 576px) {
+  .patron-search-form > * {
+    flex-basis: 40%;
+  }
+
+  .actions-more {
+    position: absolute;
+    right: 0;
+    top: 0;
+  }
+}
+
+/* not a Bootstrap breakpoint, but where col-lg-9 can break */
+@container (min-width: 680px) {
+  .patron-search-form {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr) max-content;
+    grid-template-rows: repeat(5, auto);
+  }
+
+  .actions-more {
+    position: revert;
+  }
+}
+
+/* place in the next to last column, first row */
+.actions-search {
+  grid-row: 1;
+  grid-column: 5;
+}
+
+/* place in the next to last column, second row */
+.actions-reset {
+  grid-row: 2;
+  grid-column: 5;
+}
+
+/* place in the last column, spanning all rows */
+.actions-more {
+  grid-column: 6;
+  grid-row: 1 / 5;
+}
 
 #patron-payments-spreadsheet {
   margin-top: 10px;
@@ -77,10 +139,10 @@ but the ones I'm finding aren't quite cutting it..*/
 
 #hold-notify-settings div.row { margin-top: 12px; }
 #hold-notify-settings div.row:not(.header-row):nth-child(odd) {
-  background-color: rgb(248, 248, 248);
+  background-color: var(--bs-body-bg-alt);
 }
 #hold-notify-settings div.row:not(.header-row) {
-  border-bottom: 1px solid #CCC;
+  border-bottom: 1px solid var(--border);
 }
 
 /* -- patron registration -- */
@@ -144,7 +206,7 @@ but the ones I'm finding aren't quite cutting it..*/
     padding-top: 20px;
     padding-bottom: 10px;
     z-index: 1;
-    background-color: rgba(255,255,255,1);
+    background-color: var(--bs-body-bg);
 }
 
 .patron-reg-actions-bar {
@@ -162,7 +224,7 @@ but the ones I'm finding aren't quite cutting it..*/
  * but consider revisiting. */
 .patron-reg-validation-alert {
   font-weight: bold;
-  color: red;
+  color: var(--danger);
 }
 
 /* Angular applies these classes based on the field's 
@@ -171,8 +233,8 @@ but the ones I'm finding aren't quite cutting it..*/
 #patron-reg-container .ng-invalid,
 #patron-reg-container .ng-invalid-required,
 #patron-pay-by-credit-form .ng-invalid {
-  background-color: yellow;
-  color: red;
+  background-color: light-dark(var(--badge-warning-bg), rgba(var(--bs-yellow-400-rgba), 0.1));
+  color: var(--badge-danger-color);
 }
 
 .patron-reg-names-separator {
@@ -181,11 +243,15 @@ but the ones I'm finding aren't quite cutting it..*/
 }
 
 .patron-reg-pref-names {
-  background-color: rgb(215, 215, 215);
+  background-color: light-dark(var(--bs-gray-200), var(--bs-gray-900));
+}
+
+.patron-reg-example-btn {
+  margin-right: 15px;
 }
 
 .patron-reg-pending-address {
-  border:2px dashed #d9e8f9;
+  border:2px dashed var(--border);
   -moz-border-radius: 10px;
   padding: 10px;
   margin-bottom: 5px;

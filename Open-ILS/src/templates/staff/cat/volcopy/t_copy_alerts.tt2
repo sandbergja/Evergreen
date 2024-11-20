@@ -32,7 +32,7 @@
       <div class="row">
         <div class="col-md-10 pull-right">
           <input type="submit" class="btn btn-primary" value="[% l('OK') %]"/>
-          <button class="btn btn-warning" ng-click="cancel($event)">[% l('Cancel') %]</button>
+          <button class="btn btn-normal" ng-click="cancel($event)">[% l('Cancel') %]</button>
         </div>
       </div>
 
@@ -71,7 +71,7 @@
             <div class="col-md-3">
               <label>
                 <input type="checkbox" ng-model="acked" ng-change="(acked ? a.ack_time('now') : a.ack_time(null)) && a.ischanged(1)"/>
-                [% l('Clear?') %]
+                [% l('Delete') %]
               </label>
             </div>
           </div>

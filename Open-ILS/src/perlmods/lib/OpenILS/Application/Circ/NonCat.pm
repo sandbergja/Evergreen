@@ -183,8 +183,8 @@ sub fetch_noncat {
 sub noncat_due_date {
     my($e, $circ) = @_;
 
-    my $otype = $e->retrieve_config_non_cataloged_type($circ->item_type) 
-        or return $e->die_event;
+    my $otype = ref $circ->item_type ? $circ->item_type :
+        $e->retrieve_config_non_cataloged_type($circ->item_type);
 
     my $tz = $U->ou_ancestor_setting_value(
         $circ->circ_lib,
@@ -233,19 +233,66 @@ __PACKAGE__->register_method(
 );
 
 sub fetch_open_noncats {
-    my( $self, $conn, $auth, $userid ) = @_;
-    my $e = new_editor( authtoken => $auth );
+    my ($self, $conn, $auth, $user_id) = @_;
+
+    my $e = new_editor(authtoken => $auth);
     return $e->event unless $e->checkauth;
-    $userid ||= $e->requestor->id;
-    if( $e->requestor->id ne $userid ) {
-        return $e->event unless $e->allowed('VIEW_CIRCULATIONS'); # XXX rely on editor perm
+
+    $user_id ||= $e->requestor->id;
+
+    if ($e->requestor->id ne $user_id) {
+        return $e->event unless $e->allowed('VIEW_CIRCULATIONS');
     }
 
-    return $U->simplereq(
-        'open-ils.storage',
-        'open-ils.storage.action.open_non_cataloged_circulation.user',
-        $userid
+    return $e->search_action_open_non_cataloged_circulation(
+        {patron => $user_id},
+        {idlist => 1}
     );
+}
+
+__PACKAGE__->register_method(
+    method        => 'fetch_open_noncats_batch',
+    stream        => 1,
+    authoritative => 1,
+    api_name      => 'open-ils.circ.open_non_cataloged_circulation.user.batch',
+    signature     => {
+        desc      => q/Returns a stream of open non-cat circulations for a given user/,
+        params => [
+            {desc => 'Authentication token', type => 'string'},
+            {desc => 'UserID', type => 'number'}
+        ],
+        return => {
+            desc => 'Stream of ancc objects, Event on error'
+        },
+    }
+);
+
+sub fetch_open_noncats_batch {
+    my ($self, $client, $auth, $user_id) = @_;
+
+    my $e = new_editor(authtoken => $auth);
+    return $e->event unless $e->checkauth;
+
+    $user_id ||= $e->requestor->id;
+    if ($e->requestor->id ne $user_id) {
+        return $e->event unless $e->allowed('VIEW_CIRCULATIONS');
+    }
+
+    my $ids = $e->search_action_open_non_cataloged_circulation(
+        {patron => $user_id},
+        {idlist => 1}
+    );
+
+    for my $id (@$ids) {
+        my $circ = $e->retrieve_action_non_cataloged_circulation([
+            $id, {flesh => 1, flesh_fields => {ancc => ['item_type', 'staff']}}
+        ]);
+
+        noncat_due_date($e, $circ);
+        $client->respond($circ);
+    }
+
+    return undef;
 }
 
 

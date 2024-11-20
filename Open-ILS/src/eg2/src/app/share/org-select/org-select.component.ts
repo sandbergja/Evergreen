@@ -35,15 +35,32 @@ interface OrgDisplay {
 }
 
 @Component({
-  selector: 'eg-org-select',
-  templateUrl: './org-select.component.html'
+    selector: 'eg-org-select',
+    templateUrl: './org-select.component.html'
 })
 export class OrgSelectComponent implements OnInit {
-    static domId = 0;
+    static _domId = 0;
 
     showCombinedNames = false; // Managed via user/workstation setting
 
-    selected: OrgDisplay;
+    _selected: OrgDisplay;
+    set selected(s: OrgDisplay) {
+        if (s !== this._selected) {
+            this._selected = s;
+
+            // orgChanged() does not fire when the value is cleared,
+            // so emit the onChange here for cleared values only.
+            if (!s) { // may be '' or null
+                this._selected = null;
+                this.onChange.emit(null);
+            }
+        }
+    }
+
+    get selected(): OrgDisplay {
+        return this._selected;
+    }
+
     click$ = new Subject<string>();
     valueFromSetting: number = null;
     sortedOrgs: IdlObject[] = [];
@@ -56,8 +73,13 @@ export class OrgSelectComponent implements OnInit {
     // Placeholder text for selector input
     @Input() placeholder = '';
 
+    // ARIA label for selector. Required if there is no <label> in the markup.
+    @Input() ariaLabel?: string;
+
     // ID to display in the DOM for this selector
-    @Input() domId = 'eg-org-select-' + OrgSelectComponent.domId++;
+    @Input() domId = 'eg-org-select-' + OrgSelectComponent._domId++;
+
+    @Input() name = '';
 
     // Org unit field displayed in the selector
     @Input() displayField = 'shortname';
@@ -69,6 +91,8 @@ export class OrgSelectComponent implements OnInit {
     @Input() applyDefault = false;
 
     @Input() readOnly = false;
+
+    @Input() required = false;
 
     // List of org unit IDs to exclude from the selector
     hidden: number[] = [];
@@ -105,12 +129,14 @@ export class OrgSelectComponent implements OnInit {
     // This WILL NOT result in an onChange event firing.
     @Input() set applyOrg(org: IdlObject) {
         this.selected = org ? this.formatForDisplay(org) : null;
+        this.updateValidity(this.selectedOrgId());
     }
 
     // Modify the selected org unit by ID via data binding.
     // This WILL NOT result in an onChange event firing.
     @Input() set applyOrgId(id: number) {
         this.selected = id ? this.formatForDisplay(this.org.get(id)) : null;
+        this.updateValidity(this.selectedOrgId());
     }
 
     // Limit org unit display to those where the logged in user
@@ -140,10 +166,15 @@ export class OrgSelectComponent implements OnInit {
     // selected org unit. One way of invoking this is via a template
     // reference variable.
     selectedOrg(): IdlObject {
+        // eslint-disable-next-line eqeqeq
         if (this.selected == null) {
             return null;
         }
         return this.org.get(this.selected.id);
+    }
+
+    selectedOrgId(): number {
+        return this.selected ? this.selected.id : null;
     }
 
     constructor(
@@ -164,21 +195,21 @@ export class OrgSelectComponent implements OnInit {
 
         promise = promise.then(startupOrg => {
             return this.serverStore.getItem('eg.orgselect.show_combined_names')
-            .then(show => {
-                const sortField = show ? 'name' : this.displayField;
+                .then(show => {
+                    const sortField = show ? 'name' : this.displayField;
 
-                // Sort the tree and reabsorb to propagate the sorted
-                // nodes to the org.list() used by this component.
-                // Maintain our own copy of the org list in case the
-                // org service is sorted in a different manner by other
-                // parts of the code.
-                this.org.sortTree(sortField);
-                this.org.absorbTree();
-                this.sortedOrgs = this.org.list();
+                    // Sort the tree and reabsorb to propagate the sorted
+                    // nodes to the org.list() used by this component.
+                    // Maintain our own copy of the org list in case the
+                    // org service is sorted in a different manner by other
+                    // parts of the code.
+                    this.org.sortTree(sortField);
+                    this.org.absorbTree();
+                    this.sortedOrgs = this.org.list();
 
-                this.showCombinedNames = show;
-            })
-            .then(_ => startupOrg);
+                    this.showCombinedNames = show;
+                })
+                .then(_ => startupOrg);
         });
 
         promise.then((startupOrgId: number) => {
@@ -280,11 +311,10 @@ export class OrgSelectComponent implements OnInit {
     }
 
     // Fired by the typeahead to inform us of a change.
-    // TODO: this does not fire when the value is cleared :( -- implement
-    // change detection on this.selected to look specifically for NULL.
     orgChanged(selEvent: NgbTypeaheadSelectItemEvent) {
         // console.debug('org unit change occurred ' + selEvent.item);
-        this.onChange.emit(this.org.get(selEvent.item.id));
+        const newOrg = selEvent.item.id;
+        this.onChange.emit(this.org.get(newOrg));
 
         if (this.persistKey && this.valueFromSetting !== selEvent.item.id) {
             // persistKey is active.  Update the persisted value when changed.
@@ -293,6 +323,28 @@ export class OrgSelectComponent implements OnInit {
             this.valueFromSetting = selEvent.item.id;
             this.serverStore.setItem(key, this.valueFromSetting);
         }
+    }
+
+    // Modifies the classlist of the input to show a visual change.
+    // FIXME I don't think angular forms notice this but I don't understand
+    //       angular forms to do it properly :(
+    updateValidity(newOrg: number) {
+        if (newOrg && this.required) {
+            const node = document.getElementById(`${this.domId}`);
+            if (this.isValidOrg(newOrg)) {
+                node.classList.replace('ng-invalid', 'ng-valid');
+            } else {
+                node.classList.replace('ng-valid', 'ng-invalid');
+            }
+        }
+    }
+
+    isValidOrg(org: any) : boolean {
+        if (!org) { return false; }
+
+        if (this.disableOrgs.includes(org)) { return false; }
+
+        return true;
     }
 
     // Remove the tree-padding spaces when matching.
@@ -315,16 +367,24 @@ export class OrgSelectComponent implements OnInit {
         });
     }
 
+    // Free-text values are not allowed.
+    handleBlur() {
+        if (typeof this.selected === 'string') {
+            this.selected = null;
+        }
+    }
+
     filter = (text$: Observable<string>): Observable<OrgDisplay[]> => {
 
         return text$.pipe(
+            // eslint-disable-next-line no-magic-numbers
             debounceTime(200),
             distinctUntilChanged(),
             merge(
                 // Inject a specifier indicating the source of the
                 // action is a user click
                 this.click$.pipe(filter(() => !this.instance.isPopupOpen()))
-                .pipe(mapTo('_CLICK_'))
+                    .pipe(mapTo('_CLICK_'))
             ),
             map(term => {
 
@@ -357,7 +417,7 @@ export class OrgSelectComponent implements OnInit {
                 return orgs.map(org => this.formatForDisplay(org));
             })
         );
-    }
+    };
 }
 
 

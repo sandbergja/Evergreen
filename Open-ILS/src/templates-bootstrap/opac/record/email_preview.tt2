@@ -7,6 +7,7 @@
     <h2 class="sr-only">[% l('Email Record Preview') %]</h2>
     [% INCLUDE "opac/parts/searchbar.tt2" %]
     <br class="clear-both" />
+<main id="main">
     <div id="content-wrapper" class="content-wrapper-record-page">
 
     <form id="previewForm" method="POST" action="[% mkurl('',{},['locg','format','sort','sort_dir','context_org','bre_id','is_list']) %]">
@@ -58,7 +59,7 @@
         [% IF ctx.format_obj.holdings == 't' %]
         <div class="searchbar">
             <label for="context_org">[% l('Holdings Library: ') %]
-                [% INCLUDE build_org_selector id='context_org' name='context_org' value=ctx.selected_print_email_loc %]</br>
+                [% INCLUDE build_org_selector id='context_org' name='context_org' value=ctx.selected_print_email_loc %]<br />
             </label>
         </div>
         [% END %]
@@ -85,7 +86,7 @@
             [% IF ctx.captcha.key %]
             <div class="searchbar">
                 <p>[% l('Please prove you are not a robot by answering the following addition problem:') %]</p>
-                <p>[% ctx.captcha.left %] + [% ctx.captcha.right %] = <input type="text" name="capanswer"/></p>
+                <p><label for="capanswer">[% ctx.captcha.left %] + [% ctx.captcha.right %] = </label>&nbsp;<input type="text" name="capanswer" id="capanswer"/></p>
                 <input type="hidden" name="capkey" value="[% ctx.captcha.key %]"/>
             </div>
             [% END %]
@@ -113,4 +114,5 @@
         <br class="clear-both" />
     </form>
     </div>
+</main>
 [%- END %]

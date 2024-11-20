@@ -6,8 +6,8 @@ angular.module('egCoreMod')
 
 .factory('egHolds',
 
-       ['$uibModal','$q','egCore','egConfirmDialog','egAlertDialog',
-function($uibModal , $q , egCore , egConfirmDialog , egAlertDialog) {
+       ['$uibModal','$q','egCore','egConfirmDialog','egAlertDialog','egWorkLog',
+function($uibModal , $q , egCore , egConfirmDialog , egAlertDialog , egWorkLog) {
 
     var service = {};
 
@@ -105,6 +105,29 @@ function($uibModal , $q , egCore , egConfirmDialog , egAlertDialog) {
                                         'warning.hold.cancel_failed');
                                     console.error('unable to cancel hold: ' 
                                         + evt.toString());
+                                } else {
+                                    egCore.net.request(
+                                        'open-ils.circ', 'open-ils.circ.hold.details.retrieve',
+                                        egCore.auth.token(), hold_id, {
+                                            'suppress_notices': true,
+                                            'suppress_transits': true,
+                                            'suppress_mvr' : true,
+                                            'include_usr' : true
+                                    }).then(function(details) {
+                                        //console.log('details', details);
+                                        egWorkLog.record(
+                                            egCore.strings.EG_WORK_LOG_CANCELED_HOLD
+                                            ,{
+                                                'action' : 'canceled_hold',
+                                                'method' : 'open-ils.circ.hold.cancel',
+                                                'hold_id' : hold_id,
+                                                'patron_id' : details.hold.usr().id(),
+                                                'user' : details.patron_last,
+                                                'item' : details.copy ? details.copy.barcode() : null,
+                                                'item_id' : details.copy ? details.copy.id() : null
+                                            }
+                                        );
+                                    });
                                 }
                                 cancel_one();
                             });
@@ -116,7 +139,12 @@ function($uibModal , $q , egCore , egConfirmDialog , egAlertDialog) {
             ],
             resolve : {
                 cancel_reasons : function() {
-                    return service.get_cancel_reasons();
+                    return service.get_cancel_reasons().then(function(reasons) {
+                        // only display reasons for manually canceling holds
+                        return reasons.filter(function(r) {
+                            return 't' === r.manual();
+                        });
+                    });
                 }
             }
         }).result;
@@ -494,6 +522,11 @@ function($uibModal , $q , egCore , egConfirmDialog , egAlertDialog) {
             egCore.pcrud.retrieve('au',hold.requestor()).then(function(u) { hold.requestor(u) });
         }
 
+        if (hold.canceled_by() && typeof hold.canceled_by() != 'object') {
+            console.debug('fetching hold canceled_by');
+            egCore.pcrud.retrieve('au',hold.canceled_by()).then(function(u) { hold.canceled_by(u) });
+        }
+
         if (hold.cancel_cause() && typeof hold.cancel_cause() != 'object') {
             console.debug('fetching hold cancel cause');
             egCore.pcrud.retrieve('ahrcc',hold.cancel_cause()).then(function(c) { hold.cancel_cause(c) });
@@ -589,7 +622,7 @@ function($window , $location , $timeout , egCore , egHolds , egCirc) {
         return egHolds.cancel_holds(hold_ids).then(service.refresh);
     }
 
-    service.cancel_wide_hold = function(items) {
+    service.cancel_hold_wide = function(items) {
         var hold_ids = items.filter(function(item) {
             return !item.hold.cancel_time;
         }).map(function(item) {return item.hold.id});
@@ -605,7 +638,7 @@ function($window , $location , $timeout , egCore , egHolds , egCirc) {
         return egHolds.uncancel_holds(hold_ids).then(service.refresh);
     }
 
-    service.uncancel_wide_hold = function(items) {
+    service.uncancel_hold_wide = function(items) {
         var hold_ids = items.filter(function(item) {
             return item.hold.cancel_time;
         }).map(function(item) {return item.hold.id});
@@ -841,7 +874,7 @@ function($window , $location , $timeout , egCore , egHolds , egCirc) {
                             function(val, key) { $scope[key] = val });
 
                         // fetch + flesh the cancel_cause if needed
-                        if ($scope.hold.cancel_time()) {
+                        if ($scope.hold.cancel_cause() && typeof $scope.hold.cancel_cause() != 'object') {
                             egHolds.get_cancel_reasons().then(function() {
                                 // egHolds caches the causes in egEnv
                                 $scope.hold.cancel_cause(
@@ -858,6 +891,84 @@ function($window , $location , $timeout , egCore , egHolds , egCirc) {
 
                     });
                 }
+
+                $scope.resetPage = 1;
+                $scope.resetsPerPage = 10;
+                $scope.maximumPages = 25;
+                $scope.resetsLoaded = false;
+                $scope.reverseResetOrder = false;
+
+                $scope.show_resets_tab = function() {
+                    $scope.detail_tab = 'resets';
+                    egCore.pcrud.search('ahrrre',
+                        {hold : $scope.hold.id()},
+                        {
+                            flesh : 1,
+                            flesh_fields : {ahrrre : ['reset_reason','requestor','requestor_workstation','previous_copy']},
+                            limit : $scope.resetsPerPage * $scope.maximumPages
+                        },
+                        {atomic : true}
+                    ).then(function(ents) {
+                        // sort the reset notes by date
+                        ents.sort(
+                            function(a,b){
+                                return Date.parse(a.reset_time()) - Date.parse(b.reset_time());
+                            }
+                        );
+                        $scope.hold.reset_entries(ents);
+                        $scope.filter_resets();
+                        $scope.resetsLoaded = true;
+                    });
+                }
+
+                $scope.filter_resets = function() {
+                    if(
+                        typeof($scope.hold) === 'undefined' ||
+                        typeof($scope.hold.reset_entries) === 'undefined' ||
+                        $scope.hold.reset_entries() === null
+                    )
+                        return;
+                    var begin = (($scope.resetPage - 1) * $scope.resetsPerPage),
+                        end = begin + $scope.resetsPerPage;
+                    $scope.filteredResets = $scope.hold
+                                                .reset_entries()
+                                                .slice(begin,end);
+                }
+
+                $scope.reverse_reset_order = function() {
+                    $scope.hold.reset_entries().reverse()
+                    $scope.reverseResetOrder = !$scope.reverseResetOrder;
+                    $scope.first_rs_page();
+                }
+
+                $scope.on_first_rs_page = function() {
+                    return $scope.resetPage == 1;
+                }
+
+                $scope.has_next_rs_page = function() {
+                    return $scope.resetPage < $scope.max_rs_pages();
+                }
+
+                $scope.max_rs_pages = function() {
+                    if(typeof($scope.hold.reset_entries) === 'undefined' || $scope.hold.reset_entries() === null)
+                        return 0;
+                    return $scope.hold.reset_entries().length/$scope.resetsPerPage;
+                }
+
+                $scope.first_rs_page = function() {
+                    $scope.resetPage = 1;
+                }
+
+                $scope.increment_rs_page = function() {
+                    $scope.resetPage++;
+                }
+
+                $scope.decrement_rs_page = function() {
+                    $scope.resetPage--;
+                }
+
+                $scope.$watch('resetPage',$scope.filter_resets);
+                $scope.$watch('reverseResetOrder',$scope.filter_resets);
 
                 $scope.show_notify_tab = function() {
                     $scope.detail_tab = 'notify';

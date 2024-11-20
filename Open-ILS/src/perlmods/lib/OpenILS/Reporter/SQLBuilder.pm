@@ -1,5 +1,7 @@
 #-------------------------------------------------------------------------------------------------
 package OpenILS::Reporter::SQLBuilder;
+use Scalar::Util qw(blessed);
+our $_minimum_repsec_version = 7;
 
 sub new {
     my $class = shift;
@@ -17,7 +19,7 @@ sub register_params {
 sub get_param {
     my $self = shift;
     my $p = shift;
-    return $self->{_builder}->{_params}->{$p};
+    return $self->builder->{_params}->{$p};
 }
 
 sub set_builder {
@@ -28,7 +30,34 @@ sub set_builder {
 
 sub builder {
     my $self = shift;
-    return $self->{_builder};
+    return $self->{_builder} || $self;
+}
+
+sub do_repsec {
+    my $self = shift;
+    if ($self->template_version and $self->template_version >= $self->minimum_repsec_version) {
+        return 1;
+    }
+    return 0;
+}
+
+sub template_version {
+    my $self = shift;
+    return $self->builder->{_template_version};
+}
+
+sub minimum_repsec_version {
+    my $self = shift;
+    my $v = shift;
+    $self->builder->{_minimum_repsec_version} = $v if (defined $v);
+    return $self->builder->{_minimum_repsec_version} || $_minimum_repsec_version;
+}
+
+sub runner {
+    my $self = shift;
+    my $t = shift;
+    $self->builder->{_runner} = $t if (defined $t);
+    return $self->builder->{_runner};
 }
 
 sub relative_time {
@@ -74,6 +103,7 @@ sub parse_report {
     $rs->is_subquery( 1 ) if ( $report->{alias} );
 
     $rs ->set_builder( $self )
+        ->set_template_version( $report->{version} )
         ->set_subquery_alias( $report->{alias} )
         ->set_select( $report->{select} )
         ->set_from( $report->{from} )
@@ -83,7 +113,9 @@ sub parse_report {
         ->set_do_rollup( $report->{do_rollup} )
         ->set_pivot_data( $report->{pivot_data} )
         ->set_pivot_label( $report->{pivot_label} )
-        ->set_pivot_default( $report->{pivot_default} );
+        ->set_pivot_default( $report->{pivot_default} )
+        ->set_bib_column_number( $report->{bib_column_number} )
+        ->set_record_bucket( $report->{record_bucket} );
 
     return $rs;
 }
@@ -118,6 +150,37 @@ sub pivot_label {
 sub pivot_default {
     my $self = shift;
     return $self->builder->{_pivot_default};
+}
+
+sub set_template_version {
+    my $self = shift;
+    my $v = shift;
+    $self->builder->{_template_version} = $v || 0;
+    return $self;
+}
+
+sub record_bucket {
+    my $self = shift;
+    return $self->builder->{_record_bucket};
+}
+
+sub set_record_bucket {
+    my $self = shift;
+    my $p = shift;
+    $self->builder->{_record_bucket} = $p if (defined $p);
+    return $self;
+}
+
+sub bib_column_number {
+    my $self = shift;
+    return $self->builder->{_bib_column_number};
+}
+
+sub set_bib_column_number {
+    my $self = shift;
+    my $p = shift;
+    $self->builder->{_bib_column_number} = $p if (defined $p);
+    return $self;
 }
 
 sub set_do_rollup {
@@ -263,7 +326,13 @@ sub toSQL {
 
     $sql .= "SELECT\t" . join(",\n\t", map { $_->toSQL } @{ $self->{_select} }) . "\n" if (@{ $self->{_select} });
     $sql .= "  FROM\t" . $self->{_from}->toSQL . "\n" if ($self->{_from});
-    $sql .= "  WHERE\t" . join("\n\tAND ", map { $_->toSQL } @{ $self->{_where} }) . "\n" if (@{ $self->{_where} });
+    $sql .= "  WHERE\t" . join("\n\tAND ", map { $_->toSQL } @{ $self->{_where} }) . "\n" if (@{ $self->{_where} } or $self->{_from}->{_where_addition});
+
+    # if we precalculated a WHERE condition based on @repsec:restriction_function in the IDL, add that here
+    if ($self->{_from}->{_where_addition}) {
+        my $and = "AND " if (@{ $self->{_where} });
+        $sql .= "  \t$and". $self->{_from}->{_where_addition} ."\n";
+    }
 
     my @group_by = $self->group_by_list;
 
@@ -476,6 +545,59 @@ sub find_relation {
     return $self->builder->{_rels}->{$self->{_relation}};
 }
 
+sub full_column_name {
+    my $self = shift;
+    return '"' . $self->{_relation} . '"."' . $self->name . '"';
+}
+
+sub full_column_output_reference {
+    my $self = shift;
+    my $fullname = $self->full_column_name;
+
+    if ($self->do_repsec) { # template is new enough...
+        my $rel = $self->find_relation;
+        if ($rel && $$rel{_idlclass}) { # we need and idl hint in order to do any repsec stuff ...
+            if (my $idl_class = Fieldmapper::class_for_hint( $rel->{_idlclass} )) { # ... and we have one
+                my $field_info = $idl_class->FieldInfo($self->name);
+
+                if ($$field_info{reporter_redact}) { # the field wants redaction ...
+                    $fullname = 'evergreen.redact_value('. $fullname;
+
+                    if ($$field_info{reporter_redact_skip}) { # ... there IS a function we should use to maybe allow the data through
+                        $fullname .= ", $$field_info{reporter_redact_skip}(";
+                        if ($$field_info{reporter_redact_skip_params}) { # ... and there are parameters needed by the function ...
+                            my @params = split(':', $$field_info{reporter_redact_skip_params});
+                            my $first = 1;
+                            for my $p (@params) { # ... so loop over them and add each
+                                $fullname .= ', ' unless $first;
+                                $first = 0;
+                                if ($p eq '$runner') { # special!
+                                    $fullname .= $self->runner;
+                                } elsif ($idl_class->has_field($p)) {
+                                    $fullname .= '"' . $rel->{_alias} . '"."' . $p . '"';
+                                } else {
+                                    $fullname .= "\$_$$\$$p\$_$$\$";
+                                }
+                            }
+                        }
+                        $fullname .= ')';
+                    } else { # ... there is NOT a function, we do not skip!
+                        $fullname .= ', FALSE';
+                    }
+
+                    if ($$field_info{reporter_redact_with}) { # an alternate value was supplied, otherwise it will be NULL
+                        $fullname .= ", \$_$$\$$$field_info{reporter_redact_with}\$_$$\$";
+                    }
+
+                    $fullname .= ')';
+                }
+            }
+        }
+    }
+
+    return $fullname;
+}
+
 sub name {
     my $self = shift;
     if (ref($self->{_column})) {
@@ -553,7 +675,7 @@ sub toSQL {
     my @params;
     @params = @{ $self->resolve_param( $self->{_column}->{params} ) } if ($self->{_column}->{params});
 
-    my $sql = $func . '("' . $self->{_relation} . '"."' . $self->name . '"';
+    my $sql = $func . '(' . $self->full_column_output_reference;
     $sql .= ",\$_$$\$" . join("\$_$$\$,\$_$$\$", @params) . "\$_$$\$" if (@params);
     $sql .= ')';
 
@@ -567,7 +689,7 @@ package OpenILS::Reporter::SQLBuilder::Column::Transform::Bare;
 
 sub toSQL {
     my $self = shift;
-    return '"' . $self->{_relation} . '"."' . $self->name . '"';
+    return $self->full_column_output_reference;
 }
 
 sub is_aggregate { return 0 }
@@ -578,7 +700,7 @@ package OpenILS::Reporter::SQLBuilder::Column::Transform::upper;
 sub toSQL {
     my $self = shift;
     my $params = $self->resolve_param( $self->{_column}->{params} );
-    return 'UPPER("' . $self->{_relation} . '"."' . $self->name . '")';
+    return 'UPPER(' . $self->full_column_output_reference . ')';
 }
 
 sub is_aggregate { return 0 }
@@ -590,7 +712,7 @@ package OpenILS::Reporter::SQLBuilder::Column::Transform::lower;
 sub toSQL {
     my $self = shift;
     my $params = $self->resolve_param( $self->{_column}->{params} );
-    return 'evergreen.lowercase("' . $self->{_relation} . '"."' . $self->name . '")';
+    return 'evergreen.lowercase(' . $self->full_column_output_reference . ')';
 }
 
 sub is_aggregate { return 0 }
@@ -615,7 +737,7 @@ package OpenILS::Reporter::SQLBuilder::Column::Transform::day_name;
 
 sub toSQL {
     my $self = shift;
-    return 'TO_CHAR("' . $self->{_relation} . '"."' . $self->name . '", \'Day\')';
+    return 'TO_CHAR(' . $self->full_column_output_reference . ', \'Day\')';
 }
 
 sub is_aggregate { return 0 }
@@ -626,7 +748,7 @@ package OpenILS::Reporter::SQLBuilder::Column::Transform::month_name;
 
 sub toSQL {
     my $self = shift;
-    return 'TO_CHAR("' . $self->{_relation} . '"."' . $self->name . '", \'Month\')';
+    return 'TO_CHAR(' . $self->full_column_output_reference . ', \'Month\')';
 }
 
 sub is_aggregate { return 0 }
@@ -637,7 +759,7 @@ package OpenILS::Reporter::SQLBuilder::Column::Transform::doy;
 
 sub toSQL {
     my $self = shift;
-    return 'EXTRACT(DOY FROM "' . $self->{_relation} . '"."' . $self->name . '")';
+    return 'EXTRACT(DOY FROM ' . $self->full_column_output_reference . ')';
 }
 
 sub is_aggregate { return 0 }
@@ -648,7 +770,7 @@ package OpenILS::Reporter::SQLBuilder::Column::Transform::woy;
 
 sub toSQL {
     my $self = shift;
-    return 'EXTRACT(WEEK FROM "' . $self->{_relation} . '"."' . $self->name . '")';
+    return 'EXTRACT(WEEK FROM ' . $self->full_column_output_reference . ')';
 }
 
 sub is_aggregate { return 0 }
@@ -659,7 +781,7 @@ package OpenILS::Reporter::SQLBuilder::Column::Transform::moy;
 
 sub toSQL {
     my $self = shift;
-    return 'EXTRACT(MONTH FROM "' . $self->{_relation} . '"."' . $self->name . '")';
+    return 'EXTRACT(MONTH FROM ' . $self->full_column_output_reference . ')';
 }
 
 sub is_aggregate { return 0 }
@@ -670,7 +792,7 @@ package OpenILS::Reporter::SQLBuilder::Column::Transform::qoy;
 
 sub toSQL {
     my $self = shift;
-    return 'EXTRACT(QUARTER FROM "' . $self->{_relation} . '"."' . $self->name . '")';
+    return 'EXTRACT(QUARTER FROM ' . $self->full_column_output_reference . ')';
 }
 
 sub is_aggregate { return 0 }
@@ -681,7 +803,7 @@ package OpenILS::Reporter::SQLBuilder::Column::Transform::dom;
 
 sub toSQL {
     my $self = shift;
-    return 'EXTRACT(DAY FROM "' . $self->{_relation} . '"."' . $self->name . '")';
+    return 'EXTRACT(DAY FROM ' . $self->full_column_output_reference . ')';
 }
 
 sub is_aggregate { return 0 }
@@ -692,7 +814,7 @@ package OpenILS::Reporter::SQLBuilder::Column::Transform::dow;
 
 sub toSQL {
     my $self = shift;
-    return 'EXTRACT(DOW FROM "' . $self->{_relation} . '"."' . $self->name . '")';
+    return 'EXTRACT(DOW FROM ' . $self->full_column_output_reference . ')';
 }
 
 sub is_aggregate { return 0 }
@@ -703,7 +825,7 @@ package OpenILS::Reporter::SQLBuilder::Column::Transform::year_trunc;
 
 sub toSQL {
     my $self = shift;
-    return 'EXTRACT(YEAR FROM "' . $self->{_relation} . '"."' . $self->name . '")';
+    return 'EXTRACT(YEAR FROM ' . $self->full_column_output_reference . ')';
 }
 
 sub is_aggregate { return 0 }
@@ -714,8 +836,8 @@ package OpenILS::Reporter::SQLBuilder::Column::Transform::month_trunc;
 
 sub toSQL {
     my $self = shift;
-    return '(EXTRACT(YEAR FROM "' . $self->{_relation} . '"."' . $self->name . '")' .
-        ' || \'-\' || LPAD(EXTRACT(MONTH FROM "' . $self->{_relation} . '"."' . $self->name . '")::text,2,\'0\'))';
+    return '(EXTRACT(YEAR FROM ' . $self->full_column_output_reference . ')' .
+        ' || \'-\' || LPAD(EXTRACT(MONTH FROM ' . $self->full_column_output_reference . ')::text,2,\'0\'))';
 }
 
 sub is_aggregate { return 0 }
@@ -726,7 +848,7 @@ package OpenILS::Reporter::SQLBuilder::Column::Transform::date_trunc;
 
 sub toSQL {
     my $self = shift;
-    return 'DATE("' . $self->{_relation} . '"."' . $self->name . '")';
+    return 'DATE(' . $self->full_column_output_reference . ')';
 }
 
 sub is_aggregate { return 0 }
@@ -737,7 +859,7 @@ package OpenILS::Reporter::SQLBuilder::Column::Transform::hour_trunc;
 
 sub toSQL {
     my $self = shift;
-    return 'EXTRACT(HOUR FROM "' . $self->{_relation} . '"."' . $self->name . '")';
+    return 'EXTRACT(HOUR FROM ' . $self->full_column_output_reference . ')';
 }
 
 sub is_aggregate { return 0 }
@@ -748,8 +870,8 @@ package OpenILS::Reporter::SQLBuilder::Column::Transform::quarter;
 
 sub toSQL {
     my $self = shift;
-    return '(EXTRACT(YEAR FROM "' . $self->{_relation} . '"."' . $self->name . '")' .
-        ' || \'-Q\' || EXTRACT(QUARTER FROM "' . $self->{_relation} . '"."' . $self->name . '"))';
+    return '(EXTRACT(YEAR FROM ' . $self->full_column_output_reference . ')' .
+        ' || \'-Q\' || EXTRACT(QUARTER FROM ' . $self->full_column_output_reference . '))';
 }
 
 sub is_aggregate { return 0 }
@@ -760,8 +882,8 @@ package OpenILS::Reporter::SQLBuilder::Column::Transform::months_ago;
 
 sub toSQL {
     my $self = shift;
-    return '(EXTRACT(YEAR FROM AGE(NOW(),"' . $self->{_relation} . '"."' . $self->name . '")) * 12) +'.
-           ' EXTRACT(MONTH FROM AGE(NOW(),"' . $self->{_relation} . '"."' . $self->name . '"))';
+    return '(EXTRACT(YEAR FROM AGE(NOW(),' . $self->full_column_output_reference . ')) * 12) +'.
+           ' EXTRACT(MONTH FROM AGE(NOW(),' . $self->full_column_output_reference . '))';
 }
 
 sub is_aggregate { return 0 }
@@ -772,7 +894,7 @@ package OpenILS::Reporter::SQLBuilder::Column::Transform::hod;
 
 sub toSQL {
     my $self = shift;
-    return 'EXTRACT(HOUR FROM "' . $self->{_relation} . '"."' . $self->name . '")';
+    return 'EXTRACT(HOUR FROM ' . $self->full_column_output_reference . ')';
 }
 
 sub is_aggregate { return 0 }
@@ -783,8 +905,8 @@ package OpenILS::Reporter::SQLBuilder::Column::Transform::quarters_ago;
 
 sub toSQL {
     my $self = shift;
-    return '(EXTRACT(YEAR FROM AGE(NOW(),"' . $self->{_relation} . '"."' . $self->name . '")) * 4) +'.
-           ' EXTRACT(QUARTER FROM AGE(NOW(),"' . $self->{_relation} . '"."' . $self->name . '"))';
+    return '(EXTRACT(YEAR FROM AGE(NOW(),' . $self->full_column_output_reference . ')) * 4) +'.
+           ' EXTRACT(QUARTER FROM AGE(NOW(),' . $self->full_column_output_reference . '))';
 }
 
 sub is_aggregate { return 0 }
@@ -795,7 +917,7 @@ package OpenILS::Reporter::SQLBuilder::Column::Transform::age;
 
 sub toSQL {
     my $self = shift;
-    return 'AGE(NOW(),"' . $self->{_relation} . '"."' . $self->name . '")';
+    return 'AGE(NOW(),' . $self->full_column_output_reference . ')';
 }
 
 sub is_aggregate { return 0 }
@@ -806,7 +928,7 @@ package OpenILS::Reporter::SQLBuilder::Column::Transform::first;
 
 sub toSQL {
     my $self = shift;
-    return 'FIRST("' . $self->{_relation} . '"."' . $self->name . '")';
+    return 'FIRST(' . $self->full_column_output_reference . ')';
 }
 
 sub is_aggregate { return 1 }
@@ -817,7 +939,7 @@ package OpenILS::Reporter::SQLBuilder::Column::Transform::last;
 
 sub toSQL {
     my $self = shift;
-    return 'LAST("' . $self->{_relation} . '"."' . $self->name . '")';
+    return 'LAST(' . $self->full_column_output_reference . ')';
 }
 
 sub is_aggregate { return 1 }
@@ -828,7 +950,7 @@ package OpenILS::Reporter::SQLBuilder::Column::Transform::min;
 
 sub toSQL {
     my $self = shift;
-    return 'MIN("' . $self->{_relation} . '"."' . $self->name . '")';
+    return 'MIN(' . $self->full_column_output_reference . ')';
 }
 
 sub is_aggregate { return 1 }
@@ -839,7 +961,7 @@ package OpenILS::Reporter::SQLBuilder::Column::Transform::max;
 
 sub toSQL {
     my $self = shift;
-    return 'MAX("' . $self->{_relation} . '"."' . $self->name . '")';
+    return 'MAX(' . $self->full_column_output_reference . ')';
 }
 
 sub is_aggregate { return 1 }
@@ -850,7 +972,7 @@ package OpenILS::Reporter::SQLBuilder::Column::Transform::count;
 
 sub toSQL {
     my $self = shift;
-    return 'COUNT("' . $self->{_relation} . '"."' . $self->name . '")';
+    return 'COUNT(' . $self->full_column_output_reference . ')';
 }
 
 sub is_aggregate { return 1 }
@@ -861,7 +983,7 @@ package OpenILS::Reporter::SQLBuilder::Column::Transform::count_distinct;
 
 sub toSQL {
     my $self = shift;
-    return 'COUNT(DISTINCT "' . $self->{_relation} . '"."' . $self->name . '")';
+    return 'COUNT(DISTINCT ' . $self->full_column_output_reference . ')';
 }
 
 sub is_aggregate { return 1 }
@@ -872,7 +994,7 @@ package OpenILS::Reporter::SQLBuilder::Column::Transform::sum;
 
 sub toSQL {
     my $self = shift;
-    return 'SUM("' . $self->{_relation} . '"."' . $self->name . '")';
+    return 'SUM(' . $self->full_column_output_reference . ')';
 }
 
 sub is_aggregate { return 1 }
@@ -883,7 +1005,7 @@ package OpenILS::Reporter::SQLBuilder::Column::Transform::average;
 
 sub toSQL {
     my $self = shift;
-    return 'AVG("' . $self->{_relation} . '"."' . $self->name .  '")';
+    return 'AVG(' . $self->full_column_output_reference . ')';
 }
 
 sub is_aggregate { return 1 }
@@ -1026,8 +1148,12 @@ sub parse {
     my $b = shift;
     $self->set_builder($b);
 
+    $self->{_idlclass} = $rel_data->{idlclass};
     $self->{_table} = $rel_data->{table};
     $self->{_alias} = $rel_data->{alias} || $self->{_table};
+    $self->{_RHS_join_addition} = '';
+    $self->{_LHS_join_addition} = '';
+    $self->{_where_addition} = '';
     $self->{_join} = [];
     $self->{_columns} = [];
 
@@ -1037,6 +1163,55 @@ sub parse {
         $self->add_join(
             $_ => OpenILS::Reporter::SQLBuilder::Relation->parse( $rel_data->{join}->{$_}, $b ) => $rel_data->{join}->{$_}->{key} => $rel_data->{join}->{$_}->{type}
         ) for ( keys %{ $rel_data->{join} } );
+    }
+
+    if ($self->do_repsec) {
+        if (my $idl_class = Fieldmapper::class_for_hint($self->{_idlclass})) {
+
+            # Gather JOIN restriction function for use when we're on the right side of a join
+            if (my $join_func = $Fieldmapper::fieldmap->{$idl_class}->{reporter_join_function}) {
+                $join_func .= '(';
+                if (my $join_func_params = $Fieldmapper::fieldmap->{$idl_class}->{reporter_join_parameters}) {
+                    my @params = split(':', $join_func_params);
+                    my $first = 1;
+                    for my $p (@params) { # ... so loop over them and add each
+                        $join_func .= ', ' unless $first;
+                        $first = 0;
+                        if ($p eq '$runner') { # special!
+                            $join_func .= $self->runner;
+                        } elsif ($idl_class->has_field($p)) {
+                            $join_func .= '"'.$self->{_alias}.'"."'.$p.'"';
+                        } else {
+                            $join_func .= "\$_$$\$$p\$_$$\$";
+                        }
+                    }
+                }
+                $join_func .= ')';
+                $self->{_RHS_join_addition} = $join_func;
+            }
+
+            # Gather WHERE restriction function for use when we're the core class
+            if (my $where_func = $Fieldmapper::fieldmap->{$idl_class}->{reporter_where_function}) {
+                $where_func .= '(';
+                if (my $where_func_params = $Fieldmapper::fieldmap->{$idl_class}->{reporter_where_parameters}) {
+                    my @params = split(':', $where_func_params);
+                    my $first = 1;
+                    for my $p (@params) { # ... so loop over them and add each
+                        $where_func .= ', ' unless $first;
+                        $first = 0;
+                        if ($p eq '$runner') { # special!
+                            $where_func .= $self->runner;
+                        } elsif ($idl_class->has_field($p)) {
+                            $where_func .= '"'.$self->{_alias}.'"."'.$p.'"';
+                        } else {
+                            $where_func .= "\$_$$\$$p\$_$$\$";
+                        }
+                    }
+                }
+                $where_func .= ')';
+                $self->{_where_addition} = $where_func;
+            }
+        }
     }
 
     return $self;
@@ -1141,6 +1316,34 @@ sub build {
         }
     }
 
+    if ($self->do_repsec) {
+        if (my $idl_class = Fieldmapper::class_for_hint($self->{_left_rel}->{_idlclass})) {
+            my $lcol = $self->{_left_col};
+
+            # Gather JOIN restriction function for use when we're on the left side of a join, via IDL link
+            if (my $join_func = $Fieldmapper::fieldmap->{$idl_class}{links}{$lcol}->{reporter_join_function}) {
+                $join_func .= '(';
+                if (my $join_func_params = $Fieldmapper::fieldmap->{$idl_class}{links}{$lcol}->{reporter_join_parameters}) {
+                    my @params = split(':', $join_func_params);
+                    my $first = 1;
+                    for my $p (@params) { # ... so loop over them and add each
+                        $join_func .= ', ' unless $first;
+                        $first = 0;
+                        if ($p eq '$runner') { # special!
+                            $join_func .= $self->runner;
+                        } elsif ($idl_class->has_field($p)) {
+                            $join_func .= '"'.$self->{_left_rel}->{_alias}.'"."'.$p.'"';
+                        } else {
+                            $join_func .= "\$_$$\$$p\$_$$\$";
+                        }
+                    }
+                }
+                $join_func .= ')';
+                $self->{_left_rel}->{_LHS_join_addition} = $join_func;
+            }
+        }
+    }
+
     return $self;
 }
 
@@ -1150,7 +1353,19 @@ sub toSQL {
 
     my $sql = "JOIN " . $self->{_right_rel}->toSQL .
         ' ON ("' . $self->{_left_rel}->{_alias} . '"."' . $self->{_left_col} .
-        '" = "' . $self->{_right_rel}->{_alias} . '"."' . $self->{_right_col} . '")';
+        '" = "' . $self->{_right_rel}->{_alias} . '"."' . $self->{_right_col} . '"';
+
+    # if we precalculated a JOIN condition based on @repsec:projection_function in the IDL, add that here
+    if ($self->{_right_rel}->{_RHS_join_addition}) {
+        $sql .= ' AND ' . $self->{_right_rel}->{_RHS_join_addition};
+    }
+
+    # if we precalculated a JOIN condition based on @repsec:projection_function in the IDL, add that here
+    if ($self->{_left_rel}->{_LHS_join_addition}) {
+        $sql .= ' AND ' . $self->{_left_rel}->{_LHS_join_addition};
+    }
+
+    $sql .= ")\n";
 
     $sql .= $_->toSQL($dir) for (@{ $self->{_right_rel}->{_join} });
 

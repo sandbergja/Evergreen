@@ -49,29 +49,29 @@ autoreconf -i
 
 == Installing prerequisites ==
 
-  * **PostgreSQL**: The minimum supported version is 10.
+  * **PostgreSQL**: The minimum supported version is 13.
   * **Linux**: Evergreen has been tested on
+    Debian Bookworm (12),
     Debian Bullseye (11),
     Debian Buster (10), 
-    Debian Stretch (9), 
-    Ubuntu Focal Fossa (20.04),
-    and Ubuntu Bionic Beaver (18.04).
+    Ubuntu Noble Numbat (24.04),
+    and Ubuntu Jammy Jellyfish (22.04).
     If you are running an older version of these distributions, you may want 
     to upgrade before upgrading Evergreen. For instructions on upgrading these
     distributions, visit the Debian or Ubuntu websites.
-  * **OpenSRF**: The minimum supported version of OpenSRF is 3.2.0.
+  * **OpenSRF**: The minimum supported version of OpenSRF is 3.3.0.
 
 
 Evergreen has a number of prerequisite packages that must be installed
 before you can successfully configure, compile, and install Evergreen.
 
-1. Begin by installing the most recent version of OpenSRF (3.2.0 or later).
+1. Begin by installing the most recent version of OpenSRF (3.3.0 or later).
    You can download OpenSRF releases from http://evergreen-ils.org/opensrf-downloads/
 +
 2. Issue the following commands as the *root* Linux account to install
    prerequisites using the `Makefile.install` prerequisite installer,
-   substituting `debian-bullseye`,`debian-buster`,`debian-stretch`,`ubuntu-focal`,
-   or `ubuntu-bionic` for <osname> below:
+   substituting `debian-bookworm`,`debian-bullseye`,`debian-buster`,`ubuntu-jammy`,
+   or `ubuntu-noble` for <osname> below:
 +
 [source, bash]
 ------------------------------------------------------------------------------
@@ -178,7 +178,18 @@ npm install   # fetch JS dependencies
 +
 [source,sh]
 ------------------------------------------------------------------------------
-ng build --prod
+ng build --configuration=production
+------------------------------------------------------------------------------
++
+This can be a memory-intensive build.  If the process does not finish, and you
+get the message "Killed" in the console, try running it with
+https://nodejs.org/api/cli.html#cli_max_old_space_size_size_in_megabytes[an explicit max-old-space-size option]
+to encourage more garbage collection.  For example, on a machine with 4GB of
+memory, you can limit max-old-space-size to 3GB with:
++
+[source,sh]
+------------------------------------------------------------------------------
+NODE_OPTIONS=--max-old-space-size=3072 ng build --configuration=production
 ------------------------------------------------------------------------------
 +
 4. OPTIONAL: Test eg2 web client code if the <osname>-developer packages and
@@ -189,6 +200,7 @@ ng build --prod
 [source,sh]
 ------------------------------------------------------------------------------
 CHROME_BIN=/path/to/chrome npm run test
+MOZ_HEADLESS=1 ng e2e
 ------------------------------------------------------------------------------
 
 [[install_opac_deps]]
@@ -210,6 +222,14 @@ npm install   # fetch JS and CSS dependencies
 ------------------------------------------------------------------------------
 +
 Note that there is no build step.
+
+3. OPTIONAL: Test OPAC javascript code:
++
+[source,sh]
+------------------------------------------------------------------------------
+npm run test
+------------------------------------------------------------------------------
+
 
 == Configuration and compilation instructions ==
 
@@ -251,8 +271,7 @@ chown -R opensrf:opensrf /openils
 
 == Run ldconfig ==
 
-On Ubuntu 18.04 / 20.04 or Debian Stretch / Buster / Bullseye, run the
-following command as the root user:
+On Ubuntu or Debian, run the following command as the root user:
 
 [source, bash]
 ------------------------------------------------------------------------------
@@ -273,7 +292,7 @@ of Dojo by issuing the following commands as the *opensrf* Linux account:
 
 [source, bash]
 ------------------------------------------------------------------------------
-wget http://download.dojotoolkit.org/release-1.3.3/dojo-release-1.3.3.tar.gz
+wget https://download.dojotoolkit.org/release-1.3.3/dojo-release-1.3.3.tar.gz
 tar -C /openils/var/web/js -xzf dojo-release-1.3.3.tar.gz
 cp -r /openils/var/web/js/dojo-release-1.3.3/* /openils/var/web/js/dojo/.
 ------------------------------------------------------------------------------
@@ -389,6 +408,47 @@ refer back to the OpenSRF README and, as the *opensrf* Linux account, edit the
 Evergreen version of the `opensrf_core.xml` file using the same Jabber users
 and domains as you used while installing and testing OpenSRF.
 
+=== OPTIONAL: Configure Evergreen for OpenSRF+Redis
+
+If using the Redis variant of OpenSRF, modify /openils/conf/opensrf_core.xml
+to use the Redis settings instead of the Ejabberd settings. 
+
+Several sections of the file have 2 configuration blocks, one for Ejabberd
+and one for Redis.  Example:
+
+[source,xml]
+------------------------------------------------------------------------------
+<!-- Ejabberd -->                                                          
+<passwd>password</passwd>                                                  
+<port>5222</port>                                                          
+<!-- ===  -->                                                              
+																		   
+<!-- Redis -->                                                             
+<!--                                                                       
+<passwd>456fc340-beba-4489-9070-0d6b49e9952b</passwd>                      
+<port>6379</port>                                                          
+-->                                                                        
+<!-- ===  -->   
+------------------------------------------------------------------------------
+
+For each occurrence of such block, commente out the Ejabberd sections
+and un-comment the Redis sections.  Example:
+
+[source,xml]
+------------------------------------------------------------------------------
+<!-- Ejabberd -->                                                          
+<!--
+<passwd>password</passwd>                                                  
+<port>5222</port>                                                          
+-->
+<!-- ===  -->                                                              
+																		   
+<!-- Redis -->                                                             
+<passwd>456fc340-beba-4489-9070-0d6b49e9952b</passwd>                      
+<port>6379</port>                                                          
+<!-- ===  -->   
+------------------------------------------------------------------------------
+
 [NOTE]
 The `-b` flag tells the `cp` command to create a backup version of the
 destination file. The backup version of the destination file has a tilde (`~`)
@@ -426,7 +486,7 @@ by every Evergreen system. You can install the packages required by Debian or
 Ubuntu on the machine of your choice using the following commands as the
 *root* Linux account:
 
-. Installing PostgreSQL server packages
+.Installing PostgreSQL server packages
 
 Each OS build target provides the postgres server installation
 packages required for each operating system.  To install Postgres
@@ -435,80 +495,95 @@ server packages, use the make target
 appropriate command below based on your operating system and desired
 PostgreSQL Version.
 
-The first below will install PostgreSQL 10, the minimum supported
-version and the version recommended for production use of Evergreen:
-
-[source, bash]
-------------------------------------------------------------------------------
-make -f Open-ILS/src/extras/Makefile.install postgres-server-debian-bullseye-10
-make -f Open-ILS/src/extras/Makefile.install postgres-server-debian-buster-10
-make -f Open-ILS/src/extras/Makefile.install postgres-server-debian-stretch-10
-make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-bionic-10
-make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-focal-10
-------------------------------------------------------------------------------
-
-[WARNING]
-=========
-Evergreen support for PostgreSQL server versions greater than 10 is
-still exprimental.  The use of the following is discouraged in
-production environments.  The following are only recommended if you
-are willing to test newer PostgreSQL versions for performance and
-possible bugs.
-=========
-
-To install PostgreSQL version 11, use the following command for your operating
-system:
-
-[source, bash]
-------------------------------------------------------------------------------
-make -f Open-ILS/src/extras/Makefile.install postgres-server-debian-bullseye-11
-make -f Open-ILS/src/extras/Makefile.install postgres-server-debian-buster-11
-make -f Open-ILS/src/extras/Makefile.install postgres-server-debian-stretch-11
-make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-bionic-11
-make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-focal-11
-------------------------------------------------------------------------------
-
-To install PostgreSQL version 12, use the following command for your operating
-system:
-
-[source, bash]
-------------------------------------------------------------------------------
-make -f Open-ILS/src/extras/Makefile.install postgres-server-debian-bullseye-12
-make -f Open-ILS/src/extras/Makefile.install postgres-server-debian-buster-12
-make -f Open-ILS/src/extras/Makefile.install postgres-server-debian-stretch-12
-make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-bionic-12
-make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-focal-12
-------------------------------------------------------------------------------
-
 To install PostgreSQL version 13, use the following command for your operating
 system:
 
+[WARNING]
+=========
+PostgreSQL 12+ includes a feature called "JIT" (Just-in-Time compilation).
+Do not turn on Postgres' JIT capabilities. Evergreen's queries, especially complex
+ones used for search, are intentionally tuned for non-JIT execution and JIT has
+been shown to be harmful in some circumstances.
+Recommended minimum tweak to postgresql.conf:
+jit_above_cost = -1
+=========
+
 [source, bash]
 ------------------------------------------------------------------------------
+make -f Open-ILS/src/extras/Makefile.install postgres-server-debian-bookworm-13
 make -f Open-ILS/src/extras/Makefile.install postgres-server-debian-bullseye-13
 make -f Open-ILS/src/extras/Makefile.install postgres-server-debian-buster-13
-make -f Open-ILS/src/extras/Makefile.install postgres-server-debian-stretch-13
-make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-bionic-13
-make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-focal-13
+make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-jammy-13
+make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-noble-13
 ------------------------------------------------------------------------------
 
 To install PostgreSQL version 14, use the following command for your operating
 system:
 
+[WARNING]
+=========
+PostgreSQL 12+ includes a feature called "JIT" (Just-in-Time compilation).
+Do not turn on Postgres' JIT capabilities. Evergreen's queries, especially complex
+ones used for search, are intentionally tuned for non-JIT execution and JIT has
+been shown to be harmful in some circumstances.
+Recommended minimum tweak to postgresql.conf:
+jit_above_cost = -1
+=========
+
 [source, bash]
 ------------------------------------------------------------------------------
+make -f Open-ILS/src/extras/Makefile.install postgres-server-debian-bookworm-14
 make -f Open-ILS/src/extras/Makefile.install postgres-server-debian-bullseye-14
 make -f Open-ILS/src/extras/Makefile.install postgres-server-debian-buster-14
-make -f Open-ILS/src/extras/Makefile.install postgres-server-debian-stretch-14
-make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-bionic-14
-make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-focal-14
+make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-jammy-14
+make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-noble-14
 ------------------------------------------------------------------------------
 
-For a standalone PostgreSQL server, install the following Perl modules for your
-distribution as the *root* Linux account:
+To install PostgreSQL version 15, use the following command for your operating
+system:
 
-.(Debian and Ubuntu) 
-No extra modules required for these distributions.
+[WARNING]
+=========
+PostgreSQL 12+ includes a feature called "JIT" (Just-in-Time compilation).
+Do not turn on Postgres' JIT capabilities. Evergreen's queries, especially complex
+ones used for search, are intentionally tuned for non-JIT execution and JIT has
+been shown to be harmful in some circumstances.
+Recommended minimum tweak to postgresql.conf:
+jit_above_cost = -1
+=========
+
+[source, bash]
+------------------------------------------------------------------------------
+make -f Open-ILS/src/extras/Makefile.install postgres-server-debian-bookworm-15
+make -f Open-ILS/src/extras/Makefile.install postgres-server-debian-bullseye-15
+make -f Open-ILS/src/extras/Makefile.install postgres-server-debian-buster-15
+make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-jammy-15
+make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-noble-15
+------------------------------------------------------------------------------
+
+To install PostgreSQL version 16, use the following command for your operating
+system:
+
+[WARNING]
+=========
+PostgreSQL 12+ includes a feature called "JIT" (Just-in-Time compilation).
+Do not turn on Postgres' JIT capabilities. Evergreen's queries, especially complex
+ones used for search, are intentionally tuned for non-JIT execution and JIT has
+been shown to be harmful in some circumstances.
+Recommended minimum tweak to postgresql.conf:
+jit_above_cost = -1
+=========
+
+[source, bash]
+------------------------------------------------------------------------------
+make -f Open-ILS/src/extras/Makefile.install postgres-server-debian-bookworm-16
+make -f Open-ILS/src/extras/Makefile.install postgres-server-debian-bullseye-16
+make -f Open-ILS/src/extras/Makefile.install postgres-server-debian-buster-16
+make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-jammy-16
+make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-noble-16
+------------------------------------------------------------------------------
+
+.Create the Evergreen PostgreSQL user
 
 You need to create a PostgreSQL superuser to create and access the database.
 Issue the following command as the *postgres* Linux account to create a new
@@ -579,6 +654,23 @@ database. This sample dataset is commonly referred to as the _concerto_
 sample data, and can be useful for testing out Evergreen functionality and
 for creating problem reports that developers can easily recreate with their
 own copy of the _concerto_ sample data.
+
+If you don't mind waiting a little longer, you can install the _enhanced_
+concerto dataset. Use this flag: `--load-concerto-enhanced`. This includes
+all of the data from _concerto_. Notable differences include:
+
+. The organization units have friendly names
+. Acquisitions data
+. More billing scenarios
+. More shelving locations and shelving location settings
+. Authority data
+. Japanese, Spanish, French and Czech bib records
+. Metarecord holds
+. Item Stat Cats
+. Bookings data
+. Pre-created OPAC carousels
+. Serials data
+
 
 === Creating the database on a remote server ===
 

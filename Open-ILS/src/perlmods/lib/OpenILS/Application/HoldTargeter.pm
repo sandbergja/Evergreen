@@ -4,7 +4,9 @@ use warnings;
 use OpenILS::Application;
 use base qw/OpenILS::Application/;
 use OpenILS::Utils::HoldTargeter;
+use OpenILS::Const qw/:const/;
 use OpenSRF::Utils::Logger qw(:logger);
+use OpenSRF::EX qw(:try);
 
 __PACKAGE__->register_method(
     method    => 'hold_targeter',
@@ -13,7 +15,7 @@ __PACKAGE__->register_method(
     argc      => 1,
     stream    => 1,
     # Caller is given control over how often to receive responses.
-    max_chunk_size => 0,
+    max_bundle_count => 1,
     signature => {
         desc     => q/Batch or single hold targeter./,
         params   => [
@@ -81,6 +83,8 @@ sub hold_targeter {
 
     $logger->info("targeter processing $total holds");
 
+    my $hold_ses = create OpenSRF::AppSession("open-ils.circ");
+
     for my $hold_id (@hold_ids) {
         $count++;
 
@@ -96,6 +100,18 @@ sub hold_targeter {
             $logger->error($msg);
             $single->message($msg) unless $single->message;
         }
+        else {
+            $hold_ses->request(
+                "open-ils.circ.hold_reset_reason_entry.create",
+                $single->editor()->authtoken,
+                $hold_id,
+                OILS_HOLD_TIMED_OUT,
+                undef,
+                $single->{previous_copy_id}
+            ) unless defined
+                $args->{hold} ||
+                $single->{previous_copy_id} == $single->hold->current_copy;
+        }
 
         if (($count % $throttle) == 0) { 
             # Time to reply to the caller.  Return either the number
@@ -107,6 +123,8 @@ sub hold_targeter {
             $logger->info("targeted $count of $total holds");
         }
     }
+
+    $hold_ses->disconnect;
 
     return undef;
 }

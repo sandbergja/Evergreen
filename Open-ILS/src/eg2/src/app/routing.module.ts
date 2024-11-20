@@ -10,23 +10,25 @@ import {WelcomeComponent} from './welcome.component';
  * These modules are encoded as separate JS chunks that are fetched
  * from the server only when needed.
  */
-const routes: Routes = [
-  { path: '',
+const routes: Routes = [{
+    path: '',
     component: WelcomeComponent
-  }, {
+}, {
     path: 'staff',
     resolve : {startup : BaseResolver},
     loadChildren: () => import('./staff/staff.module').then(m => m.StaffModule)
-  }
-];
+}, {
+    path: 'staff/selfcheck',
+    resolve : {startup : BaseResolver},
+    loadChildren: () => import('./staff/scko/scko.module').then(m => m.SckoModule)
+}];
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes, {
-    onSameUrlNavigation: 'reload',
-    relativeLinkResolution: 'legacy'
-})],
-  exports: [RouterModule],
-  providers: [BaseResolver]
+    imports: [RouterModule.forRoot(routes, {
+        onSameUrlNavigation: 'reload'
+    })],
+    exports: [RouterModule],
+    providers: [BaseResolver]
 })
 
 export class BaseRoutingModule {}

@@ -9,24 +9,29 @@ import {VolCopyService} from './volcopy.service';
 import {CopyAttrsComponent} from './copy-attrs.component';
 import {ItemLocationSelectModule} from '@eg/share/item-location-select/item-location-select.module';
 import {VolCopyConfigComponent} from './config.component';
+import {VolCopyPermissionDialogComponent} from './vol-copy-permission-dialog.component';
 
 @NgModule({
-  declarations: [
-    VolCopyComponent,
-    VolEditComponent,
-    CopyAttrsComponent,
-    VolCopyConfigComponent
-  ],
-  imports: [
-    StaffCommonModule,
-    CommonWidgetsModule,
-    HoldingsModule,
-    VolCopyRoutingModule,
-    ItemLocationSelectModule
-  ],
-  providers: [
-    VolCopyService
-  ]
+    declarations: [
+        VolCopyComponent,
+        VolEditComponent,
+        CopyAttrsComponent,
+        VolCopyConfigComponent,
+        VolCopyPermissionDialogComponent
+    ],
+    imports: [
+        StaffCommonModule,
+        CommonWidgetsModule,
+        HoldingsModule,
+        VolCopyRoutingModule,
+        ItemLocationSelectModule
+    ],
+    exports: [
+        VolCopyPermissionDialogComponent
+    ],
+    providers: [
+        VolCopyService
+    ]
 })
 
 export class VolCopyModule {

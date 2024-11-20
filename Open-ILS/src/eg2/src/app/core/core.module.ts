@@ -6,23 +6,36 @@
  */
 import {NgModule} from '@angular/core';
 import {CommonModule, DatePipe, DecimalPipe} from '@angular/common';
-import {FormatService, FormatValuePipe} from './format.service';
+import {FormatValuePipe, OrgDateInContextPipe, DueDatePipe,
+    OrUnderscoresPipe, Js2JsonPipe, FundLabelPipe, UsrnameOrIdPipe} from './format.service';
 
 @NgModule({
-  declarations: [
-    FormatValuePipe
-  ],
-  imports: [
-    CommonModule
-  ],
-  exports: [
-    CommonModule,
-    FormatValuePipe
-  ],
-  providers: [
-    DatePipe,
-    DecimalPipe
-  ]
+    declarations: [
+        FormatValuePipe,
+        OrgDateInContextPipe,
+        DueDatePipe,
+        OrUnderscoresPipe,
+        Js2JsonPipe,
+        FundLabelPipe,
+        UsrnameOrIdPipe,
+    ],
+    imports: [
+        CommonModule
+    ],
+    exports: [
+        CommonModule,
+        FormatValuePipe,
+        OrgDateInContextPipe,
+        DueDatePipe,
+        OrUnderscoresPipe,
+        Js2JsonPipe,
+        FundLabelPipe,
+        UsrnameOrIdPipe,
+    ],
+    providers: [
+        DatePipe,
+        DecimalPipe
+    ]
 })
 
 export class EgCoreModule {}

@@ -12,7 +12,7 @@
       <div class="progress-bar progress-bar-striped active w-100"
         role="progressbar" aria-valuenow="100" 
         aria-valuemin="0" aria-valuemax="100">
-        <span class="sr-only" i18n>Searching..</span>
+        <span class="visually-hidden" i18n>Searching..</span>
       </div>
     </div>
   </div>
@@ -38,51 +38,62 @@
   <div class="row">
     <div class="col-lg-2" *ngIf="!searchContext.basket">
       <ng-container *ngIf="!searchContext.termSearch.browseEntry">
-        <h3 i18n>Search Results ({{searchContext.result.count}})</h3>
+        <h2 i18n>Search Results ({{searchContext.result.count}})</h2>
       </ng-container>
     </div>
     <div class="col-lg-2" *ngIf="searchContext.basket">
       <h3 i18n>Basket View</h3>
     </div>
-    <div class="col-lg-3">
-      <label class="checkbox" *ngIf="!searchContext.basket">
+    <div class="col-lg-4">
+      <label class="form-label checkbox" *ngIf="!searchContext.basket">
         <input type='checkbox' [(ngModel)]="allRecsSelected" 
             (change)="toggleAllRecsSelected()"/>
-        <span class="pl-1" i18n>Select {{searchContext.pager.rowNumber(0)}} - 
+        <span class="ps-1" i18n>Select {{searchContext.pager.rowNumber(0)}} - 
           {{searchContext.pager.rowNumber(searchContext.currentResultIds().length - 1)}}
         </span>
       </label>
-      <button class="btn btn-outline-dark ml-2" (click)="toggleShowMore()">
+      <button type="button" class="btn btn-outline-dark ms-2" (click)="toggleShowMore()">
         <ng-container *ngIf="showMoreDetails" i18n>Show Fewer Details</ng-container>
         <ng-container *ngIf="!showMoreDetails" i18n>Show More Details</ng-container>
       </button>
+      <button
+        type="button"
+        class="btn btn-outline-primary ms-2"
+        (click)="handleFacetShow();"
+        [attr.aria-expanded]="!facetsCollapsed"
+        aria-controls="collapseFacetsButton"
+        class="btn btn-outline-dark ms-2"
+      >
+        <ng-container *ngIf="facetsCollapsed" i18n>Show Facets</ng-container>
+        <ng-container *ngIf="!facetsCollapsed" i18n>Hide Facets</ng-container>    
+      </button>
     </div>
-    <div class="col-lg-7">
-      <div class="float-right">
-        <eg-catalog-result-pagination></eg-catalog-result-pagination>
-      </div>
+    <div class="col-lg-6 d-flex">
+      <div class="flex-1"></div>
+      <eg-catalog-result-pagination></eg-catalog-result-pagination>
     </div>
   </div>
-  <div>
     <div class="row mt-2">
-      <div class="col-lg-2" *ngIf="!searchContext.basket">
-        <eg-catalog-result-facets></eg-catalog-result-facets>
-      </div>
-      <div
-        [ngClass]="{'col-lg-10': !searchContext.basket, 'col-lg-12': searchContext.basket}">
+      <div id="eg-catalog-result-records"
+        [ngClass]="resultsWidth">
         <div *ngFor="let summary of searchContext.result.records; let idx = index">
           <div *ngIf="summary">
             <eg-catalog-result-record [summary]="summary" [index]="idx">
             </eg-catalog-result-record>
           </div>
         </div>
-        <div class="float-right">
+        <div class="float-end">
           <eg-catalog-result-pagination></eg-catalog-result-pagination>
         </div>
-
       </div>
+
+      <aside class="col-lg-2" id="eg-catalog-result-facets" 
+      *ngIf="!searchContext.basket && searchContext.result.facetData" 
+      #collapse="ngbCollapse" [animation]="!facetsHorizontal" 
+      [(ngbCollapse)]="facetsCollapsed" [horizontal]="facetsHorizontal">
+            <eg-catalog-result-facets></eg-catalog-result-facets>
+      </aside>
     </div>
-  </div>
 </div>
 
 

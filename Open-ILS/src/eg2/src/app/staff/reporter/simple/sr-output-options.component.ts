@@ -1,15 +1,14 @@
-import {Component, Input, Output, EventEmitter, OnInit, ViewChild} from '@angular/core';
-import {NgForm} from '@angular/forms';
-import {IdlService, IdlObject} from '@eg/core/idl.service';
-import {SimpleReporterService, SRTemplate} from './simple-reporter.service';
+import {Component, Input} from '@angular/core';
+import {IdlService} from '@eg/core/idl.service';
+import {ReporterService, SRTemplate} from '../share/reporter.service';
 import * as moment from 'moment-timezone';
 
 @Component({
-  selector: 'eg-sr-output-options',
-  templateUrl: './sr-output-options.component.html'
+    selector: 'eg-sr-output-options',
+    templateUrl: './sr-output-options.component.html'
 })
 
-export class SROutputOptionsComponent implements OnInit {
+export class SROutputOptionsComponent {
 
     @Input() templ: SRTemplate;
     @Input() readyToSchedule: () => boolean;
@@ -17,15 +16,14 @@ export class SROutputOptionsComponent implements OnInit {
 
     constructor(
         private idl: IdlService,
-        private srSvc: SimpleReporterService
+        private srSvc: ReporterService
     ) { }
-
-    ngOnInit() {}
 
     defaultTime() {
         // When changing to Later for the first time default minutes to the quarter hour
         if (this.templ.runNow === 'later' && this.templ.runTime === null) {
             const now = moment();
+            // eslint-disable-next-line no-magic-numbers
             const nextQ = now.add(15 - (now.minutes() % 15), 'minutes');
             this.templ.runTime = nextQ;
         }

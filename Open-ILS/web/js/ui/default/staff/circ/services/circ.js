@@ -93,7 +93,6 @@ function($uibModal , $q , egCore , egAlertDialog , egConfirmDialog,  egAddCopyAl
     // these events can be overridden by staff during checkin
     service.checkin_overridable_events = 
         service.checkin_suppress_overrides.concat([
-        'HOLD_CAPTURE_DELAYED', // not technically overridable, but special prompt and param
         'TRANSIT_CHECKIN_INTERVAL_BLOCK'
     ])
 
@@ -429,8 +428,6 @@ function($uibModal , $q , egCore , egAlertDialog , egConfirmDialog,  egAddCopyAl
         switch(evt[0].textcode) {
             case 'COPY_ALERT_MESSAGE':
                 return service.copy_alert_dialog(evt[0], params, options, 'checkin');
-            case 'HOLD_CAPTURE_DELAYED':
-                return service.hold_capture_delay_dialog(evt[0], params, options, 'checkin');
             default: 
                 return service.override_dialog(evt, params, options, 'checkin');
         }
@@ -715,6 +712,20 @@ function($uibModal , $q , egCore , egAlertDialog , egConfirmDialog,  egAddCopyAl
             return egCore.env.aoa.map[addr_id]; 
         });
     }
+    
+    //retrieve addresses from multiple org units
+    service.cache_org_addr = function (org_ids, addr_type) {
+        var addr_ids = [];
+        org_ids.forEach(function(org_id){
+            var org = egCore.org.get(org_id);
+            var addr_id = org[addr_type](); 
+            if(addr_id)addr_ids.push(addr_id);
+        });
+		if (!addr_ids.length) return $q.when(null);
+        return egCore.pcrud.search('aoa', {id: addr_ids},{},{ atomic: true}).then(function(addrs) {
+            return egCore.env.absorbList(addrs, 'aoa');
+        });
+    }
 
     service.exit_alert = function(msg, scope) {
         return egAlertDialog.open(msg, scope).result.then(
@@ -839,7 +850,37 @@ function($uibModal , $q , egCore , egAlertDialog , egConfirmDialog,  egAddCopyAl
                             egCore.auth.token(), $scope.holdID,
                             5, // staff forced
                             'Item checked out by other patron' // FIXME I18n
-                        );
+                        ).then(function(resp) {
+                            if (evt = egCore.evt.parse(resp)) {
+                                egCore.audio.play(
+                                    'warning.hold.cancel_failed');
+                                console.error('unable to cancel hold: ' 
+                                    + evt.toString());
+                            } else {
+                                egCore.net.request(
+                                    'open-ils.circ', 'open-ils.circ.hold.details.retrieve',
+                                    egCore.auth.token(), $scope.holdID, {
+                                        'suppress_notices': true,
+                                        'suppress_transits': true,
+                                        'suppress_mvr' : true,
+                                        'include_usr' : true
+                                }).then(function(details) {
+                                    //console.log('details', details);
+                                    egWorkLog.record(
+                                        egCore.strings.EG_WORK_LOG_CANCELED_HOLD
+                                        ,{
+                                            'action' : 'canceled_hold',
+                                            'method' : 'open-ils.circ.hold.cancel',
+                                            'hold_id' : $scope.holdID,
+                                            'patron_id' : details.hold.usr().id(),
+                                            'user' : details.patron_last,
+                                            'item' : details.copy ? details.copy.barcode() : null,
+                                            'item_id' : details.copy ? details.copy.id() : null
+                                        }
+                                    );
+                                });
+                            }
+                        });
                     }
                     $uibModalInstance.close();
                 }
@@ -1414,6 +1455,16 @@ function($uibModal , $q , egCore , egAlertDialog , egConfirmDialog,  egAddCopyAl
         var dlogTitle, dlogMessage;
         switch (event.textcode) {
         case 'ITEM_TO_MARK_CHECKED_OUT':
+            if (status.id() === 4) {
+                // checked out items shouldn't be marked missing
+                console.error(
+                    'Mark item ' + status.name() + ' for ' +
+                    copy.barcode + ' failed: ' + event
+                );
+                return service.exit_alert(
+                    egCore.strings.MARK_MISSING_FAILURE_CHECKED_OUT,
+                    {barcode : copy.barcode});
+            }
             dlogTitle = egCore.strings.MARK_ITEM_CHECKED_OUT;
             dlogMessage = egCore.strings.MARK_ITEM_CHECKIN_CONTINUE;
             args.handle_checkin = 1;
@@ -1544,11 +1595,20 @@ function($uibModal , $q , egCore , egAlertDialog , egConfirmDialog,  egAddCopyAl
         ).result.then(function() {
             return egCore.pcrud.retrieve('ccs', 4)
                 .then(function(resp) {
+                    var modified = [];
                     var promise = $q.when();
                     angular.forEach(copies, function(copy) {
                         promise = promise.then(function() {
-                            return service.mark_item(copy, resp, {});
+                            return service.mark_item(
+                                copy, resp, {}
+                            ).then(function() {
+                                modified.push(copy.barcode);
+                            }).catch(function(){});
                         });
+                    });
+                    promise = promise.then(function() {
+                        if (!modified.length) return $q.reject();
+                        return modified;
                     });
                     return promise;
                 });
@@ -1759,6 +1819,10 @@ function($uibModal , $q , egCore , egAlertDialog , egConfirmDialog,  egAddCopyAl
                     egCore.strings.PRECAT_CHECKIN_MSG, params)
                     .result.then(function() {return final_resp});
 
+            case 'HOLD_CAPTURE_DELAYED':
+                return service.hold_capture_delay_dialog(
+                    evt[0], params, options, 'checkin');
+
             default:
                 egCore.audio.play('error.checkin.unknown');
                 console.warn('unhandled checkin response : ' + evt[0].textcode);
@@ -1766,26 +1830,54 @@ function($uibModal , $q , egCore , egAlertDialog , egConfirmDialog,  egAddCopyAl
         }
     }
 
-    // collect transit, address, and hold info that's not already
+    // collect transit, addresses, and hold info that's not already
     // included in responses.
     service.collect_route_data = function(tmpl, evt, params, options) {
         if (angular.isArray(evt)) evt = evt[0];
         var promises = [];
         var data = {};
-
+        var addr_deferred = $q.defer();
+        // associates org units with the address they're needed for
+        var addr_orgs = {};
+        promises.push(addr_deferred.promise);
+        
         if (evt.org && !tmpl.match(/hold_shelf/)) {
-            promises.push(
-                service.get_org_addr(evt.org, 'holds_address')
-                .then(function(addr) { data.address = addr })
-            );
+            addr_orgs['address'] = evt.org; 
         }
+		
+		if(evt.payload.transit){
+            addr_orgs['source_address'] = evt.payload.transit.source().id(); 			
+		}
 
+        if(Object.keys(addr_orgs).length){
+            promises.push(
+                service.cache_org_addr(Object.values(addr_orgs),'holds_address')
+                .then(function(){
+                    // promise to assign all of the addresses we need
+                    var addr_promises = [];
+                    Object.keys(addr_orgs).forEach(function(key){
+                        addr_promises.push(
+                            service.get_org_addr(addr_orgs[key], 'holds_address')
+                            .then(function(addr) { 
+                                // assign address to field in data
+                                data[key] = addr; 
+                            })
+                        )
+                    });
+                    $q.all(addr_promises).then(addr_deferred.resolve());
+            }));
+        }
+        else{
+            // no addresses are needed so continue
+            addr_deferred.resolve();
+        }
+        
         if (evt.payload.hold) {
             promises.push(
                 egCore.pcrud.retrieve('au', 
                     evt.payload.hold.usr(), {
                         flesh : 1,
-                        flesh_fields : {'au' : ['card']}
+                        flesh_fields : {'au' : ['card', 'profile']}
                     }
                 ).then(function(patron) {data.patron = patron})
             );
@@ -1848,8 +1940,13 @@ function($uibModal , $q , egCore , egAlertDialog , egConfirmDialog,  egAddCopyAl
                 if (data.address) {
                     print_context.dest_address = egCore.idl.toHash(data.address);
                 }
+                if (data.source_address) {
+                    print_context.source_address = egCore.idl.toHash(data.source_address);
+                }
                 print_context.dest_location =
                     egCore.idl.toHash(egCore.org.get(data.transit.dest()));
+                print_context.source_location =
+                    egCore.idl.toHash(egCore.org.get(data.transit.source()));
                 print_context.copy.status = egCore.idl.toHash(print_context.copy.status);
             }
 
@@ -2096,7 +2193,7 @@ function($uibModal , $q , egCore , egAlertDialog , egConfirmDialog,  egAddCopyAl
         });
     }
 
-    function generate_penalty_dialog_watch_callback($scope,egCore,allPenalties) {
+    function generate_note_dialog_watch_callback($scope,egCore,allPenalties) {
         return function(newval) {
             if (newval) {
                 var selected_penalty = allPenalties.filter(function(p) {
@@ -2120,7 +2217,7 @@ function($uibModal , $q , egCore , egAlertDialog , egConfirmDialog,  egAddCopyAl
         };
     }
 
-    service.create_penalty = function(user_id) {
+    service.create_note = function(user_id) {
         return $uibModal.open({
             templateUrl: './circ/share/t_new_message_dialog',
             backdrop: 'static',
@@ -2155,8 +2252,8 @@ function($uibModal , $q , egCore , egAlertDialog , egConfirmDialog,  egAddCopyAl
                     $uibModalInstance.dismiss();
                     $event.preventDefault();
                 }
-                $scope.$watch('args.penalty', generate_penalty_dialog_watch_callback($scope,egCore,allPenalties));
-                $scope.$watch('args.custom_penalty', generate_penalty_dialog_watch_callback($scope,egCore,allPenalties));
+                $scope.$watch('args.penalty', generate_note_dialog_watch_callback($scope,egCore,allPenalties));
+                $scope.$watch('args.custom_penalty', generate_note_dialog_watch_callback($scope,egCore,allPenalties));
                 $scope.$watch('args.custom_depth', function(org_depth) {
                     if (org_depth || org_depth == 0) {
                         egCore.net.request(
@@ -2196,7 +2293,7 @@ function($uibModal , $q , egCore , egAlertDialog , egConfirmDialog,  egAddCopyAl
 
                 return egCore.net.request(
                     'open-ils.actor',
-                    'open-ils.actor.user.penalty.apply',
+                    'open-ils.actor.user.note.apply',
                     egCore.auth.token(), pen, msg
                 );
             }
@@ -2204,7 +2301,7 @@ function($uibModal , $q , egCore , egAlertDialog , egConfirmDialog,  egAddCopyAl
     }
 
     // assumes, for now anyway,  penalty type is fleshed onto usr_penalty.
-    service.edit_penalty = function(pen,aum) {
+    service.edit_note = function(pen,aum) {
         return $uibModal.open({
             templateUrl: './circ/share/t_new_message_dialog',
             backdrop: 'static',
@@ -2265,6 +2362,7 @@ function($uibModal , $q , egCore , egAlertDialog , egConfirmDialog,  egAddCopyAl
                         : aum.deleted() == 't',
                     read_date : aum.read_date(),
                     edit_date : aum.edit_date(),
+                    stop_date : aum.stop_date(),
                     editor : aum.editor()
                 }
                 $scope.args.max_depth = $scope.args.org.ou_type().depth();
@@ -2282,8 +2380,8 @@ function($uibModal , $q , egCore , egAlertDialog , egConfirmDialog,  egAddCopyAl
                     $uibModalInstance.dismiss();
                     $event.preventDefault();
                 }
-                $scope.$watch('args.penalty', generate_penalty_dialog_watch_callback($scope,egCore,allPenalties));
-                $scope.$watch('args.custom_penalty', generate_penalty_dialog_watch_callback($scope,egCore,allPenalties));
+                $scope.$watch('args.penalty', generate_note_dialog_watch_callback($scope,egCore,allPenalties));
+                $scope.$watch('args.custom_penalty', generate_note_dialog_watch_callback($scope,egCore,allPenalties));
                 $scope.$watch('args.custom_depth', function(org_depth) {
                     if (org_depth || org_depth == 0) {
                         if (org_depth > $scope.workstation_depth) {
@@ -2321,7 +2419,7 @@ function($uibModal , $q , egCore , egAlertDialog , egConfirmDialog,  egAddCopyAl
                 }
                 return egCore.net.request(
                     'open-ils.actor',
-                    'open-ils.actor.user.penalty.modify',
+                    'open-ils.actor.user.note.modify',
                     egCore.auth.token(), pen, aum
                 );
             }

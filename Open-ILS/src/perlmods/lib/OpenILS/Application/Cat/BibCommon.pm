@@ -71,7 +71,19 @@ sub biblio_record_replace_marc  {
     $rec->editor($e->requestor->id);
     $rec->edit_date('now');
     $rec->marc($marc);
+
+    my $inline_ingest = $e->retrieve_config_global_flag('ingest.queued.biblio.update.marc_edit_inline');
+    $inline_ingest = ($inline_ingest and $U->is_true($inline_ingest->enabled));
+
+    $e->json_query(
+        {from => [ 'action.set_queued_ingest_force', 'ingest.queued.biblio.update.disabled' ]}
+    ) if ($inline_ingest);
+
     $e->update_biblio_record_entry($rec) or return $e->die_event;
+
+    $e->json_query(
+        {from => ['action.clear_queued_ingest_force']}
+    ) if ($inline_ingest);
 
     return $rec;
 }
@@ -114,7 +126,18 @@ sub biblio_record_xml_import {
     $record->edit_date('now');
     $record->marc($marc);
 
+    my $inline_ingest = $e->retrieve_config_global_flag('ingest.queued.biblio.insert.marc_edit_inline');
+    $inline_ingest = ($inline_ingest and $U->is_true($inline_ingest->enabled));
+
+    $e->json_query(
+        {from => [ 'action.set_queued_ingest_force', 'ingest.queued.biblio.insert.disabled' ]}
+    ) if ($inline_ingest);
+
     $record = $e->create_biblio_record_entry($record) or return $e->die_event;
+
+    $e->json_query(
+        {from => ['action.clear_queued_ingest_force']}
+    ) if ($inline_ingest);
 
     if($use_id) {
         my $existing = $e->search_biblio_record_entry(
@@ -187,6 +210,7 @@ sub _find_tcn_info {
 
     my $xpath = '//marc:controlfield[@tag="001"]';
     my $tcn = $marcxml->documentElement->findvalue($xpath);
+    $tcn =~ s/^\s+|\s+$//og;
     $logger->info("biblio import located 001 (tcn) value of $tcn");
 
     $xpath = '//marc:controlfield[@tag="003"]';
@@ -363,6 +387,10 @@ sub delete_rec {
         $hold->cancel_time('now');
         $hold->cancel_cause(1); # un-targeted expiration.
         $editor->update_action_hold_request($hold) or return $editor->die_event;
+
+        # Update our copy of the hold to pick up the cancel_time
+        # before we pass it off to A/T.
+        $hold = $editor->retrieve_action_hold_request($hold->id);
 
         my $at_ses = OpenSRF::AppSession->create('open-ils.trigger');
         $at_ses->request(

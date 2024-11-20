@@ -124,6 +124,9 @@ sub new {
     $self->{id}     = ($key eq 'barcode') ? $patron_id : $user->card->barcode;   # The barcode IS the ID to SIP.  
     # We give back the passed barcode if the key was indeed a barcode, just to be safe.  Otherwise pull it from the card.
 
+    # Return 'OK' in the screen message? Likely used primarily by PC management systems.
+    $self->{want_ok} = $args{want_ok};
+
     syslog("LOG_DEBUG", "OILS: new OpenILS Patron(%s => %s): found patron : barred=%s, card:active=%s", 
         $key, $patron_id, $user->barred, $user->card->active );
 
@@ -249,9 +252,9 @@ sub name {
 sub format_name {
     my $u = shift;
     return sprintf('%s %s %s',
-                   ($u->first_given_name || ''),
-                   ($u->second_given_name || ''),
-                   ($u->family_name || ''));
+                   ($u->pref_first_given_name || $u->first_given_name || ''),
+                   ($u->pref_second_given_name || $u->second_given_name || ''),
+                   ($u->pref_family_name || $u->family_name || ''));
 }
 
 sub home_library {
@@ -483,7 +486,7 @@ sub screen_msg {
     my $expire = DateTime::Format::ISO8601->new->parse_datetime(clean_ISO8601($u->expire_date));
     return $b if CORE::time > $expire->epoch;
 
-    return '';
+    return ($self->{want_ok} ? 'OK' : '');
 }
 
 sub print_line {            # not implemented
@@ -491,15 +494,18 @@ sub print_line {            # not implemented
     return '';
 }
 
-sub too_many_charged {      # not implemented
+sub too_many_charged {
     my $self = shift;
-    return 0;
+    return scalar(
+        grep { $_->id == OILS_PENALTY_PATRON_EXCEEDS_CHECKOUT_COUNT } @{$self->{user}->standing_penalties}
+    );
 }
 
-sub too_many_overdue { 
+sub too_many_overdue {
     my $self = shift;
-    return scalar( # PATRON_EXCEEDS_OVERDUE_COUNT
-        grep { $_->id == OILS_PENALTY_PATRON_EXCEEDS_OVERDUE_COUNT } @{$self->{user}->standing_penalties}
+    return scalar( # PATRON_EXCEEDS_OVERDUE_COUNT || PATRON_EXCEEDS_LONGOVERDUE_COUNT
+        grep { $_->id == OILS_PENALTY_PATRON_EXCEEDS_OVERDUE_COUNT
+           || $_->id == OILS_PENALTY_PATRON_EXCEEDS_LONGOVERDUE_COUNT } @{$self->{user}->standing_penalties}
     );
 }
 
@@ -515,10 +521,11 @@ sub too_many_claim_return {
     return 0;
 }
 
-# not relevant, handled by fines/fees
 sub too_many_lost {
     my $self = shift;
-    return 0;
+    return scalar(
+        grep { $_->id == OILS_PENALTY_PATRON_EXCEEDS_LOST_COUNT } @{$self->{user}->standing_penalties}
+    );
 }
 
 sub excessive_fines { 
@@ -639,6 +646,40 @@ sub find_copy_for_hold {
         {call_number => $hold->target, deleted => 'f'}, 
         {limit => 1}])->[0] if $hold->hold_type eq 'V';
 
+    return $e->json_query(
+        {
+            select => { acp => ['id'] },
+            from => {
+                acp => {
+                    acpm => {
+                        field => 'target_copy',
+                        fkey => 'id',
+                        filter => { part => $hold->target }
+                    }
+                }
+           },
+           where => { '+acp' => { deleted => 'f' } },
+           limit => 1
+       })->[0]->{id} if $hold->hold_type eq 'P';
+
+
+    return $e->json_query(
+        {
+            select => { acp => ['id'] },
+            from => {
+                acp => {
+                    sitem => {
+                        field => 'unit',
+                        fkey => 'id',
+                        filter => { issuance => $hold->target }
+                    }
+                }
+           },
+           where => { '+acp' => { deleted => 'f' } },
+           limit => 1
+       })->[0]->{id} if $hold->hold_type eq 'I';
+
+
     my $bre_ids = [$hold->target];
 
     if ($hold->hold_type eq 'M') {
@@ -701,6 +742,25 @@ sub find_hold_from_copy {
     return $hold if $hold = $run_hold_query->(
         target => $map->metarecord, hold_type => 'M');
 
+
+    # part holds
+    my $part = $e->search_asset_copy_part_map(
+        { target_copy => $copy->id })->[0];
+
+    if ($part) {
+        return $hold if $hold = $run_hold_query->(
+            target => $part->id, hold_type => 'P');
+    }
+
+    # issuance holds
+    my $iss = $e->search_serial_item(
+        { unit => $copy->id })->[0];
+
+    if ($iss) {
+        return $hold if $hold = $run_hold_query->(
+            target => $iss->id, hold_type => 'I');
+    }
+
     # volume holds
     return $hold if $hold = $run_hold_query->(
         target => $copy->call_number->id, hold_type => 'V');
@@ -721,9 +781,17 @@ sub __hold_to_title {
         $e->retrieve_asset_copy($hold->target)) 
         if $hold->hold_type eq 'C' or $hold->hold_type eq 'F' or $hold->hold_type eq 'R';
 
+    return __part_to_title($e,
+        $e->retrieve_biblio_monograph_part($hold->target))
+        if $hold->hold_type eq 'P';
+
     return __volume_to_title($e, 
         $e->retrieve_asset_call_number($hold->target))
         if $hold->hold_type eq 'V';
+
+    return __issuance_to_title(
+        $e, $hold->target) # starts with the issuance id because there's more involved for I holds.
+        if $hold->hold_type eq 'I';
 
     return __record_to_title(
         $e, $hold->target) if $hold->hold_type eq 'T';
@@ -744,11 +812,36 @@ sub __copy_to_title {
     return __volume_to_title($e, $vol);
 }
 
+sub __part_to_title {
+    my( $e, $part ) = @_;
+    #syslog('LOG_DEBUG', "OILS: part_to_title(%s)", $part->id);
+
+    return __record_to_title($e, $part->record);
+}
 
 sub __volume_to_title {
     my( $e, $volume ) = @_;
     #syslog('LOG_DEBUG', "OILS: volume_to_title(%s)", $volume->id);
     return __record_to_title($e, $volume->record);
+}
+
+sub __issuance_to_title {
+    my( $e, $issuance_id ) = @_;
+    my $bre_id = $e->json_query(
+    {
+        select => { ssub => ['record_entry'] },
+        from => {
+            ssub => {
+                siss => {
+                    field => 'subscription',
+                    fkey => 'id',
+                    filter => { id => $issuance_id }
+                }
+            }
+        }
+    })->[0]->{record_entry};
+
+    return __record_to_title($e, $bre_id);
 }
 
 
@@ -1050,7 +1143,7 @@ sub block {
     };
     my $penalty_result = $U->simplereq(
       'open-ils.actor',
-      'open-ils.actor.user.penalty.apply', $e->authtoken, $penalty, $msg);
+      'open-ils.actor.user.note.apply', $e->authtoken, $penalty, $msg);
     if( my $result_code = $U->event_code($penalty_result) ) {
         my $textcode = $penalty_result->{textcode};
         syslog('LOG_ERR', "OILS: Block: patron penalty failed: %s", $textcode);

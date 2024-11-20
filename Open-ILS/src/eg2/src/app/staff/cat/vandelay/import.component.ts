@@ -1,9 +1,10 @@
-import {Component, OnInit, AfterViewInit, Input,
+/* eslint-disable */
+import {Component, OnInit, AfterViewInit,
     ViewChild, OnDestroy} from '@angular/core';
-import {Subject} from 'rxjs';
 import {tap} from 'rxjs/operators';
-import {IdlObject} from '@eg/core/idl.service';
+import {IdlObject, IdlService} from '@eg/core/idl.service';
 import {NetService} from '@eg/core/net.service';
+import {PermService} from '@eg/core/perm.service';
 import {EventService} from '@eg/core/event.service';
 import {OrgService} from '@eg/core/org.service';
 import {AuthService} from '@eg/core/auth.service';
@@ -11,9 +12,9 @@ import {ToastService} from '@eg/share/toast/toast.service';
 import {ComboboxComponent,
     ComboboxEntry} from '@eg/share/combobox/combobox.component';
 import {VandelayService, VandelayImportSelection,
-  VANDELAY_UPLOAD_PATH} from './vandelay.service';
-import {HttpClient, HttpRequest, HttpEventType} from '@angular/common/http';
-import {HttpResponse, HttpErrorResponse} from '@angular/common/http';
+    VANDELAY_UPLOAD_PATH} from './vandelay.service';
+import {HttpClient, HttpRequest, HttpEventType,
+    HttpResponse, HttpErrorResponse} from '@angular/common/http';
 import {ProgressInlineComponent} from '@eg/share/dialog/progress-inline.component';
 import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
 import {ServerStoreService} from '@eg/core/server-store.service';
@@ -40,6 +41,8 @@ const TEMPLATE_ATTRS = [
 
 interface ImportOptions {
     session_key: string;
+    session_name?: string;
+    background_email?: string;
     overlay_map?: {[qrId: number]: /* breId */ number};
     import_no_match?: boolean;
     auto_overlay_exact?: boolean;
@@ -48,6 +51,13 @@ interface ImportOptions {
     opp_acq_copy_overlay?: boolean;
     opp_oo_cat_copy_overlay?: boolean;
     auto_overlay_org_unit_copies?: boolean;
+    bib_source?: number;
+    selected_queue?: any;
+    new_queue_name?: string;
+    match_set?: any;
+    match_bucket?: any;
+    import_type?: string;
+    holdings_profile?: any;
     merge_profile?: any;
     fall_through_merge_profile?: any;
     strip_field_groups?: number[];
@@ -56,7 +66,7 @@ interface ImportOptions {
 }
 
 @Component({
-  templateUrl: 'import.component.html'
+    templateUrl: 'import.component.html'
 })
 export class ImportComponent implements OnInit, AfterViewInit, OnDestroy {
 
@@ -89,6 +99,8 @@ export class ImportComponent implements OnInit, AfterViewInit, OnDestroy {
     autoOverlayAcqCopies: boolean;
     autoOverlayOnOrderCopies: boolean;
     autoOverlayOrgUnitCopies: boolean;
+    backgroundImportForUpload: boolean;
+    backgroundImportEmail: string;
 
     // True after the first upload, then remains true.
     showProgress: boolean;
@@ -110,43 +122,47 @@ export class ImportComponent implements OnInit, AfterViewInit, OnDestroy {
     formTemplates: {[name: string]: any};
     newTemplateName: string;
 
+    hasPermission: any;
+
     @ViewChild('fileSelector', { static: false }) private fileSelector;
     @ViewChild('uploadProgress', { static: true })
-        private uploadProgress: ProgressInlineComponent;
+    private uploadProgress: ProgressInlineComponent;
     @ViewChild('enqueueProgress', { static: true })
-        private enqueueProgress: ProgressInlineComponent;
+    private enqueueProgress: ProgressInlineComponent;
     @ViewChild('importProgress', { static: true })
-        private importProgress: ProgressInlineComponent;
+    private importProgress: ProgressInlineComponent;
 
     // Need these refs so values can be applied via external stimuli
     @ViewChild('formTemplateSelector', { static: true })
-        private formTemplateSelector: ComboboxComponent;
+    private formTemplateSelector: ComboboxComponent;
     @ViewChild('recordTypeSelector', { static: true })
-        private recordTypeSelector: ComboboxComponent;
+    private recordTypeSelector: ComboboxComponent;
     @ViewChild('bibSourceSelector', { static: true })
-        private bibSourceSelector: ComboboxComponent;
+    private bibSourceSelector: ComboboxComponent;
     @ViewChild('matchSetSelector', { static: true })
-        private matchSetSelector: ComboboxComponent;
+    private matchSetSelector: ComboboxComponent;
     @ViewChild('holdingsProfileSelector', { static: true })
-        private holdingsProfileSelector: ComboboxComponent;
+    private holdingsProfileSelector: ComboboxComponent;
     @ViewChild('mergeProfileSelector', { static: true })
-        private mergeProfileSelector: ComboboxComponent;
+    private mergeProfileSelector: ComboboxComponent;
     @ViewChild('fallThruMergeProfileSelector', { static: true })
-        private fallThruMergeProfileSelector: ComboboxComponent;
+    private fallThruMergeProfileSelector: ComboboxComponent;
     @ViewChild('queueSelector') private queueSelector: ComboboxComponent;
     @ViewChild('bucketSelector') private bucketSelector: ComboboxComponent;
 
     @ViewChild('dupeQueueAlert', { static: true })
-        private dupeQueueAlert: AlertDialogComponent;
+    private dupeQueueAlert: AlertDialogComponent;
 
     constructor(
         private http: HttpClient,
         private toast: ToastService,
         private evt: EventService,
+        private idl: IdlService,
         private net: NetService,
         private auth: AuthService,
         private org: OrgService,
         private store: ServerStoreService,
+        private perm: PermService,
         private vandelay: VandelayService
     ) {
     }
@@ -224,6 +240,8 @@ export class ImportComponent implements OnInit, AfterViewInit, OnDestroy {
             setTimeout(() => this.applyImportSelection());
         }
         this.loadStartupData();
+        this.perm.hasWorkPermHere(['CREATE_BIB_IMPORT_QUEUE','CREATE_AUTHORITY_IMPORT_QUEUE'])
+            .then(perms => this.hasPermission = perms);
     }
 
     ngOnDestroy() {
@@ -301,7 +319,7 @@ export class ImportComponent implements OnInit, AfterViewInit, OnDestroy {
 
             case 'activeQueues':
                 list = (this.vandelay.allQueues[rtype] || [])
-                        .filter(q => q.complete() === 'f');
+                    .filter(q => q.complete() === 'f');
                 break;
 
             case 'matchSets':
@@ -357,11 +375,15 @@ export class ImportComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     fileSelected($event) {
-       this.selectedFile = $event.target.files[0];
+        this.selectedFile = $event.target.files[0];
     }
 
     // Required form data varies depending on context.
     hasNeededData(): boolean {
+        if (this.backgroundImportForUpload) {
+            const test_perm = this.recordType === 'authority' ? 'CREATE_AUTHORITY_IMPORT_QUEUE' : 'CREATE_BIB_IMPORT_QUEUE'; // recordType of 'acq' is also a bib
+            if (!this.hasPermission[test_perm]) {return false;}
+        }
         if (this.vandelay.importSelection) {
             return this.importActionSelected();
         } else {
@@ -377,10 +399,14 @@ export class ImportComponent implements OnInit, AfterViewInit, OnDestroy {
             || this.mergeOnBestMatch;
     }
 
-    // 1. create queue if necessary
-    // 2. upload MARC file
-    // 3. Enqueue MARC records
-    // 4. Import records
+    // if this.backgroundImportForUpload is NOT TRUE (original logic)
+    //   1. create queue if necessary
+    //   2. upload MARC file
+    //   3. Enqueue MARC records
+    //   4. Import records
+    // else
+    //   1. upload MARC file
+    //   2. create background job
     upload() {
         this.sessionKey = null;
         this.showProgress = true;
@@ -388,31 +414,53 @@ export class ImportComponent implements OnInit, AfterViewInit, OnDestroy {
         this.uploadComplete = false;
         this.resetProgressBars();
 
-        this.resolveQueue()
-        .then(
-            queueId => {
-                this.activeQueueId = queueId;
-                return this.uploadFile();
-            },
-            err => Promise.reject('queue create failed')
-        ).then(
-            ok => this.processSpool(),
-            err => Promise.reject('process spool failed')
-        ).then(
-            ok => this.importRecords(),
-            err => Promise.reject('import records failed')
-        ).then(
-            ok => {
-                this.isUploading = false;
-                this.uploadComplete = true;
-            },
-            err => {
-                console.log('file upload failed: ', err);
-                this.isUploading = false;
-                this.resetProgressBars();
+        if (!this.backgroundImportForUpload) {
+            this.resolveQueue()
+                .then(
+                    queueId => {
+                        this.activeQueueId = queueId;
+                        return this.uploadFile();
+                    },
+                    err => Promise.reject('queue create failed')
+                ).then(
+                    ok => this.processSpool(),
+                    err => Promise.reject('process spool failed')
+                ).then(
+                    ok => this.importRecords(),
+                    err => Promise.reject('import records failed')
+                ).then(
+                    ok => {
+                        this.isUploading = false;
+                        this.uploadComplete = true;
+                    },
+                    err => {
+                        console.log('file upload failed: ', err);
+                        this.isUploading = false;
+                        this.resetProgressBars();
 
-            }
-        );
+                    }
+                );
+        } else {
+            this.uploadFile()
+                .then( _ => {
+                    this.net.request(
+                        'open-ils.vandelay',
+                        'open-ils.vandelay.background_import.create',
+                        this.auth.token(), this.compileImportOptions()
+                    ).subscribe( new_job => {
+                        const evt = this.evt.parse(new_job);
+                        if (evt) {
+                            this.toast.danger(evt.toString());
+                            this.isUploading = false;
+                            this.resetProgressBars();
+                        } else {
+                            this.toast.success($localize`Background import requested`);
+                            this.isUploading = false;
+                            this.uploadComplete = true;
+                        }
+                    });
+                });
+        }
     }
 
     resetProgressBars() {
@@ -487,6 +535,7 @@ export class ImportComponent implements OnInit, AfterViewInit, OnDestroy {
                 }
             },
 
+            // eslint-disable-next-line rxjs/no-implicit-any-catch
             (err: HttpErrorResponse) => {
                 console.error(err);
                 this.toast.danger(err.error);
@@ -521,20 +570,21 @@ export class ImportComponent implements OnInit, AfterViewInit, OnDestroy {
 
                     // Spooling is in progress, track the results.
                     this.vandelay.pollSessionTracker(tracker.id())
-                    .subscribe(
-                        trkr => {
-                            this.enqueueProgress.update({
+                        // eslint-disable-next-line rxjs/no-nested-subscribe
+                        .subscribe(
+                            trkr => {
+                                this.enqueueProgress.update({
                                 // enqueue API only tracks actions performed
-                                max: null,
-                                value: trkr.actions_performed()
-                            });
-                        },
-                        err => { console.log(err); reject(); },
-                        () => {
-                            this.enqueueProgress.update({max: 1, value: 1});
-                            resolve(null);
-                        }
-                    );
+                                    max: null,
+                                    value: trkr.actions_performed()
+                                });
+                            },
+                            (err: unknown) => { console.log(err); reject(); },
+                            () => {
+                                this.enqueueProgress.update({max: 1, value: 1});
+                                resolve(null);
+                            }
+                        );
                 }
             );
         });
@@ -556,7 +606,7 @@ export class ImportComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     importRecordQueue(recIds?: number[]): Promise<any> {
-        const rtype = this.recordType === 'bib' ? 'bib' : 'auth';
+        const rtype = this.recordType === 'authority' ? 'auth' : 'bib'; // recordType of 'acq' is also a bib
 
         let method = `open-ils.vandelay.${rtype}_queue.import`;
         const options: ImportOptions = this.compileImportOptions();
@@ -570,28 +620,29 @@ export class ImportComponent implements OnInit, AfterViewInit, OnDestroy {
         return new Promise((resolve, reject) => {
             this.net.request('open-ils.vandelay',
                 method, this.auth.token(), target, options)
-            .subscribe(
-                tracker => {
-                    const e = this.evt.parse(tracker);
-                    if (e) { console.error(e); return reject(); }
+                .subscribe(
+                    tracker => {
+                        const e = this.evt.parse(tracker);
+                        if (e) { console.error(e); return reject(); }
 
-                    // Spooling is in progress, track the results.
-                    this.vandelay.pollSessionTracker(tracker.id())
-                    .subscribe(
-                        trkr => {
-                            this.importProgress.update({
-                                max: trkr.total_actions(),
-                                value: trkr.actions_performed()
-                            });
-                        },
-                        err => { console.log(err); reject(); },
-                        () => {
-                            this.importProgress.update({max: 1, value: 1});
-                            resolve(null);
-                        }
-                    );
-                }
-            );
+                        // Spooling is in progress, track the results.
+                        this.vandelay.pollSessionTracker(tracker.id())
+                            // eslint-disable-next-line rxjs/no-nested-subscribe
+                            .subscribe(
+                                trkr => {
+                                    this.importProgress.update({
+                                        max: trkr.total_actions(),
+                                        value: trkr.actions_performed()
+                                    });
+                                },
+                                (err: unknown) => { console.log(err); reject(); },
+                                () => {
+                                    this.importProgress.update({max: 1, value: 1});
+                                    resolve(null);
+                                }
+                            );
+                    }
+                );
         });
     }
 
@@ -599,6 +650,8 @@ export class ImportComponent implements OnInit, AfterViewInit, OnDestroy {
 
         const options: ImportOptions = {
             session_key: this.sessionKey,
+            session_name: this.sessionName,
+            background_email: this.backgroundImportForUpload ? this.backgroundImportEmail : null,
             import_no_match: this.importNonMatching,
             auto_overlay_exact: this.mergeOnExact,
             auto_overlay_best_match: this.mergeOnBestMatch,
@@ -606,7 +659,14 @@ export class ImportComponent implements OnInit, AfterViewInit, OnDestroy {
             opp_acq_copy_overlay: this.autoOverlayAcqCopies,
             opp_oo_cat_copy_overlay: this.autoOverlayOnOrderCopies,
             auto_overlay_org_unit_copies: this.autoOverlayOrgUnitCopies,
+            selected_queue: this.selectedQueue?.id || this.startQueueId,
+            new_queue_name: (this.selectedQueue && this.selectedQueue?.id === null) ? this.selectedQueue.label : null,
+            match_set: this.selectedMatchSet || this.defaultMatchSet,
+            match_bucket: this.selectedBucket,
+            holdings_profile: this.selectedHoldingsProfile,
             merge_profile: this.selectedMergeProfile,
+            bib_source: this.selectedBibSource,
+            import_type: this.recordType,
             fall_through_merge_profile: this.selectedFallThruMergeProfile,
             strip_field_groups: this.selectedTrashGroups,
             match_quality_ratio: this.minQualityRatio,
@@ -642,6 +702,7 @@ export class ImportComponent implements OnInit, AfterViewInit, OnDestroy {
 
     markTemplateDefault() {
 
+        // XXX this looks like a bug, should it be `delete this.formTemplates[name].default` ?
         Object.keys(this.formTemplates).forEach(
             name => delete this.formTemplates.default
         );

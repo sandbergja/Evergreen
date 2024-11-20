@@ -1,7 +1,1 @@
-* The Field Documentation interface (under Local Administration) has
-  been ported to Angular with an org selector as an additional filter.
-* The Pending Users and Bucket View grids in the User Buckets interface
-  now includes a column for the patron's balance owed. (LP#1980257)
-* Patron Interface Gets a New Penalty Refresh Action
-* A new workstation setting optionally allows the full library name to be
-  added to the Angular Org Unit Selector. (lp#1771636)
+

@@ -92,7 +92,7 @@ CREATE TRIGGER no_overlapping_deps
     BEFORE INSERT OR UPDATE ON config.db_patch_dependencies
     FOR EACH ROW EXECUTE PROCEDURE evergreen.array_overlap_check ('deprecates');
 
-INSERT INTO config.upgrade_log (version, applied_to) VALUES ('1328', :eg_version); -- berick/tlittle/mmorgan
+INSERT INTO config.upgrade_log (version, applied_to) VALUES ('1444', :eg_version); -- JBoyer/sleary/dyrcona
 
 CREATE TABLE config.bib_source (
 	id		SERIAL	PRIMARY KEY,
@@ -194,7 +194,19 @@ CREATE TABLE config.metabib_class (
     a_weight NUMERIC  DEFAULT 1.0 NOT NULL,
     b_weight NUMERIC  DEFAULT 0.4 NOT NULL,
     c_weight NUMERIC  DEFAULT 0.2 NOT NULL,
-    d_weight NUMERIC  DEFAULT 0.1 NOT NULL
+    d_weight NUMERIC  DEFAULT 0.1 NOT NULL,
+    variant_authority_suggestion   BOOL NOT NULL DEFAULT TRUE,
+    symspell_transfer_case         BOOL NOT NULL DEFAULT TRUE,
+    symspell_skip_correct          BOOL NOT NULL DEFAULT FALSE,
+    symspell_suggestion_verbosity  INT NOT NULL DEFAULT 2,
+    max_phrase_edit_distance       INT NOT NULL DEFAULT 2,
+    suggestion_word_option_count   INT NOT NULL DEFAULT 5,
+    max_suggestions                INT NOT NULL DEFAULT -1,
+    low_result_threshold           INT NOT NULL DEFAULT 0,
+    min_suggestion_use_threshold   INT NOT NULL DEFAULT 1,
+    soundex_weight                 INT NOT NULL DEFAULT 0,
+    pg_trgm_weight                 INT NOT NULL DEFAULT 0,
+    keyboard_distance_weight       INT NOT NULL DEFAULT 0
 );
 
 CREATE TABLE config.metabib_field (
@@ -622,6 +634,13 @@ BEGIN
     RETURN NEW;
 END;
 $_$ LANGUAGE PLPGSQL;
+
+-- this may grow to support full GNU gettext functionality
+CREATE TABLE config.i18n_string (
+    id              SERIAL      PRIMARY KEY,
+    context         TEXT        NOT NULL, -- hint for translators to disambiguate
+    string          TEXT        NOT NULL
+);
 
 CREATE TABLE config.billing_type (
     id              SERIAL  PRIMARY KEY,
@@ -1104,7 +1123,7 @@ CREATE TABLE config.sms_carrier (
     active          BOOLEAN DEFAULT TRUE
 );
 
-CREATE TYPE config.usr_activity_group AS ENUM ('authen','authz','circ','hold','search');
+CREATE TYPE config.usr_activity_group AS ENUM ('authen','authz','circ','hold','search','mfa');
 
 CREATE TABLE config.usr_activity_type (
     id          SERIAL                      PRIMARY KEY, 
@@ -1398,6 +1417,78 @@ CREATE TABLE config.ui_staff_portal_page_entry (
     target_url  TEXT,
     entry_text  TEXT,
     owner       INT NOT NULL -- REFERENCES actor.org_unit (id)
+);
+
+-- Add OpenAthens Integration
+CREATE TABLE config.openathens_uid_field (
+    id      SERIAL  PRIMARY KEY,
+    name    TEXT    NOT NULL
+);
+
+INSERT INTO config.openathens_uid_field
+    (id, name)
+VALUES
+    (1,'id'),
+    (2,'usrname')
+;
+
+SELECT SETVAL('config.openathens_uid_field_id_seq'::TEXT, 100);
+
+CREATE TABLE config.openathens_name_field (
+    id      SERIAL  PRIMARY KEY,
+    name    TEXT    NOT NULL
+);
+
+INSERT INTO config.openathens_name_field
+    (id, name)
+VALUES
+    (1,'id'),
+    (2,'usrname'),
+    (3,'fullname')
+;
+
+SELECT SETVAL('config.openathens_name_field_id_seq'::TEXT, 100);
+
+CREATE TABLE config.openathens_identity (
+    id                          SERIAL  PRIMARY KEY,
+    active                      BOOL    NOT NULL DEFAULT true,
+    org_unit                    INT     NOT NULL, -- REFERENCES actor.org_unit (id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED,
+    api_key                     TEXT    NOT NULL,
+    connection_id               TEXT    NOT NULL,
+    connection_uri              TEXT    NOT NULL,
+    auto_signon_enabled         BOOL    NOT NULL DEFAULT true,
+    auto_signout_enabled        BOOL    NOT NULL DEFAULT false,
+    unique_identifier           INT     NOT NULL REFERENCES config.openathens_uid_field (id) DEFAULT 1,
+    display_name                INT     NOT NULL REFERENCES config.openathens_name_field (id) DEFAULT 1,
+    release_prefix              BOOL    NOT NULL DEFAULT false,
+    release_first_given_name    BOOL    NOT NULL DEFAULT false,
+    release_second_given_name   BOOL    NOT NULL DEFAULT false,
+    release_family_name         BOOL    NOT NULL DEFAULT false,
+    release_suffix              BOOL    NOT NULL DEFAULT false,
+    release_email               BOOL    NOT NULL DEFAULT false,
+    release_home_ou             BOOL    NOT NULL DEFAULT false,
+    release_barcode             BOOL    NOT NULL DEFAULT false
+);
+
+CREATE TABLE config.mfa_factor (
+    name        TEXT    PRIMARY KEY,
+    label       TEXT    NOT NULL,
+    description TEXT    NOT NULL
+);
+
+CREATE TABLE config.patron_loader_header_map (
+    id SERIAL,
+    org_unit INTEGER NOT NULL, -- REFERENCES actor.org_unit (id) DEFERRABLE INITIALLY DEFERRED;
+    import_header TEXT NOT NULL,
+    default_header TEXT NOT NULL
+);
+
+CREATE TABLE config.patron_loader_value_map (
+    id SERIAL,
+    org_unit INTEGER NOT NULL,  -- REFERENCES actor.org_unit (id) DEFERRABLE INITIALLY DEFERRED;
+    mapping_type TEXT NOT NULL,
+    import_value TEXT NOT NULL,
+    native_value TEXT NOT NULL
 );
 
 COMMIT;

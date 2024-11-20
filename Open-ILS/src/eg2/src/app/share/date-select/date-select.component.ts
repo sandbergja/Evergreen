@@ -1,6 +1,8 @@
-import {Component, OnInit, Input, Output, ViewChild, EventEmitter, forwardRef} from '@angular/core';
+/* eslint-disable eqeqeq */
+import {Component, OnInit, Input, Output, EventEmitter, forwardRef} from '@angular/core';
 import {NgbDateStruct} from '@ng-bootstrap/ng-bootstrap';
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from '@angular/forms';
+import {DateUtil} from '@eg/share/util/date';
 
 /**
  * RE: displaying locale dates in the input field:
@@ -9,14 +11,14 @@ import {ControlValueAccessor, NG_VALUE_ACCESSOR} from '@angular/forms';
  */
 
 @Component({
-  selector: 'eg-date-select',
-  templateUrl: './date-select.component.html',
-  styleUrls: ['date-select.component.css'],
-  providers: [ {
-      provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => DateSelectComponent),
-      multi: true
-  } ]
+    selector: 'eg-date-select',
+    templateUrl: './date-select.component.html',
+    styleUrls: ['date-select.component.css'],
+    providers: [ {
+        provide: NG_VALUE_ACCESSOR,
+        useExisting: forwardRef(() => DateSelectComponent),
+        multi: true
+    } ]
 })
 export class DateSelectComponent implements OnInit, ControlValueAccessor {
 
@@ -28,6 +30,10 @@ export class DateSelectComponent implements OnInit, ControlValueAccessor {
     @Input() domId = '';
     @Input() disabled: boolean;
     @Input() readOnly: boolean;
+
+    // Sometimes it's helpful to allow the date selector to expand
+    // to fill its container for visual consistency with other inputs.
+    @Input() noMaxWidth = false;
 
     current: NgbDateStruct;
 
@@ -46,7 +52,7 @@ export class DateSelectComponent implements OnInit, ControlValueAccessor {
         if (this.current == null) { return null; }
         if (!this.isValidDate(this.current)) { return null; }
         const ymd = `${this.current.year}-${String(this.current.month).padStart(2, '0')}-${String(this.current.day).padStart(2, '0')}`;
-        const date = this.localDateFromYmd(ymd);
+        const date = DateUtil.localDateFromYmd(ymd);
         const iso = date.toISOString();
         return iso;
     }
@@ -54,7 +60,7 @@ export class DateSelectComponent implements OnInit, ControlValueAccessor {
         if (this.current == null) { return null; }
         if (!this.isValidDate(this.current)) { return null; }
         const ymd = `${this.current.year}-${String(this.current.month).padStart(2, '0')}-${String(this.current.day).padStart(2, '0')}`;
-        const date = this.localDateFromYmd(ymd);
+        const date = DateUtil.localDateFromYmd(ymd);
         return date;
     }
 
@@ -72,7 +78,7 @@ export class DateSelectComponent implements OnInit, ControlValueAccessor {
     ngOnInit() {
 
         if (this.initialYmd) {
-            this.initialDate = this.localDateFromYmd(this.initialYmd);
+            this.initialDate = DateUtil.localDateFromYmd(this.initialYmd);
 
         } else if (this.initialIso) {
             this.initialDate = new Date(this.initialIso);
@@ -99,7 +105,7 @@ export class DateSelectComponent implements OnInit, ControlValueAccessor {
 
     onDateSelect(evt) {
         const ymd = `${evt.year}-${String(evt.month).padStart(2, '0')}-${String(evt.day).padStart(2, '0')}`;
-        const date = this.localDateFromYmd(ymd);
+        const date = DateUtil.localDateFromYmd(ymd);
         const iso = date.toISOString();
         this.onChangeAsDate.emit(date);
         this.onChangeAsYmd.emit(ymd);
@@ -107,12 +113,15 @@ export class DateSelectComponent implements OnInit, ControlValueAccessor {
         this.propagateChange(date);
     }
 
-    // Create a date in the local time zone with selected YMD values.
-    // TODO: Consider moving this to a date service...
-    localDateFromYmd(ymd: string): Date {
-        const parts = ymd.split('-');
-        return new Date(
-            Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+    // onDateSelect() is not called when the value is cleared.
+    // Handle that here.
+    inputChanged(value) {
+        if (value === null) {
+            this.onChangeAsDate.emit(null);
+            this.onChangeAsYmd.emit(null);
+            this.onChangeAsIso.emit(null);
+            this.propagateChange(null);
+        }
     }
 
     reset() {
@@ -123,8 +132,11 @@ export class DateSelectComponent implements OnInit, ControlValueAccessor {
         };
     }
 
-    writeValue(value: Date) {
-        if (value) {
+    writeValue(value: any) {
+        if (typeof value === 'string') {
+            value = new Date(value);
+        }
+        if (value && value instanceof Date && !isNaN(value.getTime())) {
             this.current = {
                 year: value.getFullYear(),
                 month: value.getMonth() + 1,

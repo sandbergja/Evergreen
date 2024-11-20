@@ -1,7 +1,7 @@
 import {Component, OnInit, OnDestroy, ViewChild} from '@angular/core';
 import {FormGroup, FormControl} from '@angular/forms';
 import {of, Subscription} from 'rxjs';
-import {debounceTime, single, switchMap, tap} from 'rxjs/operators';
+import {debounceTime, switchMap} from 'rxjs/operators';
 import {AuthService} from '@eg/core/auth.service';
 import {NetService} from '@eg/core/net.service';
 import {StringComponent} from '@eg/share/string/string.component';
@@ -11,7 +11,7 @@ import {ReservationActionsService} from './reservation-actions.service';
 import {ReservationsGridComponent} from './reservations-grid.component';
 
 @Component({
-  templateUrl: './capture.component.html'
+    templateUrl: './capture.component.html'
 })
 
 export class CaptureComponent implements OnInit, OnDestroy {
@@ -49,29 +49,29 @@ export class CaptureComponent implements OnInit, OnDestroy {
                         return of();
                     } else {
                         return this.net.request( 'open-ils.booking',
-                        'open-ils.booking.resources.capture_for_reservation',
-                        this.auth.token(), this.resourceBarcode.value )
-                        .pipe(switchMap((result: any) => {
-                            if (result && result.ilsevent !== undefined) {
-                                if (result.payload && result.payload.captured > 0) {
-                                    this.captureSuccessString.current()
-                                        .then(str => this.toast.success(str));
-                                    this.actions.printCaptureSlip(result.payload);
-                                    this.capturedTodayGrid.reloadGrid();
+                            'open-ils.booking.resources.capture_for_reservation',
+                            this.auth.token(), this.resourceBarcode.value )
+                            .pipe(switchMap((result: any) => {
+                                if (result && result.ilsevent !== undefined) {
+                                    if (result.payload && result.payload.captured > 0) {
+                                        this.captureSuccessString.current()
+                                            .then(str => this.toast.success(str));
+                                        this.actions.printCaptureSlip(result.payload);
+                                        this.capturedTodayGrid.reloadGrid();
+                                    } else {
+                                        this.captureFailureString.current()
+                                            .then(str => this.toast.danger(str));
+                                    }
                                 } else {
                                     this.captureFailureString.current()
                                         .then(str => this.toast.danger(str));
                                 }
-                            } else {
-                                this.captureFailureString.current()
-                                    .then(str => this.toast.danger(str));
-                            }
-                            return of();
-                        }));
+                                return of();
+                            }));
                     }
                 })
             )
-            .subscribe());
+                .subscribe());
 
     }
 

@@ -1,9 +1,8 @@
-import {Component, OnInit, Input, ViewChild} from '@angular/core';
+import {Component, Input, ViewChild} from '@angular/core';
 import {Observable, throwError, from, empty} from 'rxjs';
-import {tap, map, switchMap} from 'rxjs/operators';
+import {switchMap} from 'rxjs/operators';
 import {NetService} from '@eg/core/net.service';
 import {IdlService, IdlObject} from '@eg/core/idl.service';
-import {EventService} from '@eg/core/event.service';
 import {ToastService} from '@eg/share/toast/toast.service';
 import {AuthService} from '@eg/core/auth.service';
 import {PcrudService} from '@eg/core/pcrud.service';
@@ -22,18 +21,18 @@ export interface CopyNotesChanges {
 }
 
 @Component({
-  selector: 'eg-copy-notes-dialog',
-  templateUrl: 'copy-notes-dialog.component.html'
+    selector: 'eg-copy-notes-dialog',
+    templateUrl: 'copy-notes-dialog.component.html'
 })
 
 export class CopyNotesDialogComponent
-    extends DialogComponent implements OnInit {
+    extends DialogComponent {
 
     // If there are multiple copyIds, only new notes may be applied.
     // If there is only one copyId, then notes may be applied or removed.
     @Input() copyIds: number[] = [];
 
-    mode: string; // create | manage
+    mode: string; // create | manage | edit
 
     // If true, no attempt is made to save the new notes to the
     // database.  It's assumed this takes place in the calling code.
@@ -53,6 +52,8 @@ export class CopyNotesDialogComponent
 
     autoId = -1;
 
+    idToEdit: number;
+
     @ViewChild('successMsg', { static: true }) private successMsg: StringComponent;
     @ViewChild('errorMsg', { static: true }) private errorMsg: StringComponent;
 
@@ -65,9 +66,6 @@ export class CopyNotesDialogComponent
         private org: OrgService,
         private auth: AuthService) {
         super(modal); // required for subclassing
-    }
-
-    ngOnInit() {
     }
 
     /**
@@ -108,11 +106,23 @@ export class CopyNotesDialogComponent
             {flesh: 1, flesh_fields: {acp: ['notes']}},
             {atomic: true}
         )
-        .toPromise().then(copies => {
-            this.copies = copies;
-            if (copies.length === 1) {
-                this.copy = copies[0];
-            }
+            .toPromise().then(copies => {
+                this.copies = copies;
+                if (copies.length === 1) {
+                    this.copy = copies[0];
+                }
+            });
+    }
+
+    editNote(note: IdlObject) {
+        this.idToEdit = note.id();
+        this.mode = 'edit';
+    }
+
+    returnToManage() {
+        this.getCopies().then(() => {
+            this.idToEdit = null;
+            this.mode = 'manage';
         });
     }
 
@@ -167,14 +177,14 @@ export class CopyNotesDialogComponent
         });
 
         this.pcrud.create(notes).toPromise()
-        .then(_ => {
-            if (this.delNotes.length) {
-                return this.pcrud.remove(this.delNotes).toPromise();
-            }
-        }).then(_ => {
-            this.successMsg.current().then(msg => this.toast.success(msg));
-            this.close({ newNotes: this.newNotes, delNotes: this.delNotes });
-        });
+            .then(_ => {
+                if (this.delNotes.length) {
+                    return this.pcrud.remove(this.delNotes).toPromise();
+                }
+            }).then(_ => {
+                this.successMsg.current().then(msg => this.toast.success(msg));
+                this.close({ newNotes: this.newNotes, delNotes: this.delNotes });
+            });
     }
 }
 

@@ -1,15 +1,19 @@
+/* eslint-disable no-case-declarations, no-magic-numbers */
 import {Injectable, Pipe, PipeTransform} from '@angular/core';
 import {DatePipe, DecimalPipe, getLocaleDateFormat, getLocaleTimeFormat, getLocaleDateTimeFormat, FormatWidth} from '@angular/common';
 import {IdlService, IdlObject} from '@eg/core/idl.service';
 import {OrgService} from '@eg/core/org.service';
+import {AuthService} from '@eg/core/auth.service';
+import {PcrudService} from '@eg/core/pcrud.service';
 import {LocaleService} from '@eg/core/locale.service';
 import * as moment from 'moment-timezone';
+import {DateUtil} from '@eg/share/util/date';
 
 /**
  * Format IDL vield values for display.
  */
 
-declare var OpenSRF;
+declare var OpenSRF; // eslint-disable-line no-var
 
 export interface FormatParams {
     value: any;
@@ -19,6 +23,7 @@ export interface FormatParams {
     orgField?: string; // 'shortname' || 'name'
     datePlusTime?: boolean;
     timezoneContextOrg?: number;
+    dateOnlyInterval?: string;
 }
 
 @Injectable({providedIn: 'root'})
@@ -27,12 +32,14 @@ export class FormatService {
     dateFormat = 'shortDate';
     dateTimeFormat = 'short';
     wsOrgTimezone: string = OpenSRF.tz;
+    tzCache: {[orgId: number]: string} = {};
 
     constructor(
         private datePipe: DatePipe,
         private decimalPipe: DecimalPipe,
         private idl: IdlService,
         private org: OrgService,
+        private auth: AuthService,
         private locale: LocaleService
     ) {
 
@@ -102,7 +109,16 @@ export class FormatService {
                     }
 
                 } else {
-                    return value + '';
+
+                    // We have an object with no display selector
+                    // Display its pkey instead to avoid showing [object Object]
+
+                    const pkey = this.idl.classes[params.idlClass].pkey;
+                    if (pkey && typeof value[pkey] === 'function') {
+                        return value[pkey]();
+                    }
+
+                    return '';
                 }
 
             case 'org_unit':
@@ -119,17 +135,38 @@ export class FormatService {
                     // local one
                     tz = 'UTC';
                 } else {
-                    tz = this.wsOrgTimezone;
+                    if (params.timezoneContextOrg) {
+                        tz = this.getOrgTz( // support ID or object
+                            this.org.get(params.timezoneContextOrg).id());
+                    } else {
+                        tz = this.wsOrgTimezone;
+                    }
                 }
-                const date = moment(value).tz(tz);
-                if (!date.isValid()) {
-                    console.error('Invalid date in format service', value);
+
+                if (value === 'now') {
                     return '';
                 }
-                let fmt = this.dateFormat || 'shortDate';
-                if (params.datePlusTime) {
-                    fmt = this.dateTimeFormat || 'short';
+                const date = moment(value).tz(tz);
+                if (!date || !date.isValid()) {
+                    console.error(
+                        'Invalid date in format service; date=', value, 'tz=', tz);
+                    return '';
                 }
+
+                let fmt = this.dateFormat || 'shortDate';
+
+                if (params.datePlusTime) {
+                    // Time component directly requested
+                    fmt = this.dateTimeFormat || 'short';
+
+                } else if (params.dateOnlyInterval) {
+                    // Time component displays for non-day-granular intervals.
+                    const secs = DateUtil.intervalToSeconds(params.dateOnlyInterval);
+                    if (secs !== null && secs % 86400 !== 0) {
+                        fmt = this.dateTimeFormat || 'short';
+                    }
+                }
+
                 return this.datePipe.transform(date.toISOString(true), fmt, date.format('ZZ'));
 
             case 'money':
@@ -153,6 +190,42 @@ export class FormatService {
                 return value + '';
         }
     }
+
+    /**
+    Fetch the org timezone from cache when available.  Otherwise,
+    get the timezone from the org unit setting.  The first time
+    this call is made, it may return the incorrect value since
+    it's not a promise-returning method (because format() is not a
+    promise-returning method).  Future calls will return the correct
+    value since it's locally cached.  Since most format() calls are
+    repeated many times for Angular digestion, the end result is that
+    the correct value will be used in the end.
+    */
+    getOrgTz(orgId: number): string {
+
+        if (this.tzCache[orgId] === null) {
+            // We are still waiting for the value to be returned
+            // from the server.
+            return this.wsOrgTimezone;
+        }
+
+        if (this.tzCache[orgId] !== undefined) {
+            // We have a cached value.
+            return this.tzCache[orgId];
+        }
+
+        // Avoid duplicate parallel lookups by indicating we
+        // are loading the value from the server.
+        this.tzCache[orgId] = null;
+
+        this.org.settings(['lib.timezone'], orgId)
+            .then(sets => this.tzCache[orgId] = sets['lib.timezone']);
+
+        // Use the local timezone while we wait for the real value
+        // to load from the server.
+        return this.wsOrgTimezone;
+    }
+
     /**
      * Create an IDL-friendly display version of a human-readable date
      */
@@ -167,7 +240,7 @@ export class FormatService {
      * Create a Moment from an ISO string
      */
     momentizeIsoString(isoString: string, timezone: string): moment.Moment {
-        return (isoString.length) ? moment(isoString, timezone) : moment();
+        return (isoString?.length) ? moment(isoString).tz(timezone) : moment();
     }
 
     /**
@@ -196,7 +269,7 @@ export class FormatService {
                 }
                 return moment.tz(date, format, false, timezone);
             }
-        return moment(new Date(date), timezone);
+            return moment(new Date(date), timezone);
         }
     }
 
@@ -218,7 +291,7 @@ export class FormatService {
                 original = template
                     .replace('{1}', date)
                     .replace('{0}', time)
-                    .replace(/\'(\w+)\'/, '[$1]');
+                    .replace(/'(\w+)'/, '[$1]');
                 break;
             }
             case 'medium': {
@@ -228,7 +301,7 @@ export class FormatService {
                 original = template
                     .replace('{1}', date)
                     .replace('{0}', time)
-                    .replace(/\'(\w+)\'/, '[$1]');
+                    .replace(/'(\w+)'/, '[$1]');
                 break;
             }
             case 'long': {
@@ -238,7 +311,7 @@ export class FormatService {
                 original = template
                     .replace('{1}', date)
                     .replace('{0}', time)
-                    .replace(/\'(\w+)\'/, '[$1]');
+                    .replace(/'(\w+)'/, '[$1]');
                 break;
             }
             case 'full': {
@@ -248,7 +321,7 @@ export class FormatService {
                 original = template
                     .replace('{1}', date)
                     .replace('{0}', time)
-                    .replace(/\'(\w+)\'/, '[$1]');
+                    .replace(/'(\w+)'/, '[$1]');
                 break;
             }
             case 'shortDate': {
@@ -310,3 +383,79 @@ export class FormatValuePipe implements PipeTransform {
     }
 }
 
+@Pipe({name: 'egOrgDateInContext'})
+export class OrgDateInContextPipe implements PipeTransform {
+    constructor(private formatter: FormatService) {}
+
+    transform(value: string, orgId?: number, interval?: string ): string {
+        return this.formatter.transform({
+            value: value,
+            datatype: 'timestamp',
+            timezoneContextOrg: orgId,
+            dateOnlyInterval: interval
+        });
+    }
+}
+
+@Pipe({name: 'egDueDate'})
+export class DueDatePipe implements PipeTransform {
+    constructor(private formatter: FormatService) {}
+
+    transform(circ: IdlObject): string {
+        return this.formatter.transform({
+            value: circ.due_date(),
+            datatype: 'timestamp',
+            timezoneContextOrg: circ.circ_lib(),
+            dateOnlyInterval: circ.duration()
+        });
+    }
+}
+
+@Pipe({name: 'egOrUnderscores'})
+export class OrUnderscoresPipe implements PipeTransform {
+    constructor() {}
+    // Add other filter params as needed to fill in the FormatParams
+    transform(value: string, datatype: string): string {
+        return value !== '' && value !== null ? value : '________';
+    }
+}
+
+@Pipe({ name: 'js2json'})
+export class Js2JsonPipe implements PipeTransform {
+    transform(value: any): string {
+        return JSON.stringify(value, null, 2); // spacing level = 2
+    }
+}
+
+/* TODO: this should probably be moved elsewhere, within the acq/ hierarchy */
+@Pipe({ name: 'fundLabel', pure: false })
+export class FundLabelPipe implements PipeTransform {
+    private cache = new Map<number, string>();
+
+    constructor(private pcrud: PcrudService, private org: OrgService,) {}
+
+    transform(fundId: number): string {
+        if (this.cache.has(fundId)) {
+            return this.cache.get(fundId);
+        }
+
+        /* I loathed pulling in LineitemService here, so some code duplication */
+        /* .toPromise() is also deprecated here */
+        this.pcrud.retrieve('acqf',fundId).toPromise().then(fund => {
+            if (fund) {
+                const label = `${fund.code()} (${fund.year()}) (${this.org.get(fund.org()).shortname()})`;
+                this.cache.set(fundId, label);
+            }
+        });
+
+        return ''; // default value until the fund is loaded
+    }
+
+}
+
+@Pipe({ name: 'usrnameOrId' })
+export class UsrnameOrIdPipe implements PipeTransform {
+    transform(user: IdlObject): any {
+        return user && typeof user.usrname === 'function' ? user.usrname() : user;
+    }
+}
