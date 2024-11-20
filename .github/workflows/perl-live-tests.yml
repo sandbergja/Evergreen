@@ -1,0 +1,56 @@
+name: Run Perl Live Tests
+on:
+  push:
+    paths:
+      - '.github/workflows/**'
+      - 'Makefile.am'
+      - 'configure.ac'
+      - 'Open-ILS/examples'
+      - 'Open-ILS/src'
+  pull_request:
+    paths:
+      - '.github/workflows/**'
+      - 'Makefile.am'
+      - 'configure.ac'
+      - 'Open-ILS/examples'
+      - 'Open-ILS/src'
+  workflow_dispatch:
+
+jobs:
+  install-opensrf:
+    name: Install Opensrf
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Clone OpenSRF repository
+        run: git clone --branch main git://git.evergreen-ils.org/OpenSRF.git
+      - name: "OpenSRF: install dependencies"
+        run: sudo make -f src/extras/Makefile.install ubuntu-jammy
+        working-directory: ./OpenSRF
+      - name: "OpenSRF: configure and make"
+        run: autoreconf -i && ./configure --prefix=/openils --sysconfdir=/openils/conf && make
+        working-directory: ./OpenSRF
+      - name: "OpenSRF: make install"
+        run: sudo make install
+        working-directory: ./OpenSRF
+      - name: "OpenSRF: Create and set up the opensrf Unix user environment"
+        run: sudo useradd -m -s /bin/bash opensrf && sudo echo "export PATH=\$PATH:/openils/bin" >> /home/opensrf/.bashrc && echo "opensrf:opensrf" | sudo chpasswd && chown -R opensrf:opensrf /openils
+      - name: "OpenSRF: Define your public and private OpenSRF domains"
+        run: sudo echo "127.0.0.1 private.localhost public.localhost" >> /etc/hosts
+      - name: "OpenSRF: Adjust the system dynamic library path"
+        run: "sudo echo /openils/lib > /etc/ld.so.conf.d/opensrf.conf && sudo ldconfig"
+
+      - uses: actions/checkout@v4
+        with:
+          path: Evergreen
+      - name: "Evergreen: install dependencies"
+        run: sudo make -f Open-ILS/src/extras/Makefile.install ubuntu-jammy && sudo make -f Open-ILS/src/extras/Makefile.install ubuntu-jammy-developer
+        working-directory: ./Evergreen
+      - name: "Evergreen: configure and make"
+        run: autoreconf -i && PATH=/openils/bin:$PATH ./configure --prefix=/openils --sysconfdir=/openils/conf && make
+        working-directory: ./Evergreen
+      - name: "Evergreen: make install"
+        run: sudo make install
+        working-directory: ./Evergreen
+      - name: "Evergreen: run live tests"
+        run: make livecheck
+        working-directory: ./Evergreen/Open-ILS/src/perlmods
