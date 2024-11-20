@@ -18,7 +18,12 @@ jobs:
         working-directory: ./OpenSRF
 
       - uses: actions/checkout@v4
+        with:
+          path: Evergreen
+        
       - name: "Evergreen: install dependencies"
         run: sudo make -f Open-ILS/src/extras/Makefile.install ubuntu-jammy && sudo make -f Open-ILS/src/extras/Makefile.install ubuntu-jammy-developer
+        working-directory: ./Evergreen
       - name: "Evergreen: configure and make"
         run: autoreconf -i && PATH=/openils/bin:$PATH ./configure --prefix=/openils --sysconfdir=/openils/conf && make
+        working-directory: ./Evergreen
