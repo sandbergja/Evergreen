@@ -3,11 +3,11 @@ on: [push, pull_request]
 jobs:
   install-opensrf:
     name: Install Opensrf
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
-          repository: evergreen-library-system/OpenSRF
+          repository: git://git.evergreen-ils.org/OpenSRF.git
           path: opensrf
       - name: Install prereqs
         run: sudo make -f src/extras/Makefile.install ubuntu-jammy
