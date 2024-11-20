@@ -36,12 +36,12 @@ jobs:
         run: sudo useradd -m -s /bin/bash opensrf
       - name: "OpenSRF: Change opensrf Unix user password"
         run: echo "opensrf:opensrf" | sudo chpasswd
-      - name: "OpenSRF: Set correct permissions on /openils directory"
-        run: chown -R opensrf:opensrf /openils
       - name: "OpenSRF: Define your public and private OpenSRF domains"
         run: sudo echo "127.0.0.1 private.localhost public.localhost" >> /etc/hosts
       - name: "OpenSRF: Adjust the system dynamic library path"
         run: "sudo echo /openils/lib > /etc/ld.so.conf.d/opensrf.conf && sudo ldconfig"
+      - name: "OpenSRF: Update the OpenSRF configuration files"
+        run: cd /openils/conf && cp opensrf_core.xml.example opensrf_core.xml && cp opensrf.xml.example opensrf.xml && cp redis-accounts.txt.example redis-accounts.txt
 
       - uses: actions/checkout@v4
         with:
