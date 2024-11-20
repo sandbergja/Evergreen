@@ -7,12 +7,18 @@ jobs:
     steps:
       - name: Clone OpenSRF repository
         run: git clone --branch main git://git.evergreen-ils.org/OpenSRF.git
-      - name: Install prereqs
+      - name: "OpenSRF: install dependencies"
         run: sudo make -f src/extras/Makefile.install ubuntu-jammy
         working-directory: ./OpenSRF
-      - name: Configure and make
+      - name: "OpenSRF: configure and make"
         run: autoreconf -i && ./configure --prefix=/openils --sysconfdir=/openils/conf && make
         working-directory: ./OpenSRF
-      - name: make install
+      - name: "OpenSRF: make install"
         run: sudo make install
         working-directory: ./OpenSRF
+
+      - uses: actions/checkout@v4
+      - name: "Evergreen: install dependencies"
+        run: sudo make -f Open-ILS/src/extras/Makefile.install ubuntu-jammy && sudo make -f Open-ILS/src/extras/Makefile.install ubuntu-jammy-developer
+      - name: "Evergreen: configure and make"
+        run: autoreconf -i && PATH=/openils/bin:$PATH ./configure --prefix=/openils --sysconfdir=/openils/conf && make
