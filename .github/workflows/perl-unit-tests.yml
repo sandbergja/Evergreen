@@ -26,9 +26,9 @@ jobs:
       - name: "Evergreen: configure and make"
         run: autoreconf -i && PATH=/openils/bin:$PATH ./configure --prefix=/openils --sysconfdir=/openils/conf && make
         working-directory: ./Evergreen
-      - name: "Evergreen: make install"
-        run: sudo make install
-        working-directory: ./Evergreen
+      # - name: "Evergreen: make install"
+      #   run: sudo make install
+        # working-directory: ./Evergreen
       - name: "Evergreen: make check"
         run: make check
         working-directory: ./Evergreen
