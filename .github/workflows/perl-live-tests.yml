@@ -32,8 +32,14 @@ jobs:
       - name: "OpenSRF: make install"
         run: sudo make install
         working-directory: ./OpenSRF
-      - name: "OpenSRF: Create and set up the opensrf Unix user environment"
-        run: sudo useradd -m -s /bin/bash opensrf && sudo echo "export PATH=\$PATH:/openils/bin" >> /home/opensrf/.bashrc && echo "opensrf:opensrf" | sudo chpasswd && chown -R opensrf:opensrf /openils
+      - name: "OpenSRF: Create the opensrf Unix user"
+        run: sudo useradd -m -s /bin/bash opensrf
+      - name: "OpenSRF: Set up the opensrf Unix user environment"
+        run: sudo echo "export PATH=\$PATH:/openils/bin" >> /home/opensrf/.bashrc
+      - name: "OpenSRF: Change opensrf Unix user password"
+        run: echo "opensrf:opensrf" | sudo chpasswd
+      - name: "OpenSRF: Set correct permissions on /openils directory"
+        run: chown -R opensrf:opensrf /openils
       - name: "OpenSRF: Define your public and private OpenSRF domains"
         run: sudo echo "127.0.0.1 private.localhost public.localhost" >> /etc/hosts
       - name: "OpenSRF: Adjust the system dynamic library path"
