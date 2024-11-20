@@ -42,7 +42,7 @@ jobs:
       - name: "OpenSRF: Adjust the system dynamic library path"
         run: "sudo echo /openils/lib | sudo tee -a /etc/ld.so.conf.d/opensrf.conf && sudo ldconfig"
       - name: "OpenSRF: Update the OpenSRF configuration files"
-        run: cd /openils/conf && cp opensrf_core.xml.example opensrf_core.xml && cp opensrf.xml.example opensrf.xml && cp redis-accounts.txt.example redis-accounts.txt
+        run: cd /openils/conf && sudo cp opensrf_core.xml.example opensrf_core.xml && sudo cp opensrf.xml.example opensrf.xml && sudo cp redis-accounts.txt.example redis-accounts.txt
 
       - uses: actions/checkout@v4
         with:
