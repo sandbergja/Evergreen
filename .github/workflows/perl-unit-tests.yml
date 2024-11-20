@@ -10,3 +10,9 @@ jobs:
       - name: Install prereqs
         run: sudo make -f src/extras/Makefile.install ubuntu-jammy
         working-directory: ./OpenSRF
+      - name: Configure and make
+        run: autoreconf -i && ./configure --prefix=/openils --sysconfdir=/openils/conf && make
+        working-directory: ./OpenSRF
+      - name: make install
+        run: sudo make install
+        working-directory: ./OpenSRF
