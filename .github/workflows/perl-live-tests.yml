@@ -34,6 +34,8 @@ jobs:
         working-directory: ./OpenSRF
       - name: "OpenSRF: Create the opensrf Unix user"
         run: sudo useradd -m -s /bin/bash opensrf
+      - name: "CAN I LS?"
+        run: sudo ls /home/opensrf
       - name: "OpenSRF: Set up the opensrf Unix user environment"
         run: sudo echo "export PATH=\$PATH:/openils/bin" >> /home/opensrf/.bashrc
       - name: "OpenSRF: Change opensrf Unix user password"
