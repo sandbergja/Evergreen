@@ -37,7 +37,8 @@ jobs:
       - name: "OpenSRF: Change opensrf Unix user password"
         run: echo "opensrf:opensrf" | sudo chpasswd
       - name: "OpenSRF: Define your public and private OpenSRF domains"
-        run: sudo echo "127.0.0.1 private.localhost public.localhost" >> /etc/hosts
+        run: |
+            sudo echo "127.0.0.1 private.localhost public.localhost" | sudo tee -a /etc/hosts
       - name: "OpenSRF: Adjust the system dynamic library path"
         run: "sudo echo /openils/lib > /etc/ld.so.conf.d/opensrf.conf && sudo ldconfig"
       - name: "OpenSRF: Update the OpenSRF configuration files"
