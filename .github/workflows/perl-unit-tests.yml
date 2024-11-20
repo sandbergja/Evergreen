@@ -1,4 +1,4 @@
-name: Build evergreen and run tests
+name: Run Perl Unit Tests
 on: [push, pull_request]
 jobs:
   install-opensrf:
