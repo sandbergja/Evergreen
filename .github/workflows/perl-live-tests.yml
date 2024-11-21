@@ -65,8 +65,16 @@ jobs:
       - name: "Evergreen: Configure OpenSRF for the Evergreen application"
         run: "sudo cp -b /openils/conf/opensrf_core.xml.example /openils/conf/opensrf_core.xml && sudo cp -b /openils/conf/opensrf.xml.example /openils/conf/opensrf.xml"
       - name: "Evergreen: Set up the PostgreSQL server"
-        run: "sudo make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-noble-16 && createuser -s -P evergreen && perl Open-ILS/src/support-scripts/eg_db_config --update-config --service all --create-database --create-schema --create-offline --user evergreen --password password --admin-user admin --admin-pass demo123"
+        run: |
+          sudo make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-noble-16
+          psql -U postgres --comand="CREATE USER evergreen PASSWORD 'password'" --command="\du"
+          createdb --owner=evergreen evergreen
         working-directory: ./Evergreen
+      - name: "Evergreen: Load the Concerto Data set"
+        run: "perl Open-ILS/src/support-scripts/eg_db_config --update-config --service all --create-database --create-schema --create-offline --user evergreen --password password --admin-user admin --admin-pass demo123"
+        working-directory: ./Evergreen
+      - name: "Evergreen: start Evergreen"
+        run: sudo service memcached start && sudo -i -u opensrf osrf_control -l --start-all && sudo -i -u opensrf autogen.sh
       - name: "Evergreen: run live tests"
         run: make livecheck
         working-directory: ./Evergreen/Open-ILS/src/perlmods
