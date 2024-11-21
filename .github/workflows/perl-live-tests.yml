@@ -63,7 +63,10 @@ jobs:
       - name: "Evergreen: Run ldconfig"
         run: "sudo ldconfig"
       - name: "Evergreen: Configure OpenSRF for the Evergreen application"
-        run: "sudo cp -b /openils/conf/opensrf_core.xml.example /openils/conf/opensrf_core.xml && sudo cp -b /openils/conf/opensrf.xml.example /openils/conf/opensrf.xml"
+        run: |
+          sudo cp -b /openils/conf/opensrf_core.xml.example /openils/conf/opensrf_core.xml
+          sudo sed -i 's/5222/6379/g' /openils/conf/opensrf_core.xml
+          sudo cp -b /openils/conf/opensrf.xml.example /openils/conf/opensrf.xml
       - name: "Evergreen: Set up the PostgreSQL server"
         run: |
           sudo make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-noble-16
@@ -79,10 +82,6 @@ jobs:
         run: |
           sudo service memcached start
           sudo service redis-server start
-          sudo service redis-server status
-          sleep 10
-          sudo service redis-server status
-          sudo cat /etc/hosts
           sudo -i -u opensrf /openils/bin/osrf_control -l --start-all
           sudo -i -u opensrf /openils/bin/autogen.sh
       - name: "Evergreen: run live tests"
