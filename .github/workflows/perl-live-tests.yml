@@ -76,7 +76,15 @@ jobs:
           --create-offline --user evergreen --password password --admin-user admin --admin-pass demo123
         working-directory: ./Evergreen
       - name: "Evergreen: start Evergreen"
-        run: sudo service memcached start && sudo service redis-server start && sudo -i -u opensrf /openils/bin/osrf_control -l --start-all && sudo -i -u opensrf /openils/bin/autogen.sh
+        run: |
+          sudo service memcached start
+          sudo service redis-server start
+          sudo service redis-server status
+          sleep 10
+          sudo service redis-server status
+          sudo cat /etc/hosts
+          sudo -i -u opensrf /openils/bin/osrf_control -l --start-all
+          sudo -i -u opensrf /openils/bin/autogen.sh
       - name: "Evergreen: run live tests"
         run: make livecheck
         working-directory: ./Evergreen/Open-ILS/src/perlmods
