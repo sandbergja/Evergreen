@@ -72,7 +72,9 @@ jobs:
           sudo -u postgres createdb --owner=evergreen evergreen
         working-directory: ./Evergreen
       - name: "Evergreen: Load the Concerto Data set"
-        run: "perl Open-ILS/src/support-scripts/eg_db_config --update-config --service all --create-database --create-schema --create-offline --user evergreen --password password --admin-user admin --admin-pass demo123"
+        run: |
+          sudo perl Open-ILS/src/support-scripts/eg_db_config --update-config --service all --create-database --create-schema \
+          --create-offline --user evergreen --password password --admin-user admin --admin-pass demo123
         working-directory: ./Evergreen
       - name: "Evergreen: start Evergreen"
         run: sudo service memcached start && sudo -i -u opensrf osrf_control -l --start-all && sudo -i -u opensrf autogen.sh
