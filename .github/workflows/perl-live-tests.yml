@@ -68,12 +68,13 @@ jobs:
         run: |
           sudo make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-noble-16
           sudo service postgresql start
-          sudo -u postgres psql --command="CREATE USER evergreen PASSWORD 'password' CREATEDB" --command="\du"
+          sudo -u postgres psql --command="CREATE USER evergreen PASSWORD 'password' CREATEDB SUPERUSER" --command="\du"
         working-directory: ./Evergreen
       - name: "Evergreen: Load the Concerto Data set"
         run: |
           sudo perl Open-ILS/src/support-scripts/eg_db_config --update-config --service all --create-database --create-schema \
           --create-offline --user evergreen --password password --admin-user admin --admin-pass demo123
+          sudo -u postgres psql --command="ALTER USER evergreen WITH NOSUPERUSER" --command="\du"
         working-directory: ./Evergreen
       - name: "Evergreen: start Evergreen"
         run: sudo service memcached start && sudo -i -u opensrf osrf_control -l --start-all && sudo -i -u opensrf autogen.sh
