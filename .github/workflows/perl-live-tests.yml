@@ -74,10 +74,9 @@ jobs:
         run: |
           sudo perl Open-ILS/src/support-scripts/eg_db_config --update-config --service all --create-database --create-schema \
           --create-offline --user evergreen --password password --admin-user admin --admin-pass demo123
-          sudo -u postgres psql --command="ALTER USER evergreen WITH NOSUPERUSER" --command="\du"
         working-directory: ./Evergreen
       - name: "Evergreen: start Evergreen"
-        run: sudo service memcached start && sudo -i -u opensrf osrf_control -l --start-all && sudo -i -u opensrf autogen.sh
+        run: sudo service memcached start && sudo -i -u opensrf /openils/bin/osrf_control -l --start-all && sudo -i -u opensrf /openils/bin/autogen.sh
       - name: "Evergreen: run live tests"
         run: make livecheck
         working-directory: ./Evergreen/Open-ILS/src/perlmods
