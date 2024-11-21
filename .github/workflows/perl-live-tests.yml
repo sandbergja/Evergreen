@@ -68,7 +68,7 @@ jobs:
         run: |
           sudo make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-noble-16
           sudo service postgresql start
-          psql -U postgres --comand="CREATE USER evergreen PASSWORD 'password'" --command="\du"
+          psql -U postgres --command="CREATE USER evergreen PASSWORD 'password'" --command="\du"
           createdb --owner=evergreen evergreen
         working-directory: ./Evergreen
       - name: "Evergreen: Load the Concerto Data set"
