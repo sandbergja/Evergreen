@@ -1,0 +1,50 @@
+BEGIN;
+-- Remove existing items from a record, then add one fresh one
+DELETE FROM asset.copy
+    USING asset.copy c
+    JOIN asset.call_number cn ON c.call_number = cn.id
+    JOIN (SELECT MAX(id) AS max_id FROM biblio.record_entry) AS max_record
+    ON cn.record = max_record.max_id;
+
+INSERT INTO asset.copy (call_number, circ_lib, creator, editor, loan_duration, fine_level, barcode)
+SELECT cn.id,
+    (
+        SELECT MAX(ou.id)
+        FROM actor.org_unit ou
+        INNER JOIN actor.org_unit_type aout ON ou.ou_type = aout.id
+        WHERE aout.can_have_vols
+    ) AS circ_lib,
+    (
+        SELECT MAX(id)
+        FROM actor.usr
+    ) AS creator,
+    (
+        SELECT MAX(id)
+        FROM actor.usr
+    ) AS editor,
+    1 AS loan_duration,
+    1 AS fine_level,
+    md5(random()::text) AS barcode
+FROM asset.call_number cn
+JOIN (SELECT MAX(id) AS max_id FROM biblio.record_entry) AS max_record
+ON cn.record = max_record.max_id LIMIT 1;
+
+WITH new_org_lasso AS (INSERT INTO actor.org_lasso (name, global) VALUES ('New Lasso', TRUE) RETURNING id),
+    library AS (SELECT MAX(ou.id) AS max_id FROM actor.org_unit ou INNER JOIN actor.org_unit_type aout ON ou.ou_type = aout.id WHERE aout.can_have_vols)
+    INSERT INTO actor.org_lasso_map(lasso, org_unit) SELECT (SELECT id FROM new_org_lasso), library.max_id FROM library;
+
+
+SELECT plan(1);
+
+SELECT is(
+    (WITH max_record_entry AS (SELECT MAX(id) AS max_id FROM biblio.record_entry),
+        lasso AS (SELECT id FROM actor.org_lasso WHERE name = 'New Lasso')
+    SELECT SUM(visible) FROM asset.opac_lasso_record_copy_count(
+        (SELECT id FROM lasso),
+        (SELECT max_id FROM max_record_entry)))::int,
+    1,
+    'asset.opac_lasso_record_copy_count can find a visible copy'
+);
+
+SELECT * FROM finish();
+ROLLBACK;

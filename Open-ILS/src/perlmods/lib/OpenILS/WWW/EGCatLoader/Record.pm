@@ -7,6 +7,7 @@ use OpenILS::Utils::Fieldmapper;
 use OpenILS::Application::AppUtils;
 use Net::HTTP::NB;
 use IO::Select;
+use List::Util qw(reduce);
 use List::MoreUtils qw(uniq);
 my $U = 'OpenILS::Application::AppUtils';
 
@@ -585,7 +586,13 @@ sub get_hold_copy_summary {
     if ($ctx->{is_staff}) {
         $copy_count_meth .= '.staff';
     }
-    my $req1 = $search->request($copy_count_meth, $org, $rec_id); 
+    # If the user supplied a lasso aka library group, pass that rather than
+    # an org id (open-ils.search.biblio.record.copy_count will know that
+    # it is a lasso ID because it will be a negative number)
+    my $negated_library_group_id = $self->get_negated_library_group_id;
+    my $org_filter = ($negated_library_group_id && $negated_library_group_id < 0) ? $negated_library_group_id : $org;
+
+    my $req1 = $search->request($copy_count_meth, $org_filter, $rec_id);
 
     # if org unit hiding applies, limit the hold count to holds
     # whose pickup library is within our depth-scoped tree
@@ -600,6 +607,7 @@ sub get_hold_copy_summary {
         $rec_id, $count_args);
 
     $self->ctx->{copy_summary} = $req1->recv->content;
+    $self->ctx->{copy_summary_count_total} = reduce { $a + $b->{count} } 0, @{ $self->ctx->{copy_summary} };
 
     $search->kill_me;
 }
@@ -911,6 +919,21 @@ sub added_content_stage2 {
             $content->{request}->close();
         } 
     }
+}
+
+sub get_negated_library_group_id {
+    my $self = shift;
+    my $locg = $self->cgi->param('locg');
+    if ($locg && $locg =~ /lasso\((\d+)\)/) {
+        return $1 * -1 if $self->_lasso_exists($1);
+    }
+
+    return;
+}
+
+sub _lasso_exists {
+    my ($self, $lasso_id) = @_;
+    return $self->editor->retrieve_actor_org_lasso($lasso_id);
 }
 
 1;
