@@ -65,7 +65,10 @@ mockNetService.request.and.returnValue(of({
         },
     },
     'id': 248,
-    'hold_count': '0'
+    'hold_count': '0',
+    'search_result': [{
+        'display_as_link': 'f'
+    }]
 }));
 mockPermService.hasWorkPermHere.and.returnValue(Promise.resolve({PLACE_UNFILLABLE_HOLD: true}));
 let service: BibRecordService;
@@ -94,7 +97,7 @@ describe('BibRecordService', () => {
                 });
         }));
         it('can accept a library group id', waitForAsync(() => {
-            service.getBibSummary(248, 1, true, 15)
+            service.getBibSummary(248, 1, true, {library_group: 15})
                 .subscribe(() => {
                     expect(mockNetService.request).toHaveBeenCalledWith(
                         'open-ils.search',
@@ -102,6 +105,26 @@ describe('BibRecordService', () => {
                         1, // org id
                         [248], // bib record ids
                         {library_group: 15}
+                    );
+                });
+        }));
+        it('can parse the boolean search_result display_as_link field', waitForAsync(() => {
+            service.getBibSummary(248, 1, true)
+                .subscribe((summary) => {
+                    expect(summary.searchResultDisplayEntries[0].display_as_link).toBeFalse();
+                });
+        }));
+    });
+    describe('getBibSummaries()', () => {
+        it('can accept a search_result flavor', waitForAsync(() => {
+            service.getBibSummaries([248], 1, true, {search_result: 1})
+                .subscribe(() => {
+                    expect(mockNetService.request).toHaveBeenCalledWith(
+                        'open-ils.search',
+                        'open-ils.search.biblio.record.catalog_summary.staff',
+                        1, // org id
+                        [248], // bib record ids
+                        {search_result: 1}
                     );
                 });
         }));

@@ -7,6 +7,7 @@ import {CustomOrgUnitTreesComponent} from './custom-org-unit-trees.component';
 import {PrintTemplateComponent} from './print-template.component';
 import {PermGroupTreeComponent} from './perm-group-tree.component';
 import {CallNumberClassComponent} from '@eg/staff/admin/server/call-number-class/call-number-class.component';
+import { RecordDisplayAdminComponent } from './record-display-admin/record-display-admin.component';
 
 const routes: Routes = [{
     path: 'splash',
@@ -69,6 +70,9 @@ const routes: Routes = [{
         table: 'rule_circ_duration',
         fieldOrder: 'name,shrt,normal,extended,max_renewals,max_auto_renewals'
     }]
+}, {
+    path: 'config/ui_record_display_entry',
+    component: RecordDisplayAdminComponent
 }, {
     path: 'config/z3950_source',
     component: BasicAdminPageComponent,
