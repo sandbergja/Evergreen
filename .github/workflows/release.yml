@@ -1,8 +1,6 @@
 name: Release a new version of Evergreen
 on:
   push:
-    tags:
-      - '**'
   workflow_dispatch:
 
 jobs:
