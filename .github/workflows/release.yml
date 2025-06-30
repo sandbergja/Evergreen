@@ -1,6 +1,8 @@
 name: Release a new version of Evergreen
 on:
   push:
+    tags:        
+      - '**'
   workflow_dispatch:
 
 jobs:
@@ -9,17 +11,17 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          path: build/Evergreen
       - name: Install prerequisites
         run: sudo make -f Open-ILS/src/extras/Makefile.install ubuntu-noble-packager
-      - name: Download OpenSRF javascript
-        uses: actions/checkout@v4
-        with:
-          repository: evergreen-library-system/OpenSRF
-          path: opensrf
+        working-directory: ./build/Evergreen
       - name: Build tarball
-        run: build/tools/make_release -b -j $(pwd)/../opensrf/src/javascript/
+        run: build/tools/make_release -b
+        working-directory: ./build/Evergreen
       - name: Store build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: build
-          path: ../release
+          path: build/release
+          if-no-files-found: error
