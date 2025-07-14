@@ -8,6 +8,9 @@ use OpenSRF::AppSession;
 my $logger = "OpenSRF::Utils::Logger";
 
 
+# THIS is not a bug!  Just a comment to see if the tests run on this change to the perl code
+
+
 # Returns a new Event data hash (not a blessed object)
 # The first param is the event name
 # Following the first param is an optional hash of params:
