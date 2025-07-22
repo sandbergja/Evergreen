@@ -22,6 +22,7 @@ import {FileReaderComponent} from '@eg/share/file-reader/file-reader.component';
 import {IntervalInputComponent} from '@eg/share/interval-input/interval-input.component';
 import {ClipboardDialogComponent} from '@eg/share/clipboard/clipboard-dialog.component';
 import { CredentialInputComponent } from './util/credential-input.component';
+import { EgChartsModule } from '@eg/share/eg-charts/eg-charts.module';
 
 
 @NgModule({
@@ -47,7 +48,8 @@ import { CredentialInputComponent } from './util/credential-input.component';
         ReactiveFormsModule,
         NgbModule,
         EgCoreModule,
-        ContextMenuModule
+        ContextMenuModule,
+        EgChartsModule
     ],
     exports: [
         CommonModule,
@@ -67,7 +69,8 @@ import { CredentialInputComponent } from './util/credential-input.component';
         ContextMenuModule,
         FileReaderComponent,
         IntervalInputComponent,
-        CredentialInputComponent
+        CredentialInputComponent,
+        EgChartsModule
     ],
 })
 

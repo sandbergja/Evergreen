@@ -1,0 +1,509 @@
+/* eg-chart.component.css */
+
+.eg-chart-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  font-family: inherit;
+  background: var(--bs-body-bg);
+  color: var(--bs-body-color);
+  min-height: 300px;
+}
+
+.eg-chart-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.eg-chart-title h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 550;
+  color: var(--evergreen);
+  flex: 1;
+  text-align: center;
+}
+
+.chart-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.export-btn {
+  background: var(--primary);
+  color: white;
+  border: 1px solid var(--primary-border);
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.export-btn .material-icons {
+  font-size: 1rem;
+}
+
+.export-btn:hover {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+.export-btn:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.export-btn:disabled {
+  background: var(--primary-disabled);
+  border-color: var(--primary-disabled);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Accessibility patterns toggle button */
+.accessibility-toggle-btn {
+  background: var(--bs-secondary);
+  color: white;
+  border: 1px solid var(--bs-secondary);
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-right: 0.5rem;
+}
+
+.accessibility-toggle-btn .material-icons {
+  font-size: 1rem;
+}
+
+.accessibility-toggle-btn:hover {
+  background: var(--bs-secondary-hover, #5a6268);
+  border-color: var(--bs-secondary-hover, #5a6268);
+}
+
+.accessibility-toggle-btn:focus {
+  outline: 2px solid var(--bs-secondary);
+  outline-offset: 2px;
+}
+
+.accessibility-toggle-btn:disabled {
+  background: var(--bs-secondary-disabled, #6c757d);
+  border-color: var(--bs-secondary-disabled, #6c757d);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Chart Type Selector Styles */
+.chart-type-selector {
+  margin-right: 0.5rem;
+}
+
+.chart-type-selector .btn-group {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.chart-type-selector .btn {
+  border-radius: 0;
+  padding: 0.375rem 0.5rem;
+  border: 1px solid var(--bs-border-color);
+  background: var(--bs-body-bg);
+  color: var(--bs-body-color);
+  transition: all 0.2s ease;
+}
+
+.chart-type-selector .btn:first-child {
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+}
+
+.chart-type-selector .btn:last-child {
+  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
+
+.chart-type-selector .btn:not(:first-child) {
+  border-left: none;
+}
+
+.chart-type-selector .btn-primary {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
+
+.chart-type-selector .btn-outline-primary {
+  background: transparent;
+  border-color: var(--bs-border-color);
+  color: var(--bs-body-color);
+}
+
+.chart-type-selector .btn-outline-primary:hover {
+  background: var(--bs-body-bg-alt);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.chart-type-selector .btn:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  z-index: 1;
+}
+
+.chart-type-selector .material-icons {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.eg-chart-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  flex: 1;
+  overflow: hidden;
+}
+
+.eg-chart-wrapper svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--bs-body-bg);
+}
+
+/* Grid styles */
+.grid line {
+  stroke: var(--border);
+  stroke-opacity: 0.3;
+  shape-rendering: crispEdges;
+}
+
+.grid path {
+  stroke-width: 0;
+}
+
+/* Axis styles */
+.x-axis, .y-axis {
+  color: var(--bs-body-color);
+  font-size: 12px;
+}
+
+.x-axis line, .y-axis line {
+  stroke: var(--border);
+}
+
+.x-axis path, .y-axis path {
+  stroke: var(--border);
+}
+
+.axis-label {
+  font-size: 14px;
+  font-weight: 500;
+  fill: var(--bs-body-color);
+}
+
+/* Line styles */
+.line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Point styles */
+.point {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.point:hover, .point:focus {
+  r: 6;
+  stroke-width: 3;
+  outline: 2px solid var(--primary-focus-outline-rgb);
+  outline-offset: 2px;
+}
+
+.point:focus {
+  outline: 2px solid var(--primary);
+}
+
+/* Tooltip styles */
+.eg-chart-tooltip {
+  background: var(--bs-dark, #212529);
+  color: var(--bs-white, #ffffff);
+  border: 1px solid var(--bs-border-color, #dee2e6);
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+  z-index: 1000;
+  max-width: 250px;
+  line-height: 1.4;
+  transition: left 0.1s ease-out, top 0.1s ease-out;
+}
+
+/* Screen reader only content */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Accessible data table styles */
+.eg-chart-data-table {
+  margin-top: 1rem;
+}
+
+.eg-chart-data-table table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--border);
+  background: var(--bs-body-bg);
+}
+
+.eg-chart-data-table caption {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  text-align: left;
+  caption-side: top;
+}
+
+.eg-chart-data-table th,
+.eg-chart-data-table td {
+  padding: 0.5rem;
+  text-align: left;
+  border: 1px solid var(--border);
+}
+
+.eg-chart-data-table th {
+  background: var(--bs-body-bg-alt);
+  font-weight: bold;
+  color: var(--bs-body-color);
+}
+
+.eg-chart-data-table td {
+  background: var(--bs-body-bg);
+  color: var(--bs-body-color);
+}
+
+.eg-chart-data-table tr:nth-child(even) td {
+  background: var(--bs-body-bg-alt);
+}
+
+/* Responsive behavior */
+@media (max-width: 768px) {
+  .eg-chart-container {
+    font-size: 14px;
+  }
+  
+  .eg-chart-title h2 {
+    font-size: 1.1rem;
+  }
+  
+  .axis-label {
+    font-size: 12px;
+  }
+  
+  .x-axis, .y-axis {
+    font-size: 11px;
+  }
+  
+  .chart-type-selector .btn {
+    padding: 0.25rem 0.375rem;
+  }
+  
+  .chart-type-selector .material-icons {
+    font-size: 0.875rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .eg-chart-container {
+    font-size: 12px;
+  }
+  
+  .eg-chart-title h2 {
+    font-size: 1rem;
+  }
+  
+  .axis-label {
+    font-size: 11px;
+  }
+  
+  .x-axis, .y-axis {
+    font-size: 10px;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .line {
+    stroke-width: 3;
+  }
+  
+  .point {
+    stroke-width: 3;
+  }
+  
+  .grid line {
+    stroke-opacity: 0.8;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .point, .arc {
+    transition: none;
+  }
+  
+  .eg-chart-tooltip {
+    transition: none;
+  }
+  
+  .chart-type-selector .btn {
+    transition: none;
+  }
+}
+
+/* Pie Chart Specific Styles */
+.eg-chart-main-content.pie-chart-layout {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.pie-chart-layout .eg-chart-wrapper {
+  flex: 1 1 60%;
+}
+
+.eg-chart-legend-wrapper {
+  flex: 1 1 40%;
+  max-height: 100%;
+  overflow-y: auto;
+}
+
+.eg-chart-legend {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.eg-chart-legend-item {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.eg-chart-legend-item:hover, .eg-chart-legend-item:focus {
+  background-color: var(--bs-body-bg-alt);
+  outline: none;
+}
+
+.legend-color-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 0.75rem;
+  flex-shrink: 0;
+}
+
+.legend-label {
+  flex-grow: 1;
+  font-size: 0.875rem;
+  color: var(--bs-body-color);
+}
+
+.legend-value {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--bs-secondary-color);
+}
+
+/* Pie slice interaction styles */
+.arc {
+  transition: transform 0.2s ease-out, opacity 0.2s ease-out;
+}
+
+.arc.highlighted {
+  transform: scale(1.05);
+}
+
+.arc.dimmed {
+  opacity: 0.5;
+}
+
+/* Accessibility Pattern Styles */
+.bar:hover, .arc:hover {
+  filter: brightness(1.1);
+}
+
+.bar:focus, .arc:focus {
+  filter: brightness(1.1);
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+/* Ensure patterns maintain visibility in different themes */
+pattern rect {
+  fill: currentColor;
+}
+
+pattern path, pattern circle {
+  stroke: currentColor;
+  fill: currentColor;
+}
+
+/* Enhanced legend styles for pattern support */
+.legend-color-swatch.has-pattern {
+  border: 1px solid var(--bs-border-color);
+}
+
+/* Pattern visibility in high contrast mode */
+@media (prefers-contrast: high) {
+  pattern path, pattern circle {
+    stroke-width: 2;
+    stroke-opacity: 0.9;
+  }
+  
+  .bar, .arc {
+    stroke: var(--bs-body-color);
+    stroke-width: 1;
+  }
+}
+
+/* Focus visible support */
+@supports selector(:focus-visible) {
+  .point:focus, .arc:focus, .eg-chart-legend-item:focus {
+    outline: none;
+  }
+  
+  .point:focus-visible, .arc:focus-visible, .eg-chart-legend-item:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+}

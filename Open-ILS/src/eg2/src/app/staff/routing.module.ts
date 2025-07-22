@@ -67,6 +67,10 @@ const routes: Routes = [{
         loadChildren: () =>
             import('@eg/staff/reporter/routing.module').then(m => m.ReporterRoutingModule)
     }, {
+        path: 'dashboard',
+        loadChildren: () =>
+            import('./dashboard/dashboard.module').then(m => m.DashboardModule)
+    }, {
         path: 'sandbox',
         loadChildren: () =>
             import('./sandbox/sandbox.module').then(m => m.SandboxModule)
