@@ -249,7 +249,7 @@ export class FullReporterEditorComponent implements OnInit {
 			    	    		fmClass: f.class,
 			    	    		fmField: {
                                     key: f.key,
-                                    name: ['has_many','might_have'].includes(f.reltype) ? idl_class.pkey : f.name,
+                                    name: f.reltype == 'has_many' || (f.reltype == 'might_have' && f?.virtual) ? idl_class.pkey : f.name,
                                     reltype: f.reltype,
                                     class: f.class // field on parent; (stateFlag ? '' : LEFT) JOIN fmclass.tablename ON (fmField.name [lhs] = fmField.key [rhs])
                                 }
