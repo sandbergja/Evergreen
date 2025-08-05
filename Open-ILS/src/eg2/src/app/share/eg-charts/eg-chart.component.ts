@@ -53,8 +53,7 @@ import * as d3 from 'd3';
         <div class="eg-chart-wrapper" #chartWrapper>
           <svg #chartSvg
                [attr.viewBox]="'0 0 ' + config.width + ' ' + config.height"
-               [attr.aria-describedby]="chartData?.accessibility?.longDescription ? 'chart-long-desc' : null"
-               role="img">
+               [attr.aria-describedby]="chartData?.accessibility?.longDescription ? 'chart-long-desc' : null">
             <defs></defs>
             <title>{{ chartData?.accessibility?.description }}</title>
             <desc *ngIf="chartData?.accessibility?.longDescription" id="chart-long-desc">

@@ -36,8 +36,7 @@ import { ChartData } from './interfaces/chart-data.interface';
         <svg #chartSvg
              [attr.width]="config.width"
              [attr.height]="config.height"
-             [attr.aria-describedby]="chartData?.accessibility?.longDescription ? 'chart-long-desc' : null"
-             role="img">
+             [attr.aria-describedby]="chartData?.accessibility?.longDescription ? 'chart-long-desc' : null">
           <title>{{ chartData?.accessibility?.description }}</title>
           <desc *ngIf="chartData?.accessibility?.longDescription" id="chart-long-desc">
             {{ chartData?.accessibility?.longDescription }}

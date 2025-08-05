@@ -316,8 +316,7 @@ export class LineChartRenderer implements ChartRenderer<ChartData> {
                 .attr('stroke-linecap', strokeLinecap)
                 .attr('stroke-linejoin', strokeLinejoin)
                 .attr('opacity', opacity)
-                .attr('d', line)
-                .attr('aria-label', `Line chart for ${series.name}`);
+                .attr('d', line);
         });
     }
 
