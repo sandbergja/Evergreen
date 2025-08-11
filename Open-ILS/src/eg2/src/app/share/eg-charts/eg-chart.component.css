@@ -8,7 +8,7 @@
   font-family: inherit;
   background: var(--bs-body-bg);
   color: var(--bs-body-color);
-  min-height: 300px;
+  /*min-height: 300px;*/
 }
 
 .eg-chart-title {
@@ -317,23 +317,23 @@
   .eg-chart-container {
     font-size: 14px;
   }
-  
+
   .eg-chart-title h2 {
     font-size: 1.1rem;
   }
-  
+
   .axis-label {
     font-size: 12px;
   }
-  
+
   .x-axis, .y-axis {
     font-size: 11px;
   }
-  
+
   .chart-type-selector .btn {
     padding: 0.25rem 0.375rem;
   }
-  
+
   .chart-type-selector .material-icons {
     font-size: 0.875rem;
   }
@@ -343,15 +343,15 @@
   .eg-chart-container {
     font-size: 12px;
   }
-  
+
   .eg-chart-title h2 {
     font-size: 1rem;
   }
-  
+
   .axis-label {
     font-size: 11px;
   }
-  
+
   .x-axis, .y-axis {
     font-size: 10px;
   }
@@ -362,11 +362,11 @@
   .line {
     stroke-width: 3;
   }
-  
+
   .point {
     stroke-width: 3;
   }
-  
+
   .grid line {
     stroke-opacity: 0.8;
   }
@@ -377,11 +377,11 @@
   .point, .arc {
     transition: none;
   }
-  
+
   .eg-chart-tooltip {
     transition: none;
   }
-  
+
   .chart-type-selector .btn {
     transition: none;
   }
@@ -489,7 +489,7 @@ pattern path, pattern circle {
     stroke-width: 2;
     stroke-opacity: 0.9;
   }
-  
+
   .bar, .arc {
     stroke: var(--bs-body-color);
     stroke-width: 1;
@@ -501,7 +501,7 @@ pattern path, pattern circle {
   .point:focus, .arc:focus, .eg-chart-legend-item:focus {
     outline: none;
   }
-  
+
   .point:focus-visible, .arc:focus-visible, .eg-chart-legend-item:focus-visible {
     outline: 2px solid var(--primary);
     outline-offset: 2px;

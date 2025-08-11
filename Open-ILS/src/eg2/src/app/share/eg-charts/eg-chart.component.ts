@@ -14,20 +14,20 @@ import * as d3 from 'd3';
       <div class="eg-chart-title" *ngIf="chartData?.title">
         <h2>{{ chartData?.title }}</h2>
         <div class="chart-actions">
-          <div class="chart-type-selector" *ngIf="allowChartTypeToggle">
-            <div class="btn-group" role="group" [attr.aria-label]="'Chart type selector for ' + chartData?.title">
-              <button *ngFor="let chartType of supportedChartTypes" 
-                      type="button"
-                      class="btn btn-sm"
-                      [class.btn-primary]="currentChartType === chartType"
-                      [class.btn-outline-primary]="currentChartType !== chartType"
-                      (click)="onChartTypeChange(chartType)"
-                      [attr.aria-pressed]="currentChartType === chartType"
-                      [title]="getChartTypeLabel(chartType)">
-                <span class="material-icons" [attr.aria-hidden]="true">{{ getChartTypeIcon(chartType) }}</span>
-              </button>
-            </div>
-          </div>
+<!--          <div class="chart-type-selector" *ngIf="allowChartTypeToggle">-->
+<!--            <div class="btn-group" role="group" [attr.aria-label]="'Chart type selector for ' + chartData?.title">-->
+<!--              <button *ngFor="let chartType of supportedChartTypes" -->
+<!--                      type="button"-->
+<!--                      class="btn btn-sm"-->
+<!--                      [class.btn-primary]="currentChartType === chartType"-->
+<!--                      [class.btn-outline-primary]="currentChartType !== chartType"-->
+<!--                      (click)="onChartTypeChange(chartType)"-->
+<!--                      [attr.aria-pressed]="currentChartType === chartType"-->
+<!--                      [title]="getChartTypeLabel(chartType)">-->
+<!--                <span class="material-icons" [attr.aria-hidden]="true">{{ getChartTypeIcon(chartType) }}</span>-->
+<!--              </button>-->
+<!--            </div>-->
+<!--          </div>-->
           <button
             type="button"
             class="accessibility-toggle-btn"
@@ -117,9 +117,9 @@ export class EgChartComponent implements OnInit, OnDestroy {
   };
   @Input() allowChartTypeToggle: boolean = false;
   @Input() supportedChartTypes: ('line' | 'bar' | 'pie')[] = ['line', 'bar', 'pie'];
-  
+
   @Output() chartTypeChanged = new EventEmitter<'line' | 'bar' | 'pie'>();
-  
+
   currentChartType: 'line' | 'bar' | 'pie' = 'line';
 
   @ViewChild('chartSvg', { static: true }) chartSvg!: ElementRef<SVGElement>;
@@ -346,38 +346,38 @@ export class EgChartComponent implements OnInit, OnDestroy {
       // Calculate smart positioning
       const containerRect = this.chartWrapper.nativeElement.getBoundingClientRect();
       const tooltipRect = (this.tooltip.node() as HTMLElement).getBoundingClientRect();
-      
+
       // Get cursor position relative to container
       const cursorX = event.clientX - containerRect.left;
       const cursorY = event.clientY - containerRect.top;
-      
+
       // Buffer from edges
       const buffer = 15;
-      
+
       // Calculate default position (right + above cursor)
       let x = cursorX + 10;
       let y = cursorY - 10;
-      
+
       // Check right edge - if tooltip would go off-screen, position to left
       if (x + tooltipRect.width + buffer > containerRect.width) {
           x = cursorX - tooltipRect.width - 10;
       }
-      
+
       // Check left edge - ensure tooltip doesn't go off left side
       if (x < buffer) {
           x = buffer;
       }
-      
+
       // Check top edge - if tooltip would go above container, position below
       if (y < buffer) {
           y = cursorY + 10;
       }
-      
+
       // Check bottom edge - if tooltip would go below container, position above
       if (y + tooltipRect.height + buffer > containerRect.height) {
           y = cursorY - tooltipRect.height - 10;
       }
-      
+
       // Apply final position
       this.tooltip
           .style('left', x + 'px')

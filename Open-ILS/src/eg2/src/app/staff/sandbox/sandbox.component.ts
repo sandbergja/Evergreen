@@ -25,6 +25,7 @@ import * as Moment from 'moment-timezone';
 import {SampleDataService} from '@eg/share/util/sample-data.service';
 import {HtmlToTxtService} from '@eg/share/util/htmltotxt.service';
 import {Z3950SearchComponent} from '@eg/staff/share/z3950-search/z3950-search.component';
+import {ChartConfiguration, ChartData} from "@eg/share/eg-charts/interfaces/chart-data.interface";
 
 @Component({
     templateUrl: 'sandbox.component.html',
@@ -121,6 +122,98 @@ export class SandboxComponent implements OnInit {
 
     circDaily: IdlObject;
     circHourly: IdlObject;
+
+    circulationTrendData: ChartData = {
+        series: [{
+            name: 'Monthly Circulation',
+            data: [
+                {x: 1, y: 1250},
+                {x: 2, y: 1100},
+                {x: 3, y: 1450},
+                {x: 4, y: 1320},
+                {x: 5, y: 980},
+                {x: 6, y: 750}]
+        }],
+        title: 'Circulation Trends',
+        xAxisLabel: 'Sandbox Data',
+        yAxisLabel: 'Items Circulated',
+        accessibility: {
+            description: 'Monthly circulation statistics showing seasonal trends',
+            dataTable: true
+        }
+    };
+
+    circulationChartConfig: ChartConfiguration = {
+        width: 800,
+        height: 400,
+        margin: { top: 20, right: 20, bottom: 40, left: 60 },
+        showGrid: true,
+        showTooltip: true,
+        animated: true
+    };
+
+    // Add after collectionChartConfig
+    pieChartData: ChartData = {
+        series: [{
+            name: 'Library Usage',
+            data: [
+                { x: 'Reference', y: 2840 },
+                { x: 'Fiction', y: 4250 },
+                { x: 'Non-Fiction', y: 3120 },
+                { x: 'Children', y: 1890 },
+                { x: 'Teen/YA', y: 1560 },
+                { x: 'Periodicals', y: 890 }
+            ]
+        }],
+        title: 'Library Usage by Section',
+        accessibility: {
+            description: 'Pie chart showing library usage distribution across different sections',
+            dataTable: true,
+            patterns: false  // Can be toggled by users
+        }
+    };
+
+    pieChartConfig: ChartConfiguration = {
+        width: 400,
+        height: 400,  // Square for pie charts
+        margin: { top: 20, right: 20, bottom: 20, left: 20 },
+        showGrid: false,  // Not relevant for pie charts
+        showTooltip: true,
+        animated: true
+    };
+
+    // Add after circulationChartConfig
+    collectionData: ChartData = {
+        series: [{
+            name: 'Collection Items',
+            data: [
+                { x: 1, y: 15420, label: 'Books' },
+                { x: 2, y: 8750, label: 'DVDs' },
+                { x: 3, y: 4200, label: 'Magazines' },
+                { x: 4, y: 2800, label: 'Audiobooks' },
+                { x: 5, y: 1950, label: 'eBooks' },
+                { x: 6, y: 1200, label: 'Maps' }
+            ]
+        }],
+        title: 'Collection by Format',
+        xAxisLabel: 'Format Type',
+        yAxisLabel: 'Number of Items',
+        accessibility: {
+            description: 'Bar chart showing collection distribution by material format',
+            dataTable: true
+        }
+    };
+
+    collectionChartConfig: ChartConfiguration = {
+        width: 800,
+        height: 400,
+        margin: { top: 20, right: 20, bottom: 40, left: 60 },
+        showGrid: true,
+        showTooltip: true,
+        animated: true
+    };
+
+
 
     constructor(
         private idl: IdlService,
@@ -511,5 +604,25 @@ export class SandboxComponent implements OnInit {
         this.noteDialog.open()
             .subscribe(val => console.log('note value', val));
     }
+
+    // Event handlers
+    onCirculationChartTypeChanged(chartType: 'line' | 'bar' | 'pie'): void {
+        console.log('Chart type changed to:', chartType);
+    }
+
+    onChartError(error: any): void {
+        console.error('Chart error:', error);
+    }
+
+    // Add event handler
+    onPieChartTypeChanged(chartType: 'line' | 'bar' | 'pie'): void {
+        console.log('Pie chart type changed to:', chartType);
+    }
+
+    // Update event handlers to include the new chart
+    onCollectionChartTypeChanged(chartType: 'line' | 'bar' | 'pie'): void {
+        console.log('Collection chart type changed to:', chartType);
+    }
+
 }
 

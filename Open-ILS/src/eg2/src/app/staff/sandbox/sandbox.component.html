@@ -2,6 +2,83 @@
 <eg-staff-banner bannerText="Sandbox" i18n-bannerText>
 </eg-staff-banner>
 
+<div class="row mb-4">
+  <div class="col-12 mb-4">
+    <div class="card chart-card">
+      <div class="card-header">
+        <h5 class="card-title mb-0">
+          <span class="material-icons me-2" aria-hidden="true">trending_up</span>
+          Circulation Trends
+        </h5>
+      </div>
+      <div class="card-body">
+        <eg-chart
+          *ngIf="circulationTrendData"
+          [type]="'line'"
+          [chartData]="circulationTrendData"
+          [config]="circulationChartConfig"
+          [allowChartTypeToggle]="true"
+          [supportedChartTypes]="['line', 'bar']"
+          (chartTypeChanged)="onCirculationChartTypeChanged($event)"
+          (error)="onChartError($event)">
+        </eg-chart>
+      </div>
+    </div>
+  </div>
+
+
+    <div class="col-6 mb-4">
+      <div class="card chart-card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <span class="material-icons me-2" aria-hidden="true">bar_chart</span>
+            Collection Distribution
+          </h5>
+        </div>
+        <div class="card-body">
+          <eg-chart
+            *ngIf="collectionData"
+            [type]="'bar'"
+            [chartData]="collectionData"
+            [config]="collectionChartConfig"
+            [allowChartTypeToggle]="true"
+            [supportedChartTypes]="['bar', 'pie']"
+            (chartTypeChanged)="onCollectionChartTypeChanged($event)"
+            (error)="onChartError($event)">
+          </eg-chart>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-6 mb-4">
+      <div class="card chart-card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <span class="material-icons me-2" aria-hidden="true">pie_chart</span>
+            Usage Distribution
+          </h5>
+        </div>
+        <div class="card-body">
+          <eg-chart
+            *ngIf="pieChartData"
+            [type]="'pie'"
+            [chartData]="pieChartData"
+            [config]="pieChartConfig"
+            [allowChartTypeToggle]="false"
+            [supportedChartTypes]="['pie']"
+            (chartTypeChanged)="onPieChartTypeChanged($event)"
+            (error)="onChartError($event)">
+          </eg-chart>
+        </div>
+      </div>
+    </div>
+
+
+
+
+</div>
+
+
 <div class="row">
   <h4>Z Search component</h4>
   <eg-z3950-search
@@ -10,7 +87,7 @@
   </eg-z3950-search>
 </div>
 
-<eg-title 
+<eg-title
   i18n-prefix i18n-suffix
   prefix=":) {{dynamicTitleText}}"
   suffix="Sandbox">
@@ -90,7 +167,7 @@
     <div class="col">
       <p i18n>This button is announced as "new underscore releases" (no ARIA label):</p>
       <!-- do not copy this example -->
-      <button type="button" class="btn btn-danger" (click)="null" 
+      <button type="button" class="btn btn-danger" (click)="null"
         title="This tooltip is not read by screen readers" i18n-title>
         <span class="material-icons mat-icon-in-button">new_releases</span>
       </button>
@@ -99,7 +176,7 @@
     <div class="col">
       <p i18n>This button will submit form input on <kbd>Spacebar</kbd> or <kbd>Enter</kbd> (no type attribute):</p>
       <!-- do not copy this example -->
-       
+
       <button class="btn btn-info" (click)="null" i18n>Whoops!</button>
     </div>
   </div>
@@ -108,7 +185,7 @@
 
 <!-- FM Editor Experiments ----------------------------- -->
 <div class="row my-2">
-  <ng-template #descriptionTemplate 
+  <ng-template #descriptionTemplate
       let-field="field" let-record="record" let-hello="hello">
   <!-- example custom template for editing the 'description' field -->
     <textarea
@@ -123,7 +200,7 @@
   </ng-template>
   <!-- note: fieldOptions would be best defined in the .ts file, but
       want to demostrate it can be set in the template as well -->
-  <eg-fm-record-editor #fmRecordEditor 
+  <eg-fm-record-editor #fmRecordEditor
     idlClass="cmrcfld" mode="create" hiddenFields="id"
     fieldOrder="owner,name,description,marc_format,marc_record_type,tag"
     [fieldOptions]="{marc_record_type:{customValues:[{id:'biblio'},{id:'serial'},{id:'authority'}]},description:{customTemplate:{template:descriptionTemplate,context:{'hello':'goodbye'}}}}"
@@ -154,7 +231,7 @@
   </div>
   <div class="col-lg-3">
     <eg-help-popover helpLink="https://www.youtube.com/watch?v=dQw4w9WgXcQ" helpText="This popover is supposed to help or something...!"></eg-help-popover>
-    <eg-combobox [allowFreeText]="true" 
+    <eg-combobox [allowFreeText]="true"
       placeholder="Combobox with static data"
       [entries]="cbEntries"></eg-combobox>
   </div>
@@ -174,7 +251,7 @@
     <label for="limitPermsSelect" class="form-label org-unit-select-label" i18n>Org select with limit perms</label>
   </div>
   <div class="col-lg-2">
-    <eg-org-select 
+    <eg-org-select
       domId="limitPermsSelect"
       [limitPerms]="['REGISTER_WORKSTATION']">
     </eg-org-select>
@@ -251,7 +328,7 @@
     </button>
   </div>
   <div class="me-2">
-    <button type="button" class="btn btn-info" 
+    <button type="button" class="btn btn-info"
       (click)="testServerPrint()">Test Server-Generated Print</button>
   </div>
 </div>
@@ -278,7 +355,7 @@
 
 <div>
   <h4>Cross-tab communications example</h4>
-  <p>To test, open this sandbox in a second browser tab. Enter something in the input box below, then switch to the other tab and click anywhere on the page. 
+  <p>To test, open this sandbox in a second browser tab. Enter something in the input box below, then switch to the other tab and click anywhere on the page.
      You should see the message that you sent to the other browser tab.</p>
 </div>
 <div class="row">
@@ -319,8 +396,8 @@
   HELLO {{userContext.hello}}
   <button type="button">{{row.id()}}</button>
 </ng-template>
-<eg-grid #cbtGrid idlClass="cbt" 
-  [dataSource]="btSource" 
+<eg-grid #cbtGrid idlClass="cbt"
+  [dataSource]="btSource"
   [rowClassCallback]="btGridRowClassCallback"
   [rowFlairIsEnabled]="true"
   flairColumnHeader="Flair Column Tooltip" i18n-flairColumnHeader
@@ -338,11 +415,11 @@
   <eg-grid-toolbar-action label="Another Action" i18n-label
     (onClick)="complimentEvergreen2($event)" [describedbySelectionCount]="true">
   </eg-grid-toolbar-action>
-  <eg-grid-column name="test" [cellTemplate]="cellTmpl" 
+  <eg-grid-column name="test" [cellTemplate]="cellTmpl"
     [cellContext]="btGridTestContext" [sortable]="false">
   </eg-grid-column>
   <eg-grid-column [sortable]="false" path="owner.name"></eg-grid-column>
-  <eg-grid-column [sortable]="false" path="datetime_test" 
+  <eg-grid-column [sortable]="false" path="datetime_test"
     datatype="timestamp" [datePlusTime]="true"></eg-grid-column>
 </eg-grid>
 
@@ -433,8 +510,8 @@
     <div class="card-body">
       <h3 class="card-title">Or perhaps reactive forms interest you?</h3>
       <div class="card-text">
-        Choose your favorite law of library science: 
-        <eg-combobox formControlName="law" value="second" 
+        Choose your favorite law of library science:
+        <eg-combobox formControlName="law" value="second"
           [allowFreeText]="true" [startIdFiresOnChange]="true">
           <eg-combobox-entry entryId="first" entryLabel="Books are for use" i18n-entryLabel></eg-combobox-entry>
           <eg-combobox-entry entryId="second" entryLabel="Every person his or her book" i18n-entryLabel></eg-combobox-entry>
@@ -496,9 +573,9 @@
   <div class="col-lg-3">Simple Combobox using [(ngModel)]</div>
   <div class="col-lg-3">
     <eg-combobox [(ngModel)]="simpleCombo" [allowFreeText]="true">
-      <eg-combobox-entry 
+      <eg-combobox-entry
         entryId="abc" entryLabel="ABC" i18n-entryLabel></eg-combobox-entry>
-      <eg-combobox-entry 
+      <eg-combobox-entry
         entryId="def" entryLabel="DEF" i18n-entryLabel></eg-combobox-entry>
     </eg-combobox>
   </div>
