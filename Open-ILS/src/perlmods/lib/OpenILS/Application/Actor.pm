@@ -29,8 +29,10 @@ use OpenILS::Const qw/:const/;
 use OpenILS::Application::Actor::Carousel;
 use OpenILS::Application::Actor::Container;
 use OpenILS::Application::Actor::ClosedDates;
+use OpenILS::Application::Actor::EmailBlock;
 use OpenILS::Application::Actor::UserGroups;
 use OpenILS::Application::Actor::Friends;
+use OpenILS::Application::Actor::SpamFilter;
 use OpenILS::Application::Actor::Stage;
 use OpenILS::Application::Actor::Settings;
 

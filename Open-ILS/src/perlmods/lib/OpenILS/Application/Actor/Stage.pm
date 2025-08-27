@@ -81,6 +81,81 @@ sub create_user_stage {
 }
 
 __PACKAGE__->register_method (
+    method      => 'create_user_spam',
+    api_name    => 'open-ils.actor.user.spam.create',
+    signature => {
+        desc => q/
+            Creates a new entry in the spam tables including addresses, statcats, and
+            settings.
+        /,
+        params => [
+            {desc => 'user', type => 'object', class => 'stgu'},
+            {desc => 'Mailing address.  Optional', type => 'object', class => 'stgma'},
+            {desc => 'Billing address.  Optional', type => 'object', class => 'stgba'},
+            {desc => 'Statcats.  Optional.  This is an array of "stgsc" objects', type => 'array'},
+            {desc => 'Settings.  Optional.  This is an array of "stgs" objects', type => 'array'},
+        ],
+        return => {
+            desc => '1 on success, Event on error'
+        }
+
+    }
+);
+
+sub create_user_spam {
+    my($self, $conn, $user, $mail_addr, $bill_addr, $statcats, $settings) = @_;
+
+    return OpenILS::Event->new('BAD_PARAMS') unless $user;
+
+    # Re-bless all data as spam
+    $user = bless $user, 'Fieldmapper::staging::spam_user_stage';
+    if ($mail_addr) {
+        $mail_addr = bless $mail_addr, 'Fieldmapper::staging::spam_mailing_address_stage';
+    }
+    if ($bill_addr) {
+        $bill_addr = bless $bill_addr->properties, 'Fieldmapper::staging::spam_billing_address_stage';
+    }
+    if ($settings) {
+        $settings = map { bless $_, 'Fieldmapper::staging::spam_setting_stage' } @{$settings};
+    }
+
+
+    my $e = new_editor(xact => 1);
+
+    my $uname = $user->usrname || $U->create_uuid_string;
+    $user->usrname($uname);
+
+    $e->create_staging_spam_user_stage($user) or return $e->die_event;
+
+    if($mail_addr) {
+        $mail_addr->usrname($uname);
+        $e->create_staging_spam_mailing_address_stage($mail_addr) or return $e->die_event;
+    }
+
+    if($bill_addr) {
+        $bill_addr->usrname($uname);
+        $e->create_staging_spam_billing_address_stage($bill_addr) or return $e->die_event;
+    }
+
+    if($statcats) {
+        foreach (@$statcats) {
+            $_->usrname($uname);
+            $e->create_staging_spam_statcat_stage($_) or return $e->die_event;
+        }
+    }
+
+    if($settings) {
+        foreach (@$settings) {
+            $_->usrname($uname);
+            $e->create_spam_staging_setting_stage($_) or return $e->die_event;
+        }
+    }
+
+    $e->commit;
+    return 1;
+}
+
+__PACKAGE__->register_method (
     method      => 'user_stage_by_org',
     api_name    => 'open-ils.actor.user.stage.retrieve.by_org',
     stream      => 1
@@ -186,6 +261,54 @@ sub delete_user_stage {
     }
 
     $e->commit;
+    return 1;
+}
+
+__PACKAGE__->register_method (
+    method      => 'mark_stage_as_spam',
+    api_name    => 'open-ils.actor.user.stage.mark_as_spam',
+    signature => {
+        desc => "Moves a patron self-registration from the staging area to the spam area",
+        params => [
+            {desc => 'Authentication token', type => 'string'},
+            {desc => 'Row id of the staging.user_stage entry', type => 'number'},
+        ],
+        return => {desc => '1 on success, Event on error'}
+    }
+);
+
+sub mark_stage_as_spam {
+    my($self, $conn, $auth, $row_id) = @_;
+
+    my $e = new_editor(authtoken => $auth);
+    return $e->event unless $e->checkauth;
+
+    return $e->event unless $e->allowed('MARK_SPAM') || $e->allowed('ADMIN_SPAM');
+    $e->json_query({from => ['staging.mark_as_spam', $row_id]});
+    return 1;
+}
+
+__PACKAGE__->register_method (
+    method      => 'mark_stage_as_not_spam',
+    api_name    => 'open-ils.actor.user.stage.mark_as_not_spam',
+    signature => {
+        desc => "Moves a patron self-registration from the spam area to the staging area",
+        params => [
+            {desc => 'Authentication token', type => 'string'},
+            {desc => 'Row id of the staging.spam_user_stage entry', type => 'number'},
+        ],
+        return => {desc => '1 on success, Event on error'}
+    }
+);
+
+sub mark_stage_as_not_spam {
+    my($self, $conn, $auth, $row_id) = @_;
+
+    my $e = new_editor(authtoken => $auth);
+    return $e->event unless $e->checkauth;
+
+    return $e->event unless $e->allowed('ADMIN_SPAM');
+    $e->json_query({from => ['staging.mark_as_not_spam', $row_id]});
     return 1;
 }
 

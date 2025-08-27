@@ -6,6 +6,7 @@ use OpenILS::Utils::Fieldmapper;
 use OpenSRF::EX qw(:try);
 use OpenSRF::AppSession;
 use OpenSRF::Utils::Logger;
+use OpenILS::Utils::Fieldmapper;
 
 # ----------------------------------------------------------------------------------
 # These permission strings

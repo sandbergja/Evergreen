@@ -9,7 +9,7 @@ my $script = OpenILS::Utils::TestUtils->new;
 $script->bootstrap;
 my $apputils = 'OpenILS::Application::AppUtils';
 
-plan tests => 7;
+plan tests => 8;
 
 $script->authenticate({
     username => 'admin',
@@ -90,6 +90,35 @@ subtest 'User Stage with Addresses' => sub {
 
     my $bill_addr = $e->search_staging_billing_address_stage({usrname => $result})->[0];
     ok $bill_addr, 'Found billing address';
+};
+
+subtest 'Spam User Stage with Mailing Address' => sub {
+    plan tests => 2;
+
+    my $user = Fieldmapper::staging::user_stage->new;
+    $user->home_ou($org_unit_id);
+    $user->first_given_name('Bad');
+    $user->family_name('Spam');
+    $user->usrname('and-rude');
+
+    my $mailing = Fieldmapper::staging::mailing_address_stage->new;
+    $mailing->street1('Buy my products!');
+    $mailing->city('Give me your attention!');
+    $mailing->state('Please enjoy my scam!');
+    $mailing->post_code('Then download my virus!');
+    $mailing->usrname('and-rude');
+
+    my $result = $apputils->simplereq(
+        'open-ils.actor',
+        'open-ils.actor.user.spam.create',
+        $user, $mailing
+    );
+
+    my $spam_user = $e->search_staging_spam_user_stage({usrname => 'and-rude'})->[0];
+    ok $spam_user, 'Found spam user';
+
+    my $mail_addr = $e->search_staging_spam_mailing_address_stage({usrname => 'and-rude'})->[0];
+    ok $mail_addr, 'Found spam mailing address';
 };
 
 subtest 'User Stage with Settings' => sub {

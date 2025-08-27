@@ -11,6 +11,11 @@ use Data::Dumper;
 $Data::Dumper::Indent = 0;
 my $U = 'OpenILS::Application::AppUtils';
 
+# submodules
+use OpenILS::WWW::EGCatLoader::Register::Spam;
+
+use constant SPAM_THRESHOLD => 0.5;
+
 # We will construct DOB from the individual components
 sub construct_dob {
     my $self = shift;
@@ -21,6 +26,7 @@ sub load_patron_reg {
     my $self = shift;
     my $ctx = $self->ctx;
     my $cgi = $self->cgi;
+
     $ctx->{register} = {};
     $self->collect_register_validation_settings;
     $self->collect_requestor_info;
@@ -90,12 +96,18 @@ sub load_patron_reg {
     return Apache2::Const::OK if $ctx->{register}{invalid};
 
     $self->test_requested_username($user);
+    my $method;
+    if ($self->_test_spam($user, $addr, $settings, $cgi, new_editor)) {
+        $method = 'open-ils.actor.user.spam.create';
+    } else {
+        $method = 'open-ils.actor.user.stage.create';
+    }
 
     # user.stage.create will generate a temporary usrname and 
     # link the user and address objects via this username in the DB.
     my $resp = $U->simplereq(
         'open-ils.actor', 
-        'open-ils.actor.user.stage.create',
+        $method,
         $user, $addr, undef, [], $settings
     );
 
@@ -320,6 +332,16 @@ sub inspect_register_value {
     $ctx->{register}{invalid}{$scls}{$field}{regex} = 1;
 
     return;
+}
+
+sub _test_spam {
+    my ($self, $user, $addr, $settings, $cgi, $editor) = @_;
+    my $spam_checker = OpenILS::WWW::EGCatLoader::Register::Spam->new(
+        $user, $addr, $settings, $cgi, $editor
+    );
+    my $likelihood = $spam_checker->likelihood;
+    $logger->info("Spam likelihood: ". $likelihood);
+    return $likelihood > SPAM_THRESHOLD;
 }
 
 
