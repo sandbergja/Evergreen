@@ -2056,7 +2056,13 @@ INSERT INTO permission.perm_list ( id, code, description ) VALUES
  ( 692, 'CREATE_HARD_DUE_DATE_VALUE', oils_i18n_gettext(692,
      'Allow create hard due date values', 'ppl', 'description')),
  ( 693, 'DELETE_HARD_DUE_DATE_VALUE', oils_i18n_gettext(693,
-     'Allow delete hard due date values', 'ppl', 'description'))
+     'Allow delete hard due date values', 'ppl', 'description')),
+ ( 694, 'BLOCK_EMAIL', oils_i18n_gettext( 694,
+    'Allow a staff member to block an email address as spam', 'ppl', 'description' )),
+ ( 695, 'MARK_SPAM', oils_i18n_gettext( 695,
+    'Allow a staff member to mark a patron self-registration as spam', 'ppl', 'description' )),
+ ( 696, 'ADMIN_SPAM', oils_i18n_gettext( 696,
+    'Allow a staff member to administer spam protections', 'ppl', 'description' ))
 ;
 
 INSERT INTO permission.perm_list (id,code) VALUES
@@ -2393,7 +2399,7 @@ INSERT INTO permission.grp_perm_map (grp, perm, depth, grantable)
 			'DELETE_VOLUME_NOTE',
 			'MAP_MONOGRAPH_PART',
 			'MARK_ITEM_AVAILABLE',
-			'MARK_ITEM_BINDERY',
+			'MARK_ITEM_BINDERY',grp_tree
 			'MARK_ITEM_CHECKED_OUT',
 			'MARK_ITEM_ILL',
 			'MARK_ITEM_IN_PROCESS',
@@ -2599,6 +2605,19 @@ INSERT INTO permission.grp_perm_map (grp, perm, depth, grantable)
 		        'ADMIN_USER_BUCKET',
 		        'CREATE_USER_BUCKET');
 
+-- Globally required permission for circulators must be at the Consortium level
+INSERT INTO permission.grp_perm_map (grp, perm, depth, grantable)
+    SELECT
+	    pgt.id, perm.id, aout.depth, TRUE
+    FROM
+        permission.grp_tree pgt,
+        permission.perm_list perm,
+        actor.org_unit_type aout
+    WHERE
+        pgt.name = 'Circulators' AND
+        aout.name = 'Consortium' AND
+        perm.code IN ('MARK_SPAM');
+
 
 -- Add advanced circulation permissions to the Circulation Admin group
 
@@ -2627,6 +2646,8 @@ INSERT INTO permission.grp_perm_map (grp, perm, depth, grantable)
 		aout.name = 'Consortium' AND
 		perm.code IN (
 			'ADMIN_MAX_FINE_RULE',
+            'ADMIN_SPAM',
+            'BLOCK_EMAIL',
 			'CREATE_CIRC_DURATION',
 			'CREATE_PRECAT',
 			'DELETE_CIRC_DURATION',
@@ -24331,6 +24352,17 @@ INSERT INTO config.global_flag (name, value, enabled, label) VALUES
         'cgf', 'label')
 );
 
+INSERT INTO config.global_flag (name, label)
+    VALUES (
+        'opac.spam_filter.use_local_data',
+        oils_i18n_gettext(
+            'opac.spam_filter.use_local_data',
+            'OPAC: Use data from your Evergreen installation to train the spam filter.  When not enabled, the spam filter will use the basic stock training data instead.',
+            'cgf',
+            'label'
+        )
+);
+
 INSERT INTO sip.setting (setting_group, name, value, description)
 VALUES (
     1, 'currency', '"USD"',
@@ -26109,6 +26141,18 @@ VALUES (
     oils_i18n_gettext(
         'eg.grid.admin.local.config.copy_alert_type',
         'Grid Config: eg.grid.admin.local.config.copy_alert_type',
+        'cwst', 'label'
+    ), (
+    'eg.grid.admin.permission.email_block_list', 'gui', 'object',
+    oils_i18n_gettext(
+        'eg.grid.admin.permission.email_block_list',
+        'Grid Config: admin.permission.email_block_list',
+        'cwst', 'label'
+    ), (
+    'eg.grid.admin.spam.measurement', 'gui', 'object',
+    oils_i18n_gettext(
+        'eg.grid.admin.spam.measurement',
+        'Grid Config: admin.spam.measurement',
         'cwst', 'label'
     )
 );

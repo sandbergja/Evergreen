@@ -1492,4 +1492,22 @@ CREATE TABLE config.patron_loader_value_map (
     native_value TEXT NOT NULL
 );
 
+CREATE OR REPLACE FUNCTION config.is_valid_spam_measurement_field(field TEXT) RETURNS BOOLEAN AS $$
+-- Does not catch any possible invalid input (for example, you could provide a column name from an
+-- invalid table), but it should be sufficient to prevent anything malicious.
+SELECT field ~ '^(stgu|stgma)\.\w+' AND EXISTS(
+    SELECT 1 FROM information_schema.columns
+    WHERE column_name = SUBSTRING(field FROM POSITION('.' in field) + 1)
+);
+$$ LANGUAGE SQL VOLATILE;
+
+CREATE TABLE IF NOT EXISTS config.spam_measurement (
+    id                         SERIAL      PRIMARY KEY,
+    field                      TEXT        NOT NULL,
+    regular_expression         TEXT        NOT NULL,
+    label                      TEXT        NOT NULL
+    CONSTRAINT must_be_a_valid_field CHECK (config.is_valid_spam_measurement_field(field)),
+    CONSTRAINT must_be_a_valid_regex CHECK (evergreen.is_valid_regex(regular_expression))
+);
+
 COMMIT;

@@ -1,0 +1,94 @@
+BEGIN;
+
+SELECT plan(12);
+
+-- Test adding a user to staging, marking them as spam, then unmarking them as spam
+
+INSERT INTO staging.user_stage
+    (row_id, usrname, email, ident_type, first_given_name, family_name)
+    VALUES
+    (999, 'plankton', 'typus@rhincodon.com', 3, 'Whale', 'Shark');
+
+INSERT INTO staging.mailing_address_stage
+    (row_id, usrname, street1, city, post_code)
+    VALUES
+    (456, 'plankton', '123 Georgia Aquarium', 'Atlanta', '30313');
+
+SELECT is(
+    (SELECT COUNT(row_id) FROM staging.user_stage WHERE usrname='plankton'),
+    1::bigint,
+    'row added to staging.user_stage'
+);
+
+SELECT is(
+    (SELECT COUNT(row_id) FROM staging.mailing_address_stage WHERE usrname='plankton'),
+    1::bigint,
+    'row added to staging.mailing_address_stage'
+);
+
+SELECT is(
+    (SELECT COUNT(row_id) FROM staging.spam_user_stage WHERE usrname='plankton'),
+    0::bigint,
+    'row not yet added to staging.spam_user_stage'
+);
+
+SELECT is(
+    (SELECT COUNT(row_id) FROM staging.spam_mailing_address_stage WHERE usrname='plankton'),
+    0::bigint,
+    'row not yet added to staging.spam_mailing_address_stage'
+);
+
+SELECT staging.mark_as_spam(999);
+
+SELECT is(
+    (SELECT COUNT(row_id) FROM staging.user_stage WHERE usrname='plankton'),
+    0::bigint,
+    'row removed from staging.user_stage'
+);
+
+SELECT is(
+    (SELECT COUNT(row_id) FROM staging.mailing_address_stage WHERE usrname='plankton'),
+    0::bigint,
+    'row removed from staging.mailing_address_stage'
+);
+
+SELECT is(
+    (SELECT COUNT(row_id) FROM staging.spam_user_stage WHERE usrname='plankton'),
+    1::bigint,
+    'row added to staging.spam_user_stage'
+);
+
+SELECT is(
+    (SELECT COUNT(row_id) FROM staging.spam_mailing_address_stage WHERE usrname='plankton'),
+    1::bigint,
+    'row added to staging.spam_mailing_address_stage'
+);
+
+SELECT staging.mark_as_not_spam(999);
+
+
+SELECT is(
+    (SELECT COUNT(row_id) FROM staging.user_stage WHERE usrname='plankton'),
+    1::bigint,
+    'row once again in staging.user_stage'
+);
+
+SELECT is(
+    (SELECT COUNT(row_id) FROM staging.mailing_address_stage WHERE usrname='plankton'),
+    1::bigint,
+    'row once again in staging.mailing_address_stage'
+);
+
+SELECT is(
+    (SELECT COUNT(row_id) FROM staging.spam_user_stage WHERE usrname='plankton'),
+    0::bigint,
+    'row removed from staging.spam_user_stage'
+);
+
+SELECT is(
+    (SELECT COUNT(row_id) FROM staging.spam_mailing_address_stage WHERE usrname='plankton'),
+    0::bigint,
+    'row removed from staging.spam_mailing_address_stage'
+);
+
+ROLLBACK;

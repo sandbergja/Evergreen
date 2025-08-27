@@ -1087,6 +1087,23 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 		</permacrud>
 	</class>
 
+	<class id="csm" controller="open-ils.cstore open-ils.pcrud" oils_obj:fieldmapper="config::spam_measurement" oils_persist:tablename="config.spam_measurement" reporter:label="Spam Measurement" oils_persist:cardinality="low">
+		<fields oils_persist:primary="id" oils_persist:sequence="config.spam_measurement_id_seq">
+			<field reporter:label="ID" name="id" reporter:datatype="id"/>
+			<field reporter:label="Field to measure" name="field" reporter:datatype="text"/>
+			<field reporter:label="Regular expression" name="regular_expression" reporter:datatype="text"/>
+			<field reporter:label="Label" name="label" reporter:datatype="text" oils_persist:i18n="true"/>
+		</fields>
+		<permacrud xmlns="http://open-ils.org/spec/opensrf/IDL/permacrud/v1">
+			<actions>
+				<create permission="MANAGE_SPAM" global_required="true"/>
+				<retrieve permission="MANAGE_SPAM" global_required="true"/>
+				<update permission="MANAGE_SPAM" global_required="true"/>
+				<delete permission="MANAGE_SPAM" global_required="true"/>
+			</actions>
+		</permacrud>
+	</class>
+
 	<class id="ccraed" controller="open-ils.cstore open-ils.pcrud" oils_obj:fieldmapper="config::composite_attr_entry_definition" oils_persist:tablename="config.composite_attr_entry_definition" reporter:label="Composite Attribute Definitions" oils_persist:field_safe="true">
 		<fields oils_persist:primary="coded_value">
 			<field reporter:label="Coded Value" name="coded_value" reporter:datatype="id" oils_obj:required="true"/>
@@ -8585,6 +8602,26 @@ SELECT  usr,
 			</actions>
 		</permacrud>
 	</class>
+	<class id="pebl" controller="open-ils.cstore open-ils.pcrud" oils_obj:fieldmapper="permission::email_block_list" oils_persist:tablename="permission.email_block_list" reporter:label="Email Block">
+		<fields oils_persist:primary="id" oils_persist:sequence="permission.email_block_list_id_seq">
+			<field reporter:label="Blocked email ID" name="id" reporter:datatype="id"/>
+			<field reporter:label="Blocked address" name="address" reporter:datatype="text" oils_obj:required="true"/>
+			<field reporter:label="Address type" name="type" reporter:datatype="text" oils_obj:required="true"/>
+			<field reporter:label="Last edit date/time" name="edit_date" reporter:datatype="timestamp"/>
+			<field reporter:label="Last editing user" name="editor" reporter:datatype="link"/>
+		</fields>
+		<links>
+			<link field="editor" reltype="has_a" key="id" map="" class="au"/>
+		</links>
+		<permacrud xmlns="http://open-ils.org/spec/opensrf/IDL/permacrud/v1">
+			<actions>
+				<create permission="BLOCK_EMAIL ADMIN_SPAM" global_required="true" />
+				<retrieve permission="ADMIN_SPAM" global_required="true" />
+				<update permission="ADMIN_SPAM" global_required="true" />
+				<delete permission="ADMIN_SPAM" global_required="true" />
+			</actions>
+		</permacrud>
+	</class>
 	<class id="asva" controller="open-ils.cstore open-ils.pcrud" oils_obj:fieldmapper="action::survey_answer" oils_persist:tablename="action.survey_answer" reporter:label="Survey Answer">
 		<fields oils_persist:primary="id" oils_persist:sequence="action.survey_answer_id_seq">
 			<field reporter:label="Responses using this Answer" name="responses" oils_persist:virtual="true" reporter:datatype="link"/>
@@ -11917,6 +11954,39 @@ SELECT  usr,
 			<field reporter:label="User Setting Value" name="value" reporter:datatype="text" oils_obj:required="true"/>
 			<field reporter:label="Complete" name="complete" reporter:datatype="bool"/>
 		</fields>
+	</class>
+
+	<class id="sstgu" controller="open-ils.cstore open-ils.pcrud" oils_obj:fieldmapper="staging::spam_user_stage" oils_persist:tablename="staging.spam_user_stage" reporter:label="Spam patron registration">
+		<fields oils_persist:primary="row_id" oils_persist:sequence="staging.spam_user_stage_row_id_seq">
+			<field reporter:label="Row ID" name="row_id" reporter:datatype="id"/>
+			<field reporter:label="Create Date" name="row_date" reporter:datatype="timestamp"/>
+			<field reporter:label="Username" name="usrname" reporter:datatype="text" oils_obj:required="true"/>
+			<field reporter:label="Main (Profile) Permission Group" name="profile" reporter:datatype="text"/>
+			<field reporter:label="Email Address" name="email" reporter:datatype="text"/>
+			<field reporter:label="Password" name="passwd" reporter:datatype="text"/>
+			<field reporter:label="Primary Identification Type" name="ident_type" reporter:datatype="int"/>
+			<field reporter:label="First Name" name="first_given_name" reporter:datatype="text"/>
+			<field reporter:label="Middle Name" name="second_given_name" reporter:datatype="text"/>
+			<field reporter:label="Last Name" name="family_name" reporter:datatype="text"/>
+			<field reporter:label="Daytime Phone" name="day_phone" reporter:datatype="text"/>
+			<field reporter:label="Evening Phone" name="evening_phone" reporter:datatype="text"/>
+			<field reporter:label="Home Library" name="home_ou" reporter:datatype="int"/>
+			<field reporter:label="Date of Birth" name="dob" reporter:datatype="text"/>
+			<field reporter:label="Complete" name="complete" reporter:datatype="bool"/>
+			<field reporter:label="Requesting User" name="requesting_usr" reporter:datatype="link"/>
+			<field reporter:label="Preferred First Name" name="pref_first_given_name" reporter:datatype="text"/>
+			<field reporter:label="Preferred Middle Name" name="pref_second_given_name" reporter:datatype="text"/>
+			<field reporter:label="Preferred Last Name" name="pref_family_name" reporter:datatype="text"/>
+		</fields>
+		<links>
+			<link field="requesting_usr" reltype="has_a" key="id" map="" class="au"/>
+			<link field="home_ou" reltype="has_a" key="id" map="" class="aou"/>
+		</links>
+		<permacrud xmlns="http://open-ils.org/spec/opensrf/IDL/permacrud/v1">
+			<actions>
+				<retrieve permission="ADMIN_SPAM" global_required="true"/>
+			</actions>
+		</permacrud>
 	</class>
 
 	<class id="afsg" controller="open-ils.cstore open-ils.pcrud" oils_obj:fieldmapper="action::fieldset_group" oils_persist:tablename="action.fieldset_group" reporter:label="Fieldset Group">

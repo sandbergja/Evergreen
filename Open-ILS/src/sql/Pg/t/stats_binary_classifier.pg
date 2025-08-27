@@ -1,0 +1,184 @@
+BEGIN;
+
+SELECT plan(8);
+
+PREPARE arrays_with_mismatched_dimensions AS SELECT stats.binary_classifier_likelihood(
+    '{0, 107, 60}',
+    '{0.2839160839160839}',
+    '{0.5625, 0.33487654320987653, 0.10262345679012345, 0.4951048951048951, 0.22097902097902097}',
+    0.5
+);
+SELECT throws_ok('arrays_with_mismatched_dimensions', 'All arrays must have the same cardinality');
+
+SELECT ok(
+    stats.binary_classifier_likelihood(
+        -- Features to predict for
+        '{0, 107, 60}',
+        -- Feature probabilities for TRUE
+        '{0.2836649699213327, 0.4909763998149005, 0.22535863026376676}',
+        -- Feature probabilities for FALSE
+        '{0.5483636363636364, 0.1678181818181818, 0.2838181818181818}',
+        -- Overall probability of TRUE (prior probability)
+        0.25
+    ) BETWEEN 0.95 AND 1.0,
+    'it can tell when it is very likely to be true'
+);
+
+SELECT ok(
+    stats.binary_classifier_likelihood(
+        -- Features to predict for
+        '{152,115,92}',
+        -- Feature probabilities for TRUE
+        '{0.2836649699213327, 0.4909763998149005, 0.22535863026376676}',
+        -- Feature probabilities for FALSE
+        '{0.5483636363636364, 0.1678181818181818, 0.2838181818181818}',
+        -- Overall probability of TRUE (prior probability)
+        0.25
+    ) BETWEEN 0.5 AND 0.8,
+    'it can tell that this is not as likely to be true'
+);
+
+SELECT ok(
+    stats.binary_classifier_likelihood(
+        -- Features to predict for
+        '{204,0,255}',
+        -- Feature probabilities for TRUE
+        '{0.2836649699213327, 0.4909763998149005, 0.22535863026376676}',
+        -- Feature probabilities for FALSE
+        '{0.5483636363636364, 0.1678181818181818, 0.2838181818181818}',
+        -- Overall probability of TRUE (prior probability)
+        0.25
+    ) BETWEEN 0 AND 0.25,
+    'it can tell that this is fairly unlikely to be true'
+);
+
+SELECT is((SELECT COUNT(*) FROM
+stats.binary_classifier_train_and_test(
+    -- true documents
+	'{{107, 140, 55},
+	{127, 193, 165},
+	{0, 137, 98},
+	{72, 108, 37},
+	{61, 175, 68},
+	{126, 151, 94},
+	{150, 166, 72},
+	{88, 143, 107},
+	{0, 84, 94},
+	{11, 99, 113},
+	{89, 127, 28},
+	{23, 161, 102},
+	{49, 126, 87},
+	{15, 112, 42}}',
+	
+    -- false documents
+	'{{152, 156, 148},
+	{0, 112, 138},
+	{47, 79, 133},
+	{45, 70, 150},
+	{84, 189, 202},
+	{143, 124, 104},
+	{135, 84, 8},
+	{208, 137, 81},
+	{106, 72, 72},
+	{158, 181, 206},
+	{196, 118, 82},
+	{42, 73, 127},
+	{53, 77, 76},
+	{105, 112, 104},
+	{175, 99, 79},
+	{181, 152, 201},
+	{169, 183, 159},
+	{87, 0, 3},
+	{255, 245, 90},
+	{183, 64, 115},
+	{72, 75, 78},
+	{192, 20, 17},
+	{109, 148, 179},
+	{244, 135, 78},
+	{255, 243, 0},
+	{238, 196, 131},
+	{243, 171, 202},
+	{118, 88, 165},
+	{95, 70, 63},
+	{76, 120, 175},
+	{136, 105, 174},
+	{183, 148, 92},
+	{209, 165, 112},
+	{153, 101, 99},
+	{188, 187, 126},
+	{44, 155, 204},
+	{246, 155, 130},
+	{202, 204, 187},
+	{255, 226, 0},
+	{142, 39, 87},
+	{80, 112, 133},
+	{185, 192, 153},
+	{69, 65, 59},
+	{139, 72, 6},
+	{139, 136, 147},
+	{167, 77, 66},
+	{109, 101, 95},
+	{160, 116, 9},
+	{188, 107, 16},
+	{56, 119, 191},
+	{35, 148, 137},
+	{57, 106, 112},
+	{241, 108, 35},
+	{134, 50, 49},
+	{196, 221, 213},
+	{209, 165, 96},
+	{171, 161, 115},
+	{34, 60, 46},
+	{102, 101, 110},
+	{98, 1, 4},
+	{232, 46, 27},
+	{255, 255, 255},
+	{136, 8, 4},
+	{71, 18, 90},
+	{255, 217, 0},
+	{216, 157, 27}}'
+)
+WHERE accuracy BETWEEN 0.5 AND 1.0),
+1::bigint,
+'It reports the accuracy');
+
+PREPARE train_test_counts AS
+	SELECT ARRAY_LENGTH(true_documents_for_training, 1) + ARRAY_LENGTH(false_documents_for_training, 1) AS training_length,
+		ARRAY_LENGTH(documents_for_testing, 1)
+		FROM stats.binary_classifier_train_test_split(
+			'{{1, 2}, {3, 4}, {5, 6}}',
+			'{{7, 8}, {9, 10}}'
+		);
+
+SELECT results_eq(
+	'train_test_counts',
+	$$VALUES ( 4, 1)$$,
+	'it uses 80% of the data for training and 20% for testing'
+);
+
+SELECT is(
+	(SELECT '{1, 2}' <@ true_documents_for_training OR
+		documents_for_testing[1].document <@ '{1,2}'
+		FROM stats.binary_classifier_train_test_split(
+			'{{1, 2}, {3, 4}, {5, 6}}',
+			'{{7, 8}, {9, 10}}'
+		)
+	),
+	TRUE,
+	'it puts true documents into either true_documents_for_training or documents_for_testing'
+);
+
+
+SELECT is(
+	(SELECT '{7, 8}' <@ false_documents_for_training OR
+		documents_for_testing[1].document <@ '{7,8}'
+		FROM stats.binary_classifier_train_test_split(
+			'{{1, 2}, {3, 4}, {5, 6}}',
+			'{{7, 8}, {9, 10}}'
+		)
+	),
+	TRUE,
+	'it puts false documents into either false_documents_for_training or documents_for_testing'
+);
+
+ROLLBACK;

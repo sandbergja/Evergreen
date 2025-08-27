@@ -639,5 +639,52 @@ ALTER TABLE permission.grp_tree_display_entry
     ADD COLUMN parent integer REFERENCES permission.grp_tree_display_entry (id)
             DEFERRABLE INITIALLY DEFERRED;
 
+DO $$ BEGIN
+    CREATE TYPE permission.email_block_list_type AS ENUM ('email', 'domain');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+
+CREATE TABLE IF NOT EXISTS permission.email_block_list (
+    id         SERIAL                             PRIMARY KEY,
+    address    TEXT                               NOT NULL,
+    type       permission.email_block_list_type   NOT NULL,
+    edit_date  TIMESTAMP WITH TIME ZONE,
+    editor     INT REFERENCES actor.usr (id)
+               ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED
+    CONSTRAINT must_be_a_valid_email CHECK (type != 'email'::permission.email_block_list_type OR address LIKE '%@%')
+);
+
+CREATE INDEX IF NOT EXISTS email_block_list_address
+    ON permission.email_block_list (address);
+
+INSERT INTO permission.email_block_list (address, type) VALUES
+    ('ottoortner@gmx.at', 'email'),
+    ('163.com', 'domain'),
+    ('agricole.fr', 'domain'),
+    ('ameriterary.com', 'domain'),
+    ('belocksmith.com', 'domain'),
+    ('borroded.com', 'domain'),
+    ('coupledglind.org.uk', 'domain'),
+    ('i4dots.com', 'domain'),
+    ('insuranus.com', 'domain'),
+    ('ninternation.com', 'domain'),
+    ('nobutu.org', 'domain'),
+    ('paristorage.net', 'domain'),
+    ('releanded.com', 'domain'),
+    ('stristed.org', 'domain'),
+    ('versarily.org', 'domain');
+
+CREATE OR REPLACE FUNCTION permission.blocks_for_email_address(email TEXT) RETURNS SETOF permission.email_block_list AS $$
+    SELECT * FROM permission.email_block_list
+    -- Check if the email address matches the configured domain or one of its subdomains
+    WHERE (email ~ ('.*@(.*\.)?' || address || '$') AND type = 'domain')
+    OR (email = address AND type = 'email');
+$$
+    LANGUAGE SQL
+    STABLE
+    RETURNS NULL ON NULL INPUT;
+
 COMMIT;
 
