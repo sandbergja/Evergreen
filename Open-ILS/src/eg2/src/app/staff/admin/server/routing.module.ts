@@ -6,6 +6,7 @@ import {OrgUnitTypeComponent} from './org-unit-type.component';
 import {CustomOrgUnitTreesComponent} from './custom-org-unit-trees.component';
 import {PrintTemplateComponent} from './print-template.component';
 import {PermGroupTreeComponent} from './perm-group-tree.component';
+import { SpamProtectionAdminComponent } from './spam-protection-admin/spam-protection-admin.component';
 
 const routes: Routes = [{
     path: 'splash',
@@ -106,6 +107,9 @@ const routes: Routes = [{
     component: BasicAdminPageComponent,
     data: [{schema: 'asset',
         table: 'call_number_suffix', readonlyFields: 'label_sortkey'}]
+}, {
+    path: 'spam_protection',
+    component: SpamProtectionAdminComponent,
 }, {
     path: 'sip/account',
     loadChildren: () =>

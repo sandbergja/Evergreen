@@ -1,0 +1,17 @@
+<eg-admin-page idlClass="pebl"
+    readonlyFields="id,edit_date,editor"
+    [fieldOptions]="{type:{customTemplate:{template:blockTypeSelector}}}">
+</eg-admin-page>
+<ng-template #blockTypeSelector let-field="field" let-record="record">
+    <input type="radio" class="form-check-input" id="pebl-type-email"
+        [ngModel]="record[field.name]()" name="pebl-type"
+        value="email" (input)="record[field.name]('email')">
+    <label class="form-check-intput" for="pebl-type-email" i18n>Single email address</label>
+    <input type="radio" class="form-check-input" id="pebl-type-domain"
+        [ngModel]="record[field.name]()" name="pebl-type"
+        value="domain" (input)="record[field.name]('domain')">
+    <label class="form-check-intput" for="pebl-type-domain" i18n>Domain or subdomain</label>
+    <eg-help-popover
+        helpText="Block all emails from a domain and any of its subdomains.  For example, blocking example.com would block abc@example.com or def@spam.example.com"
+        i18n-helpText></eg-help-popover>
+</ng-template>

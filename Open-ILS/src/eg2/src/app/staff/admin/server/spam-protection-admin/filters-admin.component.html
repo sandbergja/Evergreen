@@ -1,0 +1,85 @@
+<div class="row mt-4 mb-4">
+    <div class="card text-white bg-primary p-1 col-xs-6 col-md-4">
+        <div class="card-body">
+            <h2 class="card-title" i18n>Accuracy</h2>
+            <span class="fs-1">{{ accuracy | percent }}</span>
+            <details>
+                <summary i18n>Changes in accuracy</summary>
+                <p i18n>Some randomness is involved in calculating accuracy, small fluctuations are expected.</p>
+            </details>
+        </div>
+    </div>
+
+    <div class="card text-white bg-secondary p-1 col-xs-6 col-md-4">
+        <form class="card-body" #trainingData="ngForm">
+            <h2 class="card-title" i18n id="training-data-label">Training data</h2>
+            <select class="form-select" aria-labelledby="training-data-label" [(ngModel)]="trainingSet" name="trainingset">
+                <option i18n value="stock">Basic stock data set</option>
+                <option i18n value="local">Our own local data</option>
+            </select>
+            <button type="submit" i18n
+                class="btn btn-primary mt-1"
+                [disabled]="!trainingData.dirty"
+                (click)="updateTrainingDataSet()">Update</button>
+            <details class="mt-2">
+                <summary i18n>Which training data should I use?</summary>
+                <p i18n>Using your own local data is recommended if you have at least 100 rows in the actor.usr and staging.spam_user_stage tables.
+                    Using your own local data will keep the filter responsive to your unique spam challenges.
+                    Regardless of your choice, all training data is private to your database server (not shared with a 3rd party).</p>
+            </details>
+        </form>
+    </div>
+</div>
+
+<h2 i18n class="mt-4">Measurements</h2>
+<details>
+    <summary i18n>How do I configure measurements?</summary>
+    <p i18n>Measurements are the calculations that the spam filter uses to determine if something is spam or not.
+        For each measurement specified here, the spam filter will run the specified regular expression against the
+        configured field and count the matches.  It then compares an incoming patron registration with existing patterns
+        of spam and non-spam (the training data) based on these counts.</p>
+    <p i18n>If your spam filter is already quite accurate, removing measurements with low importance can speed up the filter.
+        If your spam filter is not very accurate, try editing or deleting the most important measurements; they may be swaying
+        your results in the wrong direction.</p>
+</details>
+<eg-grid [dataSource]="gridDataSource" [sortable]="true" persistKey="admin.spam.measurement"
+    [filterable]="false" [useLocalSort]="true" [disablePaging]="true" #grid>
+    <eg-grid-toolbar-button label="New measurement" i18n-label (onClick)="createNew()"></eg-grid-toolbar-button>
+    <eg-grid-toolbar-action label="Edit selected" i18n-label (onClick)="edit($event)"></eg-grid-toolbar-action>
+    <eg-grid-toolbar-action label="Delete selected" i18n-label (onClick)="delete($event)"></eg-grid-toolbar-action>
+
+    <eg-grid-column name="id" [index]="true" [hidden]="true" label="Id" i18n-label></eg-grid-column>
+    <eg-grid-column name="label" label="Label" i18n-label></eg-grid-column>
+    <eg-grid-column name="importance" label="Importance" i18n-label></eg-grid-column>
+    <eg-grid-column name="field" label="Field" i18n-label></eg-grid-column>
+    <eg-grid-column name="regularExpression" label="Regular expression" i18n-label></eg-grid-column>
+</eg-grid>
+<eg-fm-record-editor #createDialog
+  idlClass="csm"
+  fieldOrder="field,regular_expression,label"
+  [fieldOptions]="{regular_expression:{helpText:regularExpressionHelp},field:{customTemplate:{template:fieldEditorTemplate}}}"
+  [remainOpenOnError]="true"
+  hiddenFields="id">
+</eg-fm-record-editor>
+<eg-fm-record-editor #editDialog
+  idlClass="csm"
+  mode="update"
+  fieldOrder="field,regular_expression,label"
+  [fieldOptions]="{regular_expression:{helpText:regularExpressionHelp},field:{customTemplate:{template:fieldEditorTemplate}}}"
+  [remainOpenOnError]="true"
+  hiddenFields="id">
+</eg-fm-record-editor>
+<eg-string #regularExpressionHelp text="The filter supports POSIX regular expressions as implemented by PostgreSQL" i18n-text></eg-string>
+<ng-template #fieldEditorTemplate let-field="field" let-record="record">
+    <select class="form-select" name="{{field.name}}"
+        id="{{field.idlClass}}-{{field.name}}"
+        [required]="field.isRequired()" [ngModel]="record[field.name]()"
+        (ngModelChange)="record[field.name]($event)">
+      <option value="stgu.first_given_name" i18n>First name</option>
+      <option value="stgu.second_given_name" i18n>Middle name</option>
+      <option value="stgu.family_name" i18n>Last name</option>
+      <option value="stgma.street1" i18n>Street (1)</option>
+      <option value="stgma.city" i18n>City</option>
+      <option value="stgma.post_code" i18n>Postal code</option>
+    </select>
+</ng-template>

@@ -1,0 +1,22 @@
+<eg-staff-banner bannerText="Spam protection" i18n-bannerText>
+</eg-staff-banner>
+<eg-title i18n-prefix prefix="Spam protection"></eg-title>
+<div *ngIf="sufficientPerms">
+  <ul ngbNav #nav="ngbNav" class="nav-tabs">
+    <li ngbNavItem>
+      <button type="button" ngbNavLink i18n>Blocks</button>
+      <ng-template ngbNavContent><eg-spam-protection-admin-blocks></eg-spam-protection-admin-blocks></ng-template>
+    </li>
+    <li ngbNavItem>
+      <button type="button" ngbNavLink i18n>Filter</button>
+      <ng-template ngbNavContent><eg-spam-protection-admin-filters></eg-spam-protection-admin-filters></ng-template>
+    </li>
+      <li ngbNavItem>
+      <button type="button" ngbNavLink i18n>Review spam</button>
+      <ng-template ngbNavContent><eg-review-spam></eg-review-spam></ng-template>
+    </li>
+  </ul>
+  <div [ngbNavOutlet]="nav"></div>
+</div>
+
+<p i18n *ngIf="!sufficientPerms">You need the MANAGE_SPAM permission to manage spam protection</p>

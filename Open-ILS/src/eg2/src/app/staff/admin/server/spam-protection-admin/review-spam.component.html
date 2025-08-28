@@ -1,0 +1,5 @@
+<eg-grid [dataSource]="dataSource" idlClass="sstgu" #grid>
+    <eg-grid-column i18n-label label="Row ID" path="row_id"
+    [index]="true" [hidden]="true"></eg-grid-column>
+    <eg-grid-toolbar-action label="Not Spam" i18n-label (onClick)="notSpam($event)"></eg-grid-toolbar-action>
+</eg-grid>

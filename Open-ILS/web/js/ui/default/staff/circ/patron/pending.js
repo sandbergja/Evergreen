@@ -18,10 +18,8 @@ angular.module('egPendingPatronsApp',
 })
 
 .controller('PendingPatronsCtrl',
-       ['$scope','$q','$routeParams','$window','$location','egCore','egGridDataProvider',
-function($scope , $q , $routeParams , $window , $location , egCore , egGridDataProvider) {
-
-    console.log('HERE');
+       ['$scope','$q','$window','$location','egCore','egGridDataProvider', '$uibModal',
+function($scope , $q , $window , $location , egCore , egGridDataProvider, $uibModal) {
 
     var pending_patrons = [];
     var provider = egGridDataProvider.instance({});
@@ -59,6 +57,79 @@ function($scope , $q , $routeParams , $window , $location , egCore , egGridDataP
 
     $scope.deletePatron = function(action, data, items) {
         delete_patron(items);
+    }
+
+    $scope.openSpamDialog = function(action, data, items) {
+        if (angular.isArray(items)) {
+            $uibModal.open({
+                templateUrl: './circ/patron/t_mark_as_spam',
+                backdrop: 'static',
+                controller: ['$scope','$uibModalInstance',
+                    function($scope , $uibModalInstance) {
+                        $scope.spam = function() {
+                            var promises = [];
+                            angular.forEach(items, function(stgu){
+                                promises.push(egCore.net.request(
+                                    'open-ils.actor',
+                                    'open-ils.actor.user.stage.mark_as_spam',
+                                    egCore.auth.token(),
+                                    stgu.user.row_id()
+                                ));
+                            });
+                            $scope.closeModal();
+                            return $q.all(promises).then(refresh_page);
+                        }
+                        $scope.spamAndBlockEmail = function() {
+                            $scope.spam();
+                            var promises = [];
+                            angular.forEach(items, function(stgu) {
+                                if (stgu.user.email()) {
+                                    promises.push(egCore.net.request(
+                                        'open-ils.actor',
+                                        'open-ils.actor.block_email',
+                                        egCore.auth.token(),
+                                        stgu.user.email()
+                                    ));
+                                }
+                            });
+                            return $q.all(promises);
+                        };
+                        $scope.spamAndBlockDomain = function() {
+                            $scope.spam();
+                            var promises = [];
+                            angular.forEach(items, function(stgu) {
+                                if (stgu.user.email()) {
+                                    promises.push(egCore.net.request(
+                                        'open-ils.actor',
+                                        'open-ils.actor.block_email_domain',
+                                        egCore.auth.token(),
+                                        stgu.user.email()
+                                    ));
+                                }
+                            });
+                            return $q.all(promises);
+                        };
+                        $scope.closeModal = function() {
+                            $uibModalInstance.dismiss();
+                        };
+                        $scope.showBlockEmailOption = false;
+                        egCore.perm.hasPermHere(['BLOCK_EMAIL']).then(
+                            function(hasPerm) {
+                                if (hasPerm['BLOCK_EMAIL']) {
+                                    var itemsWithEmails = [];
+                                    angular.forEach(items, function(stgu) {
+                                        if (stgu.user.email()) {
+                                            itemsWithEmails.push(stgu);
+                                        }
+                                    });
+                                    $scope.showBlockEmailOption = itemsWithEmails.length > 0;
+                                };
+                            }
+                        );
+                    }
+                ]
+            })
+        }
     }
 
     $scope.grid_controls = {
@@ -114,5 +185,14 @@ function($scope , $q , $routeParams , $window , $location , egCore , egGridDataP
     $scope.$watch('context_org', function(newVal, oldVal) {
         if (newVal && newVal != oldVal) refresh_page();
     });
+
+    $scope.canMarkAsSpam = false;
+    $scope.canBlockEmailAddress = false;
+    egCore.perm.hasPermHere(['MARK_SPAM', 'BLOCK_EMAIL']).then(
+        function(hasPerm) {
+            $scope.canMarkAsSpam = hasPerm['MARK_SPAM'];
+            $scope.canBlockEmailAddress = hasPerm['BLOCK_EMAIL'];
+        }
+    );
 }])
 
