@@ -34,3 +34,153 @@ Several more Library Settings can be used to verify values in certain fields and
 * GUI: Example for post_code field on patron registration
 * GUI: Example for day_phone field on patron registration OR GUI: Example for phone fields on patron registration
 
+== Spam Prevention ==
+
+Like other public online forms, the self-registration form can be subject
+to Spam registrations.  Evergreen provides some protections from Spam which
+can be configured as needed, and an extensible framework if you'd
+like to implement other protections (such as third-party CAPTCHA products).
+
+=== Marking as Spam ===
+
+TIP: You will need the _MARK_SPAM_ or _ADMIN_SPAM_ permission.
+
+Marking an item as spam removes it from the Pending Patron screen and,
+depending on how your configuration, may be used to improve the spam filter.
+
+To mark a self-registration as spam:
+
+* Go to Circulation -> Pending Patrons.
+* Select the self-registration in question.
+* Press the Mark as Spam button.
+* Confirm the action.  If you have the _ADMIN_SPAM_ or _BLOCK_EMAIL_
+  permission, you will also have a choice of blocking the email address,
+  or even the entire email domain, from submitting self-registrations
+  in the future.
+
+=== Marking as Not Spam ===
+
+TIP: You will need the _ADMIN_SPAM_ permission.
+
+You may also return a spam registration back to the Pending Patron screen.
+To do so:
+
+* Go to Administration -> Server Administration.
+* Choose Spam Protection.
+* Open the Review spam tab.
+* Select the self-registration in question.
+* On the Actions menu, select "Not Spam".
+
+=== Blocking and unblocking email addresses and domains ===
+
+TIP: You will need the _BLOCK_EMAIL_ or _ADMIN_SPAM_ permission.
+
+You may block a particular email address or domain from
+submitting patron self-registrations.  To do so:
+
+* Go to Administration -> Server Administration.
+* Choose Spam Protection.
+* Open the Blocks tab.
+* Adjust the entries as needed.
+
+Note that blocking a domain will also block its subdomains.
+The reverse is not true.  For example, blocking `bad-spam.com`
+will also block `mail.bad-spam.com`.  But blocking `spam.annoying.net`
+will not block `annoying.net`.
+
+Emails are blocked for the whole consortium.
+
+=== Adjusting the spam filter ===
+
+Evergreen uses a statistical filter to distinguish between legitimate
+self-registrations and spam.  The filter takes certain measurements of
+each incoming self-registration, compares those measurements to existing
+patterns, and then determines how likely it is to be spam.
+
+If you have the _ADMIN_SPAM_ permission, you can configure these measurements
+and which data are used for the statistical analysis.
+
+* Go to Administration -> Server Administration.
+* Choose Spam Protection.
+* Open the Filter tab.
+
+On this tab, you can make the necessary configurations and monitor their
+impact on the filter's accuracy.
+
+==== Choosing a training data set ====
+
+The spam filter regularly re-trains itself based on the data set you
+configure.  By default, the spam filter is trained on a Basic stock data
+set.  If you have access to the database, you can make changes to the
+stock data in the `staging.training_*` tables (for registrations that
+are not spam) and the `staging.training_spam_*` tables (for registraions
+that are spam).
+
+The Basic stock data set may or may not be representative of your patron
+data and spam traffic.  Therefore, using your own local data for training
+is recommended if you have at least 100 rows in the `actor.usr` and
+`staging.spam_user_stage` database tables. Using your own local data will
+keep the filter responsive to your unique spam challenges.
+
+==== Choosing measurements ====
+
+Measurements are the calculations that the spam filter uses to determine
+if something is spam or not. For each measurement you configure, the spam
+filter will run the specified regular expression against the
+configured field and count the matches.  It then compares an incoming patron
+registration with existing patterns of spam and non-spam (the training data)
+based on these counts.
+
+A higher importance means that spam registrations and non-spam registrations
+tend to have quite different counts for that measurement.
+
+If your spam filter is already quite accurate, removing measurements with
+low importance can speed up the filter.
+
+If your spam filter is not very accurate, try editing or deleting the most
+important measurements; they may be swaying your results in the wrong direction.
+
+The filter supports POSIX regular expressions as implemented by PostgreSQL.
+
+==== Understanding the accuracy percentage ====
+
+As you configure the spam filter, the filter tab will show you the updated
+accuracy of your filter.  Here is how this score is calculated:
+
+. Evergreen randomly splits the training data set you specified into
+  training data (about 80% of the data set) and testing data (about 20%).
+. Evergreen takes the measurements you specified on the training data
+  to characterize the patterns in the spam and non-spam training data.
+. Evergreen uses those patterns to determine whether each registration
+  in the testing data would be considered to be Spam or Not according
+  to the configuration.  The accuracy is the percentage of training
+  registrations that it correctly classifies as Spam or Not Spam.
+
+Since the split between training and testing data is random, the
+accuracy percentage may fluctuate.
+
+If the accuracy percentage is high, but a lot of spam still gets through
+the filter, it is a sign that your data set is not very representative
+of your real-world patron and spam data.  In this case, you should
+consider <<choosing-a-training-data-set,using your own local data to train the filter>>,
+rather than using the basic stock data set.
+
+==== Technical details ====
+
+The spam filter uses the Naive Bayes algorithm.  The filter model is
+trained within the Evergreen Postgres database, and does not share the
+training data with any third party, or even with the application servers,
+as part of this process.
+
+However, if you have found certain measurements that work well, please
+share them with the community!  These measurements can be shared freely
+without exposing any private patron data.
+
+=== Extending the spam prevention capabilities ===
+
+You can add your own spam prevention functionality to Evergreen as well,
+including adding third-party tools like https://altcha.org/[ALTCHA] or
+https://developers.google.com/recaptcha/docs/v3[reCAPTCHA]. Any
+necessary server-side logic can be added as a method in `Spam.pm` and
+registered in the `adjustments` array.  Your method should return a number
+between 0 (not likely to be spam) and 1 (extremely likely to be spam).

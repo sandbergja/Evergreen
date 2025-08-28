@@ -1,0 +1,20 @@
+== Self-Registration Form Spam Protections ==
+
+The Patron Self-Registration Form now includes several layers
+of Spam protections:
+
+* A statistical spam filter that can be trained and configured
+  according to your system's needs.
+* A honeypot field that is only visible to bots.
+* Email and email domain blocking.
+* Basic user-agent checks.
+
+=== Considerations for customized Self-Registration Forms ===
+
+* If you have customized `register.tt2`, update it to include the new
+  honeypot field.
+* Sites may add additional spam protections, such as
+https://altcha.org/[ALTCHA] or
+https://developers.google.com/recaptcha/docs/v3[reCAPTCHA]. Any
+necessary server-side logic can be added as a method in `Spam.pm` and
+registered in the `adjustments` array.
