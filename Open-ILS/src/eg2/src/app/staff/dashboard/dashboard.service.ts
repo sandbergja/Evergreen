@@ -154,7 +154,7 @@ export class DashboardService {
         primary: 'var(--primary)',      // Dark blue - Professional chart color
         success: 'var(--success)',      // Dark green - Success/positive metrics
         info: 'var(--info)',           // Dark cyan - Informational data
-        warning: 'var(--warning-color)', // Yellow - Warning/attention needed  
+        warning: 'var(--warning-color)', // Yellow - Warning/attention needed
         danger: 'var(--danger)',        // Dark red - Critical/danger items
         secondary: '#6c757d',           // Medium gray - Accessible secondary
         dark: '#495057'                 // Dark gray - Fallback, not black
@@ -272,7 +272,7 @@ export class DashboardService {
                         data: collectionTypes.map((item, index) => {
                             const colors = [
                                 this.EVERGREEN_COLORS.primary,    // Books - Blue
-                                this.EVERGREEN_COLORS.danger,     // DVDs - Red  
+                                this.EVERGREEN_COLORS.danger,     // DVDs - Red
                                 this.EVERGREEN_COLORS.warning,    // Audio Books - Orange
                                 this.EVERGREEN_COLORS.info,       // Magazines - Light Blue
                                 this.EVERGREEN_COLORS.success,    // eBooks - Green
@@ -685,10 +685,7 @@ export class DashboardService {
         };
     }
 
-    // Future method for real data queries
     private async getRealData(): Promise<DashboardData> {
-        // This would implement actual database queries
-        // Example queries:
 
         // Get circulation data
         // const circData = await this.pcrud.search('action.circulation', {

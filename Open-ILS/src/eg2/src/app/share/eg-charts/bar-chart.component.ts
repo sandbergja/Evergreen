@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { BaseChartComponent } from './base-chart.component';
 import { BarChartRenderer } from './renderers/bar-chart-renderer';
 import { ChartData } from './interfaces/chart-data.interface';
+import { ChartRenderer } from './interfaces/chart-renderer.interface';
 
 /**
  * BarChartComponent - Concrete Chart Implementation
@@ -12,60 +13,60 @@ import { ChartData } from './interfaces/chart-data.interface';
 @Component({
     selector: 'eg-bar-chart',
     template: `
-    <div class="eg-chart-container"
-         [attr.aria-label]="chartData?.accessibility?.description">
+        <div class="eg-chart-container"
+             [attr.aria-label]="chartData?.accessibility?.description">
 
-      <!-- Chart Title -->
-      <div class="eg-chart-title" *ngIf="chartData?.title">
-        <h2>{{ chartData?.title }}</h2>
-        <div class="chart-actions">
-          <button
-            type="button"
-            class="export-btn"
-            (click)="downloadChartData()"
-            [attr.aria-label]="'Export chart data for ' + chartData?.title"
-            title="Export chart data as CSV">
-            <span class="material-icons me-1" aria-hidden="true">download</span>
-            Export CSV
-          </button>
+            <!-- Chart Title -->
+            <div class="eg-chart-title" *ngIf="chartData?.title">
+                <h2>{{ chartData?.title }}</h2>
+                <div class="chart-actions">
+                    <button
+                        type="button"
+                        class="export-btn"
+                        (click)="downloadChartData()"
+                        [attr.aria-label]="'Export chart data for ' + chartData?.title"
+                        title="Export chart data as CSV">
+                        <span class="material-icons me-1" aria-hidden="true">download</span>
+                        Export CSV
+                    </button>
+                </div>
+            </div>
+
+            <!-- Chart Container -->
+            <div class="eg-chart-wrapper" #chartWrapper>
+                <svg #chartSvg
+                     [attr.width]="config.width"
+                     [attr.height]="config.height"
+                     [attr.aria-describedby]="chartData?.accessibility?.longDescription ? 'chart-long-desc' : null">
+                    <title>{{ chartData?.accessibility?.description }}</title>
+                    <desc *ngIf="chartData?.accessibility?.longDescription" id="chart-long-desc">
+                        {{ chartData?.accessibility?.longDescription }}
+                    </desc>
+                </svg>
+            </div>
+
+            <!-- Accessible data table -->
+            <div *ngIf="chartData?.accessibility?.dataTable" class="eg-chart-data-table sr-only">
+                <table>
+                    <caption>{{ chartData?.accessibility?.description }}</caption>
+                    <thead>
+                    <tr>
+                        <th scope="col">{{ chartData?.xAxisLabel || 'Category' }}</th>
+                        <th scope="col" *ngFor="let series of chartData?.series">{{ series.name }}</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr *ngFor="let category of getCategories()">
+                        <td>{{ category }}</td>
+                        <td *ngFor="let series of chartData?.series">
+                            {{ getSeriesValue(series, category) }}
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
-      </div>
-
-      <!-- Chart Container -->
-      <div class="eg-chart-wrapper" #chartWrapper>
-        <svg #chartSvg
-             [attr.width]="config.width"
-             [attr.height]="config.height"
-             [attr.aria-describedby]="chartData?.accessibility?.longDescription ? 'chart-long-desc' : null">
-          <title>{{ chartData?.accessibility?.description }}</title>
-          <desc *ngIf="chartData?.accessibility?.longDescription" id="chart-long-desc">
-            {{ chartData?.accessibility?.longDescription }}
-          </desc>
-        </svg>
-      </div>
-
-      <!-- Accessible data table -->
-      <div *ngIf="chartData?.accessibility?.dataTable" class="eg-chart-data-table sr-only">
-        <table>
-          <caption>{{ chartData?.accessibility?.description }}</caption>
-          <thead>
-            <tr>
-              <th scope="col">{{ chartData?.xAxisLabel || 'Category' }}</th>
-              <th scope="col" *ngFor="let series of chartData?.series">{{ series.name }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let category of getCategories()">
-              <td>{{ category }}</td>
-              <td *ngFor="let series of chartData?.series">
-                {{ getSeriesValue(series, category) }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  `,
+    `,
     styleUrls: ['./eg-chart.component.css']
 })
 export class BarChartComponent extends BaseChartComponent<ChartData> {
@@ -74,16 +75,22 @@ export class BarChartComponent extends BaseChartComponent<ChartData> {
     private barChartRenderer = inject(BarChartRenderer);
 
     /**
-   * Get chart type identifier
-   */
+     * Get the chart renderer instance
+     */
+    protected getRenderer(): ChartRenderer<ChartData> {
+        return this.barChartRenderer;
+    }
+
+    /**
+     * Get chart type identifier
+     */
     protected getChartType(): string {
         return 'bar';
     }
 
-
     /**
-   * Render chart data - implemented for bar charts
-   */
+     * Render chart data - implemented for bar charts
+     */
     protected renderData(): void {
         if (!this.chartData || !this.svg) {return;}
 
@@ -95,8 +102,8 @@ export class BarChartComponent extends BaseChartComponent<ChartData> {
     }
 
     /**
-   * Update chart with new data - implemented for bar charts
-   */
+     * Update chart with new data - implemented for bar charts
+     */
     protected updateData(newData: ChartData): void {
         if (!this.svg) {return;}
 
@@ -108,8 +115,8 @@ export class BarChartComponent extends BaseChartComponent<ChartData> {
     }
 
     /**
-   * Handle window resize - implemented for bar charts
-   */
+     * Handle window resize - implemented for bar charts
+     */
     protected handleResize(): void {
         if (!this.chartData) {return;}
 
@@ -125,8 +132,8 @@ export class BarChartComponent extends BaseChartComponent<ChartData> {
     }
 
     /**
-   * Cleanup resources - implemented for bar charts
-   */
+     * Cleanup resources - implemented for bar charts
+     */
     protected cleanup(): void {
         if (this.svg) {
             this.barChartRenderer.destroy(this.svg);
@@ -141,8 +148,8 @@ export class BarChartComponent extends BaseChartComponent<ChartData> {
     }
 
     /**
-   * Enhanced accessibility binding for bar charts
-   */
+     * Enhanced accessibility binding for bar charts
+     */
     protected override bindEvents(): void {
         super.bindEvents();
 
@@ -165,85 +172,45 @@ export class BarChartComponent extends BaseChartComponent<ChartData> {
     }
 
     /**
-   * Show tooltip for bar
-   */
-    private showTooltip(event: any, _data: any): void {
-        if (!this.tooltip) {return;}
-
+     * Generate tooltip content for bar charts
+     */
+    protected override generateTooltipContent(data: any, seriesName: string): string {
         // Extract series information from the bar element
-        const seriesClass = event.target.getAttribute('class');
-        const seriesIndex = seriesClass ? parseInt(seriesClass.match(/series-(\d+)/)?.[1] || '0') : 0;
-        const seriesName = this.chartData?.series[seriesIndex]?.name || 'Unknown';
-
-        // Get category and value from aria-label
-        const ariaLabel = event.target.getAttribute('aria-label') || '';
-        const [, categoryValue] = ariaLabel.split(': ');
-        const [category, value] = categoryValue ? categoryValue.split(', ') : ['', ''];
-
-        this.tooltip
-            .style('opacity', 1)
-            .html(`<strong>${seriesName}</strong><br/>${category}: ${value}`)
-            .style('left', (event.offsetX + 10) + 'px')
-            .style('top', (event.offsetY - 28) + 'px')
-            .attr('aria-hidden', 'false');
+        return `<strong>${seriesName}</strong><br/>${data.x}: ${data.y}`;
     }
 
     /**
-   * Hide tooltip
-   */
-    private hideTooltip(): void {
-        if (!this.tooltip) {return;}
-
-        this.tooltip
-            .style('opacity', 0)
-            .attr('aria-hidden', 'true');
+     * Get CSV headers for bar charts
+     */
+    protected override getCSVHeaders(): string[] {
+        if (!this.chartData) return [];
+        return ['Category', ...this.chartData.series.map(s => s.name)];
     }
 
     /**
-   * Export chart data as CSV
-   */
-    public downloadChartData(): void {
-        const csvContent = this.exportChartData();
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-
-        if (link.download !== undefined) {
-            const url = URL.createObjectURL(blob);
-            link.setAttribute('href', url);
-            link.setAttribute('download', `${this.chartData?.title || 'bar-chart-data'}.csv`);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-    }
-
-    /**
-   * Export chart data as CSV string
-   */
-    private exportChartData(): string {
-        if (!this.chartData) {return '';}
+     * Generate CSV rows for bar charts
+     */
+    protected override generateCSVRows(): string {
+        if (!this.chartData) return '';
 
         const categories = this.getCategories();
-        const headers = ['Category', ...this.chartData.series.map(s => s.name)];
-
-        let csvContent = headers.join(',') + '\n';
+        let rows = '';
 
         categories.forEach(category => {
             const row = [category];
-      this.chartData!.series.forEach(series => {
-          const point = series.data.find(d => String(d.x) === category);
-          row.push(point ? point.y.toString() : '0');
-      });
-      csvContent += row.join(',') + '\n';
+            this.chartData!.series.forEach(series => {
+                const point = series.data.find(d => String(d.x) === category);
+                row.push(point ? point.y.toString() : '0');
+            });
+            rows += row.join(',') + '\n';
         });
 
-        return csvContent;
+        return rows;
     }
 
     /**
-   * Get all categories for accessibility table
-   */
+     * Get all categories for accessibility table
+     */
     public getCategories(): string[] {
         if (!this.chartData) {return [];}
 
@@ -258,37 +225,10 @@ export class BarChartComponent extends BaseChartComponent<ChartData> {
     }
 
     /**
-   * Get series value for accessibility table
-   */
-    public getSeriesValue(series: any, category: string): string {
-        const point = series.data.find((d: any) => String(d.x) === category);
+     * Get series value for accessibility table (bar-specific)
+     */
+    public override getSeriesValue(series: any, category: string | number): string {
+        const point = series.data.find((d: any) => String(d.x) === String(category));
         return point ? point.y.toString() : '0';
-    }
-
-    /**
-   * Get performance metrics from renderer
-   */
-    public getPerformanceMetrics() {
-        return this.barChartRenderer.getPerformanceMetrics();
-    }
-
-    /**
-   * Check if chart data is valid
-   */
-    public validateChartData(): boolean {
-        if (!this.chartData) {return false;}
-
-        const validation = this.barChartRenderer.validateData(this.chartData);
-
-        if (!validation.isValid) {
-            console.error('Chart data validation failed:', validation.errors);
-            return false;
-        }
-
-        if (validation.warnings.length > 0) {
-            console.warn('Chart data validation warnings:', validation.warnings);
-        }
-
-        return true;
     }
 }

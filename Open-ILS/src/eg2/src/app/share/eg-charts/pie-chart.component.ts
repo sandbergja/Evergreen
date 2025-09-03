@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { BaseChartComponent } from './base-chart.component';
 import { PieChartRenderer } from './renderers/pie-chart-renderer';
 import { ChartData } from './interfaces/chart-data.interface';
+import { ChartRenderer } from './interfaces/chart-renderer.interface';
 
 /**
  * PieChartComponent - Concrete Chart Implementation
@@ -12,60 +13,60 @@ import { ChartData } from './interfaces/chart-data.interface';
 @Component({
     selector: 'eg-pie-chart',
     template: `
-    <div class="eg-chart-container"
-         [attr.aria-label]="chartData?.accessibility?.description">
+        <div class="eg-chart-container"
+             [attr.aria-label]="chartData?.accessibility?.description">
 
-      <!-- Chart Title -->
-      <div class="eg-chart-title" *ngIf="chartData?.title">
-        <h2>{{ chartData?.title }}</h2>
-        <div class="chart-actions">
-          <button
-            type="button"
-            class="export-btn"
-            (click)="downloadChartData()"
-            [attr.aria-label]="'Export chart data for ' + chartData?.title"
-            title="Export chart data as CSV">
-            <span class="material-icons me-1" aria-hidden="true">download</span>
-            Export CSV
-          </button>
+            <!-- Chart Title -->
+            <div class="eg-chart-title" *ngIf="chartData?.title">
+                <h2>{{ chartData?.title }}</h2>
+                <div class="chart-actions">
+                    <button
+                        type="button"
+                        class="export-btn"
+                        (click)="downloadChartData()"
+                        [attr.aria-label]="'Export chart data for ' + chartData?.title"
+                        title="Export chart data as CSV">
+                        <span class="material-icons me-1" aria-hidden="true">download</span>
+                        Export CSV
+                    </button>
+                </div>
+            </div>
+
+            <!-- Chart Container -->
+            <div class="eg-chart-wrapper" #chartWrapper>
+                <svg #chartSvg
+                     [attr.width]="config.width"
+                     [attr.height]="config.height"
+                     [attr.aria-describedby]="chartData?.accessibility?.longDescription ? 'chart-long-desc' : null">
+                    <title>{{ chartData?.accessibility?.description }}</title>
+                    <desc *ngIf="chartData?.accessibility?.longDescription" id="chart-long-desc">
+                        {{ chartData?.accessibility?.longDescription }}
+                    </desc>
+                </svg>
+            </div>
+
+            <!-- Accessible data table -->
+            <div *ngIf="chartData?.accessibility?.dataTable" class="eg-chart-data-table sr-only">
+                <table>
+                    <caption>{{ chartData?.accessibility?.description }}</caption>
+                    <thead>
+                    <tr>
+                        <th scope="col">Label</th>
+                        <th scope="col">Value</th>
+                        <th scope="col">Percentage</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr *ngFor="let point of getDataPoints()">
+                        <td>{{ point.label }}</td>
+                        <td>{{ point.value }}</td>
+                        <td>{{ point.percentage }}%</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
-      </div>
-
-      <!-- Chart Container -->
-      <div class="eg-chart-wrapper" #chartWrapper>
-        <svg #chartSvg
-             [attr.width]="config.width"
-             [attr.height]="config.height"
-             [attr.aria-describedby]="chartData?.accessibility?.longDescription ? 'chart-long-desc' : null">
-          <title>{{ chartData?.accessibility?.description }}</title>
-          <desc *ngIf="chartData?.accessibility?.longDescription" id="chart-long-desc">
-            {{ chartData?.accessibility?.longDescription }}
-          </desc>
-        </svg>
-      </div>
-
-      <!-- Accessible data table -->
-      <div *ngIf="chartData?.accessibility?.dataTable" class="eg-chart-data-table sr-only">
-        <table>
-          <caption>{{ chartData?.accessibility?.description }}</caption>
-          <thead>
-            <tr>
-              <th scope="col">Label</th>
-              <th scope="col">Value</th>
-              <th scope="col">Percentage</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let point of getDataPoints()">
-              <td>{{ point.label }}</td>
-              <td>{{ point.value }}</td>
-              <td>{{ point.percentage }}%</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  `,
+    `,
     styleUrls: ['./eg-chart.component.css']
 })
 export class PieChartComponent extends BaseChartComponent<ChartData> {
@@ -74,15 +75,22 @@ export class PieChartComponent extends BaseChartComponent<ChartData> {
     private pieChartRenderer = inject(PieChartRenderer);
 
     /**
-   * Get chart type identifier
-   */
+     * Get the chart renderer instance
+     */
+    protected getRenderer(): ChartRenderer<ChartData> {
+        return this.pieChartRenderer;
+    }
+
+    /**
+     * Get chart type identifier
+     */
     protected getChartType(): string {
         return 'pie';
     }
 
     /**
-   * Render chart data - implemented for pie charts
-   */
+     * Render chart data - implemented for pie charts
+     */
     protected renderData(): void {
         if (!this.chartData || !this.svg) {return;}
 
@@ -94,8 +102,8 @@ export class PieChartComponent extends BaseChartComponent<ChartData> {
     }
 
     /**
-   * Update chart with new data - implemented for pie charts
-   */
+     * Update chart with new data - implemented for pie charts
+     */
     protected updateData(newData: ChartData): void {
         if (!this.svg) {return;}
 
@@ -107,8 +115,8 @@ export class PieChartComponent extends BaseChartComponent<ChartData> {
     }
 
     /**
-   * Handle window resize - implemented for pie charts
-   */
+     * Handle window resize - implemented for pie charts
+     */
     protected handleResize(): void {
         if (!this.chartData) {return;}
 
@@ -124,8 +132,8 @@ export class PieChartComponent extends BaseChartComponent<ChartData> {
     }
 
     /**
-   * Cleanup resources - implemented for pie charts
-   */
+     * Cleanup resources - implemented for pie charts
+     */
     protected cleanup(): void {
         if (this.svg) {
             this.pieChartRenderer.destroy(this.svg);
@@ -140,8 +148,8 @@ export class PieChartComponent extends BaseChartComponent<ChartData> {
     }
 
     /**
-   * Enhanced accessibility binding for pie charts
-   */
+     * Enhanced accessibility binding for pie charts
+     */
     protected override bindEvents(): void {
         super.bindEvents();
 
@@ -164,11 +172,9 @@ export class PieChartComponent extends BaseChartComponent<ChartData> {
     }
 
     /**
-   * Show tooltip for pie slice
-   */
-    private showTooltip(event: any, data: any): void {
-        if (!this.tooltip) {return;}
-
+     * Generate tooltip content for pie charts
+     */
+    protected override generateTooltipContent(data: any, _seriesName: string): string {
         const series = this.chartData?.series[0];
         const seriesName = series?.name || 'Data';
         const label = data.data.x;
@@ -178,66 +184,36 @@ export class PieChartComponent extends BaseChartComponent<ChartData> {
         const total = series?.data.reduce((sum, point) => sum + point.y, 0) || 1;
         const percentage = ((value / total) * 100).toFixed(1);
 
-        this.tooltip
-            .style('opacity', 1)
-            .html(`<strong>${seriesName}</strong><br/>${label}: ${value}<br/>${percentage}%`)
-            .style('left', (event.offsetX + 10) + 'px')
-            .style('top', (event.offsetY - 28) + 'px')
-            .attr('aria-hidden', 'false');
+        return `<strong>${seriesName}</strong><br/>${label}: ${value}<br/>${percentage}%`;
     }
 
     /**
-   * Hide tooltip
-   */
-    private hideTooltip(): void {
-        if (!this.tooltip) {return;}
-
-        this.tooltip
-            .style('opacity', 0)
-            .attr('aria-hidden', 'true');
+     * Get CSV headers for pie charts
+     */
+    protected override getCSVHeaders(): string[] {
+        return ['Label', 'Value', 'Percentage'];
     }
 
     /**
-   * Export chart data as CSV
-   */
-    public downloadChartData(): void {
-        const csvContent = this.exportChartData();
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-
-        if (link.download !== undefined) {
-            const url = URL.createObjectURL(blob);
-            link.setAttribute('href', url);
-            link.setAttribute('download', `${this.chartData?.title || 'pie-chart-data'}.csv`);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-    }
-
-    /**
-   * Export chart data as CSV string
-   */
-    private exportChartData(): string {
-        if (!this.chartData) {return '';}
+     * Generate CSV rows for pie charts
+     */
+    protected override generateCSVRows(): string {
+        if (!this.chartData) return '';
 
         const dataPoints = this.getDataPoints();
-        const headers = ['Label', 'Value', 'Percentage'];
-
-        let csvContent = headers.join(',') + '\n';
+        let rows = '';
 
         dataPoints.forEach(point => {
             const row = [point.label, point.value.toString(), point.percentage.toString()];
-            csvContent += row.join(',') + '\n';
+            rows += row.join(',') + '\n';
         });
 
-        return csvContent;
+        return rows;
     }
 
     /**
-   * Get data points with calculated percentages for accessibility table
-   */
+     * Get data points with calculated percentages for accessibility table
+     */
     public getDataPoints(): {label: string, value: number, percentage: string}[] {
         if (!this.chartData || !this.chartData.series[0]) {return [];}
 
@@ -249,32 +225,5 @@ export class PieChartComponent extends BaseChartComponent<ChartData> {
             value: point.y,
             percentage: ((point.y / total) * 100).toFixed(1)
         }));
-    }
-
-    /**
-   * Get performance metrics from renderer
-   */
-    public getPerformanceMetrics() {
-        return this.pieChartRenderer.getPerformanceMetrics();
-    }
-
-    /**
-   * Check if chart data is valid
-   */
-    public validateChartData(): boolean {
-        if (!this.chartData) {return false;}
-
-        const validation = this.pieChartRenderer.validateData(this.chartData);
-
-        if (!validation.isValid) {
-            console.error('Chart data validation failed:', validation.errors);
-            return false;
-        }
-
-        if (validation.warnings.length > 0) {
-            console.warn('Chart data validation warnings:', validation.warnings);
-        }
-
-        return true;
     }
 }
