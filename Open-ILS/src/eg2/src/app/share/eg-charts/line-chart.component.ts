@@ -33,7 +33,7 @@ import { ChartRenderer } from './interfaces/chart-renderer.interface';
             </div>
 
             <!-- Chart Container -->
-            <div class="eg-chart-wrapper" #chartWrapper>
+            <div class="eg-chart-wrapper line-chart" #chartWrapper>
                 <svg #chartSvg
                      [attr.width]="config.width"
                      [attr.height]="config.height"
@@ -120,15 +120,20 @@ export class LineChartComponent extends BaseChartComponent<ChartData> {
     protected handleResize(): void {
         if (!this.chartData) {return;}
 
-        // Update chart dimensions
-        this.config = {
-            ...this.config,
-            width: this.chartWrapper?.nativeElement.clientWidth || this.config.width,
-            height: this.chartWrapper?.nativeElement.clientHeight || this.config.height
-        };
+        // Simple resize behavior - only update width if container width changes significantly
+        const containerWidth = this.chartWrapper?.nativeElement.clientWidth || this.config.width;
+        
+        // Only update if container width changed by more than 20px to avoid thrashing
+        if (Math.abs(containerWidth - (this.config.width || 0)) > 20) {
+            this.config = {
+                ...this.config,
+                width: containerWidth
+                // Keep height fixed to maintain consistency
+            };
 
-        // Re-render with new dimensions
-        this.renderData();
+            // Re-render with new dimensions
+            this.renderData();
+        }
     }
 
     /**

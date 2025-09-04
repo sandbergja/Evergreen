@@ -33,7 +33,7 @@ import { ChartRenderer } from './interfaces/chart-renderer.interface';
             </div>
 
             <!-- Chart Container -->
-            <div class="eg-chart-wrapper" #chartWrapper>
+            <div class="eg-chart-wrapper pie-chart" #chartWrapper>
                 <svg #chartSvg
                      [attr.width]="config.width"
                      [attr.height]="config.height"

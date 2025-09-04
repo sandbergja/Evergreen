@@ -142,13 +142,22 @@ export abstract class BaseChartComponent<T extends ChartData = ChartData> implem
         // Clear existing content
         this.svg.selectAll('*').remove();
 
-        // Set up basic SVG structure
-        const { width = 800, height = 400 } = this.config;
+        // Calculate dimensions - use container height if config height not specified
+        const width = this.config.width || 800;
+        const height = this.config.height || this.chartWrapper?.nativeElement?.clientHeight || 400;
+        
         this.svg
             .attr('width', width)
             .attr('height', height)
             .attr('role', 'img')
             .attr('aria-labelledby', 'chart-title');
+
+        // Update config with calculated dimensions for renderers
+        this.config = {
+            ...this.config,
+            width: width,
+            height: height
+        };
 
         // Add title element for accessibility
         this.svg.append('title')

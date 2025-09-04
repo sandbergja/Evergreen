@@ -145,7 +145,7 @@ export class SandboxComponent implements OnInit {
 
     circulationChartConfig: ChartConfiguration = {
         width: 800,
-        height: 500,
+        // height removed - let CSS aspect-ratio control sizing dynamically
         margin: { top: 20, right: 20, bottom: 40, left: 60 },
         showGrid: true,
         showTooltip: true,
