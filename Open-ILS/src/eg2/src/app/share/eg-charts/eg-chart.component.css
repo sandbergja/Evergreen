@@ -518,6 +518,41 @@
   opacity: 0.5;
 }
 
+/* Mobile/Tablet: Vertical Stack Layout for Pie Charts */
+@media (max-width: 992px) {
+  .eg-chart-main-content.pie-chart-layout {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .pie-chart-layout .eg-chart-wrapper {
+    flex: none !important; /* Let CSS aspect-ratio control size */
+  }
+  
+  /* More specific selector to override desktop styles */
+  .pie-chart-layout .eg-chart-legend-wrapper {
+    flex: none !important;
+    margin-left: 0 !important;
+    margin-top: 1rem;
+    order: 2; /* Ensure legend appears below chart */
+    max-height: none !important; /* Remove height constraint */
+    overflow-y: visible !important; /* Remove unwanted scrollbar */
+    padding: 0.75rem; /* Slightly less padding */
+  }
+  
+  .pie-chart-layout .eg-chart-legend-item {
+    padding: 0.375rem 0.5rem; /* Tighter spacing for mobile */
+  }
+  
+  .pie-chart-layout .legend-label {
+    font-size: 0.8rem; /* Slightly smaller text */
+  }
+  
+  .pie-chart-layout .legend-value {
+    font-size: 0.8rem; /* Match label size */
+  }
+}
+
 /* Accessibility Pattern Styles */
 .bar:hover, .arc:hover {
   filter: brightness(1.1);
