@@ -1,3 +1,4 @@
+rollback;
 BEGIN;
 
 -- SELECT evergreen.upgrade_deps_block_check('XXXX', :eg_version);
@@ -457,7 +458,7 @@ BEGIN
     SELECT ARRAY_AGG(ids) INTO ids_for_test_phase
         FROM (SELECT DISTINCT floor(random() * all_document_count) + 1 AS ids
             FROM generate_series(1, all_document_count)
-            LIMIT all_document_count*0.2);
+            LIMIT all_document_count*0.2) as te;
 
     FOR doc_id IN 1..true_document_count LOOP
         IF doc_id = ANY(ids_for_test_phase) THEN
@@ -631,7 +632,7 @@ BEGIN
         staging.spam_feature_extraction_query('staging.training_user_stage', 'staging.training_mailing_address_stage'))
         INTO training_results;
 
-    row_id := FLOOR(RANDOM() * 1_000_000_000);
+    row_id := FLOOR(RANDOM() * 1000000000);
     -- Extract features from the new self-registration
     CREATE TEMPORARY TABLE IF NOT EXISTS _staging_usr (LIKE staging.user_stage) ON COMMIT DROP;
     CREATE TEMPORARY TABLE IF NOT EXISTS _staging_mailing_address (LIKE staging.mailing_address_stage) ON COMMIT DROP;
