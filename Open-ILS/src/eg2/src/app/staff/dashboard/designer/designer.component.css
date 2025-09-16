@@ -4,63 +4,36 @@
   padding: 1rem 0;
 }
 
-/* Configuration Panel Styling */
-.configuration-panel {
-  /* Remove sticky positioning for horizontal layout */
+/* Common Form Styling */
+.common-form {
+  /* Evergreen's standard form styling will be applied */
 }
 
-.configuration-panel .card-header {
-  background-color: rgba(var(--bs-primary-rgb), 0.1);
-  border-bottom: none;
+/* Form group spacing */
+.common-form .form-group {
+  margin-bottom: 1.5rem;
 }
 
-/* Horizontal Configuration Layout */
-.configuration-panel .row {
-  align-items: end;
-}
-
-.configuration-panel .form-label {
+/* Form label styling to match Evergreen */
+.common-form .col-form-label {
   font-weight: 600;
-  color: #495057;
-  margin-bottom: 0.25rem;
-  font-size: 0.9rem;
+  color: var(--bs-body-color);
+}
+
+/* Form control alignment */
+.common-form .form-control,
+.common-form .form-select {
+  max-width: 400px;
 }
 
 
-/* Color Palette Styling */
-.color-palette {
-  display: grid;
-  grid-template-columns: repeat(10, 1fr);
-  gap: 0.5rem;
-  margin-top: 0.5rem;
+/* Display Options Styling */
+.common-form .form-check {
+  margin-bottom: 0.75rem;
 }
 
-/* Display Options */
-.display-options {
-  margin-top: 0.5rem;
-}
-
-.display-options .form-check {
-  margin-bottom: 0.5rem;
-}
-
-.color-option {
-  width: 30px;
-  height: 30px;
-  border-radius: 4px;
-  cursor: pointer;
-  border: 2px solid transparent;
-  transition: all 0.2s ease;
-}
-
-.color-option:hover {
-  border-color: #333;
-  transform: scale(1.1);
-}
-
-.color-option.selected {
-  border-color: #000;
-  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.2);
+.common-form .form-check:last-child {
+  margin-bottom: 0;
 }
 
 /* Chart Canvas Styling */
@@ -171,11 +144,7 @@
 
 /* Responsive Design */
 @media (max-width: 991.98px) {
-  .configuration-panel .row {
-    margin-bottom: 1rem;
-  }
-
-  .configuration-panel .row > div {
+  .common-form .form-group {
     margin-bottom: 1rem;
   }
 
@@ -187,10 +156,6 @@
     min-height: 300px;
   }
 
-  .color-palette {
-    grid-template-columns: repeat(5, 1fr);
-  }
-
   .filter-entries {
     padding: 0.25rem;
   }
@@ -199,7 +164,7 @@
     font-size: 0.85rem;
   }
 
-  .filter-config-section .form-check-container {
+  .filter-config-form .form-check-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -225,13 +190,14 @@
 }
 
 /* Accessibility improvements */
-.color-option:focus {
-  outline: 2px solid #007bff;
-  outline-offset: 2px;
+.common-form .form-check-input:focus {
+  box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.25);
 }
 
-.configuration-panel .form-check-input:focus {
-  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+.common-form .form-select:focus,
+.common-form .form-control:focus {
+  border-color: var(--bs-primary);
+  box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.25);
 }
 
 /* Animation for smooth interactions */
@@ -299,36 +265,37 @@
   margin-bottom: 0.5rem;
 }
 
-/* Filter Configuration Section */
-.filter-config-section {
+/* Filter Configuration Form */
+.filter-config-form {
+  background-color: var(--bs-gray-50, #f8f9fa);
+  border: 1px solid var(--bs-border-color);
+  border-radius: 0.375rem;
+  padding: 1rem;
   animation: slideDown 0.3s ease;
 }
 
-.filter-config-section .card {
-  border: 2px solid #e3f2fd;
-  box-shadow: 0 0.25rem 1rem rgba(33, 150, 243, 0.15);
-}
-
-.filter-config-section .card-title {
-  color: #1976d2;
-  font-weight: 600;
-  font-size: 1rem;
-}
-
-.filter-config-section .form-check-container {
+.filter-config-form .form-check-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 0.75rem;
+  margin-bottom: 1rem;
 }
 
-.filter-config-section .form-check {
+.filter-config-form .form-check {
   margin-bottom: 0;
 }
 
-.filter-config-section .form-check-label {
+.filter-config-form .form-check-label {
   font-size: 0.9rem;
   margin-left: 0.5rem;
-  color: #495057;
+  color: var(--bs-body-color);
+}
+
+/* Filter option buttons */
+.filter-option-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
 @keyframes slideDown {

@@ -3,24 +3,20 @@
 
 <div class="container-fluid dashboard-designer">
 
-  <!-- Full-Width Configuration Panel -->
+  <!-- Configuration Form -->
   <div class="row mb-4">
     <div class="col-12">
-      <div class="card configuration-panel">
-        <div class="card-header">
-          <h5 class="mb-0" i18n>Widget Configuration</h5>
-        </div>
-        <div class="card-body">
+      <h3 class="mb-3" i18n>Widget Configuration</h3>
+      <form class="form-validated common-form striped-odd" role="form">
 
-          <!-- Basic Configuration Row -->
-          <div class="row mb-3">
-            <div class="col-md-3">
-
-              <!-- Widget Type Selection -->
-              <label for="widgetType" class="form-label" i18n>Widget Type</label>
+          <!-- Widget Type Selection -->
+          <div class="form-group row">
+            <label for="widgetType" class="form-label col-form-label col-lg-3 text-end fw-bold" i18n>Widget Type</label>
+            <div class="col-lg-9">
               <select class="form-select" id="widgetType"
                       [(ngModel)]="selectedWidgetType"
-                      (change)="onWidgetTypeChange($event)">
+                      (change)="onWidgetTypeChange($event)"
+                      name="widgetType">
                 <option value="circulations" i18n>Circulations</option>
                 <option value="acquisitions" i18n>Acquisitions</option>
                 <option value="cataloging" i18n>Cataloging</option>
@@ -28,22 +24,26 @@
                 <option value="holdings" i18n>Holdings</option>
               </select>
             </div>
+          </div>
 
-            <div class="col-md-3">
-              <!-- Chart Type Selection -->
-              <label for="chartType" class="form-label" i18n>Chart Type</label>
-              <select class="form-select" id="chartType">
+          <!-- Chart Type Selection -->
+          <div class="form-group row">
+            <label for="chartType" class="form-label col-form-label col-lg-3 text-end fw-bold" i18n>Chart Type</label>
+            <div class="col-lg-9">
+              <select class="form-select" id="chartType" name="chartType">
                 <option value="line" i18n>Line Chart</option>
                 <option value="bar" i18n>Bar Chart</option>
                 <option value="pie" i18n>Pie Chart</option>
                 <option value="metric" i18n>Metric Card</option>
               </select>
             </div>
+          </div>
 
-            <div class="col-md-3">
-              <!-- Time Range Selection -->
-              <label for="timeRange" class="form-label" i18n>Time Range</label>
-              <select class="form-select" id="timeRange">
+          <!-- Time Range Selection -->
+          <div class="form-group row">
+            <label for="timeRange" class="form-label col-form-label col-lg-3 text-end fw-bold" i18n>Time Range</label>
+            <div class="col-lg-9">
+              <select class="form-select" id="timeRange" name="timeRange">
                 <option value="week" i18n>Last Week</option>
                 <option value="month" i18n>Last Month</option>
                 <option value="quarter" i18n>Last Quarter</option>
@@ -51,210 +51,204 @@
                 <option value="custom" i18n>Custom Range</option>
               </select>
             </div>
+          </div>
 
-            <div class="col-md-3">
-              <!-- Chart Title -->
-              <label for="chartTitle" class="form-label" i18n>Chart Title</label>
-              <input type="text" class="form-control" id="chartTitle" placeholder="Enter chart title" value="Title Here">
+          <!-- Chart Title -->
+          <div class="form-group row">
+            <label for="chartTitle" class="form-label col-form-label col-lg-3 text-end fw-bold" i18n>Chart Title</label>
+            <div class="col-lg-9">
+              <input type="text" class="form-control" id="chartTitle" name="chartTitle" placeholder="Enter chart title" value="Title Here">
             </div>
           </div>
 
-          <!-- Filters Row -->
-          <div class="row mb-3">
-            <div class="col-12">
-              <h6 class="form-label mb-2" i18n>Filters</h6>
-
-              <!-- Applied Filters -->
-              <div class="applied-filters-row mb-3" *ngIf="appliedFilters.length > 0">
-                <h6 class="text-muted mb-2">Applied Filters</h6>
-                <div class="filter-entries">
-                  <div class="row py-2 ps-1 align-items-start" *ngFor="let filter of appliedFilters">
-                    <div class="col-10">{{ filter.label }}</div>
-                    <div class="col-2 pe-0 text-end">
-                      <button class="btn btn-sm btn-outline-danger"
-                              (click)="removeFilter(filter.filterId)"
-                              i18n-aria-label
-                              [attr.aria-label]="'Remove ' + filter.label + ' filter'"
-                              i18n-title
-                              [attr.title]="'Remove ' + filter.label + ' filter'">
-                        <span class="material-icons mat-icon-in-button" aria-hidden="true">close</span>
-                      </button>
-                    </div>
+          <!-- Applied Filters -->
+          <div class="form-group row" *ngIf="appliedFilters.length > 0">
+            <label class="form-label col-form-label col-lg-3 text-end fw-bold" i18n>Applied Filters</label>
+            <div class="col-lg-9">
+              <div class="filter-entries">
+                <div class="row py-2 ps-1 align-items-start" *ngFor="let filter of appliedFilters">
+                  <div class="col-10">{{ filter.label }}</div>
+                  <div class="col-2 pe-0 text-end">
+                    <button class="btn btn-sm btn-outline-dark"
+                            (click)="removeFilter(filter.filterId)"
+                            i18n-aria-label
+                            [attr.aria-label]="'Remove ' + filter.label + ' filter'"
+                            i18n-title
+                            [attr.title]="'Remove ' + filter.label + ' filter'">
+                      <span class="material-icons mat-icon-in-button" aria-hidden="true">close</span>
+                    </button>
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
 
-              <!-- Add Filter Controls -->
-              <div class="filter-controls-row">
-                <div class="d-flex align-items-center gap-3">
-                  <button class="btn btn-outline-primary"
+          <!-- Add Filter Section -->
+          <div class="form-group row">
+            <label class="form-label col-form-label col-lg-3 text-end fw-bold" i18n>Add Filter</label>
+            <div class="col-lg-9">
+              <button class="btn btn-outline-primary label-with-material-icon"
+                      type="button"
+                      (click)="toggleFilterOptions()"
+                      [disabled]="!selectedWidgetType">
+                <span class="material-icons" aria-hidden="true">add</span>
+                <span i18n>Add Filter</span>
+                <span class="material-icons ms-1" aria-hidden="true">
+                  {{ showFilterOptions ? 'expand_less' : 'expand_more' }}
+                </span>
+              </button>
+
+              <!-- Available Filter Options -->
+              <div class="filter-options-list mt-2" *ngIf="showFilterOptions">
+                <div class="filter-option-buttons">
+                  <button *ngFor="let filterOption of availableFilters"
+                          class="btn btn-outline-secondary btn-sm me-2 mb-1"
                           type="button"
-                          (click)="toggleFilterOptions()"
-                          [disabled]="!selectedWidgetType">
-                    <span class="material-icons me-1" style="font-size: 16px;">add</span>
-                    Add Filter
-                    <span class="material-icons ms-1" style="font-size: 16px;">
-                      {{ showFilterOptions ? 'expand_less' : 'expand_more' }}
-                    </span>
+                          (click)="selectFilterToAdd(filterOption)"
+                          [disabled]="isFilterApplied(filterOption.id)">
+                    {{ filterOption.label }}
                   </button>
-
-                  <!-- Available Filter Options - Inline -->
-                  <div class="filter-options-inline" *ngIf="showFilterOptions">
-                    <div class="filter-option-buttons-inline">
-                      <button *ngFor="let filterOption of availableFilters"
-                              class="btn btn-outline-secondary btn-sm me-2"
-                              type="button"
-                              (click)="selectFilterToAdd(filterOption)"
-                              [disabled]="isFilterApplied(filterOption.id)">
-                        {{ filterOption.label }}
-                      </button>
-                      <span class="text-muted small" *ngIf="availableFilters.length === 0">
-                        No filters available for this widget type.
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Filter Configuration Form - Full Width -->
-              <div class="filter-config-section mt-3" *ngIf="selectedFilterToAdd">
-                <div class="card border-primary">
-                  <div class="card-body">
-                    <h6 class="card-title mb-3">Configure {{ selectedFilterToAdd.label }}</h6>
-
-                    <!-- Multi-select filter -->
-                    <div *ngIf="selectedFilterToAdd.type === 'multiselect'" class="row">
-                      <div class="col-md-8">
-                        <div class="form-check-container">
-                          <div class="form-check" *ngFor="let option of selectedFilterToAdd.options">
-                            <input class="form-check-input"
-                                   type="checkbox"
-                                   [id]="'filter_' + selectedFilterToAdd.id + '_' + option.value"
-                                   [value]="option.value"
-                                   (change)="updateFilterValue($event, option.value)">
-                            <label class="form-check-label"
-                                   [for]="'filter_' + selectedFilterToAdd.id + '_' + option.value">
-                              {{ option.label }}
-                            </label>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Single select filter -->
-                    <div *ngIf="selectedFilterToAdd.type === 'select'" class="row">
-                      <div class="col-md-4">
-                        <select class="form-select"
-                                (change)="updateFilterValue($event, $event.target.value)">
-                          <option value="">Select {{ selectedFilterToAdd.label }}</option>
-                          <option *ngFor="let option of selectedFilterToAdd.options"
-                                  [value]="option.value">
-                            {{ option.label }}
-                          </option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <!-- Text filter -->
-                    <div *ngIf="selectedFilterToAdd.type === 'text'" class="row">
-                      <div class="col-md-4">
-                        <input type="text"
-                               class="form-control"
-                               [placeholder]="selectedFilterToAdd.placeholder || 'Enter value'"
-                               (input)="updateFilterValue($event, $event.target.value)">
-                      </div>
-                    </div>
-
-                    <!-- Number range filter -->
-                    <div *ngIf="selectedFilterToAdd.type === 'numberrange'" class="row">
-                      <div class="col-md-3">
-                        <input type="number"
-                               class="form-control"
-                               placeholder="Min"
-                               (input)="updateFilterRangeValue('min', $event.target.value)">
-                      </div>
-                      <div class="col-md-3">
-                        <input type="number"
-                               class="form-control"
-                               placeholder="Max"
-                               (input)="updateFilterRangeValue('max', $event.target.value)">
-                      </div>
-                    </div>
-
-                    <!-- Date range filter -->
-                    <div *ngIf="selectedFilterToAdd.type === 'daterange'" class="row">
-                      <div class="col-md-3">
-                        <input type="date"
-                               class="form-control"
-                               (change)="updateFilterRangeValue('start', $event.target.value)">
-                      </div>
-                      <div class="col-md-3">
-                        <input type="date"
-                               class="form-control"
-                               (change)="updateFilterRangeValue('end', $event.target.value)">
-                      </div>
-                    </div>
-
-                    <div class="mt-3">
-                      <button type="button"
-                              class="btn btn-primary me-2"
-                              (click)="applyFilter()"
-                              [disabled]="!isFilterConfigValid()">
-                        Apply Filter
-                      </button>
-                      <button type="button"
-                              class="btn btn-secondary"
-                              (click)="cancelFilterConfig()">
-                        Cancel
-                      </button>
-                    </div>
+                  <div class="text-muted small mt-2" *ngIf="availableFilters.length === 0">
+                    No filters available for this widget type.
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Color and Display Options Row -->
-          <div class="row">
-            <div class="col-md-6">
-              <!-- Color Picker -->
-              <label class="form-label" i18n>Color Theme</label>
-              <div class="color-palette">
-                <div class="color-option" style="background-color: #007bff;" title="Blue"></div>
-                <div class="color-option" style="background-color: #28a745;" title="Green"></div>
-                <div class="color-option" style="background-color: #dc3545;" title="Red"></div>
-                <div class="color-option" style="background-color: #ffc107;" title="Yellow"></div>
-                <div class="color-option" style="background-color: #6f42c1;" title="Purple"></div>
-                <div class="color-option" style="background-color: #fd7e14;" title="Orange"></div>
-                <div class="color-option" style="background-color: #20c997;" title="Teal"></div>
-                <div class="color-option" style="background-color: #e83e8c;" title="Pink"></div>
-                <div class="color-option" style="background-color: #6c757d;" title="Gray"></div>
-                <div class="color-option" style="background-color: #343a40;" title="Dark"></div>
-              </div>
-            </div>
+          <!-- Filter Configuration -->
+          <div class="form-group row" *ngIf="selectedFilterToAdd">
+            <label class="form-label col-form-label col-lg-3 text-end fw-bold">Configure {{ selectedFilterToAdd.label }}</label>
+            <div class="col-lg-9">
+              <div class="filter-config-form">
 
-            <div class="col-md-6">
-              <!-- Display Options -->
-              <label class="form-label" i18n>Display Options</label>
-              <div class="display-options">
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox" id="showLegend" checked>
-                  <label class="form-check-label" for="showLegend" i18n>
-                    Show Legend
-                  </label>
+                <!-- Multi-select filter -->
+                <div *ngIf="selectedFilterToAdd.type === 'multiselect'">
+                  <div class="form-check-grid">
+                    <div class="form-check" *ngFor="let option of selectedFilterToAdd.options">
+                      <input class="form-check-input"
+                             type="checkbox"
+                             [id]="'filter_' + selectedFilterToAdd.id + '_' + option.value"
+                             [value]="option.value"
+                             (change)="updateFilterValue($event, option.value)">
+                      <label class="form-check-label"
+                             [for]="'filter_' + selectedFilterToAdd.id + '_' + option.value">
+                        {{ option.label }}
+                      </label>
+                    </div>
+                  </div>
                 </div>
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox" id="showGrid" checked>
-                  <label class="form-check-label" for="showGrid" i18n>
-                    Show Grid Lines
-                  </label>
+
+                <!-- Single select filter -->
+                <div *ngIf="selectedFilterToAdd.type === 'select'">
+                  <select class="form-select"
+                          (change)="updateFilterValue($event, $event.target.value)">
+                    <option value="">Select {{ selectedFilterToAdd.label }}</option>
+                    <option *ngFor="let option of selectedFilterToAdd.options"
+                            [value]="option.value">
+                      {{ option.label }}
+                    </option>
+                  </select>
+                </div>
+
+                <!-- Text filter -->
+                <div *ngIf="selectedFilterToAdd.type === 'text'">
+                  <input type="text"
+                         class="form-control"
+                         [placeholder]="selectedFilterToAdd.placeholder || 'Enter value'"
+                         (input)="updateFilterValue($event, $event.target.value)">
+                </div>
+
+                <!-- Number range filter -->
+                <div *ngIf="selectedFilterToAdd.type === 'numberrange'" class="row">
+                  <div class="col-md-6">
+                    <label class="form-label" i18n>Minimum</label>
+                    <input type="number"
+                           class="form-control"
+                           placeholder="Min"
+                           (input)="updateFilterRangeValue('min', $event.target.value)">
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label" i18n>Maximum</label>
+                    <input type="number"
+                           class="form-control"
+                           placeholder="Max"
+                           (input)="updateFilterRangeValue('max', $event.target.value)">
+                  </div>
+                </div>
+
+                <!-- Date range filter -->
+                <div *ngIf="selectedFilterToAdd.type === 'daterange'" class="row">
+                  <div class="col-md-6">
+                    <label class="form-label" i18n>Start Date</label>
+                    <input type="date"
+                           class="form-control"
+                           (change)="updateFilterRangeValue('start', $event.target.value)">
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label" i18n>End Date</label>
+                    <input type="date"
+                           class="form-control"
+                           (change)="updateFilterRangeValue('end', $event.target.value)">
+                  </div>
+                </div>
+
+                <div class="mt-3">
+                  <button type="button"
+                          class="btn btn-success me-2"
+                          (click)="applyFilter()"
+                          [disabled]="!isFilterConfigValid()"
+                          i18n>
+                    Apply Filter
+                  </button>
+                  <button type="button"
+                          class="btn btn-secondary"
+                          (click)="cancelFilterConfig()"
+                          i18n>
+                    Cancel
+                  </button>
                 </div>
               </div>
             </div>
           </div>
 
-        </div>
-      </div>
+          <!-- Color Theme Selection -->
+          <div class="form-group row">
+            <label class="form-label col-form-label col-lg-3 text-end fw-bold" i18n>Color Theme</label>
+            <div class="col-lg-9">
+              <select class="form-select" id="colorTheme" name="colorTheme">
+                <option value="primary" i18n>Blue (Primary)</option>
+                <option value="success" i18n>Green (Success)</option>
+                <option value="danger" i18n>Red (Danger)</option>
+                <option value="warning" i18n>Yellow (Warning)</option>
+                <option value="info" i18n>Cyan (Info)</option>
+                <option value="secondary" i18n>Gray (Secondary)</option>
+                <option value="dark" i18n>Dark</option>
+                <option value="custom" i18n>Custom Colors</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Display Options -->
+          <div class="form-group row">
+            <label class="form-label col-form-label col-lg-3 text-end fw-bold" i18n>Display Options</label>
+            <div class="col-lg-9">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="showLegend" name="showLegend" checked>
+                <label class="form-check-label" for="showLegend" i18n>
+                  Show Legend
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="showGrid" name="showGrid" checked>
+                <label class="form-check-label" for="showGrid" i18n>
+                  Show Grid Lines
+                </label>
+              </div>
+            </div>
+          </div>
+
+      </form>
     </div>
   </div>
 
