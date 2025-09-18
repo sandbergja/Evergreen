@@ -1,172 +1,25 @@
 import { Injectable } from '@angular/core';
+import { Observable, forkJoin, of } from 'rxjs';
+import { map, tap } from 'rxjs/operators';
 import { PcrudService } from '@eg/core/pcrud.service';
 import { AuthService } from '@eg/core/auth.service';
 import { OrgService } from '@eg/core/org.service';
 import { ChartData } from '@eg/share/eg-charts/interfaces/chart-data.interface';
-
-// Filter configuration interfaces
-export interface FilterValue {
-    value: string | number;
-    label: string;
-}
-
-export interface FilterOption {
-    id: string;
-    label: string;
-    type: 'select' | 'multiselect' | 'daterange' | 'text' | 'numberrange';
-    options?: FilterValue[];
-    required?: boolean;
-    placeholder?: string;
-}
-
-export interface AppliedFilter {
-    filterId: string;
-    values: (string | number)[];
-    label: string;
-}
-
-export interface WidgetTypeFilters {
-    [widgetType: string]: FilterOption[];
-}
-
-// Circulation dashboard data structures based on dashboard-circs.json
-export interface CirculationReportMetadata {
-    system: string;
-    consortium_name: string;
-    report_type: string;
-    report_period: string;
-    report_period_start: string;
-    report_period_end: string;
-    generated_date: string;
-    generated_by: string;
-    report_version: string;
-    total_circulation: number;
-    data_freshness: string;
-    org_unit_tree_version: string;
-}
-
-export interface CirculationSummary {
-    checkouts: number;
-    staff_renewals: number;
-    auto_renewals: number;
-    web_renewals: number;
-    holds_filled: number;
-}
-
-export interface LibraryCirculationData {
-    library_name: string;
-    org_unit_id: number;
-    org_unit_type: string;
-    parent_org_unit_id: number | null;
-    shortname: string;
-    checkouts: number;
-    renewals: number;
-    web_renewals: number;
-    auto_renewals: number;
-    total: number;
-    percentage_of_total: number;
-    items_per_capita: number;
-    service_population: number;
-}
-
-export interface DailyCirculationData {
-    date: string;
-    checkouts: number;
-    renewals: number;
-    holds_filled: number;
-}
-
-export interface PerformanceMetrics {
-    circulation_velocity: number;
-    collection_turnover_rate: number;
-    holds_fill_rate: number;
-    renewal_rate: number;
-    auto_renewal_success_rate: number;
-    average_checkout_duration: number;
-}
-
-export interface CirculationByFormat {
-    format: string;
-    format_code: string;
-    circulation: number;
-    percentage_of_total: number;
-    trend_indicator: string;
-}
-
-export interface CirculationByAgeGroup {
-    adult_total: number;
-    ya_total: number;
-    child_total: number;
-    grand_total: number;
-}
-
-export interface CirculationByAgeGroupFormat {
-    format: string;
-    adult: number;
-    ya: number;
-    child: number;
-    total: number;
-}
-
-export interface DashboardWidgets {
-    kpi_summary: {
-        total_circulation: number;
-        circulation_change_percent: number;
-        top_performing_library: string;
-        most_popular_format: string;
-        digital_adoption_rate: number;
-    };
-    quick_stats: {
-        active_holds: number;
-        renewal_rate: number;
-        consortium_libraries: number;
-        reciprocal_borrowing_usage: number;
-    };
-}
-
-export interface CirculationDashboardData {
-    report_metadata: CirculationReportMetadata;
-    circulation_summary: CirculationSummary;
-    circulation_by_library: LibraryCirculationData[];
-    time_series_data: {
-        daily_circulation: DailyCirculationData[];
-        monthly_comparison: {
-            current_month: { period: string; total: number; };
-            previous_month: { period: string; total: number; };
-            same_month_previous_year: { period: string; total: number; };
-        };
-    };
-    performance_metrics: PerformanceMetrics;
-    circ_modifier: CirculationByFormat[];
-    circulation_by_aris: {
-        summary: CirculationByAgeGroup;
-        by_format: CirculationByAgeGroupFormat[];
-    };
-    dashboard_widgets: DashboardWidgets;
-    charts: {
-        circulationTrend: ChartData;
-        libraryPerformance: ChartData;
-        formatBreakdown: ChartData;
-        ageGroupAnalysis: ChartData;
-        performanceMetrics: ChartData;
-    };
-}
-
-export interface DashboardData {
-    metrics: {
-        circulationToday: number;
-        activePatrons: number;
-        overdueItems: number;
-        totalCollection: number;
-        currentHolds: number;
-    };
-    charts: {
-        circulationTrend: ChartData;
-        collectionBreakdown: ChartData;
-        patronActivity: ChartData;
-        holdStatus: ChartData;
-    };
-}
+import {
+    FilterOption,
+    AppliedFilter,
+    WidgetTypeFilters,
+    CirculationDashboardData,
+    DashboardData,
+    LibraryCirculationData,
+    DailyCirculationData,
+    CirculationByFormat,
+    FilterValue
+} from './interfaces';
+import { ChartWidgetConfig } from './interfaces/dashboard.interfaces';
+import { CirculationDataService } from '@eg/share/widgets/services/circulation-data.service';
+import { WidgetFactoryService } from '@eg/share/widgets/factories/widget.factory';
+import { WidgetRegistryService } from '@eg/share/widgets/services/widget-registry.service';
 
 @Injectable({
     providedIn: 'root'
@@ -184,6 +37,15 @@ export class DashboardService {
         secondary: '#6c757d',           // Medium gray - Accessible secondary
         dark: '#495057'                 // Dark gray - Fallback, not black
     };
+
+    constructor(
+        private pcrud: PcrudService,
+        private auth: AuthService,
+        private org: OrgService,
+        private circulationDataService: CirculationDataService,
+        private widgetFactory: WidgetFactoryService,
+        private widgetRegistry: WidgetRegistryService
+    ) {}
 
     // Widget-specific filter configurations
     private readonly WIDGET_FILTERS: WidgetTypeFilters = {
@@ -396,11 +258,6 @@ export class DashboardService {
         ]
     };
 
-    constructor(
-        private pcrud: PcrudService,
-        private auth: AuthService,
-        private org: OrgService
-    ) { }
 
     getAvailableFilters(widgetType: string): FilterOption[] {
         return this.WIDGET_FILTERS[widgetType] || [];
@@ -1012,5 +869,187 @@ export class DashboardService {
 
         // Transform and return data
         return this.getSampleData(); // Fallback to sample data for now
+    }
+
+    // ========================================================================
+    // Widget Management Methods
+    // ========================================================================
+
+    /**
+     * Get available widget templates
+     */
+    getWidgetTemplates(): Observable<any[]> {
+        return this.widgetRegistry.getTemplates();
+    }
+
+    /**
+     * Get widget templates by category
+     */
+    getWidgetTemplatesByCategory(category: string): Observable<any[]> {
+        return this.widgetRegistry.getTemplatesByCategory(category);
+    }
+
+    /**
+     * Create a widget from a template
+     */
+    createWidgetFromTemplate(templateId: string, customizations?: Partial<ChartWidgetConfig>): ChartWidgetConfig {
+        return this.widgetRegistry.createWidgetFromTemplate(templateId, customizations);
+    }
+
+    /**
+     * Create a circulation widget with default configuration
+     */
+    createCirculationWidget(overrides?: Partial<ChartWidgetConfig>): ChartWidgetConfig {
+        const defaultConfig = this.widgetFactory.getDefaultConfig('monthly-circulation-by-shelving-location');
+
+        return {
+            ...defaultConfig,
+            ...overrides,
+            id: `circulation-widget-${Date.now()}`,
+            createdDate: new Date().toISOString(),
+            lastModified: new Date().toISOString(),
+            createdBy: this.auth.user()?.usrname || 'system'
+        } as ChartWidgetConfig;
+    }
+
+    /**
+     * Create a metric widget with default configuration
+     */
+    createMetricWidget(overrides?: Partial<ChartWidgetConfig>): ChartWidgetConfig {
+        const defaultConfig = this.widgetFactory.getDefaultConfig('current-holds-metric');
+
+        return {
+            ...defaultConfig,
+            ...overrides,
+            id: `metric-widget-${Date.now()}`,
+            chartType: 'metric',
+            widgetType: 'circulations',
+            createdDate: new Date().toISOString(),
+            lastModified: new Date().toISOString(),
+            createdBy: this.auth.user()?.usrname || 'system'
+        } as ChartWidgetConfig;
+    }
+
+    /**
+     * Get circulation data for widgets
+     */
+    getCirculationDataForWidget(config: ChartWidgetConfig): Observable<any> {
+        const query = this.buildCirculationQueryFromConfig(config);
+        return this.circulationDataService.getCirculationByShelvingLocation(query);
+    }
+
+    /**
+     * Build circulation query from widget configuration
+     */
+    private buildCirculationQueryFromConfig(config: ChartWidgetConfig): any {
+        const { start, end } = this.getDateRangeFromConfig(config);
+        const currentOrgUnit = this.org.get(this.auth.user()?.ws_ou);
+
+        let query: any = {
+            start_date: this.formatDate(start),
+            end_date: this.formatDate(end),
+            org_unit: currentOrgUnit?.id || 1,
+            include_descendants: true
+        };
+
+        // Apply filters from config
+        if (config.filters) {
+            config.filters.forEach(filter => {
+                if (filter.selectedValues && filter.selectedValues.length > 0) {
+                    switch (filter.filterId) {
+                        case 'shelving_location':
+                            query.shelving_locations = filter.selectedValues;
+                            break;
+                        case 'material_format':
+                            query.material_formats = filter.selectedValues;
+                            break;
+                        case 'patron_type':
+                            query.patron_types = filter.selectedValues;
+                            break;
+                    }
+                }
+            });
+        }
+
+        return query;
+    }
+
+    /**
+     * Get date range from widget configuration
+     */
+    private getDateRangeFromConfig(config: ChartWidgetConfig): { start: Date, end: Date } {
+        let end = new Date();
+        let start = new Date();
+
+        if (config.timeRange === 'custom' && config.customDateRange) {
+            start = new Date(config.customDateRange.start);
+            end = new Date(config.customDateRange.end);
+        } else {
+            switch (config.timeRange) {
+                case 'week':
+                    start.setDate(end.getDate() - 7);
+                    break;
+                case 'month':
+                    start.setMonth(end.getMonth() - 1);
+                    break;
+                case 'quarter':
+                    start.setMonth(end.getMonth() - 3);
+                    break;
+                case 'year':
+                    start.setFullYear(end.getFullYear() - 1);
+                    break;
+                default:
+                    start.setMonth(end.getMonth() - 1); // Default to month
+            }
+        }
+
+        return { start, end };
+    }
+
+    /**
+     * Format date for queries
+     */
+    private formatDate(date: Date): string {
+        return date.toISOString().split('T')[0];
+    }
+
+    /**
+     * Get filter options for widget configuration
+     */
+    getFilterOptions(widgetType: string, filterId: string): FilterValue[] {
+        const filters = this.WIDGET_FILTERS[widgetType];
+        if (!filters) return [];
+
+        const filter = filters.find(f => f.id === filterId);
+        return filter?.options || [];
+    }
+
+    /**
+     * Validate widget configuration
+     */
+    validateWidgetConfig(config: ChartWidgetConfig): { isValid: boolean; errors: string[] } {
+        return this.widgetFactory.validateWidgetConfig(config);
+    }
+
+    /**
+     * Get widget metadata
+     */
+    getWidgetMetadata(): any[] {
+        return this.widgetFactory.getAllWidgetMetadata();
+    }
+
+    /**
+     * Clone widget configuration
+     */
+    cloneWidgetConfig(config: ChartWidgetConfig): ChartWidgetConfig {
+        return this.widgetFactory.cloneWidgetConfig(config);
+    }
+
+    /**
+     * Update widget configuration
+     */
+    updateWidgetConfig(config: ChartWidgetConfig): ChartWidgetConfig {
+        config.lastModified = new Date().toISOString();
+        return config;
     }
 }

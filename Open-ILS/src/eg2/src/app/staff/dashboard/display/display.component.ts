@@ -1,6 +1,8 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { DashboardService, CirculationDashboardData } from '../dashboard.service';
+import { DashboardService } from '../dashboard.service';
+import { CirculationDashboardData } from '../interfaces';
 import { ChartData, ChartConfiguration } from '@eg/share/eg-charts/interfaces/chart-data.interface';
+import { ChartWidgetConfig } from '../interfaces/dashboard.interfaces';
 
 @Component({
     selector: 'eg-dashboard-display',
@@ -36,6 +38,11 @@ export class DashboardDisplayComponent implements OnInit, OnDestroy {
     formatBreakdownData: ChartData | null = null;
     ageGroupAnalysisData: ChartData | null = null;
     performanceMetricsData: ChartData | null = null;
+
+    // Widget configurations
+    monthlyCirculationWidget: ChartWidgetConfig | null = null;
+    currentHoldsMetricWidget: ChartWidgetConfig | null = null;
+    showWidgetSection = true;
 
     // Centralized chart configuration - responsive and consistent
     private readonly baseChartConfig: ChartConfiguration = {
@@ -130,6 +137,32 @@ export class DashboardDisplayComponent implements OnInit, OnDestroy {
         this.formatBreakdownData = circulationData.charts.formatBreakdown;
         this.ageGroupAnalysisData = circulationData.charts.ageGroupAnalysis;
         this.performanceMetricsData = circulationData.charts.performanceMetrics;
+
+        // Initialize widgets
+        this.initializeWidgets();
+    }
+
+    /**
+     * Initialize dashboard widgets
+     */
+    private initializeWidgets(): void {
+        try {
+            // Create monthly circulation by shelving location widget
+            this.monthlyCirculationWidget = this.dashboardService.createCirculationWidget({
+                name: 'Monthly Circulation by Shelving Location',
+                title: 'Monthly Circulation by Shelving Location',
+                timeRange: 'month'
+            });
+
+            // Create current holds metric widget
+            this.currentHoldsMetricWidget = this.dashboardService.createMetricWidget({
+                name: 'Current Holds',
+                title: 'Current Holds',
+                timeRange: 'today'
+            });
+        } catch (error) {
+            console.error('Error initializing widgets:', error);
+        }
     }
 
     refreshData(): void {
@@ -180,6 +213,72 @@ export class DashboardDisplayComponent implements OnInit, OnDestroy {
         } catch (error) {
             console.warn('Failed to get chart preference:', error);
             return null;
+        }
+    }
+
+    // ========================================================================
+    // Widget Event Handlers
+    // ========================================================================
+
+    /**
+     * Handle widget data loaded event
+     */
+    onWidgetDataLoaded(data: any): void {
+        // Could implement additional processing here
+    }
+
+    /**
+     * Handle widget errors
+     */
+    onWidgetError(error: any): void {
+        console.error('Widget error:', error);
+        // Could implement user-friendly error notifications here
+    }
+
+    /**
+     * Handle widget configuration changes
+     */
+    onWidgetConfigChanged(config: ChartWidgetConfig): void {
+        console.log('Widget config changed:', config);
+        // Update the widget configuration
+        if (config.id === this.monthlyCirculationWidget?.id) {
+            this.monthlyCirculationWidget = { ...config };
+        } else if (config.id === this.currentHoldsMetricWidget?.id) {
+            this.currentHoldsMetricWidget = { ...config };
+        }
+    }
+
+    /**
+     * Refresh all widgets
+     */
+    refreshWidgets(): void {
+        console.log('Refreshing all widgets...');
+        // Force refresh by updating widget configurations
+        if (this.monthlyCirculationWidget) {
+            this.monthlyCirculationWidget = {
+                ...this.monthlyCirculationWidget,
+                lastModified: new Date().toISOString()
+            };
+        }
+        if (this.currentHoldsMetricWidget) {
+            this.currentHoldsMetricWidget = {
+                ...this.currentHoldsMetricWidget,
+                lastModified: new Date().toISOString()
+            };
+        }
+    }
+
+    /**
+     * Toggle widget section visibility
+     */
+    toggleWidgetSection(): void {
+        this.showWidgetSection = !this.showWidgetSection;
+
+        // Save preference
+        try {
+            localStorage.setItem('dashboard-show-widgets', this.showWidgetSection.toString());
+        } catch (error) {
+            console.warn('Failed to save widget visibility preference:', error);
         }
     }
 

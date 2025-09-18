@@ -14,7 +14,7 @@
             <label for="widgetType" class="form-label col-form-label col-lg-3 text-end fw-bold" i18n>Widget Type</label>
             <div class="col-lg-9">
               <select class="form-select" id="widgetType"
-                      [(ngModel)]="selectedWidgetType"
+                      [(ngModel)]="widgetConfig.widgetType"
                       (change)="onWidgetTypeChange($event)"
                       name="widgetType">
                 <option value="circulations" i18n>Circulations</option>
@@ -30,7 +30,9 @@
           <div class="form-group row">
             <label for="chartType" class="form-label col-form-label col-lg-3 text-end fw-bold" i18n>Chart Type</label>
             <div class="col-lg-9">
-              <select class="form-select" id="chartType" name="chartType">
+              <select class="form-select" id="chartType" name="chartType"
+                      [(ngModel)]="widgetConfig.chartType"
+                      (change)="updateChartType($event)">
                 <option value="line" i18n>Line Chart</option>
                 <option value="bar" i18n>Bar Chart</option>
                 <option value="pie" i18n>Pie Chart</option>
@@ -43,7 +45,9 @@
           <div class="form-group row">
             <label for="timeRange" class="form-label col-form-label col-lg-3 text-end fw-bold" i18n>Time Range</label>
             <div class="col-lg-9">
-              <select class="form-select" id="timeRange" name="timeRange">
+              <select class="form-select" id="timeRange" name="timeRange"
+                      [(ngModel)]="widgetConfig.timeRange"
+                      (change)="updateTimeRange($event)">
                 <option value="week" i18n>Last Week</option>
                 <option value="month" i18n>Last Month</option>
                 <option value="quarter" i18n>Last Quarter</option>
@@ -57,7 +61,10 @@
           <div class="form-group row">
             <label for="chartTitle" class="form-label col-form-label col-lg-3 text-end fw-bold" i18n>Chart Title</label>
             <div class="col-lg-9">
-              <input type="text" class="form-control" id="chartTitle" name="chartTitle" placeholder="Enter chart title" value="Title Here">
+              <input type="text" class="form-control" id="chartTitle" name="chartTitle"
+                     placeholder="Enter chart title"
+                     [(ngModel)]="widgetConfig.title"
+                     (input)="updateWidgetTitle($event)">
             </div>
           </div>
 
@@ -69,7 +76,7 @@
                 <div class="row py-2 ps-1 align-items-start" *ngFor="let filter of appliedFilters">
                   <div class="col-10">{{ filter.label }}</div>
                   <div class="col-2 pe-0 text-end">
-                    <button class="btn btn-sm btn-outline-dark"
+                    <button type="button" class="btn btn-sm btn-outline-dark"
                             (click)="removeFilter(filter.filterId)"
                             i18n-aria-label
                             [attr.aria-label]="'Remove ' + filter.label + ' filter'"
@@ -90,7 +97,7 @@
               <button class="btn btn-outline-primary label-with-material-icon"
                       type="button"
                       (click)="toggleFilterOptions()"
-                      [disabled]="!selectedWidgetType">
+                      [disabled]="!widgetConfig.widgetType">
                 <span class="material-icons" aria-hidden="true">add</span>
                 <span i18n>Add Filter</span>
                 <span class="material-icons ms-1" aria-hidden="true">
@@ -216,7 +223,9 @@
           <div class="form-group row">
             <label class="form-label col-form-label col-lg-3 text-end fw-bold" i18n>Color Theme</label>
             <div class="col-lg-9">
-              <select class="form-select" id="colorTheme" name="colorTheme">
+              <select class="form-select" id="colorTheme" name="colorTheme"
+                      [(ngModel)]="widgetConfig.colorTheme"
+                      (change)="updateColorTheme($event)">
                 <option value="primary" i18n>Blue (Primary)</option>
                 <option value="success" i18n>Green (Success)</option>
                 <option value="danger" i18n>Red (Danger)</option>
@@ -234,17 +243,56 @@
             <label class="form-label col-form-label col-lg-3 text-end fw-bold" i18n>Display Options</label>
             <div class="col-lg-9">
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="showLegend" name="showLegend" checked>
+                <input class="form-check-input" type="checkbox" id="showLegend" name="showLegend"
+                       [(ngModel)]="widgetConfig.displayOptions.showLegend"
+                       (change)="updateShowLegend($event)">
                 <label class="form-check-label" for="showLegend" i18n>
                   Show Legend
                 </label>
               </div>
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="showGrid" name="showGrid" checked>
+                <input class="form-check-input" type="checkbox" id="showGrid" name="showGrid"
+                       [(ngModel)]="widgetConfig.displayOptions.showGrid"
+                       (change)="updateShowGrid($event)">
                 <label class="form-check-label" for="showGrid" i18n>
                   Show Grid Lines
                 </label>
               </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="showExportButton" name="showExportButton"
+                       [(ngModel)]="widgetConfig.displayOptions.showExportButton"
+                       (change)="updateShowExportButton($event)">
+                <label class="form-check-label" for="showExportButton" i18n>
+                  Show Export Button
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="showPatterns" name="showPatterns"
+                       [(ngModel)]="widgetConfig.displayOptions.showPatterns"
+                       (change)="updateShowPatterns($event)">
+                <label class="form-check-label" for="showPatterns" i18n>
+                  Show Patterns
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Widget Actions -->
+          <div class="form-group row">
+            <label class="form-label col-form-label col-lg-3 text-end fw-bold" i18n>Actions</label>
+            <div class="col-lg-9">
+              <button type="button" class="btn btn-success me-2"
+                      (click)="saveWidgetConfig()"
+                      [disabled]="!isWidgetConfigValid()"
+                      i18n>
+                Save Configuration
+              </button>
+              <button type="button" class="btn btn-outline-secondary"
+                      (click)="exportWidgetConfig()"
+                      [disabled]="!isWidgetConfigValid()"
+                      i18n>
+                Export JSON
+              </button>
             </div>
           </div>
 
@@ -257,68 +305,24 @@
     <div class="col-12">
       <div class="chart-canvas">
         <div class="chart-preview">
-          <h3 class="chart-title">Title Here</h3>
+          <!-- Dynamic Chart Container -->
+          <div class="preview-chart-container">
+            <eg-chart
+              *ngIf="previewChartData"
+              [type]="widgetConfig.chartType"
+              [chartData]="previewChartData"
+              [config]="previewChartConfig"
+              [allowChartTypeToggle]="false"
+              [showExportButton]="widgetConfig.displayOptions.showExportButton"
+              (error)="onPreviewChartError($event)">
+            </eg-chart>
 
-          <!-- Mock Chart Container -->
-          <div class="mock-chart">
-            <svg viewBox="0 0 600 300" class="chart-svg">
-              <!-- Y-axis -->
-              <line x1="40" y1="20" x2="40" y2="280" stroke="#ccc" stroke-width="1"/>
-
-              <!-- X-axis -->
-              <line x1="40" y1="280" x2="580" y2="280" stroke="#ccc" stroke-width="1"/>
-
-              <!-- Y-axis labels -->
-              <text x="35" y="25" text-anchor="end" class="axis-label">160</text>
-              <text x="35" y="65" text-anchor="end" class="axis-label">150</text>
-              <text x="35" y="105" text-anchor="end" class="axis-label">140</text>
-              <text x="35" y="145" text-anchor="end" class="axis-label">130</text>
-              <text x="35" y="185" text-anchor="end" class="axis-label">120</text>
-              <text x="35" y="225" text-anchor="end" class="axis-label">110</text>
-              <text x="35" y="265" text-anchor="end" class="axis-label">100</text>
-
-              <!-- Grid lines -->
-              <line x1="40" y1="60" x2="580" y2="60" stroke="#f0f0f0" stroke-width="0.5"/>
-              <line x1="40" y1="100" x2="580" y2="100" stroke="#f0f0f0" stroke-width="0.5"/>
-              <line x1="40" y1="140" x2="580" y2="140" stroke="#f0f0f0" stroke-width="0.5"/>
-              <line x1="40" y1="180" x2="580" y2="180" stroke="#f0f0f0" stroke-width="0.5"/>
-              <line x1="40" y1="220" x2="580" y2="220" stroke="#f0f0f0" stroke-width="0.5"/>
-
-              <!-- Sample line chart data -->
-              <polyline points="60,240 100,160 140,180 180,140 220,120 260,100 300,160 340,80 380,120 420,60 460,140 500,120 540,40"
-                        fill="none" stroke="#007bff" stroke-width="2"/>
-
-              <!-- Data points -->
-              <circle cx="60" cy="240" r="3" fill="#007bff"/>
-              <circle cx="100" cy="160" r="3" fill="#007bff"/>
-              <circle cx="140" cy="180" r="3" fill="#007bff"/>
-              <circle cx="180" cy="140" r="3" fill="#007bff"/>
-              <circle cx="220" cy="120" r="3" fill="#007bff"/>
-              <circle cx="260" cy="100" r="3" fill="#007bff"/>
-              <circle cx="300" cy="160" r="3" fill="#007bff"/>
-              <circle cx="340" cy="80" r="3" fill="#007bff"/>
-              <circle cx="380" cy="120" r="3" fill="#007bff"/>
-              <circle cx="420" cy="60" r="3" fill="#007bff"/>
-              <circle cx="460" cy="140" r="3" fill="#007bff"/>
-              <circle cx="500" cy="120" r="3" fill="#007bff"/>
-              <circle cx="540" cy="40" r="3" fill="#007bff"/>
-
-              <!-- X-axis labels -->
-              <text x="60" y="295" text-anchor="middle" class="axis-label">Jan</text>
-              <text x="140" y="295" text-anchor="middle" class="axis-label">Feb</text>
-              <text x="220" y="295" text-anchor="middle" class="axis-label">Mar</text>
-              <text x="300" y="295" text-anchor="middle" class="axis-label">Apr</text>
-              <text x="380" y="295" text-anchor="middle" class="axis-label">May</text>
-              <text x="460" y="295" text-anchor="middle" class="axis-label">Jun</text>
-              <text x="540" y="295" text-anchor="middle" class="axis-label">Jul</text>
-            </svg>
-          </div>
-
-          <!-- Chart Legend -->
-          <div class="chart-legend">
-            <div class="legend-item">
-              <span class="legend-color" style="background-color: #007bff;"></span>
-              <span class="legend-label">Circulation Data</span>
+            <!-- Loading state -->
+            <div *ngIf="!previewChartData" class="preview-loading">
+              <div class="text-center p-4">
+                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                <span i18n>Generating preview...</span>
+              </div>
             </div>
           </div>
         </div>

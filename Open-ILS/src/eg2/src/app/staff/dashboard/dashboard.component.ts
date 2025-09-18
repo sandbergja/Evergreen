@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { DashboardService, CirculationDashboardData } from './dashboard.service';
+import { DashboardService } from './dashboard.service';
+import { CirculationDashboardData } from './interfaces';
 import { ChartData, ChartConfiguration } from '@eg/share/eg-charts/interfaces/chart-data.interface';
 
 @Component({

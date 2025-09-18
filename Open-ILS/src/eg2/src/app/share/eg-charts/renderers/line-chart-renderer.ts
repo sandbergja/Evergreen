@@ -295,8 +295,14 @@ export class LineChartRenderer implements ChartRenderer<ChartData> {
 
             // Create line generator with appropriate curve
             const line = d3.line<any>()
-                .x(d => xScale(d.x))
-                .y(d => yScale(d.y))
+                .x(d => {
+                    const xValue = xScale(d.x);
+                    return isNaN(xValue) ? 0 : xValue;
+                })
+                .y(d => {
+                    const yValue = yScale(d.y);
+                    return isNaN(yValue) ? 0 : yValue;
+                })
                 .curve(this.getCurveFunction(curveType, lineStyle));
 
             // Apply line styling
@@ -331,8 +337,14 @@ export class LineChartRenderer implements ChartRenderer<ChartData> {
                 .enter()
                 .append('circle')
                 .attr('class', `point point-${seriesIndex}`)
-                .attr('cx', (d: any) => xScale(d.x))
-                .attr('cy', (d: any) => yScale(d.y))
+                .attr('cx', (d: any) => {
+                    const xValue = xScale(d.x);
+                    return isNaN(xValue) ? 0 : xValue;
+                })
+                .attr('cy', (d: any) => {
+                    const yValue = yScale(d.y);
+                    return isNaN(yValue) ? 0 : yValue;
+                })
                 .attr('r', 4)
                 .attr('fill', color)
                 .attr('stroke', 'var(--bs-body-bg)')

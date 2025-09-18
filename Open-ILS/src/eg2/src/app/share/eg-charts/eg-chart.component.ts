@@ -29,15 +29,7 @@ import * as d3 from 'd3';
                     <!--            </div>-->
                     <!--          </div>-->
                     <button
-                        type="button"
-                        class="accessibility-toggle-btn"
-                        (click)="toggleAccessibilityPatterns()"
-                        [attr.aria-label]="'Toggle accessibility patterns for ' + chartData?.title"
-                        [title]="(chartData?.accessibility?.patterns ? 'Disable' : 'Enable') + ' accessibility patterns for color-blind users'">
-                        <span class="material-icons me-1" aria-hidden="true">{{ chartData?.accessibility?.patterns ? 'visibility_off' : 'visibility' }}</span>
-                        {{ chartData?.accessibility?.patterns ? 'Hide' : 'Show' }} Patterns
-                    </button>
-                    <button
+                        *ngIf="showExportButton"
                         type="button"
                         class="export-btn"
                         (click)="downloadChartData()"
@@ -117,6 +109,7 @@ export class EgChartComponent implements OnInit, OnDestroy {
     };
     @Input() allowChartTypeToggle: boolean = false;
     @Input() supportedChartTypes: ('line' | 'bar' | 'pie')[] = ['line', 'bar', 'pie'];
+    @Input() showExportButton: boolean = true;
 
     @Output() chartTypeChanged = new EventEmitter<'line' | 'bar' | 'pie'>();
 
@@ -526,25 +519,28 @@ export class EgChartComponent implements OnInit, OnDestroy {
 
     // --- Accessibility Pattern Methods ---
 
-    toggleAccessibilityPatterns(): void {
-        if (!this.chartData) return;
-
-        // Initialize accessibility config if it doesn't exist
-        if (!this.chartData.accessibility) {
-            this.chartData.accessibility = {
-                description: this.chartData.title || 'Chart',
-                patterns: true
-            };
-        } else {
-            // Toggle the patterns setting
-            this.chartData.accessibility.patterns = !this.chartData.accessibility.patterns;
-        }
-
-        // Re-render the chart with patterns
-        this.drawChart();
-    }
 
     getAvailablePatterns() {
         return this.patternService.getAvailablePatterns();
+    }
+
+    /**
+     * Get performance metrics for the current chart
+     */
+    getPerformanceMetrics(): any {
+        switch (this.currentChartType) {
+            case 'line':
+                return this.lineRenderer.getPerformanceMetrics();
+            case 'bar':
+                return this.barRenderer.getPerformanceMetrics();
+            case 'pie':
+                return this.pieRenderer.getPerformanceMetrics();
+            default:
+                return {
+                    renderTime: 0,
+                    memoryUsage: 0,
+                    dataPointCount: this.chartData?.series?.[0]?.data?.length || 0
+                };
+        }
     }
 }
