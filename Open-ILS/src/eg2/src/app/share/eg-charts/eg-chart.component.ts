@@ -319,11 +319,11 @@ export class EgChartComponent implements OnInit, OnDestroy {
         let content = '';
         if (this.currentChartType === 'line') {
             const date = data.x instanceof Date ? data.x.toLocaleDateString() : data.x;
-            const series = this.chartData?.series?.[0];
+            const series = this.chartData?.series?.find(s => s?.data.includes(data));
             const seriesName = series?.name || 'Value';
             content = `<strong>${seriesName}</strong><br/>\n                     <strong>Date:</strong> ${date}<br/>\n                     <strong>Count:</strong> ${data.y?.toLocaleString() || data.y}`;
         } else if (this.currentChartType === 'bar') {
-            const series = this.chartData?.series?.[0];
+           const series = this.chartData?.series?.find(s => s?.data.includes(data));
             const seriesName = series?.name || 'Value';
             content = `<strong>${seriesName}</strong><br/>\n                     <strong>${data.x}:</strong> ${data.y?.toLocaleString() || data.y}`;
         } else if (this.currentChartType === 'pie') {

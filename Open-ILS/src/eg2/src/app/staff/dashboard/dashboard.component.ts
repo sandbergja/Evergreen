@@ -2,6 +2,10 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { DashboardService } from './dashboard.service';
 import { CirculationDashboardData } from './interfaces';
 import { ChartData, ChartConfiguration } from '@eg/share/eg-charts/interfaces/chart-data.interface';
+import { PcrudService } from '@eg/core/pcrud.service';
+import { NetService } from '@eg/core/net.service';
+import {pipe, tap, lastValueFrom, toArray} from 'rxjs';
+import { AuthService } from '@eg/core/auth.service';
 
 @Component({
     selector: 'eg-dashboard',
@@ -37,6 +41,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
     formatBreakdownData: ChartData | null = null;
     ageGroupAnalysisData: ChartData | null = null;
     performanceMetricsData: ChartData | null = null;
+
+
+    // REAL ChartData
+    circByDayData: ChartData | null = null;
+    collectionByStatusData: ChartData | null = null;
 
     // Centralized chart configuration - responsive and consistent
     private readonly baseChartConfig: ChartConfiguration = {
@@ -81,7 +90,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
         return { ...this.baseChartConfig, width: 400, height: 260 };
     }
 
-    constructor(private dashboardService: DashboardService) {}
+    get circByDayChartConfig(): ChartConfiguration {
+        return { ...this.baseChartConfig, width: 400, height: 260 };
+    }
+
+    constructor(
+        private dashboardService: DashboardService,
+        private net: NetService,
+        private pcrud: PcrudService
+    ) {}
 
     ngOnInit(): void {
         this.loadDashboardData();
@@ -99,7 +116,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
             // Load data in parallel for better performance
             const [dashboardData, circulationData] = await Promise.all([
                 this.dashboardService.getDashboardData(),
-                this.dashboardService.getCirculationDashboardData()
+                this.dashboardService.getCirculationDashboardData(),
+                this.circByDayPromise,
+                this.collectionByStatusPromise
             ]);
 
             // Update all data at once to minimize change detection cycles
@@ -206,4 +225,64 @@ export class DashboardComponent implements OnInit, OnDestroy {
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
     }
+
+    circByDayPromise = lastValueFrom(this.pcrud.retrieveAll(
+            'dashboard_dailycirc', 
+            {flesh: 1, flesh_fields: {'dashboard_dailycirc': ['circ_lib']}}, {fleshSelectors: true})
+        .pipe(toArray())).then((response) => {
+
+            const fetchInfo = {
+                xAxis: {
+                    name: 'date',
+                    get: (idl) => idl.date()
+                },
+                yAxis: {
+                    name: 'count',
+                    get: (idl) => idl.count()
+                },
+                filters: [{
+                    get_field_value: (idl) => idl.circ_lib().id(),
+                    get_field_name: (idl) => idl.circ_lib().name()
+                }]
+            }
+
+            let arr = this.dashboardService.idlToChartPoints(response, fetchInfo);
+            this.circByDayData = {
+                series: arr,
+                title: "Circulations Per Day",
+                xAxisLabel: "Date",
+                yAxisLabel: "Circulations",
+                accessibility: {
+                    description: "Line Chart Showing Daily Circulation",
+                    dataTable: true,
+                    patterns: true
+                }
+            }
+    });
+
+    collectionByStatusPromise = lastValueFrom(this.pcrud.retrieveAll(
+        'dashboard_itemstatus',
+        {flesh: 1, flesh_fields: {'dashboard_itemstatus': ['status']}})
+    .pipe(toArray()))
+        .then(response => {
+            const fetchInfo = {
+                xAxis: {
+                    name: 'status',
+                    get: (idl) => idl.status().name()
+                },
+                yAxis: {
+                    name: 'count',
+                    get: (idl) => idl.count()
+                },
+                chartType: 'pie'
+            }
+
+            let arr = this.dashboardService.idlToChartPoints(response, fetchInfo);
+            this.collectionByStatusData = {
+                series: arr,
+                title: "Collection by Status"
+            }
+        });
+
+
 }

@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnDestroy, ElementRef, ViewChild, HostListener, inject } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, ElementRef, ViewChild, HostListener, inject, SimpleChanges, OnChanges } from '@angular/core';
 import { ChartData, ChartConfiguration } from './interfaces/chart-data.interface';
 import { ChartRenderer } from './interfaces/chart-renderer.interface';
 import { AccessibilityService } from './services/accessibility.service';
@@ -15,7 +15,7 @@ import * as d3 from 'd3';
 @Component({
     template: '' // Abstract component has no template
 })
-export abstract class BaseChartComponent<T extends ChartData = ChartData> implements OnInit, OnDestroy {
+export abstract class BaseChartComponent<T extends ChartData = ChartData> implements OnInit, OnDestroy, OnChanges {
     @Input() chartData: T | null = null;
     @Input() config: ChartConfiguration = {
         width: 800,
@@ -43,6 +43,12 @@ export abstract class BaseChartComponent<T extends ChartData = ChartData> implem
 
     ngOnInit(): void {
         this.initializeChart();
+    }
+
+    ngOnChanges(changes: SimpleChanges) : void {
+        if (changes.chartData) {
+            this.updateChart();
+        }
     }
 
     ngOnDestroy(): void {
@@ -269,6 +275,7 @@ export abstract class BaseChartComponent<T extends ChartData = ChartData> implem
         // Find the series name from the event target
         const seriesIndex = this.extractSeriesIndex(event.target);
         const seriesName = this.chartData?.series[seriesIndex]?.name || 'Unknown';
+        console.log(seriesName);
 
         const tooltipContent = this.generateTooltipContent(data, seriesName);
 

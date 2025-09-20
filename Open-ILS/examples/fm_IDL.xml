@@ -16664,6 +16664,37 @@ SELECT  usr,
                 <link field="org_unit" reltype="has_a" key="id" map="" class="aou"/>
         </links>
     </class>
+	<class id="dashboard_dailycirc" controller="open-ils.cstore open-ils.pcrud" oils_obj:fieldmapper="dashboard::daily_circulation" oils_persist:tablename="dashboard.daily_circulation" reporter:label="Circulation By Day" oils_persist:readonly="true" reporter:core="false">
+		<fields oils_persist:primary="id" oils_persist:sequence="">
+			<field reporter:label="ID" name="id" reporter:datatype="id"></field>
+			<field reporter:label="Date" name="date" reporter:datatype="timestamp"></field>
+			<field reporter:label="Count" name="count" reporter:datatype="number"></field>
+			<field reporter:label="Circ Lib" name="circ_lib" reporter:datatype="link"></field>
+		</fields>
+		<links>
+			<link field="circ_lib" reltype="has_a" key="id" map="" class="aou"/>
+		</links>
+		<permacrud xmlns="http://open-ils.org/spec/opensrf/IDL/permacrud/v1">
+			<actions>
+				<retrieve/>
+			</actions>
+		</permacrud>
+	</class>
+
+	<class id="dashboard_itemstatus" controller="open-ils.cstore open-ils.pcrud" oils_obj:fieldmapper="dashboard::item_statuses" oils_persist:tablename="dashboard.item_statuses" reporter:label="Status Counts" oils_persist:readonly="true" reporter:core="false">
+		<fields oils_persist:primary="status" oils_persist:sequence="">
+			<field reporter:label="Status" name="status" reporter:datatype="link"></field>
+			<field reporter:label="Item Count" name="count" reporter:datatype="number"></field>
+		</fields>
+		<links>
+			<link field="status" reltype="has_a" key="id" map="" class="ccs"/>
+		</links>
+		<permacrud xmlns="http://open-ils.org/spec/opensrf/IDL/permacrud/v1">
+			<actions>
+				<retrieve/>
+			</actions>
+		</permacrud>
+	</class>
 
     <class id="kt" controller="open-ils.cstore open-ils.pcrud" oils_obj:fieldmapper="config::kpac_topics" oils_persist:tablename="config.kpac_topics" reporter:label="KPAC Topic Configuration">
         <fields oils_persist:primary="id" oils_persist:sequence="config.kpac_topics_id_seq">
