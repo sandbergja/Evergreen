@@ -672,10 +672,12 @@ CREATE TABLE config.org_unit_setting_type (
       'date', 'string', 'object', 'array', 'link' ) ),
     --
     -- fm_class is meaningful only for 'link' datatype
-    --
+    -- or an 'array' datatype, sometimes
     CONSTRAINT coust_no_empty_link CHECK
     ( ( datatype =  'link' AND fm_class IS NOT NULL ) OR
-      ( datatype <> 'link' AND fm_class IS NULL ) )
+      ( datatype <> 'link' AND fm_class IS NULL ) OR
+      -- arrays may or may not be of fieldmapper values. When they are we can do fun stuff in the gui
+      (datatype='array') )
 );
 
 CREATE TABLE config.usr_setting_type (

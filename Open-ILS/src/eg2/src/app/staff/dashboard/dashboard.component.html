@@ -47,7 +47,7 @@
   <!-- Dashboard Content -->
   <div *ngIf="!loading && !error">
 
-    <div class="card">
+    <!-- <div class="card">
       <div class="card-body">
         <eg-chart
           *ngIf="circulationTrendData"
@@ -60,9 +60,9 @@
           (error)="onChartError($event)">
         </eg-chart>
       </div> 
-    </div>
+    </div> -->
 
-    <div class="card chart-card">
+    <div class="card chart-card" *ngIf="widgetList.includes('daily_circulation')">
       <div class="card-body">
         <eg-chart
           [type]="'line'"
@@ -72,7 +72,7 @@
         </eg-chart>
       </div>
     </div>
-    <div class="card chart-card">
+    <div class="card chart-card" *ngIf="widgetList.includes('item_status')">
         <div class="card-header">
           <h5 class="card-title mb-0">
             <span class="material-icons me-2" aria-hidden="true">pie_chart</span>

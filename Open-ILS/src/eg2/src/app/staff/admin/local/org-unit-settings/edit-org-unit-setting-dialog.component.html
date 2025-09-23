@@ -27,7 +27,6 @@
     <div class="row mt-2">
         <div class="col-md-6">
             <ng-container [ngSwitch]="inputType()">
-
               <ng-container *ngSwitchCase="'integer'">
                 <div class="input-group">
                     <label class="form-label input-group-text" for="entryValue" i18n>Value</label>
@@ -87,7 +86,15 @@
                 </div>
               </ng-container>
               <ng-container *ngSwitchCase="'array'">
-                <div class="input-group">
+                @if (getFieldClass()) {
+                  <eg-multi-select
+                    [idlClass]="getFieldClass()"
+                    [startValue]="entryValue"
+                    (onChange)="setMultiselectInputValue($event)">
+                  </eg-multi-select>
+                }
+                @else {
+                  <div class="input-group">
                     <label for="entryValue" class="input-group-text" i18n>Value</label>
                     <input id="entryValue"
                       class="form-control" type="text"
@@ -95,7 +102,9 @@
                       placeholder="Input a comma-separated list..."
                       i18n-placeholder
                       [(ngModel)]="entryValue"/>
-                </div>
+                  </div> 
+                }
+                
               </ng-container>
               <ng-container *ngSwitchCase="'link'">
                 <div class="input-group">

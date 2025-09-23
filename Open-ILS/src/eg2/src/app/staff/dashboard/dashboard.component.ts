@@ -6,6 +6,7 @@ import { PcrudService } from '@eg/core/pcrud.service';
 import { NetService } from '@eg/core/net.service';
 import {pipe, tap, lastValueFrom, toArray} from 'rxjs';
 import { AuthService } from '@eg/core/auth.service';
+import { OrgService } from '@eg/core/org.service';
 
 @Component({
     selector: 'eg-dashboard',
@@ -46,6 +47,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
     // REAL ChartData
     circByDayData: ChartData | null = null;
     collectionByStatusData: ChartData | null = null;
+
+    widgetList: any;
+    promisesToLoad: Promise<any>[] = null;
 
     // Centralized chart configuration - responsive and consistent
     private readonly baseChartConfig: ChartConfiguration = {
@@ -97,7 +101,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     constructor(
         private dashboardService: DashboardService,
         private net: NetService,
-        private pcrud: PcrudService
+        private pcrud: PcrudService,
+        private org: OrgService
     ) {}
 
     ngOnInit(): void {
@@ -109,6 +114,20 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
 
     async loadDashboardData(): Promise<void> {
+
+        if (!this.widgetList) {
+            const [idsToShow, idsToCodes] = await Promise.all([
+                this.org.settings('ui.dashboard.show_widgets'),
+                lastValueFrom(this.pcrud.retrieveAll('dashboard_widget').pipe(toArray()))
+            ]);
+            debugger;
+
+            const idList = JSON.parse('[' + idsToShow['ui.dashboard.show_widgets'] + ']');
+            this.widgetList = idList.map(id => {
+                return idsToCodes.find(widget => widget.id() == id).code();
+            });
+        }
+        console.log(this.widgetList);
         try {
             this.loading = true;
             this.error = null;
@@ -283,6 +302,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
                 title: "Collection by Status"
             }
         });
+
+    widgetMap = {
+        'daily_circulation' : this.circByDayPromise,
+        'item_status' : this.collectionByStatusPromise
+    }
 
 
 }
