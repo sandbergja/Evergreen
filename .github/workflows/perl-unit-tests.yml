@@ -1,4 +1,6 @@
 name: Run Perl and C Unit Tests
+env:
+  NO_CPAN_TEST: 1
 on:
   push:
     paths:
