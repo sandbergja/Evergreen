@@ -31,7 +31,7 @@ import { DashboardService } from '@eg/staff/dashboard/dashboard.service';
                 <div class="card">
                     <div class="card-header">
                         <h6 class="card-title mb-0">
-                            <i class="fas fa-filter"></i> Filters
+                            <span class="material-icons">filter_alt</span> Filters
                         </h6>
                     </div>
                     <div class="card-body">
@@ -89,7 +89,7 @@ import { DashboardService } from '@eg/staff/dashboard/dashboard.service';
                 <!-- Widget Header -->
                 <div class="eg-widget-header" *ngIf="showHeader">
                     <h3 class="eg-widget-title">
-                        <i class="fas fa-exchange-alt text-primary me-2"></i>
+                        <span class="material-icons text-primary me-2">bar_chart</span>
                         {{ config?.title || config?.name }}
                     </h3>
                     <div class="eg-widget-actions">
@@ -98,19 +98,19 @@ import { DashboardService } from '@eg/staff/dashboard/dashboard.service';
                                 (click)="exportChartData()"
                                 [disabled]="isLoading"
                                 title="Export Data">
-                            <i class="fas fa-download"></i>
+                            <span class="material-icons">download</span>
                         </button>
                         <button class="btn btn-sm btn-outline-secondary"
                                 (click)="refresh()"
                                 [disabled]="isLoading"
                                 title="Refresh">
-                            <i class="fas fa-sync-alt" [class.fa-spin]="isLoading"></i>
+                            <span class="material-icons" [class.spinning]="isLoading">refresh</span>
                         </button>
                         <button *ngIf="supportedFilters.length > 0"
                                 class="btn btn-sm btn-outline-secondary"
                                 (click)="toggleFilters()"
                                 title="Toggle Filters">
-                            <i class="fas fa-filter"></i>
+                            <span class="material-icons">filter_alt</span>
                         </button>
                     </div>
                 </div>
@@ -128,10 +128,10 @@ import { DashboardService } from '@eg/staff/dashboard/dashboard.service';
                 <!-- Error State -->
                 <div *ngIf="hasError && !isLoading" class="eg-widget-error">
                     <div class="alert alert-danger m-3">
-                        <h5><i class="fas fa-exclamation-triangle"></i> Error Loading Circulation Data</h5>
+                        <h5><span class="material-icons">warning</span> Error Loading Circulation Data</h5>
                         <p>{{ currentError?.message || 'Failed to load circulation data' }}</p>
                         <button class="btn btn-sm btn-danger" (click)="refresh()">
-                            <i class="fas fa-redo"></i> Retry
+                            <span class="material-icons">refresh</span> Retry
                         </button>
                     </div>
                 </div>
@@ -182,6 +182,15 @@ import { DashboardService } from '@eg/staff/dashboard/dashboard.service';
 
         .form-select {
             min-height: 2.5rem;
+        }
+
+        .spinning {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
     `]
 })

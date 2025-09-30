@@ -113,13 +113,12 @@ import { CirculationDataService, CirculationDataPoint } from '../services/circul
         <ng-template #chartTemplate>
             <div class="eg-widget-container" [class.loading]="isLoading" [class.error]="hasError">
                 <!-- Widget Header -->
-                <div class="eg-widget-header" *ngIf="showHeader">
-                    <h3 class="eg-widget-title">
-                        <span class="material-icons text-primary me-2">bar_chart</span>
+                <div class="widget-header" *ngIf="showHeader">
+                    <h3 class="widget-title">
                         {{ config?.title || 'Monthly Circulation by Shelving Location' }}
                     </h3>
-                    <div class="eg-widget-actions">
-                        <button *ngIf="config?.displayOptions?.showExportButton"
+                    <div class="widget-actions">
+                        <button *ngIf="config?.displayOptions?.showExportButton !== false"
                                 class="btn btn-sm btn-outline-secondary"
                                 (click)="exportChartData()"
                                 [disabled]="isLoading"
@@ -131,12 +130,6 @@ import { CirculationDataService, CirculationDataPoint } from '../services/circul
                                 [disabled]="isLoading"
                                 title="Refresh">
                             <span class="material-icons" [class.spinning]="isLoading">refresh</span>
-                        </button>
-                        <button *ngIf="supportedFilters.length > 0"
-                                class="btn btn-sm btn-outline-secondary"
-                                (click)="toggleFilters()"
-                                title="Toggle Filters">
-                            <span class="material-icons">filter_alt</span>
                         </button>
                     </div>
                 </div>
@@ -188,6 +181,49 @@ import { CirculationDataService, CirculationDataPoint } from '../services/circul
         </ng-template>
     `,
     styles: [`
+        /* Widget Container - Match JSON Widget Card Style */
+        .eg-widget-container {
+            background: var(--bs-card-bg, #fff);
+            border: 1px solid var(--bs-border-color, #dee2e6);
+            border-radius: var(--bs-border-radius, 0.375rem);
+            box-shadow: var(--bs-box-shadow-sm, 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075));
+            transition: all 0.2s ease-in-out;
+        }
+
+        .eg-widget-container.loading {
+            opacity: 0.8;
+        }
+
+        /* Widget Header Styling - Match JSON Widget */
+        .widget-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+            background: var(--bs-light, #f8f9fa);
+        }
+
+        .widget-title {
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--bs-dark, #212529);
+            display: flex;
+            align-items: center;
+        }
+
+        .widget-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* Widget Content */
+        .eg-widget-content {
+            padding: 1rem;
+        }
+
+        /* Summary Metrics */
         .eg-widget-summary .metric {
             padding: 1rem 0;
         }
@@ -205,6 +241,7 @@ import { CirculationDataService, CirculationDataPoint } from '../services/circul
             letter-spacing: 0.05em;
         }
 
+        /* Form Styling */
         .form-select[multiple] {
             min-height: 120px;
         }
@@ -213,6 +250,7 @@ import { CirculationDataService, CirculationDataPoint } from '../services/circul
             margin-top: 0.25rem;
         }
 
+        /* Spinning Animation */
         .spinning {
             animation: spin 1s linear infinite;
         }
@@ -222,9 +260,20 @@ import { CirculationDataService, CirculationDataPoint } from '../services/circul
             to { transform: rotate(360deg); }
         }
 
+        /* Responsive */
         @media (max-width: 768px) {
             .eg-widget-summary .col-md-3 {
                 margin-bottom: 1rem;
+            }
+
+            .widget-header {
+                flex-direction: column;
+                gap: 0.75rem;
+                align-items: flex-start;
+            }
+
+            .widget-actions {
+                align-self: flex-end;
             }
         }
     `]
