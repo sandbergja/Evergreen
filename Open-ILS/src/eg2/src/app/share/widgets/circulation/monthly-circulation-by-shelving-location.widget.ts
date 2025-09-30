@@ -20,7 +20,7 @@ import { CirculationDataService, CirculationDataPoint } from '../services/circul
  * - Responsive design with mobile-friendly layout
  */
 @Component({
-    selector: 'eg-monthly-circulation-by-shelving-location-widget',
+    selector: 'eg-monthly-circulation-by-location-chart-widget',
     template: `
         <div class="eg-circulation-widget">
             <!-- Use the inherited template from CirculationWidgetComponent -->

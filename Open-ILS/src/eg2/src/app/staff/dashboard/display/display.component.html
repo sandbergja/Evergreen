@@ -63,12 +63,12 @@
             <!-- Monthly Circulation by Shelving Location Widget -->
             <div class="row" *ngIf="monthlyCirculationWidget">
               <div class="col-lg-12 mb-4">
-                <eg-monthly-circulation-by-shelving-location-widget
+                <eg-monthly-circulation-by-location-chart-widget
                   [config]="monthlyCirculationWidget"
                   (dataLoaded)="onWidgetDataLoaded($event)"
                   (dataError)="onWidgetError($event)"
                   (configChanged)="onWidgetConfigChanged($event)">
-                </eg-monthly-circulation-by-shelving-location-widget>
+                </eg-monthly-circulation-by-location-chart-widget>
               </div>
             </div>
 

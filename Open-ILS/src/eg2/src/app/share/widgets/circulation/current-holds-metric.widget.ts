@@ -40,7 +40,7 @@ import { ChartWidgetConfig } from '@eg/staff/dashboard/interfaces/dashboard.inte
             </div>
 
             <!-- Metric Content -->
-            <div *ngIf="!isLoading && !hasError" class="card border-info">
+            <div *ngIf="!isLoading && !hasError" class="card border-secondary">
                 <div class="card-body text-center">
                     <div class="mb-2">
                         <span class="material-icons text-info" style="font-size: 2rem;">bookmark</span>
