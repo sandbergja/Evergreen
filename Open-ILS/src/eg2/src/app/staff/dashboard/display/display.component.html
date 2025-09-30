@@ -84,6 +84,19 @@
               </div>
             </div>
 
+            <!-- JSON Chart Widget Example -->
+            <div class="row" *ngIf="jsonChartWidget">
+              <div class="col-lg-12 mb-4">
+                <div class="json-widget-demo">
+                  <eg-json-widget
+                    [config]="jsonChartWidget"
+                    [showHeader]="true"
+                    [showDebugInfo]="false">
+                  </eg-json-widget>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>

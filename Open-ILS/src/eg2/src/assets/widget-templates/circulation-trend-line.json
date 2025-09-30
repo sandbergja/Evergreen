@@ -1,0 +1,72 @@
+{
+  "$schema": "Widget JSON Configuration",
+  "$description": "Circulation trend over time displayed as a line chart",
+
+  "id": "circulation-trend-line",
+  "name": "Circulation Trend",
+  "type": "chart",
+  "description": "Shows circulation trends over time as a line chart",
+  "category": "circulations",
+
+  "dataSource": {
+    "service": "circulation",
+    "method": "getCirculationTrend",
+    "params": {
+      "timeRange": "month",
+      "groupBy": "day"
+    },
+    "cache": {
+      "enabled": true,
+      "ttl": 600
+    }
+  },
+
+  "transform": {
+    "type": "groupBy",
+    "xField": "date",
+    "yField": "checkouts",
+    "groupByField": "date",
+    "aggregation": "sum",
+    "sortBy": {
+      "field": "date",
+      "order": "asc"
+    }
+  },
+
+  "visualization": {
+    "chartType": "line",
+    "title": "Circulation Trend",
+    "subtitle": "Daily checkouts over the last 30 days",
+    "xAxisLabel": "Date",
+    "yAxisLabel": "Checkouts",
+    "colors": ["#0d6efd"],
+    "showLegend": false,
+    "showGrid": true,
+    "showTooltip": true,
+    "animated": true
+  },
+
+  "timeRange": {
+    "type": "month"
+  },
+
+  "autoRefresh": {
+    "enabled": false,
+    "interval": 600
+  },
+
+  "layout": {
+    "row": 0,
+    "column": 6,
+    "width": 6,
+    "height": 6
+  },
+
+  "metadata": {
+    "author": "System",
+    "created": "2025-09-30T00:00:00Z",
+    "modified": "2025-09-30T00:00:00Z",
+    "version": "1.0.0",
+    "tags": ["circulation", "trend", "time-series", "line-chart"]
+  }
+}

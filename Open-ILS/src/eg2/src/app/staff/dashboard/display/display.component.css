@@ -615,3 +615,29 @@
 /*    stroke-width: 3;*/
 /*    filter: drop-shadow(0 0 4px currentColor);*/
 /*}*/
+
+/* JSON Widget Demo Styles */
+.json-widget-demo {
+    position: relative;
+    padding-top: 2rem;
+}
+
+.json-widget-demo .demo-label {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: linear-gradient(90deg, rgba(25, 135, 84, 0.1) 0%, transparent 100%);
+    border-left: 3px solid var(--bs-success);
+    border-radius: 0.25rem 0.25rem 0 0;
+    font-size: 0.875rem;
+}
+
+.json-widget-demo .badge {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+}

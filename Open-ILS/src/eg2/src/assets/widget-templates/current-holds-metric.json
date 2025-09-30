@@ -1,0 +1,70 @@
+{
+  "$schema": "Widget JSON Configuration",
+  "$description": "Current holds count displayed as a metric card",
+
+  "id": "current-holds-metric",
+  "name": "Current Holds",
+  "type": "metric",
+  "description": "Displays the current number of holds in the system",
+  "category": "circulations",
+
+  "dataSource": {
+    "service": "circulation",
+    "method": "getCirculationSummary",
+    "params": {
+      "timeRange": "today"
+    },
+    "cache": {
+      "enabled": true,
+      "ttl": 60
+    }
+  },
+
+  "transform": {
+    "type": "sum",
+    "yField": "total_holds_filled",
+    "aggregation": "sum"
+  },
+
+  "visualization": {
+    "chartType": "metric",
+    "title": "Current Holds",
+    "subtitle": "Active hold requests",
+    "icon": "bookmark",
+    "color": "info",
+    "showLegend": false,
+    "showGrid": false,
+    "showTooltip": false,
+    "metricOptions": {
+      "format": "number",
+      "precision": 0,
+      "showTrend": true,
+      "showStatus": true,
+      "showTopIcon": true
+    }
+  },
+
+  "timeRange": {
+    "type": "today"
+  },
+
+  "autoRefresh": {
+    "enabled": true,
+    "interval": 300
+  },
+
+  "layout": {
+    "row": 0,
+    "column": 0,
+    "width": 3,
+    "height": 3
+  },
+
+  "metadata": {
+    "author": "System",
+    "created": "2025-09-30T00:00:00Z",
+    "modified": "2025-09-30T00:00:00Z",
+    "version": "1.0.0",
+    "tags": ["circulation", "holds", "metric", "kpi"]
+  }
+}

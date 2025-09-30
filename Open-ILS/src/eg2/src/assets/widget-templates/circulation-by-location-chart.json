@@ -1,0 +1,89 @@
+{
+  "$schema": "Widget JSON Configuration",
+  "$description": "Monthly circulation statistics grouped by shelving location - Bar Chart",
+
+  "id": "circulation-by-location-chart",
+  "name": "Circulation by Location",
+  "type": "chart",
+  "description": "Displays monthly circulation statistics grouped by shelving location as a bar chart",
+  "category": "circulations",
+
+  "dataSource": {
+    "service": "circulation",
+    "method": "getCirculationByShelvingLocation",
+    "params": {
+      "timeRange": "month"
+    },
+    "cache": {
+      "enabled": true,
+      "ttl": 300
+    }
+  },
+
+  "transform": {
+    "type": "groupBy",
+    "xField": "shelving_location_name",
+    "yField": "checkouts",
+    "groupByField": "shelving_location",
+    "aggregation": "sum",
+    "sortBy": {
+      "field": "checkouts",
+      "order": "desc"
+    },
+    "limit": 10
+  },
+
+  "visualization": {
+    "chartType": "bar",
+    "title": "Circulation by Shelving Location",
+    "subtitle": "Last 30 days",
+    "xAxisLabel": "Shelving Location",
+    "yAxisLabel": "Number of Checkouts",
+    "colors": ["#0d6efd", "#6610f2", "#6f42c1", "#d63384", "#dc3545"],
+    "showLegend": true,
+    "showGrid": true,
+    "showTooltip": true,
+    "animated": true
+  },
+
+  "filters": [
+    {
+      "id": "shelving_location",
+      "type": "multiselect",
+      "label": "Shelving Location",
+      "field": "shelving_location",
+      "placeholder": "Select locations..."
+    },
+    {
+      "id": "material_format",
+      "type": "multiselect",
+      "label": "Material Format",
+      "field": "material_format",
+      "placeholder": "Select formats..."
+    }
+  ],
+
+  "timeRange": {
+    "type": "month"
+  },
+
+  "autoRefresh": {
+    "enabled": false,
+    "interval": 300
+  },
+
+  "layout": {
+    "row": 0,
+    "column": 0,
+    "width": 12,
+    "height": 6
+  },
+
+  "metadata": {
+    "author": "System",
+    "created": "2025-09-30T00:00:00Z",
+    "modified": "2025-09-30T00:00:00Z",
+    "version": "1.0.0",
+    "tags": ["circulation", "statistics", "location", "chart"]
+  }
+}

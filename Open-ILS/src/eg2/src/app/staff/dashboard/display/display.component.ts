@@ -3,6 +3,7 @@ import { DashboardService } from '../dashboard.service';
 import { CirculationDashboardData } from '../interfaces';
 import { ChartData, ChartConfiguration } from '@eg/share/eg-charts/interfaces/chart-data.interface';
 import { ChartWidgetConfig } from '../interfaces/dashboard.interfaces';
+import { WidgetJsonConfig } from '../interfaces/widget-json-config.interface';
 
 @Component({
     selector: 'eg-dashboard-display',
@@ -43,6 +44,11 @@ export class DashboardDisplayComponent implements OnInit, OnDestroy {
     monthlyCirculationWidget: ChartWidgetConfig | null = null;
     currentHoldsMetricWidget: ChartWidgetConfig | null = null;
     showWidgetSection = true;
+
+    // JSON-driven widget configurations
+    jsonChartWidget: WidgetJsonConfig | null = null;
+    jsonMetricWidget: WidgetJsonConfig | null = null;
+    showJsonWidgetSection = true;
 
     // Centralized chart configuration - responsive and consistent
     private readonly baseChartConfig: ChartConfiguration = {
@@ -160,9 +166,143 @@ export class DashboardDisplayComponent implements OnInit, OnDestroy {
                 title: 'Current Holds',
                 timeRange: 'today'
             });
+
+            // Initialize JSON-driven widgets
+            this.initializeJsonWidgets();
         } catch (error) {
             console.error('Error initializing widgets:', error);
         }
+    }
+
+    /**
+     * Initialize JSON-driven widgets
+     */
+    private initializeJsonWidgets(): void {
+        // JSON Chart Widget - Circulation by Shelving Location
+        this.jsonChartWidget = {
+            id: 'json-circulation-by-location',
+            name: 'Circulation by Location (JSON)',
+            type: 'chart',
+            description: 'JSON-driven bar chart showing circulation by shelving location',
+            category: 'circulations',
+
+            dataSource: {
+                service: 'circulation',
+                method: 'getCirculationByShelvingLocation',
+                params: {
+                    timeRange: 'month'
+                },
+                cache: {
+                    enabled: true,
+                    ttl: 300
+                }
+            },
+
+            transform: {
+                type: 'groupBy',
+                xField: 'shelving_location_name',
+                yField: 'checkouts',
+                groupByField: 'shelving_location',
+                aggregation: 'sum',
+                sortBy: {
+                    field: 'checkouts',
+                    order: 'desc'
+                },
+                limit: 10
+            },
+
+            visualization: {
+                chartType: 'bar',
+                title: 'Top 10 Locations by Circulation',
+                subtitle: 'Last 30 days',
+                xAxisLabel: 'Shelving Location',
+                yAxisLabel: 'Number of Checkouts',
+                colors: ['#0d6efd', '#6610f2', '#6f42c1'],
+                showLegend: false,
+                showGrid: true,
+                showTooltip: true,
+                animated: true
+            },
+
+            timeRange: {
+                type: 'month'
+            },
+
+            autoRefresh: {
+                enabled: false,
+                interval: 300
+            },
+
+            metadata: {
+                author: 'System',
+                created: new Date().toISOString(),
+                modified: new Date().toISOString(),
+                version: '1.0.0',
+                tags: ['circulation', 'json-widget', 'example']
+            }
+        };
+
+        // JSON Metric Widget - Total Circulation Count
+        this.jsonMetricWidget = {
+            id: 'json-total-circulation',
+            name: 'Total Circulation (JSON)',
+            type: 'metric',
+            description: 'JSON-driven metric showing total circulation count',
+            category: 'circulations',
+
+            dataSource: {
+                service: 'circulation',
+                method: 'getCirculationSummary',
+                params: {
+                    timeRange: 'month'
+                },
+                cache: {
+                    enabled: true,
+                    ttl: 60
+                }
+            },
+
+            transform: {
+                type: 'sum',
+                yField: 'total_checkouts',
+                aggregation: 'sum'
+            },
+
+            visualization: {
+                chartType: 'metric',
+                title: 'Total Checkouts',
+                subtitle: 'Last 30 days',
+                icon: 'local_library',
+                color: 'success',
+                showLegend: false,
+                showGrid: false,
+                showTooltip: false,
+                metricOptions: {
+                    format: 'number',
+                    precision: 0,
+                    showTrend: false,
+                    showStatus: false,
+                    showTopIcon: true
+                }
+            },
+
+            timeRange: {
+                type: 'month'
+            },
+
+            autoRefresh: {
+                enabled: true,
+                interval: 300
+            },
+
+            metadata: {
+                author: 'System',
+                created: new Date().toISOString(),
+                modified: new Date().toISOString(),
+                version: '1.0.0',
+                tags: ['circulation', 'json-widget', 'metric', 'example']
+            }
+        };
     }
 
     refreshData(): void {
