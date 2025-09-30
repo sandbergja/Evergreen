@@ -149,6 +149,7 @@ import { EgChartComponent } from '@eg/share/eg-charts/eg-chart.component';
 
         .widget-content {
             padding: 1rem;
+            background: var(--bs-body-bg);
         }
 
         .widget-loading,

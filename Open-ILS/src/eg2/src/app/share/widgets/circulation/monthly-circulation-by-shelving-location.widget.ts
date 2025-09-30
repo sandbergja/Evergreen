@@ -162,6 +162,7 @@ import { CirculationDataService, CirculationDataPoint } from '../services/circul
                         [chartData]="chartData"
                         [config]="chartConfig"
                         [type]="'bar'"
+                        [showExportButton]="false"
                         (chartError)="onChartError($event)"
                         (dataPointClick)="onDataPointClick($event)">
                     </eg-chart>
@@ -221,6 +222,7 @@ import { CirculationDataService, CirculationDataPoint } from '../services/circul
         /* Widget Content */
         .eg-widget-content {
             padding: 1rem;
+            background: var(--bs-body-bg);
         }
 
         /* Summary Metrics */
