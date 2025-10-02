@@ -161,6 +161,6 @@ vale modules
 If you would like to output to a spreadsheet like google sheets:
 
 . Follow the above instructions
-. Run `vale modules --output oneline`
+. Run `vale modules --output line`
 . Copy the output into your spreadsheet program.
 . Split the text and split it by the `:` character.  In Google Sheets, this is at Data -> Split text to columns.
