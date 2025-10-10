@@ -7,6 +7,7 @@ import { NetService } from '@eg/core/net.service';
 import {pipe, tap, lastValueFrom, toArray} from 'rxjs';
 import { AuthService } from '@eg/core/auth.service';
 import { OrgService } from '@eg/core/org.service';
+import { EgChartType } from '@eg/share/eg-charts/eg-chart.component';
 
 @Component({
     selector: 'eg-dashboard',
@@ -169,7 +170,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
 
     // Unified chart type change handler with localStorage persistence
-    onChartTypeChanged(chartId: string, newType: 'line' | 'bar' | 'pie'): void {
+    onChartTypeChanged(chartId: string, newType: EgChartType): void {
         console.log(`${chartId} chart type changed to:`, newType);
 
         // Save preference to localStorage for user experience
@@ -183,19 +184,19 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
 
     // Individual chart handlers for backward compatibility
-    onCirculationChartTypeChanged(newType: 'line' | 'bar' | 'pie'): void {
+    onCirculationChartTypeChanged(newType: EgChartType): void {
         this.onChartTypeChanged('circulation-trend', newType);
     }
 
-    onCollectionChartTypeChanged(newType: 'line' | 'bar' | 'pie'): void {
+    onCollectionChartTypeChanged(newType: EgChartType): void {
         this.onChartTypeChanged('collection-breakdown', newType);
     }
 
-    onPatronActivityChartTypeChanged(newType: 'line' | 'bar' | 'pie'): void {
+    onPatronActivityChartTypeChanged(newType: EgChartType): void {
         this.onChartTypeChanged('patron-activity', newType);
     }
 
-    onLibraryPerformanceChartTypeChanged(newType: 'line' | 'bar' | 'pie'): void {
+    onLibraryPerformanceChartTypeChanged(newType: EgChartType): void {
         this.onChartTypeChanged('library-performance', newType);
     }
 
@@ -205,7 +206,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     }
 
     // Utility method to get saved chart preferences
-    getChartPreference(chartId: string): 'line' | 'bar' | 'pie' | null {
+    getChartPreference(chartId: string): EgChartType | null {
         try {
             const preferences = JSON.parse(localStorage.getItem('dashboard-chart-preferences') || '{}');
             return preferences[chartId] || null;

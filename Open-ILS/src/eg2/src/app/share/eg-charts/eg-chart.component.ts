@@ -7,13 +7,17 @@ import { ColorService } from './services/color.service';
 import { PatternService } from './services/pattern.service';
 import * as d3 from 'd3';
 
+// Some weird typing chicanery to update possible chart types all in one location
+const EG_CHART_TYPES = ['line', 'bar', 'pie'] as const;
+export type EgChartType = typeof EG_CHART_TYPES[number];
+
 @Component({
     selector: 'eg-chart',
     templateUrl: './eg-chart.component.html',
     styleUrls: ['./eg-chart.component.css']
 })
 export class EgChartComponent implements OnInit, OnDestroy {
-    @Input() type: 'line' | 'bar' | 'pie' = 'line';
+    @Input() type: EgChartType = 'line';
     @Input() chartData: ChartData | null = null;
     @Input() config: ChartConfiguration = {
         width: 800,
@@ -24,12 +28,12 @@ export class EgChartComponent implements OnInit, OnDestroy {
         animated: true
     };
     @Input() allowChartTypeToggle: boolean = false;
-    @Input() supportedChartTypes: ('line' | 'bar' | 'pie')[] = ['line', 'bar', 'pie'];
+    @Input() supportedChartTypes: EgChartType[] = [...EG_CHART_TYPES];
     @Input() showExportButton: boolean = true;
 
-    @Output() chartTypeChanged = new EventEmitter<'line' | 'bar' | 'pie'>();
+    @Output() chartTypeChanged = new EventEmitter<EgChartType>();
 
-    currentChartType: 'line' | 'bar' | 'pie' = 'line';
+    currentChartType: EgChartType = 'line';
 
     @ViewChild('chartSvg', { static: true }) chartSvg!: ElementRef<SVGElement>;
     @ViewChild('chartWrapper', { static: true }) chartWrapper!: ElementRef<HTMLDivElement>;
@@ -395,7 +399,7 @@ export class EgChartComponent implements OnInit, OnDestroy {
 
     // --- Chart Type Selector Methods ---
 
-    onChartTypeChange(newType: 'line' | 'bar' | 'pie'): void {
+    onChartTypeChange(newType: EgChartType): void {
         if (this.currentChartType !== newType) {
             this.currentChartType = newType;
             this.chartTypeChanged.emit(newType);
@@ -403,7 +407,7 @@ export class EgChartComponent implements OnInit, OnDestroy {
         }
     }
 
-    getChartTypeIcon(type: 'line' | 'bar' | 'pie'): string {
+    getChartTypeIcon(type: EgChartType): string {
         switch (type) {
             case 'line':
                 return 'show_chart';
@@ -416,7 +420,7 @@ export class EgChartComponent implements OnInit, OnDestroy {
         }
     }
 
-    getChartTypeLabel(type: 'line' | 'bar' | 'pie'): string {
+    getChartTypeLabel(type: EgChartType): string {
         switch (type) {
             case 'line':
                 return 'Line Chart';
@@ -429,7 +433,7 @@ export class EgChartComponent implements OnInit, OnDestroy {
         }
     }
 
-    isChartTypeSupported(type: 'line' | 'bar' | 'pie'): boolean {
+    isChartTypeSupported(type: EgChartType): boolean {
         return this.supportedChartTypes.includes(type);
     }
 

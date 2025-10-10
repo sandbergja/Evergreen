@@ -26,7 +26,7 @@ import {SampleDataService} from '@eg/share/util/sample-data.service';
 import {HtmlToTxtService} from '@eg/share/util/htmltotxt.service';
 import {Z3950SearchComponent} from '@eg/staff/share/z3950-search/z3950-search.component';
 import {ChartConfiguration, ChartData} from "@eg/share/eg-charts/interfaces/chart-data.interface";
-
+import { EgChartType } from '@eg/share/eg-charts/eg-chart.component';
 @Component({
     templateUrl: 'sandbox.component.html',
     styles: ['.date-time-input.ng-invalid {border: 5px purple solid;}',
@@ -606,7 +606,7 @@ export class SandboxComponent implements OnInit {
     }
 
     // Event handlers
-    onCirculationChartTypeChanged(chartType: 'line' | 'bar' | 'pie'): void {
+    onCirculationChartTypeChanged(chartType: EgChartType): void {
         console.log('Chart type changed to:', chartType);
     }
 
@@ -615,12 +615,12 @@ export class SandboxComponent implements OnInit {
     }
 
     // Add event handler
-    onPieChartTypeChanged(chartType: 'line' | 'bar' | 'pie'): void {
+    onPieChartTypeChanged(chartType: EgChartType): void {
         console.log('Pie chart type changed to:', chartType);
     }
 
     // Update event handlers to include the new chart
-    onCollectionChartTypeChanged(chartType: 'line' | 'bar' | 'pie'): void {
+    onCollectionChartTypeChanged(chartType: EgChartType): void {
         console.log('Collection chart type changed to:', chartType);
     }
 
