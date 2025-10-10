@@ -22,34 +22,6 @@ import { CirculationDataService } from '@eg/share/widgets/services/circulation-d
 import { WidgetFactoryService } from '@eg/share/widgets/factories/widget.factory';
 import { WidgetRegistryService } from '@eg/share/widgets/services/widget-registry.service';
 
-export interface chartFetcher {
-    xAxis: {
-        name: string;
-        get: (idl: IdlObject) => any;
-    }
-    yAxis: {
-        name: string;
-        get: (idl: IdlObject) => any;
-    }
-    filters?: chartFilter[];
-    chartType?: string;
-}
-
-/**
- * Can't figure out how to get the name of what we split our dataset by (for the tooltip),
- * so we make the caller of idlToChartPoints do it. 
- * 
- * Would look something like
- * const filters = [{
- *      get_field_value: (idl) => idl.circ_lib().id(),
- *      get_field_name: (idl) => idl.circ_lib().shortname()
- * }];
- */
-export interface chartFilter {
-    get_value: (idl: IdlObject) => any;
-    get_name: (idl: IdlObject) => any;
-}
-
 @Injectable({
     providedIn: 'root'
 })
@@ -379,80 +351,6 @@ export class DashboardService {
         // For now, return sample circulation data based on dashboard-circs.json structure
         // In production, this would query the actual Evergreen database
         return this.generateCirculationSampleData();
-    }
-
-    /**
-     * TODO: create nested for loop to go through more than one filterField to split the dataset
-     * @param idlArr 
-     * @param xAxisField 
-     * @param yAxisField 
-     * @param filterFields 
-     * @returns 
-     */
-    public idlToChartPoints(idlArr: IdlObject[], fetchInfo: chartFetcher) : ChartSeries[] {
-        let series = [];
-
-        let foundFilterVals = [];
-        if (!fetchInfo.filters) {
-            series.push({
-                name: 'This was a placeholder you fool',
-                color: this.getNewColor(),
-                data: []
-            })
-        }
-
-        idlArr.forEach(obj => {
-            const thisObjFilterValue = fetchInfo.filters?.[0]?.get_value(obj);
-            const thisObjFilterName = fetchInfo.filters?.[0]?.get_name(obj);
-            console.log(thisObjFilterValue);
-            if (fetchInfo.filters && !foundFilterVals.includes(thisObjFilterValue)) {
-                foundFilterVals.push(thisObjFilterValue);
-                series.push({
-                    name: thisObjFilterName,
-                    data: [],
-                    color: this.getNewColor()
-                });
-            }
-
-            let newPoint = {
-                x: this.guaranteeIdlDataType(fetchInfo.xAxis , obj), 
-                y: this.guaranteeIdlDataType(fetchInfo.yAxis, obj), 
-                color: undefined
-            };
-            if (['pie'].includes(fetchInfo?.chartType)) {
-                newPoint.color = this.getNewColor();
-            }
-
-
-            if (fetchInfo.filters) {
-                series.find(s => s.name == thisObjFilterName).data.push(newPoint);
-            } else {
-                series[0].data.push(newPoint);
-            }
-        });
-
-        return series;
-    }
-
-    /**
-     * Gotta return a real Date() object for our timestamps, so add this as a guarantee we convert it, if the idlField is a timestamp
-     * 
-     * @param fieldName 
-     * @param obj 
-     * @returns 
-     */
-    private guaranteeIdlDataType(axisInfo: any, obj: IdlObject) {
-        const fieldType = this.idl.classes[obj.classname].fields.find(field => field.name === axisInfo.name).datatype;
-        if (fieldType === "timestamp") {
-            return new Date(axisInfo.get(obj));
-        }
-        return axisInfo.get(obj);
-    }
-
-    private getNewColor(): string {
-        const color = this.cycleColors[this.colorIndex % this.cycleColors.length];
-        this.colorIndex++;
-        return color;
     }
 
     private getSampleData(): DashboardData {

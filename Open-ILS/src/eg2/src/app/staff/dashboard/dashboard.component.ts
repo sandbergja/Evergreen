@@ -4,10 +4,10 @@ import { CirculationDashboardData } from './interfaces';
 import { ChartData, ChartConfiguration } from '@eg/share/eg-charts/interfaces/chart-data.interface';
 import { PcrudService } from '@eg/core/pcrud.service';
 import { NetService } from '@eg/core/net.service';
-import {pipe, tap, lastValueFrom, toArray} from 'rxjs';
+import {pipe, tap, lastValueFrom, toArray, map, Observable} from 'rxjs';
 import { AuthService } from '@eg/core/auth.service';
 import { OrgService } from '@eg/core/org.service';
-import { EgChartType } from '@eg/share/eg-charts/eg-chart.component';
+import { ChartBuildInfo, ChartFetcher, EgChartType } from '@eg/share/eg-charts/eg-chart.component';
 
 @Component({
     selector: 'eg-dashboard',
@@ -130,8 +130,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
             const [dashboardData, circulationData] = await Promise.all([
                 this.dashboardService.getDashboardData(),
                 this.dashboardService.getCirculationDashboardData(),
-                this.circByDayPromise,
-                this.collectionByStatusPromise
+                // this.circByDayPromise,
+                // this.collectionByStatusPromise
             ]);
 
             // Update all data at once to minimize change detection cycles
@@ -239,29 +239,29 @@ export class DashboardComponent implements OnInit, OnDestroy {
         URL.revokeObjectURL(url);
     }
 
-    circByDayPromise = lastValueFrom(this.pcrud.retrieveAll(
-            'dashboard_dailycirc', 
-            {flesh: 1, flesh_fields: {'dashboard_dailycirc': ['circ_lib']}}, {fleshSelectors: true})
-        .pipe(toArray())).then((response) => {
-
-            const fetchInfo = {
+    circByDayObservable: Observable<ChartBuildInfo> = this.pcrud.retrieveAll(
+        'dashboard_dailycirc', 
+        {flesh: 1, flesh_fields: {'dashboard_dailycirc': ['circ_lib']}}, {fleshSelectors: true})
+    .pipe(
+        toArray(),
+        map((response) => {
+            const fetchInfo: ChartFetcher = {
                 xAxis: {
-                    name: 'date',
-                    get: (idl) => idl.date()
+                    get_name: (idl) => 'date',
+                    get_value: (idl) => idl.date()
                 },
                 yAxis: {
-                    name: 'count',
-                    get: (idl) => idl.count()
+                    get_name: (idl) => 'count',
+                    get_value: (idl) => idl.count()
                 },
                 filters: [{
                     get_value: (idl) => idl.circ_lib().id(),
                     get_name: (idl) => idl.circ_lib().name()
-                }]
+                }],
+                chartType: 'pie'
             }
 
-            let arr = this.dashboardService.idlToChartPoints(response, fetchInfo);
-            this.circByDayData = {
-                series: arr,
+            const circByDayIncompleteData = {
                 title: "Circulations Per Day",
                 xAxisLabel: "Date",
                 yAxisLabel: "Circulations",
@@ -271,40 +271,38 @@ export class DashboardComponent implements OnInit, OnDestroy {
                     patterns: true
                 }
             }
-    });
+            return {
+                incompleteChartData: circByDayIncompleteData, 
+                fetchInfo: fetchInfo,
+                data: response
+            }
+        })
+    );
 
-    collectionByStatusPromise = lastValueFrom(this.pcrud.retrieveAll(
+    collectionByStatusObservable: Observable<ChartBuildInfo> = this.pcrud.retrieveAll(
         'dashboard_itemstatus',
-        {flesh: 1, flesh_fields: {'dashboard_itemstatus': ['status', 'circ_lib']}}).pipe(toArray()))
-        .then(response => {
-            debugger;
-            const fetchInfo = {
-                xAxis: {
-                    name: 'status',
-                    get: (idl) => idl.status().name()
+        {flesh: 1, flesh_fields: {'dashboard_itemstatus': ['status', 'circ_lib']}})
+    .pipe(
+        toArray(),
+        map((response) => {
+            return {
+                data: response,
+                fetchInfo: {
+                    xAxis: {
+                        get_name: (idl) => 'status',
+                        get_value: (idl) => idl.status().name()
+                    },
+                    yAxis: {
+                        get_name: (idl) => 'count',
+                        get_value: (idl) => idl.count()
+                    },
+                    chartType: 'pie'
                 },
-                yAxis: {
-                    name: 'count',
-                    get: (idl) => idl.count()
-                },
-                // filters: [{
-                //     get_field_value: (idl) => idl.circ_lib().id(),
-                //     get_field_name: (idl) => idl.circ_lib().name()
-                // }],
-                chartType: 'pie'
+                incompleteChartData: {
+                    title: "Collection by Status"
+                }
             }
-
-            let arr = this.dashboardService.idlToChartPoints(response, fetchInfo);
-            this.collectionByStatusData = {
-                series: arr.filter(a => a.data.length > 1),
-                title: "Collection by Status"
-            }
-        });
-
-    widgetMap = {
-        'daily_circulation' : this.circByDayPromise,
-        'item_status' : this.collectionByStatusPromise
-    }
-
+        })
+    );
 
 }

@@ -25,7 +25,11 @@
                 <span class="material-icons me-1" aria-hidden="true">{{ chartData?.accessibility?.patterns ? 'visibility_off' : 'visibility' }}</span>
                 {{ chartData?.accessibility?.patterns ? 'Hide' : 'Show' }} Patterns
             </button> -->
-            <button *ngIf="">
+            <button *ngIf=""
+                type="button"
+                class="btn btn-light"
+                [attr.aria-label]="'Show different data set'"
+            >
 
             </button>
             <button

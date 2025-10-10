@@ -6,10 +6,40 @@ import { PieChartRenderer } from './renderers/pie-chart-renderer';
 import { ColorService } from './services/color.service';
 import { PatternService } from './services/pattern.service';
 import * as d3 from 'd3';
-
+import { IdlService, IdlObject } from '@eg/core/idl.service';
+import { ChartSeries } from './interfaces/chart-data.interface';
+import { EMPTY, Observable, Subscription } from 'rxjs';
 // Some weird typing chicanery to update possible chart types all in one location
 const EG_CHART_TYPES = ['line', 'bar', 'pie'] as const;
 export type EgChartType = typeof EG_CHART_TYPES[number];
+
+/**
+ * Can't figure out how to get the name of what we split our dataset by (for the tooltip),
+ * so we make the caller of idlToChartPoints do it. 
+ * 
+ * Would look something like
+ * filters: [{
+ *      get_value: (idl) => idl.circ_lib().id(),
+ *      get_name: (idl) => idl.circ_lib().shortname()
+ * }];
+ */
+export interface ChartFetcher {
+    xAxis: ChartAxis;
+    yAxis: ChartAxis;
+    filters?: ChartAxis[];
+    chartType?: EgChartType;
+}
+export interface ChartAxis {
+    get_value: (idl: IdlObject) => any;
+    get_name: (idl: IdlObject) => any;
+}
+
+type IncompleteChartData = Omit<ChartData, 'series'>;
+export interface ChartBuildInfo {
+    incompleteChartData: IncompleteChartData;
+    fetchInfo: ChartFetcher;
+    data: any;
+}
 
 @Component({
     selector: 'eg-chart',
@@ -30,6 +60,16 @@ export class EgChartComponent implements OnInit, OnDestroy {
     @Input() allowChartTypeToggle: boolean = false;
     @Input() supportedChartTypes: EgChartType[] = [...EG_CHART_TYPES];
     @Input() showExportButton: boolean = true;
+    @Input() colors: string[] = [
+        'var(--primary)',       // Dark blue - Professional chart color
+        'var(--success)',       // Dark green - Success/positive metrics
+        'var(--info)',          // Dark cyan - Informational data
+        'var(--warning-color)', // Yellow - Warning/attention needed
+        'var(--danger)',        // Dark red - Critical/danger items
+        '#6c757d',            // Medium gray - Accessible secondary
+        '#495057'             // Dark gray - Fallback, not black
+    ];
+    @Input() get_data: Observable<ChartBuildInfo>;
 
     @Output() chartTypeChanged = new EventEmitter<EgChartType>();
 
@@ -41,6 +81,7 @@ export class EgChartComponent implements OnInit, OnDestroy {
     private svg: d3.Selection<SVGElement, unknown, null, undefined> | null = null;
     private tooltip: d3.Selection<HTMLDivElement, unknown, null, undefined> | null = null;
     private resizeObserver!: ResizeObserver;
+    private colorIndex: number = 0;
 
     // Inject all renderers and services
     private lineRenderer = inject(LineChartRenderer);
@@ -49,10 +90,19 @@ export class EgChartComponent implements OnInit, OnDestroy {
     private colorService = inject(ColorService);
     private patternService = inject(PatternService);
 
+    constructor (
+        private idl: IdlService
+    ) {
+
+    }
+
     ngOnInit(): void {
         this.currentChartType = this.type;
-        this.initializeChart();
-        this.setupResizeObserver();
+        this.fetchChartData().add(() => {
+            this.initializeChart();
+            this.setupResizeObserver();
+        });
+        
     }
 
     ngOnDestroy(): void {
@@ -69,6 +119,29 @@ export class EgChartComponent implements OnInit, OnDestroy {
             this.updateChart();
         });
         this.resizeObserver.observe(this.chartWrapper.nativeElement);
+    }
+
+    fetchChartData(): Subscription {
+        // Already have our data, reuse what we're given and be done
+        if (this.chartData && this.chartData?.series) {
+            return EMPTY.subscribe();
+        }
+
+        if (!this.get_data) {
+            throw new Error("Either chartData or get_data must be defined!!");
+            return EMPTY.subscribe();
+        }
+
+        // Fetch the stuff from the database and assign it
+        return this.get_data.subscribe({
+            next: (resp: ChartBuildInfo) => {
+                let series = this.idlToChartPoints(resp.data, resp.fetchInfo);
+                this.chartData = {
+                    series: series,
+                    ...resp.incompleteChartData
+                }
+            }
+        });
     }
 
     private initializeChart(): void {
@@ -462,5 +535,79 @@ export class EgChartComponent implements OnInit, OnDestroy {
                     dataPointCount: this.chartData?.series?.[0]?.data?.length || 0
                 };
         }
+    }
+
+    /**
+     * TODO: create nested for loop to go through more than one filterField to split the dataset
+     * @param idlArr 
+     * @param xAxisField 
+     * @param yAxisField 
+     * @param filterFields 
+     * @returns 
+     */
+    public idlToChartPoints(idlArr: IdlObject[], fetchInfo: ChartFetcher) : ChartSeries[] {
+        let series = [];
+
+        let foundFilterVals = [];
+        if (!fetchInfo.filters) {
+            series.push({
+                name: 'This was a placeholder you fool',
+                color: this.getNewColor(),
+                data: []
+            })
+        }
+
+        idlArr.forEach(obj => {
+            const thisObjFilterValue = fetchInfo.filters?.[0]?.get_value(obj);
+            const thisObjFilterName = fetchInfo.filters?.[0]?.get_name(obj);
+            console.log(thisObjFilterValue);
+            if (fetchInfo.filters && !foundFilterVals.includes(thisObjFilterValue)) {
+                foundFilterVals.push(thisObjFilterValue);
+                series.push({
+                    name: thisObjFilterName,
+                    data: [],
+                    color: this.getNewColor()
+                });
+            }
+
+            let newPoint = {
+                x: this.guaranteeIdlDataType(fetchInfo.xAxis , obj), 
+                y: this.guaranteeIdlDataType(fetchInfo.yAxis, obj), 
+                color: undefined
+            };
+            if (['pie'].includes(fetchInfo?.chartType)) {
+                newPoint.color = this.getNewColor();
+            }
+
+
+            if (fetchInfo.filters) {
+                series.find(s => s.name == thisObjFilterName).data.push(newPoint);
+            } else {
+                series[0].data.push(newPoint);
+            }
+        });
+
+        return series;
+    }
+
+    /**
+     * Gotta return a real Date() object for our timestamps, so add this as a guarantee we convert it, if the idlField is a timestamp
+     * 
+     * @param fieldName 
+     * @param obj 
+     * @returns 
+     */
+    private guaranteeIdlDataType(axisInfo: ChartAxis, obj: IdlObject) {
+        const fieldType = this.idl.classes[obj.classname].fields.find(field => field.name === axisInfo.get_name(obj))?.datatype;
+        if (fieldType === "timestamp") {
+            return new Date(axisInfo.get_value(obj));
+        }
+        return axisInfo.get_value(obj);
+    }
+
+    private getNewColor(): string {
+        const color = this.colors[this.colorIndex % this.colors.length];
+        this.colorIndex++;
+        return color;
     }
 }
