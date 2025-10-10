@@ -4,6 +4,7 @@ import { ChartRenderer } from './interfaces/chart-renderer.interface';
 import { AccessibilityService } from './services/accessibility.service';
 import { ColorService } from './services/color.service';
 import * as d3 from 'd3';
+import { chartFetcher } from '@eg/staff/dashboard/dashboard.service';
 
 /**
  * BaseChartComponent - Template Method Pattern Implementation
@@ -25,6 +26,8 @@ export abstract class BaseChartComponent<T extends ChartData = ChartData> implem
         showTooltip: true,
         animated: true
     };
+
+    @Input() fetchInfo: chartFetcher;
 
     @ViewChild('chartSvg', { static: true }) chartSvg?: ElementRef<SVGElement>;
     @ViewChild('chartWrapper', { static: true }) chartWrapper?: ElementRef<HTMLDivElement>;

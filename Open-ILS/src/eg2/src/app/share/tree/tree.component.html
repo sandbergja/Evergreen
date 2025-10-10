@@ -45,16 +45,16 @@
         <span class="material-icons" aria-hidden="true">{{node.expanded? 'expand_less' : 'expand_more'}}</span>
       </button>
 
-      <span #stateFlagContainer *ngIf="(node.stateFlagLabel || showSelectAll || stateFlagTemplate) && !disableStateFlag">
+      <ng-container #stateFlagContainer *ngIf="(node.stateFlagLabel || showSelectAll || stateFlagTemplate) && !disableStateFlag">
         <input *ngIf="!stateFlagTemplate" type='checkbox'
-		  [(ngModel)]="node.stateFlag"
-		  (click)="handleStateFlagClick(node, $event)"
-		  title="{{node.stateFlagLabel}}"
-		  tabindex="0"
+          [(ngModel)]="node.stateFlag"
+          (click)="handleStateFlagClick(node, $event)"
+          title="{{node.stateFlagLabel}}"
+          tabindex="0"
           [disabled]="disabled"
-		  [attr.aria-label]="node.stateFlagLabel" />
+		      [attr.aria-label]="node.stateFlagLabel" />
         <ng-container [ngTemplateOutlet]="stateFlagTemplate" [ngTemplateOutletContext]="{ node:node }"></ng-container>
-      </span>
+      </ng-container>
 
       <button class="btn btn-link eg-tree-node-label" #egTreeNode
 		id="{{_tree.treeId}}-{{node.id}}" 

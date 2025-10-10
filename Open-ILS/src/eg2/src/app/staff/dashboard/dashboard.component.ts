@@ -116,15 +116,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
     async loadDashboardData(): Promise<void> {
 
         if (!this.widgetList) {
-            const [idsToShow, idsToCodes] = await Promise.all([
-                this.org.settings('ui.dashboard.show_widgets'),
-                lastValueFrom(this.pcrud.retrieveAll('dashboard_widget').pipe(toArray()))
-            ]);
-            debugger;
-
-            const idList = JSON.parse('[' + idsToShow['ui.dashboard.show_widgets'] + ']');
-            this.widgetList = idList.map(id => {
-                return idsToCodes.find(widget => widget.id() == id).code();
+            await this.org.settings('ui.dashboard.show_widgets').then(resp => {
+                this.widgetList = resp['ui.dashboard.show_widgets']?.split(',');
             });
         }
         console.log(this.widgetList);
@@ -260,8 +253,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
                     get: (idl) => idl.count()
                 },
                 filters: [{
-                    get_field_value: (idl) => idl.circ_lib().id(),
-                    get_field_name: (idl) => idl.circ_lib().name()
+                    get_value: (idl) => idl.circ_lib().id(),
+                    get_name: (idl) => idl.circ_lib().name()
                 }]
             }
 
@@ -281,9 +274,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     collectionByStatusPromise = lastValueFrom(this.pcrud.retrieveAll(
         'dashboard_itemstatus',
-        {flesh: 1, flesh_fields: {'dashboard_itemstatus': ['status']}})
-    .pipe(toArray()))
+        {flesh: 1, flesh_fields: {'dashboard_itemstatus': ['status', 'circ_lib']}}).pipe(toArray()))
         .then(response => {
+            debugger;
             const fetchInfo = {
                 xAxis: {
                     name: 'status',
@@ -293,12 +286,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
                     name: 'count',
                     get: (idl) => idl.count()
                 },
+                // filters: [{
+                //     get_field_value: (idl) => idl.circ_lib().id(),
+                //     get_field_name: (idl) => idl.circ_lib().name()
+                // }],
                 chartType: 'pie'
             }
 
             let arr = this.dashboardService.idlToChartPoints(response, fetchInfo);
             this.collectionByStatusData = {
-                series: arr,
+                series: arr.filter(a => a.data.length > 1),
                 title: "Collection by Status"
             }
         });

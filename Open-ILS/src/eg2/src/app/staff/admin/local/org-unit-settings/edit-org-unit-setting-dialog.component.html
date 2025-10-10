@@ -87,11 +87,14 @@
               </ng-container>
               <ng-container *ngSwitchCase="'array'">
                 @if (getFieldClass()) {
-                  <eg-multi-select
+                  <eg-tree-multiselect
                     [idlClass]="getFieldClass()"
                     [startValue]="entryValue"
+                    [showExpandAll]="false"
+                    [showSelectAll]="true"
+                    [disableRootSelector]="true"
                     (onChange)="setMultiselectInputValue($event)">
-                  </eg-multi-select>
+                  </eg-tree-multiselect>
                 }
                 @else {
                   <div class="input-group">

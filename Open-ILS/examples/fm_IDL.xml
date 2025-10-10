@@ -16685,9 +16685,11 @@ SELECT  usr,
 		<fields oils_persist:primary="status" oils_persist:sequence="">
 			<field reporter:label="Status" name="status" reporter:datatype="link"></field>
 			<field reporter:label="Item Count" name="count" reporter:datatype="number"></field>
+			<field reporter:label="Library" name="circ_lib" reporter:datatype="org_unit"/>
 		</fields>
 		<links>
 			<link field="status" reltype="has_a" key="id" map="" class="ccs"/>
+			<link field="circ_lib" reltype="has_a" key="id" map="" class="aou"/>
 		</links>
 		<permacrud xmlns="http://open-ils.org/spec/opensrf/IDL/permacrud/v1">
 			<actions>
@@ -16758,10 +16760,9 @@ SELECT  usr,
     </class>
 
 	<class id="dashboard_widget" controller="open-ils.cstore open-ils.pcrud" oils_obj:fieldmapper="dashboard::widgets" oils_persist:tablename="dashboard.widgets" reporter:label="Dashboard Widgets" reporter:core="false">
-		<fields oils_persist:primary="id" oils_persist:sequence="">
-			<field reporter:label="Id" name="id" reporter:datatype="id"/>
-			<field reporter:label="Name" name="name" reporter:datatype="text"/>
+		<fields oils_persist:primary="code" oils_persist:sequence="">
 			<field reporter:label="Code" name="code" reporter:datatype="text"/>
+			<field reporter:label="Name" name="name" reporter:datatype="text"/>	
 		</fields>
 		<permacrud xmlns="http://open-ils.org/spec/opensrf/IDL/permacrud/v1">
 			<actions>

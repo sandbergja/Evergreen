@@ -65,6 +65,7 @@
 
 .eg-tree-branch .eg-tree-node:last-child {
   border-left: none;
+  padding-left: calc(1rem + 2px);
 }
 
 .eg-tree-branch .eg-tree-node-wrapper:before {
@@ -74,14 +75,19 @@
   width: 1rem;
   margin-left: -1.05rem;
   content: " ";
+  align-self: flex-start;
 }
 
 .eg-tree-branch .eg-tree-node:last-child > .eg-tree-node-wrapper:before {
   border-left: 2px solid var(--tree-border);
+  margin-left: calc(-1.05rem - 2px);
+  width: calc(1rem + 2px);
 }
 
 .eg-tree-branch .eg-tree-node > .eg-tree-node-wrapper {
   border: 1px solid transparent;
+  /* Hide the gap betwen rows on the bottom node*/
+  margin-top: -1px;
 }
 
 .eg-tree-branch .eg-tree-node.active > .eg-tree-node-wrapper {
@@ -107,7 +113,7 @@
   display: flex;
   gap: .25rem;
   justify-content: flex-start;
-  align-items: flex-start;
+  align-items: center;
 }
 
 .eg-tree-node-wrapper .btn {
@@ -119,14 +125,15 @@
   text-decoration: none;
 }
 
-.eg-tree-node-wrapper input[type="checkbox"] {
+/* .eg-tree-node-wrapper input[type="checkbox"] {
   margin-top: .65rem;
-}
+  align-self: center;
+} */
 
 .eg-tree-node-wrapper .btn.eg-tree-node-expandy {
   padding: .5rem 0 .25rem;
 }
 
 .eg-tree-node-wrapper .btn.eg-tree-node-label {
-  padding: .5rem .5rem .25rem 0;
+  padding: .375rem .5rem .375rem 0;
 }

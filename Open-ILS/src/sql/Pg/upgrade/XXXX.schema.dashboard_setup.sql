@@ -7,11 +7,11 @@ CREATE SCHEMA IF NOT EXISTS dashboard;
 -- Create a table for holding the names of all the widgets
 DROP TABLE IF EXISTS dashboard.widgets;
 CREATE TABLE dashboard.widgets (
-    id SERIAL PRIMARY KEY,
+    -- id SERIAL PRIMARY KEY,
     -- The official name to display for the user
     name text NOT NULL,
     -- The locale independent code to use for readable back end stuff
-    code text NOT NULL UNIQUE
+    code text PRIMARY KEY
 );
 INSERT INTO dashboard.widgets (code, name) VALUES
     (
@@ -43,9 +43,9 @@ FROM action.circulation ac
 GROUP BY 1, 2;
 
 CREATE OR REPLACE VIEW dashboard.item_statuses AS
-SELECT COUNT(acp.id) AS count, acp.status AS status
+SELECT COUNT(acp.id) AS count, acp.status AS status, acp.circ_lib
 FROM asset.copy acp
-GROUP BY acp.status;
+GROUP BY acp.status, acp.circ_lib;
 
 -- Change the org unit setting type table so that arrays may have an fm_class, if they want.
 ALTER TABLE config.org_unit_setting_type

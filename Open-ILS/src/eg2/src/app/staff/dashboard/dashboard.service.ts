@@ -46,8 +46,8 @@ export interface chartFetcher {
  * }];
  */
 export interface chartFilter {
-    get_field_value: (idl: IdlObject) => any;
-    get_field_name: (idl: IdlObject) => any;
+    get_value: (idl: IdlObject) => any;
+    get_name: (idl: IdlObject) => any;
 }
 
 @Injectable({
@@ -395,15 +395,15 @@ export class DashboardService {
         let foundFilterVals = [];
         if (!fetchInfo.filters) {
             series.push({
-                name: 'Hebleh',
+                name: 'This was a placeholder you fool',
                 color: this.getNewColor(),
                 data: []
             })
         }
 
         idlArr.forEach(obj => {
-            const thisObjFilterValue = fetchInfo.filters?.[0]?.get_field_value(obj);
-            const thisObjFilterName = fetchInfo.filters?.[0]?.get_field_name(obj);
+            const thisObjFilterValue = fetchInfo.filters?.[0]?.get_value(obj);
+            const thisObjFilterName = fetchInfo.filters?.[0]?.get_name(obj);
             console.log(thisObjFilterValue);
             if (fetchInfo.filters && !foundFilterVals.includes(thisObjFilterValue)) {
                 foundFilterVals.push(thisObjFilterValue);

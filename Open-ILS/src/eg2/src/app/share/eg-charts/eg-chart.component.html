@@ -1,0 +1,95 @@
+<div class="eg-chart-container" [attr.aria-label]="chartData?.accessibility?.description">
+    <div class="eg-chart-title" *ngIf="chartData?.title">
+        <h2>{{ chartData?.title }}</h2>
+        <div class="chart-actions">
+            <!--          <div class="chart-type-selector" *ngIf="allowChartTypeToggle">-->
+            <!--            <div class="btn-group" role="group" [attr.aria-label]="'Chart type selector for ' + chartData?.title">-->
+            <!--              <button *ngFor="let chartType of supportedChartTypes" -->
+            <!--                      type="button"-->
+            <!--                      class="btn btn-sm"-->
+            <!--                      [class.btn-primary]="currentChartType === chartType"-->
+            <!--                      [class.btn-outline-primary]="currentChartType !== chartType"-->
+            <!--                      (click)="onChartTypeChange(chartType)"-->
+            <!--                      [attr.aria-pressed]="currentChartType === chartType"-->
+            <!--                      [title]="getChartTypeLabel(chartType)">-->
+            <!--                <span class="material-icons" [attr.aria-hidden]="true">{{ getChartTypeIcon(chartType) }}</span>-->
+            <!--              </button>-->
+            <!--            </div>-->
+            <!--          </div>-->
+            <!-- <button
+                type="button"
+                class="accessibility-toggle-btn"
+                (click)="toggleAccessibilityPatterns()"
+                [attr.aria-label]="'Toggle accessibility patterns for ' + chartData?.title"
+                [title]="(chartData?.accessibility?.patterns ? 'Disable' : 'Enable') + ' accessibility patterns for color-blind users'">
+                <span class="material-icons me-1" aria-hidden="true">{{ chartData?.accessibility?.patterns ? 'visibility_off' : 'visibility' }}</span>
+                {{ chartData?.accessibility?.patterns ? 'Hide' : 'Show' }} Patterns
+            </button> -->
+            <button *ngIf="">
+
+            </button>
+            <button
+                *ngIf="showExportButton"
+                type="button"
+                class="export-btn"
+                (click)="downloadChartData()"
+                [attr.aria-label]="'Export chart data for ' + chartData?.title"
+                title="Export chart data as CSV">
+                <span class="material-icons me-1" aria-hidden="true">download</span>
+                Export CSV
+            </button>
+        </div>
+    </div>
+
+    <div class="eg-chart-main-content" [class.pie-chart-layout]="currentChartType === 'pie'">
+        <div class="eg-chart-wrapper" #chartWrapper>
+            <svg #chartSvg
+                    [attr.viewBox]="'0 0 ' + config.width + ' ' + config.height"
+                    [attr.aria-describedby]="chartData?.accessibility?.longDescription ? 'chart-long-desc' : null">
+                <defs></defs>
+                <title>{{ chartData?.accessibility?.description }}</title>
+                <desc *ngIf="chartData?.accessibility?.longDescription" id="chart-long-desc">
+                    {{ chartData?.accessibility?.longDescription }}
+                </desc>
+            </svg>
+        </div>
+
+        <!-- External Legend for Pie Chart -->
+        <div *ngIf="currentChartType === 'pie' && chartData" class="eg-chart-legend-wrapper">
+            <ul class="eg-chart-legend">
+                <li *ngFor="let point of chartData.series[0].data; let i = index"
+                    class="eg-chart-legend-item"
+                    (mouseover)="highlightSlice($event, i, false)"
+                    (mouseout)="unhighlightSlice($event, i)"
+                    (focus)="highlightSlice($event, i, false)"
+                    (blur)="unhighlightSlice($event, i)"
+                    tabindex="0">
+                    <span class="legend-color-swatch" [style.background-color]="point.color || getSliceColor(i)"></span>
+                    <span class="legend-label">{{ point.x }}</span>
+                    <span class="legend-value">{{ getSlicePercentage(point) }}</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Accessible data table -->
+    <div *ngIf="chartData?.accessibility?.dataTable" class="eg-chart-data-table sr-only">
+        <table>
+            <caption>{{ chartData?.accessibility?.description }}</caption>
+            <thead>
+            <tr>
+                <th scope="col">{{ chartData?.xAxisLabel || 'X Value' }}</th>
+                <th scope="col" *ngFor="let series of chartData?.series">{{ series.name }}</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr *ngFor="let point of getTableData(); let i = index">
+                <td>{{ point.x }}</td>
+                <td *ngFor="let series of chartData?.series">
+                    {{ getSeriesValue(series, i) }}
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
