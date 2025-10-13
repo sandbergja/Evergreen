@@ -55,8 +55,6 @@ import { WidgetConfigValidator } from './widgets/validators/widget-config.valida
 @NgModule({
     declarations: [
         ButtonStyleDirective,
-        ComboboxComponent,
-        ComboboxEntryComponent,
         DateSelectComponent,
         BooleanSelectComponent,
         OrgSelectComponent,
@@ -83,7 +81,9 @@ import { WidgetConfigValidator } from './widgets/validators/widget-config.valida
         NgbModule,
         EgCoreModule,
         ContextMenuModule,
-        EgChartsModule
+        EgChartsModule,
+        ComboboxComponent,
+        ComboboxEntryComponent
     ],
     exports: [
         CommonModule,

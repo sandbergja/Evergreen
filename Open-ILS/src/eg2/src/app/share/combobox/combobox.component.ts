@@ -9,6 +9,11 @@ import {Component, OnInit, Input, Output, ViewChild,
     Directive, ViewChildren, QueryList, AfterViewInit,
     OnChanges, SimpleChanges,
     TemplateRef, EventEmitter, ElementRef, forwardRef} from '@angular/core';
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { FormsModule, ReactiveFormsModule} from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { EgCoreModule } from '@eg/core/core.module';
+import { ContextMenuModule } from '../context-menu/context-menu.module';
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from '@angular/forms';
 import {EMPTY, Observable, of, Subject} from 'rxjs';
 import {map, mergeMap, mapTo, debounceTime, distinctUntilChanged, merge, filter, mergeWith} from 'rxjs/operators';
@@ -16,6 +21,7 @@ import {NgbTypeahead, NgbTypeaheadSelectItemEvent} from '@ng-bootstrap/ng-bootst
 import {IdlService, IdlObject} from '@eg/core/idl.service';
 import {PcrudService} from '@eg/core/pcrud.service';
 import {OrgService} from '@eg/core/org.service';
+import { ComboboxEntryComponent } from './combobox-entry.component';
 
 export interface ComboboxEntry {
   id: any;
@@ -43,6 +49,16 @@ export class IdlClassTemplateDirective {
     .icons {margin-inline-start:-18px}
     .material-icons {font-size: 16px;font-weight:bold}
   `],
+    standalone: true,
+    imports: [
+        CommonModule, 
+        FormsModule,
+        // ReactiveFormsModule,
+        NgbModule, 
+        EgCoreModule, 
+        // ContextMenuModule, 
+        ComboboxEntryComponent
+    ],
     providers: [{
         provide: NG_VALUE_ACCESSOR,
         useExisting: forwardRef(() => ComboboxComponent),

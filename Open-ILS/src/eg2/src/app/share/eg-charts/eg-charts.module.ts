@@ -5,10 +5,13 @@ import { EgChartComponent } from './eg-chart.component';
 import { LineChartComponent } from './line-chart.component';
 import { BarChartComponent } from './bar-chart.component';
 import { PieChartComponent } from './pie-chart.component';
+import { StaffCommonModule } from '@eg/staff/common.module';
+import { ComboboxComponent } from '../combobox/combobox.component';
 
 @NgModule({
     imports: [
-        CommonModule
+        CommonModule,
+        ComboboxComponent
     ],
     declarations: [
         EgChartComponent,
