@@ -16682,10 +16682,11 @@ SELECT  usr,
 	</class>
 
 	<class id="dashboard_itemstatus" controller="open-ils.cstore open-ils.pcrud" oils_obj:fieldmapper="dashboard::item_statuses" oils_persist:tablename="dashboard.item_statuses" reporter:label="Dashboard Status Counts" oils_persist:readonly="true" reporter:core="false">
-		<fields oils_persist:primary="status" oils_persist:sequence="">
+		<fields oils_persist:primary="id" oils_persist:sequence="">
+			<field reporter:label="Id" name="id" reporter:datatype="id"/>
 			<field reporter:label="Status" name="status" reporter:datatype="link"></field>
 			<field reporter:label="Item Count" name="count" reporter:datatype="number"></field>
-			<field reporter:label="Library" name="circ_lib" reporter:datatype="org_unit"/>
+			<field reporter:label="Library" name="circ_lib" reporter:datatype="link"/>
 		</fields>
 		<links>
 			<link field="status" reltype="has_a" key="id" map="" class="ccs"/>

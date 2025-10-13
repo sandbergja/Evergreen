@@ -7,11 +7,13 @@ import { BarChartComponent } from './bar-chart.component';
 import { PieChartComponent } from './pie-chart.component';
 import { StaffCommonModule } from '@eg/staff/common.module';
 import { ComboboxComponent } from '../combobox/combobox.component';
+import { TreeModule } from '../tree/tree.module';
 
 @NgModule({
     imports: [
         CommonModule,
-        ComboboxComponent
+        ComboboxComponent,
+        TreeModule
     ],
     declarations: [
         EgChartComponent,

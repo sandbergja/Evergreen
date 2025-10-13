@@ -9,6 +9,9 @@ import * as d3 from 'd3';
 import { IdlService, IdlObject } from '@eg/core/idl.service';
 import { ChartSeries } from './interfaces/chart-data.interface';
 import { EMPTY, Observable, Subscription } from 'rxjs';
+import { ComboboxComponent, ComboboxEntry  } from '../combobox/combobox.component';
+
+
 // Some weird typing chicanery to update possible chart types all in one location
 const EG_CHART_TYPES = ['line', 'bar', 'pie'] as const;
 export type EgChartType = typeof EG_CHART_TYPES[number];
@@ -32,6 +35,10 @@ export interface ChartFetcher {
 export interface ChartAxis {
     get_value: (idl: IdlObject) => any;
     get_name: (idl: IdlObject) => any;
+
+    // Only works on filter axes - could you show more than one series at once?
+    // If so, use a multiselect instead of a combobox
+    multi?: boolean;
 }
 
 type IncompleteChartData = Omit<ChartData, 'series'>;
@@ -82,6 +89,10 @@ export class EgChartComponent implements OnInit, OnDestroy {
     private tooltip: d3.Selection<HTMLDivElement, unknown, null, undefined> | null = null;
     private resizeObserver!: ResizeObserver;
     private colorIndex: number = 0;
+    private shownSeries: ChartSeries[];
+
+    private filters: ChartAxis[] = [];
+    private filterChoice = [];
 
     // Inject all renderers and services
     private lineRenderer = inject(LineChartRenderer);
@@ -135,7 +146,10 @@ export class EgChartComponent implements OnInit, OnDestroy {
         // Fetch the stuff from the database and assign it
         return this.get_data.subscribe({
             next: (resp: ChartBuildInfo) => {
+                debugger;
+                this.filters = resp.fetchInfo.filters;
                 let series = this.idlToChartPoints(resp.data, resp.fetchInfo);
+                this.filterChoice = series.map(s => {return {id: s.name, label: s.name}});
                 this.chartData = {
                     series: series,
                     ...resp.incompleteChartData
@@ -445,7 +459,8 @@ export class EgChartComponent implements OnInit, OnDestroy {
 
     getSlicePercentage(point: ChartPoint): string {
         if (!this.chartData) { return '0%'; }
-        const total = this.chartData.series[0].data.reduce((sum, p) => sum + p.y, 0);
+        const s = this.shownSeries?.[0] ?? this.chartData.series[0];
+        const total = s.data.reduce((sum, p) => sum + p.y, 0);
         if (total === 0) { return '0%'; }
         const percentage = (point.y / total) * 100;
         return `${percentage.toFixed(1)}%`;
@@ -538,6 +553,8 @@ export class EgChartComponent implements OnInit, OnDestroy {
     }
 
     /**
+     * Create an array of ChartSeries to go into our chart from the 
+     * 
      * TODO: create nested for loop to go through more than one filterField to split the dataset
      * @param idlArr 
      * @param xAxisField 
@@ -609,5 +626,14 @@ export class EgChartComponent implements OnInit, OnDestroy {
         const color = this.colors[this.colorIndex % this.colors.length];
         this.colorIndex++;
         return color;
+    }
+
+    changeSeries(series: ComboboxEntry) {
+        this.chartData.shownSeries = [series.id];
+        this.shownSeries = this.chartData.shownSeries.map(shown => {
+            return this.chartData.series.find(s => s.name == shown);
+        })
+        this.initializeChart();
+        this.setupResizeObserver();
     }
 }

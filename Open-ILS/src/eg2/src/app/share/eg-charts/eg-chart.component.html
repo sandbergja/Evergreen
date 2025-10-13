@@ -25,13 +25,18 @@
                 <span class="material-icons me-1" aria-hidden="true">{{ chartData?.accessibility?.patterns ? 'visibility_off' : 'visibility' }}</span>
                 {{ chartData?.accessibility?.patterns ? 'Hide' : 'Show' }} Patterns
             </button> -->
-            <button *ngIf=""
-                type="button"
-                class="btn btn-light"
-                [attr.aria-label]="'Show different data set'"
-            >
+            @for (filter of filters; track $index) {
+                @if (filter?.multi) {
+                    <eg-tree-multiselect objectList="filterChoice"/>
+                }
+                @else {
+                    <eg-combobox 
+                        [entries]="filterChoice"
+                        (onChange)="changeSeries($event)"
+                    />
 
-            </button>
+                }
+            }
             <button
                 *ngIf="showExportButton"
                 type="button"
@@ -61,7 +66,7 @@
         <!-- External Legend for Pie Chart -->
         <div *ngIf="currentChartType === 'pie' && chartData" class="eg-chart-legend-wrapper">
             <ul class="eg-chart-legend">
-                <li *ngFor="let point of chartData.series[0].data; let i = index"
+                <li *ngFor="let point of shownSeries?.[0]?.data ?? chartData.series[0].data; let i = index"
                     class="eg-chart-legend-item"
                     (mouseover)="highlightSlice($event, i, false)"
                     (mouseout)="unhighlightSlice($event, i)"

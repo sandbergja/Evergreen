@@ -43,8 +43,13 @@ FROM action.circulation ac
 GROUP BY 1, 2;
 
 CREATE OR REPLACE VIEW dashboard.item_statuses AS
-SELECT COUNT(acp.id) AS count, acp.status AS status, acp.circ_lib
+SELECT 
+    COUNT(DISTINCT acp.id) AS count, 
+    acp.status AS status, 
+    acp.circ_lib,
+    ROW_NUMBER() OVER (ORDER BY acp.circ_lib ASC, acp.status ASC) AS id
 FROM asset.copy acp
+WHERE NOT acp.deleted
 GROUP BY acp.status, acp.circ_lib;
 
 -- Change the org unit setting type table so that arrays may have an fm_class, if they want.

@@ -58,7 +58,7 @@ export class PieChartRenderer implements ChartRenderer<ChartData> {
             const cornerRadius = pieStyle.cornerRadius || 0;
 
             // Process data - use first series for single series implementation
-            const series = data.series[0];
+            const series = data.series.find(s => s.name == data.shownSeries?.[0]) ?? data.series[0];
             if (!series) {
                 throw new Error('No data series found for pie chart');
             }

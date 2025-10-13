@@ -296,6 +296,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
                         get_name: (idl) => 'count',
                         get_value: (idl) => idl.count()
                     },
+                    filters: [{
+                        get_name: (idl) => idl.circ_lib().name(),
+                        get_value: (idl) => idl.circ_lib().id()
+                    }],
                     chartType: 'pie'
                 },
                 incompleteChartData: {
