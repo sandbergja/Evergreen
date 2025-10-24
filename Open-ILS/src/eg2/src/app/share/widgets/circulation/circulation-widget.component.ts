@@ -7,6 +7,7 @@ import { ChartWidgetConfig } from '@eg/staff/dashboard/interfaces/dashboard.inte
 import { PcrudService } from '@eg/core/pcrud.service';
 import { NetService } from '@eg/core/net.service';
 import { DashboardService } from '@eg/staff/dashboard/dashboard.service';
+import { CirculationDataService } from '../services/circulation-data.service';
 
 /**
  * CirculationWidgetComponent - Base Class for Circulation-Related Widgets
@@ -117,11 +118,9 @@ import { DashboardService } from '@eg/staff/dashboard/dashboard.service';
 
                 <!-- Loading State -->
                 <div *ngIf="isLoading" class="eg-widget-loading">
-                    <div class="d-flex justify-content-center align-items-center p-4">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="sr-only">Loading circulation data...</span>
-                        </div>
-                        <span class="ml-3">Loading circulation data...</span>
+                    <div class="d-flex flex-column justify-content-center align-items-center p-4">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <p class="text-muted mt-2 mb-0 small">Loading data...</p>
                     </div>
                 </div>
 
@@ -200,6 +199,7 @@ export abstract class CirculationWidgetComponent extends ChartWidgetComponent {
     protected pcrud = inject(PcrudService);
     protected net = inject(NetService);
     protected dashboardService = inject(DashboardService);
+    protected circulationDataService = inject(CirculationDataService);
 
     // Filter state
     protected showFilters = false;
@@ -353,17 +353,34 @@ export abstract class CirculationWidgetComponent extends ChartWidgetComponent {
     }
 
     /**
+     * Get effective organizational unit for queries
+     * Returns config.orgUnit if set, otherwise user's workstation org unit
+     */
+    protected getEffectiveOrgUnit(): number {
+        const orgUnit = this.config?.orgUnit || this.auth.user()?.ws_ou() || 1;
+        // Ensure it's a number - ws_ou() may return string
+        return typeof orgUnit === 'number' ? orgUnit : parseInt(String(orgUnit), 10) || 1;
+    }
+
+    /**
+     * Check if descendants should be included in org unit queries
+     * Defaults to true unless explicitly set to false in config
+     */
+    protected shouldIncludeDescendants(): boolean {
+        return this.config?.includeDescendants !== false; // Default true
+    }
+
+    /**
      * Build base circulation query parameters
      */
     protected buildBaseCirculationQuery(): any {
         const { start, end } = this.getDateRange();
-        const currentOrgUnit = this.org.get(this.auth.user()?.ws_ou);
 
         return {
             start_date: this.formatDate(start),
             end_date: this.formatDate(end),
-            org_unit: currentOrgUnit?.id || 1,
-            include_descendants: true
+            org_unit: this.getEffectiveOrgUnit(),
+            include_descendants: this.shouldIncludeDescendants()
         };
     }
 

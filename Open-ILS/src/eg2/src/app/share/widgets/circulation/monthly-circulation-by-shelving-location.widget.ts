@@ -136,11 +136,9 @@ import { CirculationDataService, CirculationDataPoint } from '../services/circul
 
                 <!-- Loading State -->
                 <div *ngIf="isLoading" class="eg-widget-loading">
-                    <div class="d-flex justify-content-center align-items-center p-4">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="sr-only">Loading circulation data...</span>
-                        </div>
-                        <span class="ml-3">Loading circulation data...</span>
+                    <div class="d-flex flex-column justify-content-center align-items-center p-4">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <p class="text-muted mt-2 mb-0 small">Loading data...</p>
                     </div>
                 </div>
 
@@ -281,8 +279,6 @@ import { CirculationDataService, CirculationDataPoint } from '../services/circul
     `]
 })
 export class MonthlyCirculationByShelvingLocationWidget extends CirculationWidgetComponent {
-
-    private circulationDataService = inject(CirculationDataService);
 
     // Summary metrics
     totalCheckouts = 0;

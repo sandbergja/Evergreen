@@ -56,11 +56,9 @@ import { EgChartComponent } from '@eg/share/eg-charts/eg-chart.component';
 
             <!-- Loading State -->
             <div *ngIf="isLoading" class="widget-loading">
-                <div class="d-flex justify-content-center align-items-center p-4">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading chart data...</span>
-                    </div>
-                    <span class="ms-3 text-muted">Loading chart data...</span>
+                <div class="d-flex flex-column justify-content-center align-items-center p-4">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="text-muted mt-2 mb-0 small">Loading data...</p>
                 </div>
             </div>
 

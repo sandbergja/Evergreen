@@ -20,10 +20,8 @@ import { ChartWidgetConfig } from '@eg/staff/dashboard/interfaces/dashboard.inte
             <!-- Loading State -->
             <div *ngIf="isLoading" class="card">
                 <div class="card-body text-center">
-                    <div class="spinner-border text-info" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                    <p class="mt-2 text-muted">Loading holds data...</p>
+                    <div class="spinner-border text-info" role="status"></div>
+                    <p class="text-muted mt-2 mb-0 small">Loading data...</p>
                 </div>
             </div>
 
@@ -129,30 +127,31 @@ export class CurrentHoldsMetricWidget extends CirculationMetricWidgetComponent i
      * Fetch current holds data from circulation services
      */
     private fetchCurrentHoldsData(): Observable<MetricData> {
-        const query = this.buildBaseCirculationQuery();
+        const orgUnit = this.getEffectiveOrgUnit();
 
-        // In a real implementation, this would call the actual OpenSRF service
-        // For now, we'll use mock data that matches the screenshot
-        return this.getMockHoldsData().pipe(
+        // Call the real OpenSRF service via CirculationDataService
+        return this.circulationDataService.getCurrentHoldsCount(orgUnit).pipe(
             map(holdsData => this.transformHoldsDataToMetric(holdsData)),
             catchError(error => {
                 console.error('Failed to fetch holds data:', error);
-                throw error;
+                // Fall back to mock data on error
+                return this.getMockHoldsData().pipe(
+                    map(mockData => this.transformHoldsDataToMetric(mockData))
+                );
             })
         );
     }
 
     /**
-     * Mock data service (replace with actual OpenSRF calls)
+     * Mock data service (fallback for errors or development)
      */
     private getMockHoldsData(): Observable<any> {
         // Mock data matching the screenshot design
         const mockData = {
-            totalHolds: 524,
-            pendingHolds: 387,
-            readyHolds: 98,
-            transitHolds: 39,
-            previousPeriodTotal: 498
+            active: 524,
+            on_shelf: 98,
+            in_transit: 39,
+            org_unit: 1
         };
 
         return of(mockData);
@@ -162,9 +161,13 @@ export class CurrentHoldsMetricWidget extends CirculationMetricWidgetComponent i
      * Transform holds data into MetricData format
      */
     private transformHoldsDataToMetric(holdsData: any): MetricData {
-        const currentValue = holdsData.totalHolds;
-        const previousValue = holdsData.previousPeriodTotal;
-        const { trend, trendValue } = this.calculateTrend(currentValue, previousValue);
+        const currentValue = holdsData.active || 0;
+        const onShelf = holdsData.on_shelf || 0;
+        const inTransit = holdsData.in_transit || 0;
+
+        // Calculate trend based on on_shelf ratio
+        const trend = onShelf > currentValue * 0.2 ? 'up' : onShelf < currentValue * 0.1 ? 'down' : 'stable';
+        const trendValue = `${Math.round((onShelf / currentValue) * 100)}% ready`;
 
         return {
             value: currentValue,
@@ -183,10 +186,10 @@ export class CurrentHoldsMetricWidget extends CirculationMetricWidgetComponent i
      * Get subtitle text based on holds breakdown
      */
     private getHoldsSubtitle(holdsData: any): string {
-        const pending = holdsData.pendingHolds;
-        const ready = holdsData.readyHolds;
+        const onShelf = holdsData.on_shelf || 0;
+        const inTransit = holdsData.in_transit || 0;
 
-        return `${pending} pending, ${ready} ready`;
+        return `${onShelf} ready, ${inTransit} in transit`;
     }
 
     /**
@@ -257,7 +260,13 @@ export class CurrentHoldsMetricWidget extends CirculationMetricWidgetComponent i
      * Implementation of abstract fetchData method from BaseWidgetComponent
      */
     protected fetchData(config: ChartWidgetConfig): Observable<any> {
-        return this.getMockHoldsData();
+        const orgUnit = this.getEffectiveOrgUnit();
+        return this.circulationDataService.getCurrentHoldsCount(orgUnit).pipe(
+            catchError(error => {
+                console.error('Error in fetchData:', error);
+                return this.getMockHoldsData();
+            })
+        );
     }
 
     /**

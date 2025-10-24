@@ -318,17 +318,34 @@ export abstract class CirculationMetricWidgetComponent extends MetricWidgetCompo
     }
 
     /**
+     * Get effective organizational unit for queries
+     * Returns config.orgUnit if set, otherwise user's workstation org unit
+     */
+    protected getEffectiveOrgUnit(): number {
+        const orgUnit = this.config?.orgUnit || this.auth.user()?.ws_ou() || 1;
+        // Ensure it's a number - ws_ou() may return string
+        return typeof orgUnit === 'number' ? orgUnit : parseInt(String(orgUnit), 10) || 1;
+    }
+
+    /**
+     * Check if descendants should be included in org unit queries
+     * Defaults to true unless explicitly set to false in config
+     */
+    protected shouldIncludeDescendants(): boolean {
+        return this.config?.includeDescendants !== false; // Default true
+    }
+
+    /**
      * Build base circulation query parameters
      */
     protected buildBaseCirculationQuery(): any {
         const { start, end } = this.getDateRange();
-        const currentOrgUnit = this.org.get(this.auth.user()?.ws_ou);
 
         return {
             start_date: this.formatDate(start),
             end_date: this.formatDate(end),
-            org_unit: currentOrgUnit?.id || 1,
-            include_descendants: true
+            org_unit: this.getEffectiveOrgUnit(),
+            include_descendants: this.shouldIncludeDescendants()
         };
     }
 

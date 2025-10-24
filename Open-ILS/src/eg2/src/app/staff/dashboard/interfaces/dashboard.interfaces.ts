@@ -58,6 +58,10 @@ export interface ChartWidgetConfig {
     // Applied filters
     filters: AppliedFilter[];
 
+    // Organizational unit filtering
+    orgUnit?: number;  // Optional override - defaults to user's workstation org unit
+    includeDescendants?: boolean;  // Include child org units - defaults to true
+
     // Layout configuration (for future dashboard positioning)
     position?: {
         row: number;
