@@ -13,13 +13,13 @@ vim:et:ts=4:sw=4:
         <default_locale>en-US</default_locale>
 
         <dirs>
-            <log>openilsa/log</log> <!-- unix::server log files -->
-            <sock>openilsa/lock</sock> <!-- unix::server sock files -->
-            <pid>openilsa/run</pid>
-            <xsl>openilsa/xsl</xsl>
-            <script>openilsa</script>
-            <script_lib>openilsa</script_lib>
-            <templates>openilsa/templates</templates>
+            <log>LOCALSTATEDIR/log</log> <!-- unix::server log files -->
+            <sock>LOCALSTATEDIR/lock</sock> <!-- unix::server sock files -->
+            <pid>LOCALSTATEDIR/run</pid>
+            <xsl>LOCALSTATEDIR/xsl</xsl>
+            <script>LOCALSTATEDIR</script>
+            <script_lib>LOCALSTATEDIR</script_lib>
+            <templates>LOCALSTATEDIR/templates</templates>
         </dirs>
 
         <!-- global data visibility settings -->
@@ -36,11 +36,11 @@ vim:et:ts=4:sw=4:
 
         <server_type>prefork</server_type> <!-- net::server type -->
 
-        <ils_events>openilsa/data/ils_events.xml</ils_events> <!-- ILS events description file -->
+        <ils_events>LOCALSTATEDIR/data/ils_events.xml</ils_events> <!-- ILS events description file -->
 
         <email_notify> <!-- this will eventually move into the notifications section below... -->
             <!-- global email notification settings -->
-            <template>openilsa/data/hold_notification_template.example</template>
+            <template>LOCALSTATEDIR/data/hold_notification_template.example</template>
             <smtp_server>localhost</smtp_server>
 
             <!--
@@ -97,8 +97,8 @@ vim:et:ts=4:sw=4:
 
             <!-- The system can generate an XML file of overdue notices.  This is the
                 directory where they are stored.  Files are named overdue.YYYY-MM-DD.xml -->
-            <notice_dir>openilsa/data/overdue</notice_dir>
-            <combined_template>openilsa/data/templates/overdue_combined_xml.example</combined_template>
+            <notice_dir>LOCALSTATEDIR/data/overdue</notice_dir>
+            <combined_template>LOCALSTATEDIR/data/templates/overdue_combined_xml.example</combined_template>
 
             <notice>
                 <!-- Notify at 7 days overdue -->
@@ -109,7 +109,7 @@ vim:et:ts=4:sw=4:
                 <!-- do we attempt email notification? -->
                 <email_notify>false</email_notify>
                 <!-- notice template file -->
-                <email_template>openilsa/data/templates/overdue_7day.example</email_template>
+                <email_template>LOCALSTATEDIR/data/templates/overdue_7day.example</email_template>
             </notice>
         </overdue>
 
@@ -125,7 +125,7 @@ vim:et:ts=4:sw=4:
                 <notify_interval>1 day</notify_interval>
                 <file_append>false</file_append>
                 <email_notify>false</email_notify>
-                <email_template>openilsa/data/templates/predue_1day.example</email_template>
+                <email_template>LOCALSTATEDIR/data/templates/predue_1day.example</email_template>
             </notice>
         </predue>
       </notifications>
@@ -172,9 +172,9 @@ vim:et:ts=4:sw=4:
                 </state_store>
                 <files>
                     <!-- successful report outputs go here -->
-                    <output_base>openilsa/web/reporter</output_base>
-                    <success_template>openilsa/data/report-success</success_template>
-                    <fail_template>openilsa/data/report-fail</fail_template>
+                    <output_base>LOCALSTATEDIR/web/reporter</output_base>
+                    <success_template>LOCALSTATEDIR/data/report-success</success_template>
+                    <fail_template>LOCALSTATEDIR/data/report-fail</fail_template>
                 </files>
                 <!-- Number of reports that can be processed simultaneously.  This
                      value can overriden by the -c/-concurrency command-line switch
@@ -682,11 +682,11 @@ vim:et:ts=4:sw=4:
                             If no dictionaries are defined, the default Aspell dictionary is used.
                         -->
                         <!--
-                        <default>openilsa/data/default_dict.txt</default>
-                        <title>openilsa/data/title_dict.txt</title>
-                        <author>openilsa/data/author_dict.txt</author>
-                        <subject>openilsa/data/subject_dict.txt</subject>
-                        <series>openilsa/data/series_dict.txt</series>
+                        <default>LOCALSTATEDIR/data/default_dict.txt</default>
+                        <title>LOCALSTATEDIR/data/title_dict.txt</title>
+                        <author>LOCALSTATEDIR/data/author_dict.txt</author>
+                        <subject>LOCALSTATEDIR/data/subject_dict.txt</subject>
+                        <series>LOCALSTATEDIR/data/series_dict.txt</series>
                         -->
                     </spelling_dictionary>
 
@@ -775,7 +775,7 @@ vim:et:ts=4:sw=4:
                     <max_superpages>100</max_superpages>
 
                     <!-- zip code database file -->
-                    <!--<zips_file>openilsa/data/zips.txt</zips_file>-->
+                    <!--<zips_file>LOCALSTATEDIR/data/zips.txt</zips_file>-->
                 </app_settings>
             </open-ils.search>
 
@@ -866,7 +866,7 @@ vim:et:ts=4:sw=4:
                 </unix_config>
                 <app_settings>
                     <marctemplates>
-                        <K_book>openilsa/templates/marc/k_book.xml</K_book>
+                        <K_book>LOCALSTATEDIR/templates/marc/k_book.xml</K_book>
                     </marctemplates>
                 </app_settings>
             </open-ils.cat>
@@ -1133,7 +1133,7 @@ vim:et:ts=4:sw=4:
                 </unix_config>
                 <app_settings>
                     <script_path>LIBDIR/javascript/</script_path>
-                    <script_path>openilsa/catalog/</script_path>
+                    <script_path>LOCALSTATEDIR/catalog/</script_path>
                     <scripts>
                         <biblio_fingerprint>biblio_fingerprint.js</biblio_fingerprint>
                     </scripts>
