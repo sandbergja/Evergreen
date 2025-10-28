@@ -45,33 +45,21 @@ import { WidgetRegistryService } from '@eg/share/widgets/services/widget-registr
                             <div class="row">
                                 <div class="col-md-3">
                                     <label class="form-label">Time Range</label>
-                                    <select class="form-select"
-                                            [(ngModel)]="selectedTimeRange"
-                                            (change)="updateWidget()">
                                         <option value="week">Last Week</option>
                                         <option value="month">Last Month</option>
                                         <option value="quarter">Last Quarter</option>
-                                    </select>
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label">Widget Template</label>
-                                    <select class="form-select"
-                                            [(ngModel)]="selectedTemplate"
-                                            (change)="createWidgetFromTemplate()">
                                         <option value="">Select a template...</option>
                                         <option *ngFor="let template of availableTemplates"
                                                 [value]="template.id">
                                             {{ template.name }}
                                         </option>
-                                    </select>
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label">Auto Refresh</label>
                                     <div class="form-check form-switch">
-                                        <input class="form-check-input"
-                                               type="checkbox"
-                                               id="autoRefreshSwitch"
-                                               [(ngModel)]="autoRefresh">
                                         <label class="form-check-label" for="autoRefreshSwitch">
                                             Enable Auto Refresh
                                         </label>
