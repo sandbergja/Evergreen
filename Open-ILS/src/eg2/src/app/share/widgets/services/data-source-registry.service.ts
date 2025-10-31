@@ -53,6 +53,7 @@ export class DataSourceRegistryService {
             'getCirculationByShelvingLocation': this.circulationDataService.getCirculationByShelvingLocation.bind(this.circulationDataService),
             'getCirculationTrend': this.circulationDataService.getCirculationTrend.bind(this.circulationDataService),
             'getCirculationSummary': this.circulationDataService.getCirculationSummary.bind(this.circulationDataService),
+            'getCurrentHoldsCount': this.circulationDataService.getCurrentHoldsCount.bind(this.circulationDataService),
             'getShelvingLocations': this.circulationDataService.getShelvingLocations.bind(this.circulationDataService)
         });
 

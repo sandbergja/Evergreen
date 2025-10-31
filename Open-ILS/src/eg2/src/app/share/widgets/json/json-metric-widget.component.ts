@@ -1,8 +1,7 @@
 import { Component, Input, OnInit, OnDestroy, inject } from '@angular/core';
 import { Subject } from 'rxjs';
 import { takeUntil, catchError } from 'rxjs/operators';
-import { WidgetJsonConfig } from '@eg/staff/dashboard/interfaces/widget-json-config.interface';
-import { MetricData } from '../base/metric-widget.component';
+import { WidgetJsonConfig, MetricData } from '@eg/staff/dashboard/interfaces/widget-json-config.interface';
 import { WidgetConfigEngine } from '../engines/widget-config.engine';
 
 /**
@@ -27,24 +26,6 @@ import { WidgetConfigEngine } from '../engines/widget-config.engine';
     selector: 'eg-json-metric-widget',
     template: `
         <div class="eg-json-metric-widget" [class.loading]="isLoading" [class.error]="hasError">
-
-            <!-- Widget Header (optional) -->
-            <div class="widget-header" *ngIf="showHeader">
-                <h5 class="widget-title">
-                    <span class="material-icons me-2" *ngIf="config?.visualization?.icon" aria-hidden="true">
-                        {{ config.visualization.icon }}
-                    </span>
-                    {{ config?.visualization?.title || config?.name }}
-                </h5>
-                <div class="widget-actions">
-                    <button class="btn btn-sm btn-outline-secondary"
-                            (click)="refresh()"
-                            [disabled]="isLoading"
-                            title="Refresh">
-                        <span class="material-icons" [class.spinning]="isLoading">refresh</span>
-                    </button>
-                </div>
-            </div>
 
             <!-- Loading State -->
             <div *ngIf="isLoading" class="metric-loading">
@@ -73,61 +54,65 @@ import { WidgetConfigEngine } from '../engines/widget-config.engine';
 
             <!-- Metric Content -->
             <div *ngIf="!isLoading && !hasError && metricData" class="metric-content">
-                <div class="metric-card"
-                     [class]="getMetricCardClasses()"
+                <div [class]="getMetricCardClasses()"
                      [attr.aria-label]="getAriaLabel()">
 
-                    <!-- Top Icon -->
-                    <div class="metric-top-icon" *ngIf="metricData.icon && showTopIcon">
-                        <span class="material-icons"
-                              [class]="'text-' + (metricData.color || getColorFromConfig())"
-                              aria-hidden="true">
-                            {{ metricData.icon }}
-                        </span>
+                    <!-- Card Header with Title and Actions -->
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">
+                                <span class="material-icons me-2"
+                                      *ngIf="metricData.icon"
+                                      aria-hidden="true">
+                                    {{ metricData.icon }}
+                                </span>
+                                {{ metricData.title }}
+                            </h5>
+                            <button class="btn btn-sm btn-outline-secondary"
+                                    (click)="refresh()"
+                                    [disabled]="isLoading"
+                                    title="Refresh">
+                                <span class="material-icons" [class.spinning]="isLoading">refresh</span>
+                            </button>
+                        </div>
                     </div>
 
-                    <!-- Main Value -->
-                    <div class="metric-value"
-                         [class]="'text-' + (metricData.color || getColorFromConfig())">
-                        {{ metricData.value }}
-                    </div>
+                    <!-- Card Body with Metric Value and Indicators -->
+                    <div class="card-body">
 
-                    <!-- Title -->
-                    <div class="metric-title">
-                        {{ metricData.title }}
-                    </div>
+                        <!-- Main Value -->
+                        <h2 class="metric-value mb-3"
+                            [class]="'text-' + (metricData.color || getColorFromConfig())">
+                            {{ metricData.value }}
+                        </h2>
 
-                    <!-- Subtitle -->
-                    <div class="metric-subtitle" *ngIf="metricData.subtitle">
-                        {{ metricData.subtitle }}
-                    </div>
+                        <!-- Status Indicator -->
+                        <div class="d-flex justify-content-center align-items-center mb-2"
+                             *ngIf="metricData.status">
+                            <span class="material-icons me-1"
+                                  [class]="'text-' + (metricData.color || getColorFromConfig())"
+                                  style="font-size: 1rem;"
+                                  *ngIf="metricData.statusIcon"
+                                  aria-hidden="true">
+                                {{ metricData.statusIcon }}
+                            </span>
+                            <span class="text-muted">
+                                {{ metricData.status }}
+                            </span>
+                        </div>
 
-                    <!-- Status Indicator -->
-                    <div class="metric-status" *ngIf="metricData.status">
-                        <span class="material-icons status-icon"
-                              *ngIf="metricData.statusIcon"
-                              [class]="getStatusIconClass()"
-                              aria-hidden="true">
-                            {{ metricData.statusIcon }}
-                        </span>
-                        <span class="status-text" [class]="getStatusTextClass()">
-                            {{ metricData.status }}
-                        </span>
-                    </div>
+                        <!-- Trend Indicator -->
+                        <div class="mt-2" *ngIf="metricData.trend && metricData.trendValue">
+                            <small class="text-muted">
+                                <span [class]="getTrendIconClass()"
+                                      style="font-size: 1rem; vertical-align: middle;"
+                                      aria-hidden="true">
+                                    {{ getTrendArrow() }}
+                                </span>
+                                {{ metricData.trendValue }}
+                            </small>
+                        </div>
 
-                    <!-- Trend Indicator -->
-                    <div class="metric-trend"
-                         *ngIf="metricData.trend && config?.visualization?.metricOptions?.showTrend">
-                        <span class="material-icons trend-icon"
-                              [class]="getTrendIconClass()"
-                              aria-hidden="true">
-                            {{ getTrendIcon() }}
-                        </span>
-                        <span class="trend-text"
-                              [class]="getTrendTextClass()"
-                              *ngIf="metricData.trendValue">
-                            {{ metricData.trendValue }}
-                        </span>
                     </div>
                 </div>
             </div>
@@ -160,50 +145,50 @@ import { WidgetConfigEngine } from '../engines/widget-config.engine';
             height: 100%;
         }
 
-        .metric-card {
-            background: var(--bs-card-bg, #fff);
-            border: 1px solid var(--bs-border-color, #dee2e6);
-            border-radius: var(--bs-border-radius, 0.375rem);
-            padding: 1.5rem;
-            text-align: center;
-            box-shadow: var(--bs-box-shadow-sm, 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075));
-            transition: all 0.2s ease-in-out;
+        .card {
             height: 100%;
+        }
+
+        .card-header {
+            background-color: var(--bs-light, #f8f9fa);
+            border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+            padding: 0.75rem 1rem;
+        }
+
+        .card-header .card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--bs-dark, #212529);
             display: flex;
-            flex-direction: column;
-            justify-content: center;
+            align-items: center;
         }
 
-        .metric-card:hover {
-            box-shadow: var(--bs-box-shadow, 0 0.5rem 1rem rgba(0, 0, 0, 0.15));
-            transform: translateY(-1px);
+        .card-header .material-icons {
+            font-size: 1.25rem;
         }
 
-        .metric-top-icon {
-            margin-bottom: 0.75rem;
+        .card-header .btn {
+            padding: 0.25rem 0.5rem;
         }
 
-        .metric-top-icon .material-icons {
-            font-size: 2.5rem;
+        .card-header .btn .material-icons {
+            font-size: 1rem;
+        }
+
+        .card-body {
+            text-align: center;
+            padding: 2rem 1.5rem;
         }
 
         .metric-value {
-            font-size: 3rem;
+            font-size: 2.5rem;
             font-weight: 700;
-            line-height: 1;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.25rem;
         }
 
         .metric-title {
-            font-size: 1rem;
-            color: var(--bs-secondary, #6c757d);
-            margin-bottom: 0.75rem;
-            font-weight: 500;
-        }
-
-        .metric-subtitle {
-            font-size: 0.875rem;
-            color: var(--bs-muted, #6c757d);
+            font-size: 1.25rem;
+            font-weight: 600;
             margin-bottom: 0.5rem;
         }
 
@@ -347,32 +332,7 @@ import { WidgetConfigEngine } from '../engines/widget-config.engine';
         .metric-card.variant-info { border-left: 4px solid var(--bs-info, #0dcaf0); }
         .metric-card.variant-secondary { border-left: 4px solid var(--bs-secondary, #6c757d); }
 
-        /* Header */
-        .widget-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.75rem;
-            margin-bottom: 1rem;
-            border-bottom: 1px solid var(--bs-border-color, #dee2e6);
-            background: var(--bs-light, #f8f9fa);
-            border-radius: var(--bs-border-radius, 0.375rem) var(--bs-border-radius, 0.375rem) 0 0;
-        }
-
-        .widget-title {
-            margin: 0;
-            font-size: 1rem;
-            font-weight: 600;
-            color: var(--bs-dark, #212529);
-            display: flex;
-            align-items: center;
-        }
-
-        .widget-actions {
-            display: flex;
-            gap: 0.5rem;
-        }
-
+        /* Animations */
         .spinning {
             animation: spin 1s linear infinite;
         }
@@ -539,14 +499,7 @@ export class JsonMetricWidgetComponent implements OnInit, OnDestroy {
      * Get metric card CSS classes
      */
     public getMetricCardClasses(): string {
-        const classes = ['metric-card'];
-
-        const color = this.metricData?.color || this.getColorFromConfig();
-        if (color) {
-            classes.push(`variant-${color}`);
-        }
-
-        return classes.join(' ');
+        return 'card border-secondary';
     }
 
     /**
@@ -607,17 +560,32 @@ export class JsonMetricWidgetComponent implements OnInit, OnDestroy {
     }
 
     /**
+     * Get trend arrow (Unicode character)
+     */
+    public getTrendArrow(): string {
+        switch (this.metricData?.trend) {
+            case 'up':
+                return '↑';  // U+2191
+            case 'down':
+                return '↓';  // U+2193
+            case 'stable':
+            default:
+                return '→';  // U+2192
+        }
+    }
+
+    /**
      * Get trend icon CSS class
      */
     public getTrendIconClass(): string {
         switch (this.metricData?.trend) {
             case 'up':
-                return 'trend-up';
+                return 'text-success';
             case 'down':
-                return 'trend-down';
+                return 'text-danger';
             case 'stable':
             default:
-                return 'trend-stable';
+                return 'text-secondary';
         }
     }
 

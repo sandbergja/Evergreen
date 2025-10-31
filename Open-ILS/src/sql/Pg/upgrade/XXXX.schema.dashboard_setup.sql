@@ -4,31 +4,205 @@ BEGIN;
 
 CREATE SCHEMA IF NOT EXISTS dashboard;
 
--- Create a table for holding the names of all the widgets
-DROP TABLE IF EXISTS dashboard.widgets;
+-- Create a table for storing widget configurations
+-- This table stores complete JSON widget configurations for dynamic dashboard rendering
+DROP TABLE IF EXISTS dashboard.widgets CASCADE;
 CREATE TABLE dashboard.widgets (
-    -- id SERIAL PRIMARY KEY,
-    -- The official name to display for the user
-    name text NOT NULL,
-    -- The locale independent code to use for readable back end stuff
-    code text PRIMARY KEY
+    -- Widget identifier (unique code)
+    code TEXT PRIMARY KEY,
+
+    -- Display name (localized)
+    name TEXT NOT NULL,
+
+    -- Widget category (circulations, acquisitions, cataloging, patrons, holdings)
+    category TEXT NOT NULL,
+
+    -- Complete JSON widget configuration (WidgetJsonConfig)
+    json_config JSONB NOT NULL,
+
+    -- Description of what the widget displays
+    description TEXT,
+
+    -- Is this widget enabled/available?
+    enabled BOOLEAN NOT NULL DEFAULT TRUE,
+
+    -- Required permission to view this widget (NULL = no permission required)
+    view_permission TEXT,
+
+    -- Created/modified timestamps
+    created TIMESTAMP NOT NULL DEFAULT NOW(),
+    modified TIMESTAMP NOT NULL DEFAULT NOW()
 );
-INSERT INTO dashboard.widgets (code, name) VALUES
+
+-- Create index on category for efficient filtering
+CREATE INDEX dashboard_widgets_category_idx ON dashboard.widgets(category);
+
+-- Create index on enabled for filtering active widgets
+CREATE INDEX dashboard_widgets_enabled_idx ON dashboard.widgets(enabled);
+
+-- Create table for user widget preferences
+DROP TABLE IF EXISTS dashboard.user_widgets CASCADE;
+CREATE TABLE dashboard.user_widgets (
+    id SERIAL PRIMARY KEY,
+
+    -- User ID
+    usr INTEGER NOT NULL REFERENCES actor.usr(id) ON DELETE CASCADE,
+
+    -- Widget code
+    widget_code TEXT NOT NULL REFERENCES dashboard.widgets(code) ON DELETE CASCADE,
+
+    -- Display order (for sorting)
+    display_order INTEGER NOT NULL DEFAULT 0,
+
+    -- Widget-specific customizations (e.g., date range, filters)
+    customizations JSONB,
+
+    -- Timestamps
+    created TIMESTAMP NOT NULL DEFAULT NOW(),
+    modified TIMESTAMP NOT NULL DEFAULT NOW(),
+
+    -- Each user can only have one instance of each widget
+    UNIQUE(usr, widget_code)
+);
+
+-- Create index for efficient user widget lookup
+CREATE INDEX dashboard_user_widgets_usr_idx ON dashboard.user_widgets(usr);
+
+-- Insert default widget configurations
+INSERT INTO dashboard.widgets (code, name, category, description, json_config, enabled) VALUES
+    (
+        'current-holds-metric',
+        oils_i18n_gettext(
+            'current-holds-metric',
+            'Current Holds',
+            'dashboard_widget', 'label'
+        ),
+        'circulations',
+        'Displays current count of active holds',
+        '{
+            "id": "current-holds-metric",
+            "name": "Current Holds",
+            "type": "metric",
+            "category": "circulations",
+            "dataSource": {
+                "service": "circulation",
+                "method": "getCurrentHoldsCount",
+                "params": {
+                    "include_descendants": true
+                },
+                "cache": {
+                    "enabled": true,
+                    "ttl": 60
+                }
+            },
+            "transform": {
+                "type": "sum",
+                "yField": "active"
+            },
+            "visualization": {
+                "chartType": "metric",
+                "title": "Current Holds",
+                "icon": "bookmark",
+                "color": "primary",
+                "metricOptions": {
+                    "format": "number",
+                    "precision": 0
+                }
+            }
+        }'::jsonb,
+        TRUE
+    ),
     (
         'daily_circulation',
         oils_i18n_gettext(
             'daily_circulation',
             'Circulation Per Day',
             'dashboard_widget', 'label'
-        )
+        ),
+        'circulations',
+        'Shows daily circulation counts over time',
+        '{
+            "id": "daily_circulation",
+            "name": "Circulation Per Day",
+            "type": "chart",
+            "category": "circulations",
+            "dataSource": {
+                "service": "circulation",
+                "method": "getCirculationTrend",
+                "params": {
+                    "timeRange": "month",
+                    "include_descendants": true
+                },
+                "cache": {
+                    "enabled": true,
+                    "ttl": 300
+                }
+            },
+            "transform": {
+                "type": "groupBy",
+                "xField": "date",
+                "yField": "total",
+                "groupByField": "date",
+                "aggregation": "sum"
+            },
+            "visualization": {
+                "chartType": "line",
+                "title": "Daily Circulation",
+                "xAxisLabel": "Date",
+                "yAxisLabel": "Checkouts",
+                "showGrid": true,
+                "showTooltip": true
+            }
+        }'::jsonb,
+        TRUE
     ),
     (
-        'item_status',
+        'circulation-by-location',
         oils_i18n_gettext(
-            'item_status',
-            'Collection Item Status',
+            'circulation-by-location',
+            'Circulation by Shelving Location',
             'dashboard_widget', 'label'
-        )
+        ),
+        'circulations',
+        'Shows circulation statistics grouped by shelving location',
+        '{
+            "id": "circulation-by-location",
+            "name": "Circulation by Location",
+            "type": "chart",
+            "category": "circulations",
+            "dataSource": {
+                "service": "circulation",
+                "method": "getCirculationByShelvingLocation",
+                "params": {
+                    "timeRange": "month",
+                    "include_descendants": true
+                },
+                "cache": {
+                    "enabled": true,
+                    "ttl": 300
+                }
+            },
+            "transform": {
+                "type": "groupBy",
+                "xField": "shelving_location_name",
+                "yField": "checkouts",
+                "groupByField": "shelving_location",
+                "aggregation": "sum",
+                "sortBy": {
+                    "field": "checkouts",
+                    "order": "desc"
+                },
+                "limit": 10
+            },
+            "visualization": {
+                "chartType": "bar",
+                "title": "Top 10 Locations by Circulation",
+                "xAxisLabel": "Shelving Location",
+                "yAxisLabel": "Checkouts",
+                "colors": ["#0d6efd"]
+            }
+        }'::jsonb,
+        TRUE
     )
 ;
 
@@ -69,25 +243,37 @@ UPDATE config.org_unit_setting_type
 SET fm_class='ccs'
 WHERE name = 'circ.selfcheck.block_checkout_on_copy_status';
 
-DELETE FROM config.org_unit_setting_type WHERE name = 'ui.dashboard.show_widgets';
-INSERT INTO config.org_unit_setting_type (name, label, grp, description, datatype, fm_class, view_perm, update_perm)
+-- Org unit setting for org-level widget defaults
+-- This controls which widgets are available to users at each org unit
+DELETE FROM config.org_unit_setting_type WHERE name = 'ui.dashboard.default_widgets';
+INSERT INTO config.org_unit_setting_type (name, label, grp, description, datatype, view_perm, update_perm)
 VALUES (
-    'ui.dashboard.show_widgets',    --name
-    oils_i18n_gettext(              --label
-        'ui.dashboard.show_widgets',
-        'Shown Dashboard Widgets List',
-        'cwst', 'label'),
-    'gui',                          --grp
-    oils_i18n_gettext(              --description
-        'ui.dashboard.show_widgets',
-        'The set of ui elements to include on the dashboard. All elements not included will be hidden.',
-        'cwst', 'description'
+    'ui.dashboard.default_widgets',  --name
+    oils_i18n_gettext(               --label
+        'ui.dashboard.default_widgets',
+        'Default Dashboard Widgets',
+        'coust', 'label'),
+    'gui',                           --grp
+    oils_i18n_gettext(               --description
+        'ui.dashboard.default_widgets',
+        'JSON array of widget codes that should be displayed by default for users at this org unit. Users can override this by customizing their dashboard. Example: ["current-holds-metric", "daily_circulation", "circulation-by-location"]',
+        'coust', 'description'
     ),
-    'array',                        --datatype
-    'dashboard_widget',             --fm_class
-    NULL,                           --view_perm
-    NULL                            --update_perm
+    'array',                         --datatype
+    NULL,                            --view_perm
+    NULL                             --update_perm
 );
+
+-- Set default widgets for the consortium (org_unit 1)
+-- These will be inherited by child org units unless overridden
+INSERT INTO actor.org_unit_setting (org_unit, name, value)
+VALUES (
+    1,
+    'ui.dashboard.default_widgets',
+    '["current-holds-metric", "daily_circulation", "circulation-by-location"]'
+)
+ON CONFLICT (org_unit, name) DO UPDATE
+SET value = EXCLUDED.value;
 
 
 COMMIT;

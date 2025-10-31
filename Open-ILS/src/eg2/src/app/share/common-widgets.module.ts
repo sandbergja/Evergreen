@@ -24,24 +24,13 @@ import {ClipboardDialogComponent} from '@eg/share/clipboard/clipboard-dialog.com
 import { CredentialInputComponent } from './util/credential-input.component';
 import { EgChartsModule } from '@eg/share/eg-charts/eg-charts.module';
 
-// Widget components - TypeScript-based widgets
-import { BaseWidgetComponent } from './widgets/base/base-widget.component';
-import { ChartWidgetComponent } from './widgets/base/chart-widget.component';
-import { MetricWidgetComponent } from './widgets/base/metric-widget.component';
-import { CirculationWidgetComponent } from './widgets/circulation/circulation-widget.component';
-import { CirculationMetricWidgetComponent } from './widgets/circulation/circulation-metric-widget.component';
-import { MonthlyCirculationByShelvingLocationWidget } from './widgets/circulation/monthly-circulation-by-shelving-location.widget';
-import { CurrentHoldsMetricWidget } from './widgets/circulation/current-holds-metric.widget';
-
-// JSON-driven widget components
+// JSON-driven widget components (database-driven, fully dynamic)
 import { JsonWidgetComponent } from './widgets/json/json-widget.component';
 import { JsonChartWidgetComponent } from './widgets/json/json-chart-widget.component';
 import { JsonMetricWidgetComponent } from './widgets/json/json-metric-widget.component';
 
-// Widget services
+// Widget services (JSON-based system only)
 import { CirculationDataService } from './widgets/services/circulation-data.service';
-import { WidgetFactoryService } from './widgets/factories/widget.factory';
-import { WidgetRegistryService } from './widgets/services/widget-registry.service';
 import { DataSourceRegistryService } from './widgets/services/data-source-registry.service';
 
 // Widget engines
@@ -66,10 +55,7 @@ import { WidgetConfigValidator } from './widgets/validators/widget-config.valida
         IdlClassTemplateDirective,
         IntervalInputComponent,
         CredentialInputComponent,
-        // TypeScript-based widget components - only concrete implementations can be declared
-        MonthlyCirculationByShelvingLocationWidget,
-        CurrentHoldsMetricWidget,
-        // JSON-driven widget components
+        // JSON-driven widget components (database-driven)
         JsonWidgetComponent,
         JsonChartWidgetComponent,
         JsonMetricWidgetComponent
@@ -105,19 +91,14 @@ import { WidgetConfigValidator } from './widgets/validators/widget-config.valida
         IntervalInputComponent,
         CredentialInputComponent,
         EgChartsModule,
-        // TypeScript-based widget components - only concrete implementations can be exported
-        MonthlyCirculationByShelvingLocationWidget,
-        CurrentHoldsMetricWidget,
-        // JSON-driven widget components
+        // JSON-driven widget components (database-driven)
         JsonWidgetComponent,
         JsonChartWidgetComponent,
         JsonMetricWidgetComponent
     ],
     providers: [
-        // Widget services
+        // Widget services (JSON-based system only)
         CirculationDataService,
-        WidgetFactoryService,
-        WidgetRegistryService,
         DataSourceRegistryService,
         // Widget engines
         TransformEngine,

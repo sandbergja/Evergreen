@@ -16762,12 +16762,48 @@ SELECT  usr,
 
 	<class id="dashboard_widget" controller="open-ils.cstore open-ils.pcrud" oils_obj:fieldmapper="dashboard::widgets" oils_persist:tablename="dashboard.widgets" reporter:label="Dashboard Widgets" reporter:core="false">
 		<fields oils_persist:primary="code" oils_persist:sequence="">
-			<field reporter:label="Code" name="code" reporter:datatype="text"/>
-			<field reporter:label="Name" name="name" reporter:datatype="text"/>	
+			<field reporter:label="Widget Code" name="code" reporter:datatype="text"/>
+			<field reporter:label="Widget Name" name="name" reporter:datatype="text"/>
+			<field reporter:label="Category" name="category" reporter:datatype="text"/>
+			<field reporter:label="JSON Configuration" name="json_config" reporter:datatype="text"/>
+			<field reporter:label="Description" name="description" reporter:datatype="text"/>
+			<field reporter:label="Enabled" name="enabled" reporter:datatype="bool"/>
+			<field reporter:label="View Permission" name="view_permission" reporter:datatype="text"/>
+			<field reporter:label="Created" name="created" reporter:datatype="timestamp"/>
+			<field reporter:label="Modified" name="modified" reporter:datatype="timestamp"/>
 		</fields>
 		<permacrud xmlns="http://open-ils.org/spec/opensrf/IDL/permacrud/v1">
 			<actions>
+				<retrieve permission="VIEW_CIRCULATIONS"/>
+				<search permission="VIEW_CIRCULATIONS"/>
+				<update permission="ADMIN_DASHBOARD"/>
+				<create permission="ADMIN_DASHBOARD"/>
+				<delete permission="ADMIN_DASHBOARD"/>
+			</actions>
+		</permacrud>
+	</class>
+
+	<class id="duwdgt" controller="open-ils.cstore open-ils.pcrud" oils_obj:fieldmapper="dashboard::user_widgets" oils_persist:tablename="dashboard.user_widgets" reporter:label="Dashboard User Widgets" reporter:core="false">
+		<fields oils_persist:primary="id" oils_persist:sequence="dashboard.user_widgets_id_seq">
+			<field reporter:label="ID" name="id" reporter:datatype="id"/>
+			<field reporter:label="User" name="usr" reporter:datatype="link"/>
+			<field reporter:label="Widget Code" name="widget_code" reporter:datatype="text"/>
+			<field reporter:label="Display Order" name="display_order" reporter:datatype="int"/>
+			<field reporter:label="Customizations" name="customizations" reporter:datatype="text"/>
+			<field reporter:label="Created" name="created" reporter:datatype="timestamp"/>
+			<field reporter:label="Modified" name="modified" reporter:datatype="timestamp"/>
+		</fields>
+		<links>
+			<link field="usr" reltype="has_a" key="id" map="" class="au"/>
+			<link field="widget_code" reltype="has_a" key="code" map="" class="dwdgt"/>
+		</links>
+		<permacrud xmlns="http://open-ils.org/spec/opensrf/IDL/permacrud/v1">
+			<actions>
 				<retrieve/>
+				<search/>
+				<update/>
+				<create/>
+				<delete/>
 			</actions>
 		</permacrud>
 	</class>

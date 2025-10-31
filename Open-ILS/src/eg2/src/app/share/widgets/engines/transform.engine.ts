@@ -26,39 +26,57 @@ export class TransformEngine {
 
     /**
      * Transform data based on configuration
+     * Accepts any data type and normalizes to array before transforming
      */
-    public transform(data: any[], config: TransformConfig): TransformResult {
+    public transform(data: any, config: TransformConfig): TransformResult {
         const startTime = Date.now();
         const errors: string[] = [];
 
         try {
+            // NORMALIZE: Ensure data is always an array for processing
+            let normalizedData: any[];
+            if (!Array.isArray(data)) {
+                // Single object or primitive - wrap in array
+                normalizedData = data ? [data] : [];
+                console.log('🔧 TransformEngine: Normalized non-array data to array', {
+                    originalType: typeof data,
+                    originalData: data,
+                    wrapped: normalizedData,
+                    transformType: config.type,
+                    yField: config.yField
+                });
+            } else {
+                normalizedData = data;
+                console.log('🔧 TransformEngine: Data is array, length:', normalizedData.length);
+            }
+
             let transformedData: any[];
 
-            // Apply transformation based on type
+            // Apply transformation based on type (using normalized array data)
             switch (config.type) {
                 case 'groupBy':
-                    transformedData = this.groupBy(data, config);
+                    transformedData = this.groupBy(normalizedData, config);
                     break;
                 case 'sum':
-                    transformedData = this.sum(data, config);
+                    transformedData = this.sum(normalizedData, config);
                     break;
                 case 'average':
-                    transformedData = this.average(data, config);
+                    transformedData = this.average(normalizedData, config);
                     break;
                 case 'count':
-                    transformedData = this.count(data, config);
+                    transformedData = this.count(normalizedData, config);
                     break;
                 case 'filter':
-                    transformedData = this.filter(data, config);
+                    transformedData = this.filter(normalizedData, config);
                     break;
                 case 'sort':
-                    transformedData = this.sort(data, config);
+                    transformedData = this.sort(normalizedData, config);
                     break;
                 case 'map':
-                    transformedData = this.map(data, config);
+                    transformedData = this.map(normalizedData, config);
                     break;
                 case 'reduce':
-                    transformedData = this.reduce(data, config);
+                    transformedData = this.reduce(normalizedData, config);
                     break;
                 default:
                     throw new Error(`Unknown transform type: ${config.type}`);
@@ -131,7 +149,12 @@ export class TransformEngine {
      */
     private sum(data: any[], config: TransformConfig): any[] {
         const total = this.aggregate(data, config.yField, 'sum');
+
+        // Preserve all fields from first object if it exists (for trend calculations, etc.)
+        const result = data.length > 0 ? { ...data[0] } : {};
+
         return [{
+            ...result,
             [config.yField]: total,
             _count: data.length
         }];

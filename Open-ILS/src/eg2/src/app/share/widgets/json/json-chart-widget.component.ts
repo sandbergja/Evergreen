@@ -29,31 +29,6 @@ import { EgChartComponent } from '@eg/share/eg-charts/eg-chart.component';
     template: `
         <div class="eg-json-chart-widget" [class.loading]="isLoading" [class.error]="hasError">
 
-            <!-- Widget Header -->
-            <div class="widget-header" *ngIf="showHeader">
-                <h3 class="widget-title">
-                    <span class="material-icons me-2" *ngIf="config?.visualization?.icon" aria-hidden="true">
-                        {{ config.visualization.icon }}
-                    </span>
-                    {{ config?.visualization?.title || config?.name }}
-                </h3>
-                <div class="widget-actions">
-                    <button *ngIf="config?.visualization?.showExportButton !== false"
-                            class="btn btn-sm btn-outline-secondary"
-                            (click)="exportData()"
-                            [disabled]="isLoading || !chartData"
-                            title="Export Data">
-                        <span class="material-icons">download</span>
-                    </button>
-                    <button class="btn btn-sm btn-outline-secondary"
-                            (click)="refresh()"
-                            [disabled]="isLoading"
-                            title="Refresh">
-                        <span class="material-icons" [class.spinning]="isLoading">refresh</span>
-                    </button>
-                </div>
-            </div>
-
             <!-- Loading State -->
             <div *ngIf="isLoading" class="widget-loading">
                 <div class="d-flex flex-column justify-content-center align-items-center p-4">
@@ -80,13 +55,49 @@ import { EgChartComponent } from '@eg/share/eg-charts/eg-chart.component';
 
             <!-- Chart Content -->
             <div *ngIf="!isLoading && !hasError && chartData" class="widget-content">
-                <eg-chart
-                    #chartComponent
-                    [chartData]="chartData"
-                    [config]="chartConfig"
-                    [type]="config?.visualization?.chartType || 'bar'"
-                    [showExportButton]="false">
-                </eg-chart>
+                <div class="card">
+
+                    <!-- Card Header with Title and Actions -->
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">
+                                <span class="material-icons me-2"
+                                      *ngIf="config?.visualization?.icon"
+                                      aria-hidden="true">
+                                    {{ config.visualization.icon }}
+                                </span>
+                                {{ config?.visualization?.title || config?.name }}
+                            </h5>
+                            <div class="d-flex gap-2">
+                                <button *ngIf="config?.visualization?.showExportButton !== false"
+                                        class="btn btn-sm btn-outline-secondary"
+                                        (click)="exportData()"
+                                        [disabled]="isLoading || !chartData"
+                                        title="Export Data">
+                                    <span class="material-icons">download</span>
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary"
+                                        (click)="refresh()"
+                                        [disabled]="isLoading"
+                                        title="Refresh">
+                                    <span class="material-icons" [class.spinning]="isLoading">refresh</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card Body with Chart -->
+                    <div class="card-body">
+                        <eg-chart
+                            #chartComponent
+                            [chartData]="chartDataWithoutTitle"
+                            [config]="chartConfig"
+                            [type]="config?.visualization?.chartType || 'bar'"
+                            [showExportButton]="false">
+                        </eg-chart>
+                    </div>
+
+                </div>
             </div>
 
             <!-- No Data State -->
@@ -111,43 +122,53 @@ import { EgChartComponent } from '@eg/share/eg-charts/eg-chart.component';
     `,
     styles: [`
         .eg-json-chart-widget {
-            background: var(--bs-card-bg, #fff);
-            border: 1px solid var(--bs-border-color, #dee2e6);
-            border-radius: var(--bs-border-radius, 0.375rem);
-            box-shadow: var(--bs-box-shadow-sm, 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075));
-            transition: all 0.2s ease-in-out;
+            width: 100%;
+            height: 100%;
         }
 
         .eg-json-chart-widget.loading {
             opacity: 0.8;
         }
 
-        .widget-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem;
-            border-bottom: 1px solid var(--bs-border-color, #dee2e6);
-            background: var(--bs-light, #f8f9fa);
+        .card {
+            height: 100%;
         }
 
-        .widget-title {
-            margin: 0;
-            font-size: 1.1rem;
+        .card-header {
+            background-color: var(--bs-light, #f8f9fa);
+            border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+            padding: 0.75rem 1rem;
+        }
+
+        .card-header .card-title {
+            font-size: 1rem;
             font-weight: 600;
             color: var(--bs-dark, #212529);
             display: flex;
             align-items: center;
         }
 
-        .widget-actions {
+        .card-header .material-icons {
+            font-size: 1.25rem;
+        }
+
+        .card-header .btn {
+            padding: 0.25rem 0.5rem;
+        }
+
+        .card-header .btn .material-icons {
+            font-size: 1rem;
+        }
+
+        .card-body {
+            padding: 1rem;
+            flex: 1;
             display: flex;
-            gap: 0.5rem;
+            flex-direction: column;
         }
 
         .widget-content {
-            padding: 1rem;
-            background: var(--bs-body-bg);
+            height: 100%;
         }
 
         .widget-loading,
@@ -193,13 +214,13 @@ import { EgChartComponent } from '@eg/share/eg-charts/eg-chart.component';
         }
 
         @media (max-width: 768px) {
-            .widget-header {
+            .card-header .d-flex {
                 flex-direction: column;
                 gap: 0.75rem;
                 align-items: flex-start;
             }
 
-            .widget-actions {
+            .card-header .d-flex > div {
                 align-self: flex-end;
             }
         }
@@ -383,6 +404,18 @@ export class JsonChartWidgetComponent implements OnInit, OnDestroy {
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
+    }
+
+    /**
+     * Get chart data without title (to prevent duplicate titles in header and chart)
+     */
+    public get chartDataWithoutTitle(): ChartData | null {
+        if (!this.chartData) return null;
+
+        return {
+            ...this.chartData,
+            title: undefined  // Remove title so eg-chart doesn't render it
+        };
     }
 
     /**

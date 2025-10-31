@@ -1,6 +1,26 @@
 import { ChartData } from '@eg/share/eg-charts/interfaces/chart-data.interface';
 import { AppliedFilter } from './filter.interfaces';
 
+/**
+ * ============================================================================
+ * DEPRECATED INTERFACES - Legacy TypeScript Widget System
+ * ============================================================================
+ *
+ * These interfaces are deprecated and should NOT be used for new code.
+ * They were part of the old TypeScript widget system that has been replaced
+ * by the JSON widget system (WidgetJsonConfig).
+ *
+ * Use WidgetJsonConfig instead for all new widgets.
+ *
+ * These interfaces are kept only for backward compatibility and may be
+ * removed in a future version.
+ * ============================================================================
+ */
+
+/**
+ * @deprecated Use WidgetJsonConfig instead
+ * Legacy interface from TypeScript widget system
+ */
 export interface DashboardData {
     metrics: {
         circulationToday: number;
@@ -17,6 +37,11 @@ export interface DashboardData {
     };
 }
 
+/**
+ * @deprecated Use WidgetJsonConfig instead
+ * Legacy configuration interface for TypeScript-based widgets.
+ * All widgets are now JSON-driven and stored in the database.
+ */
 export interface ChartWidgetConfig {
     // Widget identification
     id: string;
@@ -59,10 +84,10 @@ export interface ChartWidgetConfig {
     filters: AppliedFilter[];
 
     // Organizational unit filtering
-    orgUnit?: number;  // Optional override - defaults to user's workstation org unit
-    includeDescendants?: boolean;  // Include child org units - defaults to true
+    orgUnit?: number;
+    includeDescendants?: boolean;
 
-    // Layout configuration (for future dashboard positioning)
+    // Layout configuration
     position?: {
         row: number;
         column: number;

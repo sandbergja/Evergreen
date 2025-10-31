@@ -340,3 +340,18 @@ export interface DataFetchResult {
         cached?: boolean;
     };
 }
+
+/**
+ * Metric widget data display format
+ */
+export interface MetricData {
+    value: number | string;
+    title: string;
+    subtitle?: string;
+    icon?: string;
+    color?: 'primary' | 'success' | 'warning' | 'danger' | 'info' | 'secondary';
+    status?: string;
+    statusIcon?: string;
+    trend?: 'up' | 'down' | 'stable';
+    trendValue?: string;
+}

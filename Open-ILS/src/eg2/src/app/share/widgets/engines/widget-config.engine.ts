@@ -1,9 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
-import { WidgetJsonConfig } from '@eg/staff/dashboard/interfaces/widget-json-config.interface';
+import { WidgetJsonConfig, MetricData } from '@eg/staff/dashboard/interfaces/widget-json-config.interface';
 import { ChartData, ChartSeries, ChartPoint } from '@eg/share/eg-charts/interfaces/chart-data.interface';
-import { MetricData } from '../base/metric-widget.component';
 import { DataSourceRegistryService } from '../services/data-source-registry.service';
 import { TransformEngine } from './transform.engine';
 
@@ -188,16 +187,48 @@ export class WidgetConfigEngine {
             value = this.formatMetricValue(value, viz.metricOptions);
         }
 
+        // Calculate trend for holds data
+        let trend: 'up' | 'down' | 'stable' | undefined;
+        let trendValue: string | undefined;
+        let status: string | undefined;
+        let statusIcon: string | undefined;
+
+        if (transformedData.length === 1 && transformedData[0].active !== undefined) {
+            // This looks like holds data - calculate trend
+            const data = transformedData[0];
+            const active = data.active || 0;
+            const onShelf = data.on_shelf || 0;
+            const inTransit = data.in_transit || 0;
+
+            if (active > 0) {
+                const percentageReady = Math.round((onShelf / active) * 100);
+                trendValue = `${percentageReady}% ready`;
+
+                // Determine trend direction based on percentage
+                if (percentageReady > 20) {
+                    trend = 'up';
+                } else if (percentageReady < 10) {
+                    trend = 'down';
+                } else {
+                    trend = 'stable';
+                }
+
+                // Set status
+                status = 'Pending';
+                statusIcon = viz.icon; // Use same icon as widget
+            }
+        }
+
         return {
             value,
             title: viz.title,
             subtitle: viz.subtitle,
             icon: viz.icon,
             color: viz.color,
-            status: undefined, // Can be calculated from data if needed
-            statusIcon: undefined,
-            trend: undefined, // Can be calculated if historical data available
-            trendValue: undefined
+            status,
+            statusIcon,
+            trend,
+            trendValue
         };
     }
 
