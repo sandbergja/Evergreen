@@ -236,27 +236,17 @@ sub circulation_by_shelving_location {
         $U->get_org_descendants($org_unit) :
         [$org_unit];
 
-    # Query circulation by shelving location
-    # This joins circulation data with copy location information
-    my $results = $e->json_query({
+    # Fetch all circulations in date range with copy location (simple query without GROUP BY)
+    my $circs = $e->json_query({
         select => {
-            acpl => ['id', 'name'],
-            circ => [
-                {transform => 'count', column => 'id', alias => 'checkouts'},
-            ]
+            acp => ['location'],
+            circ => ['id', 'desk_renewal', 'opac_renewal', 'phone_renewal']
         },
         from => {
             circ => {
                 acp => {
                     field => 'id',
                     fkey => 'target_copy'
-                },
-                acpl => {
-                    field => 'id',
-                    fkey => 'location',
-                    join => {
-                        acp => {}
-                    }
                 }
             }
         },
@@ -266,66 +256,50 @@ sub circulation_by_shelving_location {
                 xact_start => {
                     between => [$start_date, $end_date]
                 }
-            }
-        },
-        order_by => [
-            {class => 'circ', field => 'checkouts', direction => 'desc'}
-        ]
-    });
-
-    # Calculate renewals separately
-    my $renewals = $e->json_query({
-        select => {
-            acpl => ['id'],
-            circ => [
-                {transform => 'count', column => 'id', alias => 'renewals'},
-            ]
-        },
-        from => {
-            circ => {
-                acp => {
-                    field => 'id',
-                    fkey => 'target_copy'
-                },
-                acpl => {
-                    field => 'id',
-                    fkey => 'location',
-                    join => {
-                        acp => {}
-                    }
-                }
-            }
-        },
-        where => {
-            '+circ' => {
-                circ_lib => $org_list,
-                xact_start => {
-                    between => [$start_date, $end_date]
-                },
-                '-or' => [
-                    {desk_renewal => 't'},
-                    {opac_renewal => 't'},
-                    {phone_renewal => 't'}
-                ]
             }
         }
     });
 
-    # Create a lookup hash for renewals
-    my %renewal_lookup;
-    foreach my $r (@$renewals) {
-        $renewal_lookup{$r->{id}} = $r->{renewals};
+    $logger->info("Dashboard.pm: circulation_by_shelving_location - Raw circs count = " . ($circs ? scalar(@$circs) : "undef"));
+
+    # Group by location in Perl, counting checkouts vs renewals
+    my %by_location;
+    if ($circs && @$circs) {
+        foreach my $circ (@$circs) {
+            my $location_id = $circ->{location};
+            next unless $location_id;
+
+            $by_location{$location_id} ||= {checkouts => 0, renewals => 0};
+
+            # Check if this is a renewal
+            if ($circ->{desk_renewal} eq 't' || $circ->{opac_renewal} eq 't' || $circ->{phone_renewal} eq 't') {
+                $by_location{$location_id}->{renewals}++;
+            } else {
+                $by_location{$location_id}->{checkouts}++;
+            }
+        }
     }
 
+    # Fetch location names
+    my %location_names;
+    if (%by_location) {
+        my @location_ids = keys %by_location;
+        my $locations = $e->search_asset_copy_location({id => \@location_ids});
+        foreach my $loc (@$locations) {
+            $location_names{$loc->id} = $loc->name;
+        }
+    }
+
+    $logger->info("Dashboard.pm: circulation_by_shelving_location - Grouped locations count = " . scalar(keys %by_location));
+
     # Stream results
-    foreach my $row (@$results) {
-        my $location_id = $row->{id};
-        my $checkouts = $row->{checkouts} || 0;
-        my $renewals = $renewal_lookup{$location_id} || 0;
+    foreach my $location_id (sort keys %by_location) {
+        my $checkouts = $by_location{$location_id}->{checkouts} || 0;
+        my $renewals = $by_location{$location_id}->{renewals} || 0;
 
         $conn->respond({
             shelving_location => $location_id,
-            shelving_location_name => $row->{name},
+            shelving_location_name => $location_names{$location_id} || "Unknown",
             checkouts => $checkouts,
             renewals => $renewals,
             total => $checkouts + $renewals
@@ -400,21 +374,13 @@ sub circulation_trend {
         $U->get_org_descendants($org_unit) :
         [$org_unit];
 
-    # Query daily circulation counts
-    my $results = $e->json_query({
+    $logger->info("Dashboard.pm: org_list = " . Dumper($org_list));
+    $logger->info("Dashboard.pm: start_date = $start_date, end_date = $end_date");
+
+    # Fetch all circulations in date range (simple query without GROUP BY)
+    my $circs = $e->json_query({
         select => {
-            circ => [
-                {
-                    transform => 'date',
-                    column => 'xact_start',
-                    alias => 'date'
-                },
-                {
-                    transform => 'count',
-                    column => 'id',
-                    alias => 'total'
-                }
-            ]
+            circ => ['xact_start']
         },
         from => 'circ',
         where => {
@@ -422,11 +388,29 @@ sub circulation_trend {
             xact_start => {
                 between => [$start_date, $end_date]
             }
-        },
-        order_by => [
-            {class => 'circ', field => 'date'}
-        ]
+        }
     });
+
+    $logger->info("Dashboard.pm: Raw circs count = " . ($circs ? scalar(@$circs) : "undef"));
+
+    # Group by date in Perl (since json_query GROUP BY is broken)
+    my %by_date;
+    if ($circs && @$circs) {
+        foreach my $circ (@$circs) {
+            my $date_str = substr($circ->{xact_start}, 0, 10);  # Extract YYYY-MM-DD
+            $by_date{$date_str}++;
+        }
+    }
+
+    # Convert hash to sorted array
+    my @results = map {
+        { date => $_, total => $by_date{$_} }
+    } sort keys %by_date;
+
+    my $results = \@results;
+
+    $logger->info("Dashboard.pm: results count = " . scalar(@results));
+    $logger->info("Dashboard.pm: results data = " . Dumper($results));
 
     # Stream results
     foreach my $row (@$results) {

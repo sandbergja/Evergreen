@@ -194,18 +194,32 @@ export class LineChartRenderer implements ChartRenderer<ChartData> {
         const allData = data.series.flatMap(series => series.data);
         const xValues = allData.map(d => d.x);
 
-        // Check if we have Date values
-        if (xValues.length > 0 && xValues[0] instanceof Date) {
-            const xExtent = d3.extent(xValues as Date[]) as [Date, Date];
-            return d3.scaleTime()
-                .domain(xExtent)
-                .range([0, width]);
-        } else {
-            const xExtent = d3.extent(xValues as number[]) as [number, number];
-            return d3.scaleLinear()
-                .domain(xExtent)
-                .range([0, width]);
+        // Check if we have Date values or date strings
+        if (xValues.length > 0) {
+            if (xValues[0] instanceof Date) {
+                // Already Date objects
+                const xExtent = d3.extent(xValues as Date[]) as [Date, Date];
+                return d3.scaleTime()
+                    .domain(xExtent)
+                    .range([0, width]);
+            } else if (typeof xValues[0] === 'string' && /^\d{4}-\d{2}-\d{2}/.test(xValues[0])) {
+                // Date strings (YYYY-MM-DD format) - convert to Date objects
+                const dates = xValues.map(v => new Date(v as string));
+                const xExtent = d3.extent(dates) as [Date, Date];
+                return d3.scaleTime()
+                    .domain(xExtent)
+                    .range([0, width]);
+            } else {
+                // Numeric values
+                const xExtent = d3.extent(xValues as number[]) as [number, number];
+                return d3.scaleLinear()
+                    .domain(xExtent)
+                    .range([0, width]);
+            }
         }
+
+        // Fallback for empty data
+        return d3.scaleLinear().domain([0, 1]).range([0, width]);
     }
 
     private createYScale(data: ChartData, height: number): d3.ScaleLinear<number, number> {
@@ -296,7 +310,9 @@ export class LineChartRenderer implements ChartRenderer<ChartData> {
             // Create line generator with appropriate curve
             const line = d3.line<any>()
                 .x(d => {
-                    const xValue = xScale(d.x);
+                    // Convert date strings to Date objects for scaleTime
+                    const xVal = (typeof d.x === 'string' && /^\d{4}-\d{2}-\d{2}/.test(d.x)) ? new Date(d.x) : d.x;
+                    const xValue = xScale(xVal);
                     return isNaN(xValue) ? 0 : xValue;
                 })
                 .y(d => {
@@ -338,7 +354,9 @@ export class LineChartRenderer implements ChartRenderer<ChartData> {
                 .append('circle')
                 .attr('class', `point point-${seriesIndex}`)
                 .attr('cx', (d: any) => {
-                    const xValue = xScale(d.x);
+                    // Convert date strings to Date objects for scaleTime
+                    const xVal = (typeof d.x === 'string' && /^\d{4}-\d{2}-\d{2}/.test(d.x)) ? new Date(d.x) : d.x;
+                    const xValue = xScale(xVal);
                     return isNaN(xValue) ? 0 : xValue;
                 })
                 .attr('cy', (d: any) => {
