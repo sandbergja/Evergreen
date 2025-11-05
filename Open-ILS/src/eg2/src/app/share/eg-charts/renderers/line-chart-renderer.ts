@@ -37,7 +37,7 @@ export class LineChartRenderer implements ChartRenderer<ChartData> {
             }
 
             // Set up dimensions
-            const { width = 800, height = 400, margin = { top: 20, right: 20, bottom: 40, left: 40 } } = config;
+            const { width = 800, height = 400, margin = { top: 20, right: 20, bottom: 60, left: 40 } } = config;
             const innerWidth = width - margin.left - margin.right;
             const innerHeight = height - margin.top - margin.bottom;
 
@@ -87,7 +87,7 @@ export class LineChartRenderer implements ChartRenderer<ChartData> {
             const config: ChartConfiguration = {
                 width: +svg.attr('width'),
                 height: +svg.attr('height'),
-                margin: { top: 20, right: 20, bottom: 40, left: 40 },
+                margin: { top: 20, right: 20, bottom: 60, left: 40 },
                 showGrid: true,
                 showTooltip: true,
                 animated: true
@@ -264,10 +264,25 @@ export class LineChartRenderer implements ChartRenderer<ChartData> {
 
     private drawAxes(g: any, xScale: any, yScale: any, height: number, data: ChartData): void {
     // X axis
+        const xAxisGenerator = d3.axisBottom(xScale);
+
+        // Format dates nicely if using time scale
+        if ('ticks' in xScale && 'domain' in xScale && xScale.domain()[0] instanceof Date) {
+            xAxisGenerator.tickFormat(d3.timeFormat('%b %d') as any);
+            xAxisGenerator.ticks(6);  // Limit to ~6 tick marks
+        }
+
         const xAxis = g.append('g')
             .attr('class', 'x-axis')
             .attr('transform', `translate(0,${height})`)
-            .call(d3.axisBottom(xScale));
+            .call(xAxisGenerator);
+
+        // Rotate x-axis labels for better readability
+        xAxis.selectAll('text')
+            .style('text-anchor', 'end')
+            .attr('dx', '-.8em')
+            .attr('dy', '.15em')
+            .attr('transform', 'rotate(-45)');
 
         // Y axis
         const yAxis = g.append('g')
