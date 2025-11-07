@@ -201,6 +201,112 @@ VALUES ('current-holds-metric',
             ]
           }
         }'::jsonb,
+        TRUE),
+       ('items-by-copy-status',
+        oils_i18n_gettext(
+                'items-by-copy-status',
+                'Items by Copy Status',
+                'dashboard_widget', 'label'
+        ),
+        'circulations',
+        'Pie chart showing items distribution by copy status (Available, Checked Out, In Transit, etc.)',
+        '{
+          "id": "items-by-copy-status",
+          "name": "Items by Copy Status",
+          "type": "chart",
+          "category": "circulations",
+          "dataSource": {
+            "service": "circulation",
+            "method": "getItemsByCopyStatus",
+            "params": {
+              "include_descendants": true
+            },
+            "cache": {
+              "enabled": true,
+              "ttl": 300
+            }
+          },
+          "transform": {
+            "type": "sort",
+            "xField": "copy_status_name",
+            "yField": "count",
+            "sortBy": {
+              "field": "count",
+              "order": "desc"
+            }
+          },
+          "visualization": {
+            "chartType": "pie",
+            "title": "Items by Copy Status",
+            "subtitle": "Current item distribution",
+            "showLegend": true,
+            "showTooltip": true,
+            "colors": [
+              "#198754",
+              "#0d6efd",
+              "#0dcaf0",
+              "#ffc107",
+              "#dc3545",
+              "#6c757d",
+              "#d63384",
+              "#fd7e14"
+            ]
+          }
+        }'::jsonb,
+        TRUE),
+       ('circulation-by-library',
+        oils_i18n_gettext(
+                'circulation-by-library',
+                'Circulation by Library',
+                'dashboard_widget', 'label'
+        ),
+        'circulations',
+        'Pie chart showing circulation distribution across libraries/branches',
+        '{
+          "id": "circulation-by-library",
+          "name": "Circulation by Library",
+          "type": "chart",
+          "category": "circulations",
+          "dataSource": {
+            "service": "circulation",
+            "method": "getCirculationByLibrary",
+            "params": {
+              "timeRange": "month",
+              "org_unit": 1,
+              "include_descendants": true
+            },
+            "cache": {
+              "enabled": true,
+              "ttl": 300
+            }
+          },
+          "transform": {
+            "type": "sort",
+            "xField": "library_name",
+            "yField": "total",
+            "sortBy": {
+              "field": "total",
+              "order": "desc"
+            }
+          },
+          "visualization": {
+            "chartType": "pie",
+            "title": "Circulation by Library",
+            "subtitle": "Last 30 days",
+            "showLegend": true,
+            "showTooltip": true,
+            "colors": [
+              "#0d6efd",
+              "#198754",
+              "#ffc107",
+              "#dc3545",
+              "#6f42c1",
+              "#0dcaf0",
+              "#fd7e14",
+              "#d63384"
+            ]
+          }
+        }'::jsonb,
         TRUE)
 ;
 
@@ -270,7 +376,7 @@ VALUES ('ui.dashboard.default_widgets', --name
 INSERT INTO actor.org_unit_setting (org_unit, name, value)
 VALUES (1,
         'ui.dashboard.default_widgets',
-        '["current-holds-metric", "daily_circulation", "circulation-by-location"]')
+        '["current-holds-metric", "daily_circulation", "circulation-by-location", "items-by-copy-status", "circulation-by-library"]')
 ON CONFLICT (org_unit, name) DO UPDATE
     SET value = EXCLUDED.value;
 

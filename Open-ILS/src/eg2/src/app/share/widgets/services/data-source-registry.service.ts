@@ -54,7 +54,11 @@ export class DataSourceRegistryService {
             'getCirculationTrend': this.circulationDataService.getCirculationTrend.bind(this.circulationDataService),
             'getCirculationSummary': this.circulationDataService.getCirculationSummary.bind(this.circulationDataService),
             'getCurrentHoldsCount': this.circulationDataService.getCurrentHoldsCount.bind(this.circulationDataService),
-            'getShelvingLocations': this.circulationDataService.getShelvingLocations.bind(this.circulationDataService)
+            'getShelvingLocations': this.circulationDataService.getShelvingLocations.bind(this.circulationDataService),
+            'getCirculationByItemType': this.circulationDataService.getCirculationByItemType.bind(this.circulationDataService),
+            'getHoldsByStatus': this.circulationDataService.getHoldsByStatus.bind(this.circulationDataService),
+            'getItemsByCopyStatus': this.circulationDataService.getItemsByCopyStatus.bind(this.circulationDataService),
+            'getCirculationByLibrary': this.circulationDataService.getCirculationByLibrary.bind(this.circulationDataService)
         });
 
         // Additional data sources can be registered here

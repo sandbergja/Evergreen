@@ -109,9 +109,19 @@ export class WidgetConfigEngine {
 
         // Apply colors if specified
         if (viz.colors && viz.colors.length > 0) {
-            series.forEach((s, index) => {
-                s.color = viz.colors![index % viz.colors!.length];
-            });
+            if (viz.chartType === 'pie') {
+                // For pie charts, apply colors to each data point (slice)
+                series.forEach(s => {
+                    s.data.forEach((point, pointIndex) => {
+                        point.color = viz.colors![pointIndex % viz.colors!.length];
+                    });
+                });
+            } else {
+                // For bar/line charts, apply colors to series
+                series.forEach((s, seriesIndex) => {
+                    s.color = viz.colors![seriesIndex % viz.colors!.length];
+                });
+            }
         }
 
         return {

@@ -75,7 +75,7 @@
                     tabindex="0">
                     <span class="legend-color-swatch" [style.background-color]="point.color || getSliceColor(i)"></span>
                     <span class="legend-label">{{ point.x }}</span>
-                    <span class="legend-value">{{ getSlicePercentage(point) }}</span>
+                    <span class="legend-value">{{ point.y.toLocaleString() }} ({{ getSlicePercentage(point) }})</span>
                 </li>
             </ul>
         </div>

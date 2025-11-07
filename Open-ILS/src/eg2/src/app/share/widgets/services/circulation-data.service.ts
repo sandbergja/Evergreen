@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { map, catchError, toArray } from 'rxjs/operators';
+import { map, catchError, toArray, tap } from 'rxjs/operators';
 import { PcrudService } from '@eg/core/pcrud.service';
 import { NetService } from '@eg/core/net.service';
 import { AuthService } from '@eg/core/auth.service';
@@ -109,6 +109,154 @@ export class CirculationDataService {
             toArray(),
             catchError(error => {
                 console.error('Error fetching circulation trend:', error);
+                throw error;
+            })
+        );
+    }
+
+    /**
+     * Get circulation data by item type (circ_modifier)
+     */
+    getCirculationByItemType(params: any): Observable<any[]> {
+        console.log('[CircByItemType] Raw params:', params);
+
+        // Process params - convert timeRange to dates if needed
+        const query = this.processQueryParams(params);
+        console.log('[CircByItemType] Processed query:', query);
+
+        return this.net.request(
+            'open-ils.dashboard',
+            'open-ils.dashboard.circulation.by_item_type',
+            this.auth.token(),
+            query
+        ).pipe(
+            // Collect all streamed results into an array
+            toArray(),
+            tap(data => {
+                console.log('[CircByItemType] API Response:', data);
+                console.log('[CircByItemType] Response length:', data?.length || 0);
+                if (data && data.length > 0) {
+                    console.log('[CircByItemType] First item:', data[0]);
+                    console.log('[CircByItemType] Sample fields:', {
+                        circ_modifier: data[0]?.circ_modifier,
+                        circ_modifier_name: data[0]?.circ_modifier_name,
+                        total: data[0]?.total,
+                        checkouts: data[0]?.checkouts,
+                        renewals: data[0]?.renewals
+                    });
+                } else {
+                    console.warn('[CircByItemType] WARNING: API returned EMPTY array!');
+                }
+            }),
+            catchError(error => {
+                console.error('[CircByItemType] ERROR:', error);
+                throw error;
+            })
+        );
+    }
+
+    /**
+     * Get holds data by status (waiting, in-transit, on shelf, suspended)
+     */
+    getHoldsByStatus(params: any): Observable<any[]> {
+        console.log('[HoldsByStatus] Raw params:', params);
+
+        // Get org unit from params or default to user's ws_ou
+        const orgUnit = params?.org_unit || (this.auth.user()?.ws_ou ? this.auth.user().ws_ou() : null);
+        const query = {
+            org_unit: orgUnit,
+            include_descendants: params?.include_descendants || true
+        };
+
+        console.log('[HoldsByStatus] Processed query:', query);
+
+        return this.net.request(
+            'open-ils.dashboard',
+            'open-ils.dashboard.holds.by_status',
+            this.auth.token(),
+            query
+        ).pipe(
+            toArray(),
+            tap(data => {
+                console.log('[HoldsByStatus] API Response:', data);
+                console.log('[HoldsByStatus] Response length:', data?.length || 0);
+                if (data && data.length > 0) {
+                    console.log('[HoldsByStatus] First item:', data[0]);
+                } else {
+                    console.warn('[HoldsByStatus] WARNING: API returned EMPTY array!');
+                }
+            }),
+            catchError(error => {
+                console.error('[HoldsByStatus] ERROR:', error);
+                throw error;
+            })
+        );
+    }
+
+    /**
+     * Get items data by copy status (Available, Checked Out, In Transit, etc.)
+     */
+    getItemsByCopyStatus(params: any): Observable<any[]> {
+        console.log('[ItemsByCopyStatus] Raw params:', params);
+
+        // Get org unit from params or default to user's ws_ou
+        const orgUnit = params?.org_unit || (this.auth.user()?.ws_ou ? this.auth.user().ws_ou() : null);
+        const query = {
+            org_unit: orgUnit,
+            include_descendants: params?.include_descendants || true
+        };
+
+        console.log('[ItemsByCopyStatus] Processed query:', query);
+
+        return this.net.request(
+            'open-ils.dashboard',
+            'open-ils.dashboard.items.by_copy_status',
+            this.auth.token(),
+            query
+        ).pipe(
+            toArray(),
+            tap(data => {
+                console.log('[ItemsByCopyStatus] API Response:', data);
+                console.log('[ItemsByCopyStatus] Response length:', data?.length || 0);
+                if (data && data.length > 0) {
+                    console.log('[ItemsByCopyStatus] First item:', data[0]);
+                } else {
+                    console.warn('[ItemsByCopyStatus] WARNING: API returned EMPTY array!');
+                }
+            }),
+            catchError(error => {
+                console.error('[ItemsByCopyStatus] ERROR:', error);
+                throw error;
+            })
+        );
+    }
+
+    /**
+     * Get circulation data by library/branch
+     */
+    getCirculationByLibrary(params: any): Observable<any[]> {
+        console.log('[CircByLibrary] Raw params:', params);
+
+        // Process params - convert timeRange to dates if needed
+        const query = this.processQueryParams(params);
+        console.log('[CircByLibrary] Processed query:', query);
+
+        return this.net.request(
+            'open-ils.dashboard',
+            'open-ils.dashboard.circulation.by_library',
+            this.auth.token(),
+            query
+        ).pipe(
+            toArray(),
+            tap(data => {
+                console.log('[CircByLibrary] API Response:', data);
+                console.log('[CircByLibrary] Response length:', data?.length || 0);
+                if (data && data.length > 0) {
+                    console.log('[CircByLibrary] First item:', data[0]);
+                }
+            }),
+            catchError(error => {
+                console.error('[CircByLibrary] ERROR:', error);
                 throw error;
             })
         );

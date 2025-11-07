@@ -261,8 +261,8 @@ export class PieChartRenderer implements ChartRenderer<ChartData> {
                     }
                 }
 
-                // Fall back to solid color
-                return d.data.color || series.color || this.colorService.getAccessibleColor(i);
+                // Fall back to solid color - each slice gets a different color from palette
+                return d.data.color || this.colorService.getAccessibleColor(i);
             })
             .attr('opacity', opacity)
             .attr('stroke', 'rgba(255, 255, 255, 0.8)') // Subtle white inner border
