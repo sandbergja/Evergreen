@@ -20,49 +20,6 @@ use Data::Dumper;
 
 my $date_parser = DateTime::Format::ISO8601->new;
 
-=head1 NAME
-
-OpenILS::Application::Dashboard - Dashboard API for circulation and library statistics
-
-=head1 SYNOPSIS
-
-This module provides OpenSRF methods for retrieving dashboard data including:
-- Circulation statistics by various dimensions
-- Holds statistics
-- Patron activity metrics
-- Collection analytics
-
-=head1 DESCRIPTION
-
-The Dashboard API provides efficient, aggregated data queries for library
-dashboards and reporting widgets. All methods require authentication and
-respect organizational unit permissions.
-
-=head1 METHODS
-
-=cut
-
-# -------------------------------------------------------------------------
-# Circulation Summary
-# -------------------------------------------------------------------------
-
-=head2 circulation_summary
-
-Returns a summary of circulation statistics for a given time period.
-
-Parameters:
-- authtoken: Authentication token
-- query: Hash reference containing:
-  - start_date: ISO8601 date string
-  - end_date: ISO8601 date string
-  - org_unit: Optional org unit ID (defaults to workstation org unit)
-  - include_descendants: Optional boolean to include child org units
-
-Returns:
-- Hash reference with circulation summary data
-
-=cut
-
 __PACKAGE__->register_method(
     method   => "circulation_summary",
     api_name => "open-ils.dashboard.circulation.summary",
@@ -171,23 +128,6 @@ sub circulation_summary {
         org_unit => $org_unit
     };
 }
-
-# -------------------------------------------------------------------------
-# Circulation by Shelving Location
-# -------------------------------------------------------------------------
-
-=head2 circulation_by_shelving_location
-
-Returns circulation statistics grouped by shelving location.
-
-Parameters:
-- authtoken: Authentication token
-- query: Hash reference containing date range and org unit filters
-
-Returns:
-- Array of hashes with circulation data by shelving location
-
-=cut
 
 __PACKAGE__->register_method(
     method   => "circulation_by_shelving_location",
@@ -310,23 +250,6 @@ sub circulation_by_shelving_location {
     return undef;
 }
 
-# -------------------------------------------------------------------------
-# Circulation Trend
-# -------------------------------------------------------------------------
-
-=head2 circulation_trend
-
-Returns circulation trend data over time (daily aggregates).
-
-Parameters:
-- authtoken: Authentication token
-- query: Hash reference with date range and org unit
-
-Returns:
-- Stream of daily circulation counts
-
-=cut
-
 __PACKAGE__->register_method(
     method   => "circulation_trend",
     api_name => "open-ils.dashboard.circulation.trend",
@@ -424,23 +347,6 @@ sub circulation_trend {
     $e->disconnect;
     return undef;
 }
-
-# -------------------------------------------------------------------------
-# Current Holds Count
-# -------------------------------------------------------------------------
-
-=head2 holds_current_count
-
-Returns the current count of holds in various states.
-
-Parameters:
-- authtoken: Authentication token
-- org_unit: Optional org unit ID
-
-Returns:
-- Hash with holds counts by status
-
-=cut
 
 __PACKAGE__->register_method(
     method   => "holds_current_count",
@@ -559,23 +465,6 @@ sub holds_current_count {
     };
 }
 
-# -------------------------------------------------------------------------
-# Widget Configuration Management
-# -------------------------------------------------------------------------
-
-=head2 widgets_list
-
-Returns a list of available dashboard widget configurations.
-
-Parameters:
-- authtoken: Authentication token
-- query: Hash reference containing optional filters (category, enabled)
-
-Returns:
-- Stream of widget configuration objects
-
-=cut
-
 __PACKAGE__->register_method(
     method   => "widgets_list",
     api_name => "open-ils.dashboard.widgets.list",
@@ -638,19 +527,6 @@ sub widgets_list {
     return undef;
 }
 
-=head2 widgets_get
-
-Returns a specific widget configuration by code.
-
-Parameters:
-- authtoken: Authentication token
-- widget_code: Widget code identifier
-
-Returns:
-- Widget configuration object
-
-=cut
-
 __PACKAGE__->register_method(
     method   => "widgets_get",
     api_name => "open-ils.dashboard.widgets.get",
@@ -695,19 +571,6 @@ sub widgets_get {
         enabled => $widget->enabled
     };
 }
-
-=head2 user_widgets_get
-
-Returns the list of widgets enabled for a specific user's dashboard.
-This combines org-level defaults with user-specific customizations.
-
-Parameters:
-- authtoken: Authentication token
-
-Returns:
-- Array of widget configurations
-
-=cut
 
 __PACKAGE__->register_method(
     method   => "user_widgets_get",
@@ -787,19 +650,6 @@ sub user_widgets_get {
     return \@results;
 }
 
-=head2 user_widgets_update
-
-Updates a user's dashboard widget preferences.
-
-Parameters:
-- authtoken: Authentication token
-- widget_codes: Array of widget codes in display order
-
-Returns:
-- Success/failure status
-
-=cut
-
 __PACKAGE__->register_method(
     method   => "user_widgets_update",
     api_name => "open-ils.dashboard.user.widgets.update",
@@ -860,5 +710,10 @@ sub user_widgets_update {
 
     return {success => 1, count => scalar(@$widget_codes)};
 }
+
+
+
+sub get_widget_data {...}
+
 
 1;
