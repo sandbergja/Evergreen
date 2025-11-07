@@ -179,9 +179,9 @@ export class CirculationDataService {
             include_descendants: params?.include_descendants !== false // Default to true
         };
 
-        console.log('🔍 getCurrentHoldsCount called with params:', params);
-        console.log('🔍 getCurrentHoldsCount - user.ws_ou():', userWsOu);
-        console.log('🔍 Sending query to API:', query);
+        console.log('getCurrentHoldsCount called with params:', params);
+        console.log('getCurrentHoldsCount - user.ws_ou():', userWsOu);
+        console.log('Sending query to API:', query);
 
         return this.net.request(
             'open-ils.dashboard',
@@ -196,7 +196,7 @@ export class CirculationDataService {
                 return result;
             }),
             catchError(error => {
-                console.error('❌ Error fetching current holds count:', error);
+                console.error('Error fetching current holds count:', error);
                 throw error;
             })
         );
@@ -213,10 +213,10 @@ export class CirculationDataService {
         const userWsOu = user?.ws_ou ? user.ws_ou() : null;
         const orgUnit = params.org_unit || this.org.get(userWsOu)?.id() || 1;
 
-        console.log('🔍 processQueryParams - user:', user);
-        console.log('🔍 processQueryParams - user.ws_ou():', userWsOu);
-        console.log('🔍 processQueryParams - orgUnit:', orgUnit);
-        console.log('🔍 processQueryParams - params.org_unit:', params.org_unit);
+        console.log('processQueryParams - user:', user);
+        console.log('processQueryParams - user.ws_ou():', userWsOu);
+        console.log('processQueryParams - orgUnit:', orgUnit);
+        console.log('processQueryParams - params.org_unit:', params.org_unit);
 
         // If already has start_date/end_date, return as-is
         if (params.start_date && params.end_date) {

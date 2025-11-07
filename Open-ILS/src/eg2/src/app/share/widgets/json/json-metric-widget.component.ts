@@ -147,6 +147,11 @@ import { WidgetConfigEngine } from '../engines/widget-config.engine';
 
         .card {
             height: 100%;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
+        }
+
+        .dashboard-widget-border {
+            border: 1px solid #b8b8b8 !important;
         }
 
         .card-header {
@@ -499,7 +504,7 @@ export class JsonMetricWidgetComponent implements OnInit, OnDestroy {
      * Get metric card CSS classes
      */
     public getMetricCardClasses(): string {
-        return 'card border-secondary';
+        return 'card dashboard-widget-border';
     }
 
     /**
