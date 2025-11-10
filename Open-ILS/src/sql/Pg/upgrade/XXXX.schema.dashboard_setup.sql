@@ -307,6 +307,63 @@ VALUES ('current-holds-metric',
             ]
           }
         }'::jsonb,
+        TRUE),
+       ('items-by-status-and-library',
+        oils_i18n_gettext(
+                'items-by-status-and-library',
+                'Collection Status by Library',
+                'dashboard_widget', 'label'
+        ),
+        'circulations',
+        'Stacked bar chart showing item status distribution across libraries (multi-series)',
+        '{
+          "id": "items-by-status-and-library",
+          "name": "Collection Status by Library",
+          "type": "chart",
+          "category": "circulations",
+          "dataSource": {
+            "service": "circulation",
+            "method": "getItemsByCopyStatusAndLibrary",
+            "params": {
+              "org_unit": 1,
+              "include_descendants": true
+            },
+            "cache": {
+              "enabled": true,
+              "ttl": 300
+            }
+          },
+          "transform": {
+            "type": "multiSeries",
+            "xField": "library",
+            "yField": "item_count",
+            "seriesField": "copy_status",
+            "aggregation": "sum"
+          },
+          "visualization": {
+            "chartType": "bar",
+            "title": "Collection Status by Library",
+            "subtitle": "Current item status across all branches",
+            "xAxisLabel": "Library",
+            "yAxisLabel": "Item Count",
+            "showLegend": true,
+            "showTooltip": true,
+            "showGrid": true,
+            "barStyle": {
+              "grouping": "stacked"
+            },
+            "colors": [
+              "#198754",
+              "#0d6efd",
+              "#dc3545",
+              "#ffc107",
+              "#6c757d",
+              "#0dcaf0",
+              "#fd7e14",
+              "#d63384"
+            ]
+          }
+        }'::jsonb,
         TRUE)
 ;
 
@@ -376,7 +433,7 @@ VALUES ('ui.dashboard.default_widgets', --name
 INSERT INTO actor.org_unit_setting (org_unit, name, value)
 VALUES (1,
         'ui.dashboard.default_widgets',
-        '["current-holds-metric", "daily_circulation", "circulation-by-location", "items-by-copy-status", "circulation-by-library"]')
+        '["current-holds-metric", "daily_circulation", "circulation-by-location", "items-by-copy-status", "circulation-by-library", "items-by-status-and-library"]')
 ON CONFLICT (org_unit, name) DO UPDATE
     SET value = EXCLUDED.value;
 

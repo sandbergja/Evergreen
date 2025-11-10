@@ -971,6 +971,133 @@ sub items_by_copy_status {
 }
 
 __PACKAGE__->register_method(
+    method   => "items_by_copy_status_and_library",
+    api_name => "open-ils.dashboard.items.by_copy_status_and_library",
+    stream   => 1,
+    signature => {
+        params => [
+            {type => 'string', desc => 'Authentication token'},
+            {type => 'object', desc => 'Query parameters (org_unit, include_descendants)'},
+        ],
+        return => { desc => 'Stream of item counts by copy status and library'}
+    }
+);
+
+sub items_by_copy_status_and_library {
+    my ($self, $conn, $authtoken, $query) = @_;
+
+    $logger->info("Dashboard.pm: items_by_copy_status_and_library CALLED");
+    $logger->info("Query params: " . Dumper($query));
+
+    # Validate authentication
+    my $e = new_editor(authtoken => $authtoken);
+    unless ($e->checkauth) {
+        $logger->error("Dashboard.pm: Authentication failed");
+        return $e->die_event;
+    }
+
+    $logger->info("Dashboard.pm: Auth successful");
+
+    # Get org unit
+    my $org_unit;
+    if (ref($query) eq 'HASH') {
+        $org_unit = $query->{org_unit} || $e->requestor->ws_ou;
+    } else {
+        $org_unit = $query || $e->requestor->ws_ou;
+    }
+
+    # Check permissions
+    return $e->die_event unless $e->allowed("VIEW_COPY_NOTES", $org_unit);
+
+    # Get org unit tree if include_descendants is true
+    my $org_list;
+    if (ref($query) eq 'HASH' && $query->{include_descendants}) {
+        $org_list = $U->get_org_descendants($org_unit);
+        $logger->info("Dashboard.pm: Using org descendants: " . join(', ', @$org_list));
+    } else {
+        $org_list = [$org_unit];
+        $logger->info("Dashboard.pm: Using single org: $org_unit");
+    }
+
+    # Fetch all items (copies) with their status and library
+    my $copies = $e->json_query({
+        select => {
+            acp => ['status', 'circ_lib']
+        },
+        from => 'acp',
+        where => {
+            circ_lib => $org_list,
+            deleted => 'f'
+        }
+    });
+
+    $logger->info("Dashboard.pm: items_by_copy_status_and_library - Raw copies count = " . ($copies ? scalar(@$copies) : "undef"));
+
+    # Group by library and status in Perl
+    my %by_lib_and_status;
+    if ($copies && @$copies) {
+        foreach my $copy (@$copies) {
+            my $lib_id = $copy->{circ_lib};
+            my $status_id = $copy->{status};
+            # Use defined() because status_id can be 0 (Available)
+            next unless $lib_id && defined($status_id);
+
+            my $key = "$lib_id:$status_id";
+            $by_lib_and_status{$key} ||= {
+                lib_id => $lib_id,
+                status_id => $status_id,
+                count => 0
+            };
+            $by_lib_and_status{$key}->{count}++;
+        }
+    }
+
+    # Fetch library names
+    my %library_names;
+    if (%by_lib_and_status) {
+        my %lib_ids = map { $_->{lib_id} => 1 } values %by_lib_and_status;
+        my @lib_ids = keys %lib_ids;
+        my $libraries = $e->search_actor_org_unit({id => \@lib_ids});
+        foreach my $lib (@$libraries) {
+            $library_names{$lib->id} = $lib->shortname;
+        }
+    }
+
+    # Fetch status names
+    my %status_names;
+    if (%by_lib_and_status) {
+        my %status_ids = map { $_->{status_id} => 1 } values %by_lib_and_status;
+        my @status_ids = keys %status_ids;
+        my $statuses = $e->search_config_copy_status({id => \@status_ids});
+        foreach my $status (@$statuses) {
+            $status_names{$status->id} = $status->name;
+        }
+    }
+
+    $logger->info("Dashboard.pm: items_by_copy_status_and_library - Grouped count = " . scalar(keys %by_lib_and_status));
+
+    # Stream results - filter to only include statuses with significant counts
+    foreach my $key (sort keys %by_lib_and_status) {
+        my $data = $by_lib_and_status{$key};
+        my $count = $data->{count} || 0;
+
+        # Only include if count > 10 to avoid clutter
+        next unless $count > 10;
+
+        $conn->respond({
+            library => $library_names{$data->{lib_id}} || "Unknown",
+            library_id => $data->{lib_id},
+            copy_status => $status_names{$data->{status_id}} || "Unknown",
+            copy_status_id => $data->{status_id},
+            item_count => $count
+        });
+    }
+
+    $e->disconnect;
+    return undef;
+}
+
+__PACKAGE__->register_method(
     method   => "widgets_list",
     api_name => "open-ils.dashboard.widgets.list",
     stream   => 1,

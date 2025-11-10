@@ -81,30 +81,38 @@ export class WidgetConfigEngine {
     /**
      * Convert transformed data to ChartData format
      */
-    public toChartData(transformedData: any[], config: WidgetJsonConfig): ChartData {
+    public toChartData(transformedData: any, config: WidgetJsonConfig): ChartData {
         const viz = config.visualization;
-
-        // Determine if we have grouped data or simple data
-        const isGroupedData = transformedData.length > 0 && transformedData[0]._items;
 
         let series: ChartSeries[];
 
-        if (isGroupedData) {
-            // Data is grouped - create chart series
-            series = this.createChartSeriesFromGroupedData(transformedData, config);
-        } else if (transformedData.length === 1 && typeof transformedData[0][config.transform.yField] === 'number') {
-            // Single aggregated value - create simple series
-            series = [{
-                name: viz.title || 'Value',
-                data: [{
-                    x: viz.title || 'Total',
-                    y: transformedData[0][config.transform.yField],
-                    label: `${transformedData[0][config.transform.yField]}`
-                }]
-            }];
+        // Check if this is multi-series data from multiSeries transform
+        if (transformedData && transformedData._multiSeriesData === true) {
+            // Multi-series data - already in ChartSeries format
+            series = transformedData.series;
+        } else if (Array.isArray(transformedData)) {
+            // Determine if we have grouped data or simple data
+            const isGroupedData = transformedData.length > 0 && transformedData[0]._items;
+
+            if (isGroupedData) {
+                // Data is grouped - create chart series
+                series = this.createChartSeriesFromGroupedData(transformedData, config);
+            } else if (transformedData.length === 1 && typeof transformedData[0][config.transform.yField] === 'number') {
+                // Single aggregated value - create simple series
+                series = [{
+                    name: viz.title || 'Value',
+                    data: [{
+                        x: viz.title || 'Total',
+                        y: transformedData[0][config.transform.yField],
+                        label: `${transformedData[0][config.transform.yField]}`
+                    }]
+                }];
+            } else {
+                // Array of data points - create series from array
+                series = this.createChartSeriesFromArray(transformedData, config);
+            }
         } else {
-            // Array of data points - create series from array
-            series = this.createChartSeriesFromArray(transformedData, config);
+            throw new Error('Invalid transformed data format');
         }
 
         // Apply colors if specified

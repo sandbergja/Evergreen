@@ -78,6 +78,9 @@ export class TransformEngine {
                 case 'reduce':
                     transformedData = this.reduce(normalizedData, config);
                     break;
+                case 'multiSeries':
+                    transformedData = this.multiSeries(normalizedData, config);
+                    break;
                 default:
                     throw new Error(`Unknown transform type: ${config.type}`);
             }
@@ -230,6 +233,73 @@ export class TransformEngine {
     }
 
     /**
+     * Create multiple series from flat data
+     * Pivots data by seriesField to create separate series for charts
+     * Example input: [{library: "BR1", status: "Available", count: 100}, {library: "BR1", status: "Checked out", count: 50}]
+     * Example output: ChartData with multiple series
+     */
+    private multiSeries(data: any[], config: TransformConfig): any {
+        if (!config.seriesField) {
+            throw new Error('multiSeries transform requires seriesField');
+        }
+        if (!config.xField) {
+            throw new Error('multiSeries transform requires xField');
+        }
+
+        // Group data by xField (categories) and seriesField (series)
+        const seriesMap = new Map<string, Map<any, number>>();
+        const categories = new Set<any>();
+
+        data.forEach(item => {
+            const seriesKey = this.getNestedValue(item, config.seriesField!);
+            const category = this.getNestedValue(item, config.xField!);
+            const value = this.getNestedValue(item, config.yField);
+
+            categories.add(category);
+
+            if (!seriesMap.has(seriesKey)) {
+                seriesMap.set(seriesKey, new Map());
+            }
+
+            const categoryMap = seriesMap.get(seriesKey)!;
+            const existingValue = categoryMap.get(category) || 0;
+
+            // Aggregate if multiple values for same category/series
+            if (config.aggregation === 'sum' || !config.aggregation) {
+                categoryMap.set(category, existingValue + (value || 0));
+            } else if (config.aggregation === 'average') {
+                // For average, we'd need to track count - simplified here
+                categoryMap.set(category, value || 0);
+            } else {
+                categoryMap.set(category, value || 0);
+            }
+        });
+
+        // Convert to ChartData format with multiple series
+        const series: any[] = [];
+        const categoryArray = Array.from(categories);
+
+        seriesMap.forEach((categoryMap, seriesName) => {
+            const seriesData = categoryArray.map(category => ({
+                x: category,
+                y: categoryMap.get(category) || 0,
+                label: `${category}: ${categoryMap.get(category) || 0}`
+            }));
+
+            series.push({
+                name: seriesName,
+                data: seriesData
+            });
+        });
+
+        // Return ChartData structure (not array)
+        return {
+            _multiSeriesData: true,  // Flag to indicate this is multi-series data
+            series: series
+        };
+    }
+
+    /**
      * Aggregate values using specified function
      */
     private aggregate(data: any[], field: string, fn: AggregationFunction): number {
@@ -364,6 +434,14 @@ export class TransformEngine {
                     errors.push('groupBy transform requires groupByField');
                 }
                 break;
+            case 'multiSeries':
+                if (!config.seriesField) {
+                    errors.push('multiSeries transform requires seriesField');
+                }
+                if (!config.xField) {
+                    errors.push('multiSeries transform requires xField');
+                }
+                break;
             case 'filter':
                 if (!config.filterExpression) {
                     errors.push('filter transform requires filterExpression');
@@ -391,7 +469,7 @@ export class TransformEngine {
      * Get supported transform types
      */
     public getSupportedTransformTypes(): string[] {
-        return ['groupBy', 'sum', 'average', 'count', 'filter', 'sort', 'map', 'reduce'];
+        return ['groupBy', 'sum', 'average', 'count', 'filter', 'sort', 'map', 'reduce', 'multiSeries'];
     }
 
     /**

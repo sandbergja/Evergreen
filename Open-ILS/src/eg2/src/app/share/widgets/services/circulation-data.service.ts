@@ -263,6 +263,49 @@ export class CirculationDataService {
     }
 
     /**
+     * Get items data by copy status AND library (for multi-series charts)
+     */
+    getItemsByCopyStatusAndLibrary(params: any): Observable<any[]> {
+        console.log('[ItemsByCopyStatusAndLibrary] Raw params:', params);
+
+        // Get org unit from params or default to user's ws_ou
+        const orgUnit = params?.org_unit || (this.auth.user()?.ws_ou ? this.auth.user().ws_ou() : null);
+        const query = {
+            org_unit: orgUnit,
+            include_descendants: params?.include_descendants || true
+        };
+
+        console.log('[ItemsByCopyStatusAndLibrary] Processed query:', query);
+
+        return this.net.request(
+            'open-ils.dashboard',
+            'open-ils.dashboard.items.by_copy_status_and_library',
+            this.auth.token(),
+            query
+        ).pipe(
+            toArray(),
+            tap(data => {
+                console.log('[ItemsByCopyStatusAndLibrary] API Response:', data);
+                console.log('[ItemsByCopyStatusAndLibrary] Response length:', data?.length || 0);
+                if (data && data.length > 0) {
+                    console.log('[ItemsByCopyStatusAndLibrary] First item:', data[0]);
+                    console.log('[ItemsByCopyStatusAndLibrary] Sample fields:', {
+                        library: data[0]?.library,
+                        copy_status: data[0]?.copy_status,
+                        item_count: data[0]?.item_count
+                    });
+                } else {
+                    console.warn('[ItemsByCopyStatusAndLibrary] WARNING: API returned EMPTY array!');
+                }
+            }),
+            catchError(error => {
+                console.error('[ItemsByCopyStatusAndLibrary] ERROR:', error);
+                throw error;
+            })
+        );
+    }
+
+    /**
      * Get available shelving locations for the current organizational unit
      */
     getShelvingLocations(orgUnit?: number): Observable<ShelvingLocationInfo[]> {

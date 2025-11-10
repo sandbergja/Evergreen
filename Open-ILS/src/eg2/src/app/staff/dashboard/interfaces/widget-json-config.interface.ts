@@ -12,7 +12,7 @@
 /**
  * Transform strategy types for data manipulation
  */
-export type TransformType = 'groupBy' | 'sum' | 'average' | 'count' | 'filter' | 'sort' | 'map' | 'reduce';
+export type TransformType = 'groupBy' | 'sum' | 'average' | 'count' | 'filter' | 'sort' | 'map' | 'reduce' | 'multiSeries';
 
 /**
  * Available data source services
@@ -59,6 +59,9 @@ export interface TransformConfig {
 
     // Field to group by (for groupBy transform)
     groupByField?: string;
+
+    // Field to split into multiple series (for multiSeries transform)
+    seriesField?: string;
 
     // Aggregation function to apply
     aggregation?: AggregationFunction;
