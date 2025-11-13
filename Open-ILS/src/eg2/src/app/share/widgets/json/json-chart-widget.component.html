@@ -1,0 +1,130 @@
+<div class="eg-json-chart-widget" [class.loading]="isLoading" [class.error]="hasError">
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="widget-loading">
+        <div class="d-flex flex-column justify-content-center align-items-center p-4">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="text-muted mt-2 mb-0 small">Loading data...</p>
+        </div>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="hasError && !isLoading" class="widget-error">
+        <div class="alert alert-danger m-3">
+            <div class="d-flex align-items-start">
+                <span class="material-icons me-2" style="font-size: 2rem;">error</span>
+                <div class="flex-grow-1">
+                    <h5 class="alert-heading">Error Loading Chart</h5>
+                    <p class="mb-2">{{ errorMessage || 'Failed to load chart data' }}</p>
+                    <button class="btn btn-sm btn-danger" (click)="refresh()">
+                        <span class="material-icons">refresh</span> Retry
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart Content -->
+    <div *ngIf="!isLoading && !hasError && chartData" class="widget-content flip-card" #flipCard>
+        <div class="flip-card-inner card dashboard-widget-border">
+            <div class="card-front">
+                <!-- Card Header with Title and Actions -->
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <span class="material-icons me-2"
+                                    *ngIf="config?.visualization?.icon"
+                                    aria-hidden="true">
+                                {{ config.visualization.icon }}
+                            </span>
+                            {{ config?.visualization?.title || config?.name }}
+                        </h5>
+                        <div class="d-flex gap-2">
+                            <button 
+                                    class="btn btn-sm btn-outline-secondary"
+                                    (click)="showConfig()"
+                                    [disabled]="isLoading"
+                                    title="Configure Chart">
+                                <span class="material-icons">settings</span>
+                            </button>
+                            <button *ngIf="config?.visualization?.showExportButton !== false"
+                                    class="btn btn-sm btn-outline-secondary"
+                                    (click)="exportData()"
+                                    [disabled]="isLoading || !chartData"
+                                    title="Export Data">
+                                <span class="material-icons">download</span>
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary"
+                                    (click)="refresh()"
+                                    [disabled]="isLoading"
+                                    title="Refresh">
+                                <span class="material-icons" [class.spinning]="isLoading">refresh</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card Body with Chart -->
+                <div class="card-body">
+                    <eg-chart
+                        #chartComponent
+                        [chartData]="chartDataWithoutTitle"
+                        [config]="chartConfig"
+                        [type]="config?.visualization?.chartType || 'bar'"
+                        [showExportButton]="false">
+                    </eg-chart>
+                </div>
+            </div>
+            <!-- Back of the card -should only see one at a time -->
+            <div class="card-back">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <span class="material-icons me-2"
+                                    *ngIf="config?.visualization?.icon"
+                                    aria-hidden="true">
+                                {{ config.visualization.icon }}
+                            </span>
+                            {{ config?.visualization?.title || config?.name }}
+                        </h5>
+                        <div class="d-flex gap-2">
+                            <button 
+                                    class="btn btn-success"
+                                    (click)="hideConfig()">
+                                <span class="material-icons">arrow_back</span>
+                                Save Chart Settings
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    And this is where the config stuff will go :)
+                    <br/>
+                    <br/>
+                    Either a form for all of the things in a WidgetJsonConfig or a textarea for entering PRQL.
+                    Maybe both in two different tabs.
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- No Data State -->
+    <div *ngIf="!isLoading && !hasError && !chartData" class="widget-no-data">
+        <div class="text-center p-4 text-muted">
+            <span class="material-icons mb-3" style="font-size: 3rem;">bar_chart</span>
+            <p>No data available for this chart.</p>
+            <button class="btn btn-sm btn-outline-primary" (click)="refresh()">
+                <span class="material-icons">refresh</span> Refresh Data
+            </button>
+        </div>
+    </div>
+
+    <!-- Debug Info (only in development) -->
+    <div *ngIf="showDebugInfo && !isLoading" class="widget-debug mt-2">
+        <details>
+            <summary class="text-muted small">Debug Info</summary>
+            <pre class="small">{{ getDebugInfo() }}</pre>
+        </details>
+    </div>
+</div>

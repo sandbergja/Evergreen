@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnDestroy, ViewChild, inject } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, ViewChild, inject, ElementRef } from '@angular/core';
 import { Subject } from 'rxjs';
 import { takeUntil, catchError } from 'rxjs/operators';
 import { WidgetJsonConfig } from '@eg/staff/dashboard/interfaces/widget-json-config.interface';
@@ -26,210 +26,8 @@ import { EgChartComponent } from '@eg/share/eg-charts/eg-chart.component';
  */
 @Component({
     selector: 'eg-json-chart-widget',
-    template: `
-        <div class="eg-json-chart-widget" [class.loading]="isLoading" [class.error]="hasError">
-
-            <!-- Loading State -->
-            <div *ngIf="isLoading" class="widget-loading">
-                <div class="d-flex flex-column justify-content-center align-items-center p-4">
-                    <div class="spinner-border text-primary" role="status"></div>
-                    <p class="text-muted mt-2 mb-0 small">Loading data...</p>
-                </div>
-            </div>
-
-            <!-- Error State -->
-            <div *ngIf="hasError && !isLoading" class="widget-error">
-                <div class="alert alert-danger m-3">
-                    <div class="d-flex align-items-start">
-                        <span class="material-icons me-2" style="font-size: 2rem;">error</span>
-                        <div class="flex-grow-1">
-                            <h5 class="alert-heading">Error Loading Chart</h5>
-                            <p class="mb-2">{{ errorMessage || 'Failed to load chart data' }}</p>
-                            <button class="btn btn-sm btn-danger" (click)="refresh()">
-                                <span class="material-icons">refresh</span> Retry
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Chart Content -->
-            <div *ngIf="!isLoading && !hasError && chartData" class="widget-content">
-                <div class="card dashboard-widget-border">
-
-                    <!-- Card Header with Title and Actions -->
-                    <div class="card-header">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h5 class="card-title mb-0">
-                                <span class="material-icons me-2"
-                                      *ngIf="config?.visualization?.icon"
-                                      aria-hidden="true">
-                                    {{ config.visualization.icon }}
-                                </span>
-                                {{ config?.visualization?.title || config?.name }}
-                            </h5>
-                            <div class="d-flex gap-2">
-                                <button *ngIf="config?.visualization?.showExportButton !== false"
-                                        class="btn btn-sm btn-outline-secondary"
-                                        (click)="exportData()"
-                                        [disabled]="isLoading || !chartData"
-                                        title="Export Data">
-                                    <span class="material-icons">download</span>
-                                </button>
-                                <button class="btn btn-sm btn-outline-secondary"
-                                        (click)="refresh()"
-                                        [disabled]="isLoading"
-                                        title="Refresh">
-                                    <span class="material-icons" [class.spinning]="isLoading">refresh</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Card Body with Chart -->
-                    <div class="card-body">
-                        <eg-chart
-                            #chartComponent
-                            [chartData]="chartDataWithoutTitle"
-                            [config]="chartConfig"
-                            [type]="config?.visualization?.chartType || 'bar'"
-                            [showExportButton]="false">
-                        </eg-chart>
-                    </div>
-
-                </div>
-            </div>
-
-            <!-- No Data State -->
-            <div *ngIf="!isLoading && !hasError && !chartData" class="widget-no-data">
-                <div class="text-center p-4 text-muted">
-                    <span class="material-icons mb-3" style="font-size: 3rem;">bar_chart</span>
-                    <p>No data available for this chart.</p>
-                    <button class="btn btn-sm btn-outline-primary" (click)="refresh()">
-                        <span class="material-icons">refresh</span> Refresh Data
-                    </button>
-                </div>
-            </div>
-
-            <!-- Debug Info (only in development) -->
-            <div *ngIf="showDebugInfo && !isLoading" class="widget-debug mt-2">
-                <details>
-                    <summary class="text-muted small">Debug Info</summary>
-                    <pre class="small">{{ getDebugInfo() }}</pre>
-                </details>
-            </div>
-        </div>
-    `,
-    styles: [`
-        .eg-json-chart-widget {
-            width: 100%;
-            height: 100%;
-        }
-
-        .eg-json-chart-widget.loading {
-            opacity: 0.8;
-        }
-
-        .card {
-            height: 100%;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
-        }
-
-        .dashboard-widget-border {
-            border: 1px solid #b8b8b8 !important;
-        }
-
-        .card-header {
-            background-color: var(--bs-light, #f8f9fa);
-            border-bottom: 1px solid var(--bs-border-color, #dee2e6);
-            padding: 0.75rem 1rem;
-        }
-
-        .card-header .card-title {
-            font-size: 1rem;
-            font-weight: 600;
-            color: var(--bs-dark, #212529);
-            display: flex;
-            align-items: center;
-        }
-
-        .card-header .material-icons {
-            font-size: 1.25rem;
-        }
-
-        .card-header .btn {
-            padding: 0.25rem 0.5rem;
-        }
-
-        .card-header .btn .material-icons {
-            font-size: 1rem;
-        }
-
-        .card-body {
-            padding: 1rem;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .widget-content {
-            height: 100%;
-        }
-
-        .widget-loading,
-        .widget-error,
-        .widget-no-data {
-            min-height: 200px;
-        }
-
-        .widget-loading {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .spinning {
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        .widget-debug {
-            padding: 0.5rem 1rem;
-            border-top: 1px solid var(--bs-border-color-translucent);
-            background: var(--bs-light, #f8f9fa);
-        }
-
-        .widget-debug summary {
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .widget-debug pre {
-            margin: 0.5rem 0 0 0;
-            padding: 0.5rem;
-            background: white;
-            border: 1px solid var(--bs-border-color);
-            border-radius: 0.25rem;
-            max-height: 200px;
-            overflow: auto;
-        }
-
-        @media (max-width: 768px) {
-            .card-header .d-flex {
-                flex-direction: column;
-                gap: 0.75rem;
-                align-items: flex-start;
-            }
-
-            .card-header .d-flex > div {
-                align-self: flex-end;
-            }
-        }
-    `]
+    templateUrl: './json-chart-widget.component.html',
+    styleUrl: './json-chart-widget.component.css'
 })
 export class JsonChartWidgetComponent implements OnInit, OnDestroy {
 
@@ -238,6 +36,7 @@ export class JsonChartWidgetComponent implements OnInit, OnDestroy {
     @Input() showDebugInfo = false;
 
     @ViewChild('chartComponent') chartComponent?: EgChartComponent;
+    @ViewChild('flipCard') flipCard: ElementRef;
 
     // Component state
     isLoading = false;
@@ -450,5 +249,16 @@ export class JsonChartWidgetComponent implements OnInit, OnDestroy {
         };
 
         return JSON.stringify(info, null, 2);
+    }
+
+    private showConfig(): void {
+        this.flipCard.nativeElement.classList.add('flipped');
+    }
+
+    private hideConfig(): void {
+        this.flipCard.nativeElement.classList.remove('flipped');
+
+        // And then the actual saving logic goes here
+        // Or maybe just passing the event from another component
     }
 }
