@@ -1098,8 +1098,8 @@ sub items_by_copy_status_and_library {
 }
 
 __PACKAGE__->register_method(
-    method   => "widgets_list",
-    api_name => "open-ils.dashboard.widgets.list",
+    method   => "widget_list",
+    api_name => "open-ils.dashboard.widget.list",
     stream   => 1,
     signature => {
         params => [
@@ -1110,10 +1110,10 @@ __PACKAGE__->register_method(
     }
 );
 
-sub widgets_list {
+sub widget_list {
     my ($self, $conn, $authtoken, $query) = @_;
 
-    $logger->info("Dashboard.pm: widgets_list CALLED");
+    $logger->info("Dashboard.pm: widget_list CALLED");
     $logger->info("Query params: " . Dumper($query));
 
     # Validate authentication
@@ -1139,7 +1139,7 @@ sub widgets_list {
     }
 
     # Query widgets from database
-    my $widgets = $e->search_dashboard_widgets($search, {
+    my $widgets = $e->search_dashboard_widget($search, {
         order_by => {dw => 'name'}
     });
 
@@ -1160,8 +1160,8 @@ sub widgets_list {
 }
 
 __PACKAGE__->register_method(
-    method   => "widgets_get",
-    api_name => "open-ils.dashboard.widgets.get",
+    method   => "widget_get",
+    api_name => "open-ils.dashboard.widget.get",
     signature => {
         params => [
             {type => 'string', desc => 'Authentication token'},
@@ -1171,10 +1171,10 @@ __PACKAGE__->register_method(
     }
 );
 
-sub widgets_get {
+sub widget_get {
     my ($self, $conn, $authtoken, $widget_code) = @_;
 
-    $logger->info("Dashboard.pm: widgets_get CALLED for widget: $widget_code");
+    $logger->info("Dashboard.pm: widget_get CALLED for widget: $widget_code");
 
     # Validate authentication
     my $e = new_editor(authtoken => $authtoken);
@@ -1184,7 +1184,7 @@ sub widgets_get {
     }
 
     # Retrieve widget from database
-    my $widget = $e->retrieve_dashboard_widgets($widget_code);
+    my $widget = $e->retrieve_dashboard_widget($widget_code);
 
     unless ($widget) {
         $logger->warn("Dashboard.pm: Widget not found: $widget_code");
@@ -1205,8 +1205,8 @@ sub widgets_get {
 }
 
 __PACKAGE__->register_method(
-    method   => "user_widgets_get",
-    api_name => "open-ils.dashboard.user.widgets.get",
+    method   => "user_widget_get",
+    api_name => "open-ils.dashboard.user.widget.get",
     signature => {
         params => [
             {type => 'string', desc => 'Authentication token'},
@@ -1215,10 +1215,10 @@ __PACKAGE__->register_method(
     }
 );
 
-sub user_widgets_get {
+sub user_widget_get {
     my ($self, $conn, $authtoken) = @_;
 
-    $logger->info("Dashboard.pm: user_widgets_get CALLED");
+    $logger->info("Dashboard.pm: user_widget_get CALLED");
 
     # Validate authentication
     my $e = new_editor(authtoken => $authtoken);
@@ -1233,7 +1233,7 @@ sub user_widgets_get {
     $logger->info("Dashboard.pm: Getting widgets for user $user_id at org $org_unit");
 
     # Check if user has customized their dashboard
-    my $user_widgets = $e->search_dashboard_user_widgets({
+    my $user_widgets = $e->search_dashboard_user_widget({
         usr => $user_id
     }, {
         order_by => {duw => 'display_order'}
@@ -1265,7 +1265,7 @@ sub user_widgets_get {
     # Fetch full widget configurations for the selected widgets
     my @results;
     foreach my $code (@widget_codes) {
-        my $widget = $e->retrieve_dashboard_widgets($code);
+        my $widget = $e->retrieve_dashboard_widget($code);
         if ($widget && $widget->enabled eq 't') {
             push @results, {
                 code => $widget->code,
@@ -1283,8 +1283,8 @@ sub user_widgets_get {
 }
 
 __PACKAGE__->register_method(
-    method   => "user_widgets_update",
-    api_name => "open-ils.dashboard.user.widgets.update",
+    method   => "user_widget_update",
+    api_name => "open-ils.dashboard.user.widget.update",
     signature => {
         params => [
             {type => 'string', desc => 'Authentication token'},
@@ -1294,10 +1294,10 @@ __PACKAGE__->register_method(
     }
 );
 
-sub user_widgets_update {
+sub user_widget_update {
     my ($self, $conn, $authtoken, $widget_codes) = @_;
 
-    $logger->info("Dashboard.pm: user_widgets_update CALLED");
+    $logger->info("Dashboard.pm: user_widget_update CALLED");
     $logger->info("Widget codes: " . Dumper($widget_codes));
 
     # Validate authentication
@@ -1310,16 +1310,16 @@ sub user_widgets_update {
     my $user_id = $e->requestor->id;
 
     # Delete existing user widget preferences
-    my $existing = $e->search_dashboard_user_widgets({usr => $user_id});
+    my $existing = $e->search_dashboard_user_widget({usr => $user_id});
     foreach my $widget (@$existing) {
-        $e->delete_dashboard_user_widgets($widget) or return $e->die_event;
+        $e->delete_dashboard_user_widget($widget) or return $e->die_event;
     }
 
     # Insert new preferences
     my $display_order = 0;
     foreach my $code (@$widget_codes) {
         # Verify widget exists
-        my $widget = $e->retrieve_dashboard_widgets($code);
+        my $widget = $e->retrieve_dashboard_widget($code);
         unless ($widget) {
             $logger->error("Dashboard.pm: Widget '$code' not found");
             $e->rollback;
@@ -1327,14 +1327,14 @@ sub user_widgets_update {
         }
 
         # Create user widget entry
-        my $user_widget = Fieldmapper::dashboard::user_widgets->new;
+        my $user_widget = Fieldmapper::dashboard::user_widget->new;
         $user_widget->usr($user_id);
         $user_widget->widget_code($code);
         $user_widget->display_order($display_order++);
         $user_widget->created('now');
         $user_widget->modified('now');
 
-        $e->create_dashboard_user_widgets($user_widget) or return $e->die_event;
+        $e->create_dashboard_user_widget($user_widget) or return $e->die_event;
     }
 
     $e->commit;
