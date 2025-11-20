@@ -442,7 +442,7 @@ INSERT into config.org_unit_setting_type
 
 -- triggered table approach
 
-DROP TABLE dashboard.materialized_action_all_circulation;
+DROP TABLE IF EXISTS dashboard.materialized_action_all_circulation;
 
 CREATE TABLE dashboard.materialized_action_all_circulation (
     id              BIGSERIAL   PRIMARY KEY,

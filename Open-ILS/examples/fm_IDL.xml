@@ -16760,7 +16760,7 @@ SELECT  usr,
         </permacrud>
     </class>
 
-	<class id="dw" controller="open-ils.cstore open-ils.pcrud" oils_obj:fieldmapper="dashboard::widgets" oils_persist:tablename="dashboard.widgets" reporter:label="Dashboard Widgets" reporter:core="false">
+	<class id="dw" controller="open-ils.cstore open-ils.pcrud" oils_obj:fieldmapper="dashboard::widget" oils_persist:tablename="dashboard.widget" reporter:label="Dashboard Widget" reporter:core="false">
 		<fields oils_persist:primary="code" oils_persist:sequence="">
 			<field reporter:label="Widget Code" name="code" reporter:datatype="text"/>
 			<field reporter:label="Widget Name" name="name" reporter:datatype="text"/>
@@ -16782,8 +16782,8 @@ SELECT  usr,
 		</permacrud>
 	</class>
 
-	<class id="duw" controller="open-ils.cstore open-ils.pcrud" oils_obj:fieldmapper="dashboard::user_widgets" oils_persist:tablename="dashboard.user_widgets" reporter:label="Dashboard User Widgets" reporter:core="false">
-		<fields oils_persist:primary="id" oils_persist:sequence="dashboard.user_widgets_id_seq">
+	<class id="duw" controller="open-ils.cstore open-ils.pcrud" oils_obj:fieldmapper="dashboard::user_widget" oils_persist:tablename="dashboard.user_widget" reporter:label="Dashboard User Widget" reporter:core="false">
+		<fields oils_persist:primary="id" oils_persist:sequence="dashboard.user_widget_id_seq">
 			<field reporter:label="ID" name="id" reporter:datatype="id"/>
 			<field reporter:label="User" name="usr" reporter:datatype="link"/>
 			<field reporter:label="Widget Code" name="widget_code" reporter:datatype="text"/>
