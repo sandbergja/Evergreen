@@ -16760,7 +16760,7 @@ SELECT  usr,
         </permacrud>
     </class>
 
-	<class id="dashboard_widget" controller="open-ils.cstore open-ils.pcrud" oils_obj:fieldmapper="dashboard::widgets" oils_persist:tablename="dashboard.widgets" reporter:label="Dashboard Widgets" reporter:core="false">
+	<class id="dw" controller="open-ils.cstore open-ils.pcrud" oils_obj:fieldmapper="dashboard::widgets" oils_persist:tablename="dashboard.widgets" reporter:label="Dashboard Widgets" reporter:core="false">
 		<fields oils_persist:primary="code" oils_persist:sequence="">
 			<field reporter:label="Widget Code" name="code" reporter:datatype="text"/>
 			<field reporter:label="Widget Name" name="name" reporter:datatype="text"/>
@@ -16775,7 +16775,6 @@ SELECT  usr,
 		<permacrud xmlns="http://open-ils.org/spec/opensrf/IDL/permacrud/v1">
 			<actions>
 				<retrieve permission="VIEW_CIRCULATIONS"/>
-				<search permission="VIEW_CIRCULATIONS"/>
 				<update permission="ADMIN_DASHBOARD"/>
 				<create permission="ADMIN_DASHBOARD"/>
 				<delete permission="ADMIN_DASHBOARD"/>
@@ -16783,7 +16782,7 @@ SELECT  usr,
 		</permacrud>
 	</class>
 
-	<class id="duwdgt" controller="open-ils.cstore open-ils.pcrud" oils_obj:fieldmapper="dashboard::user_widgets" oils_persist:tablename="dashboard.user_widgets" reporter:label="Dashboard User Widgets" reporter:core="false">
+	<class id="duw" controller="open-ils.cstore open-ils.pcrud" oils_obj:fieldmapper="dashboard::user_widgets" oils_persist:tablename="dashboard.user_widgets" reporter:label="Dashboard User Widgets" reporter:core="false">
 		<fields oils_persist:primary="id" oils_persist:sequence="dashboard.user_widgets_id_seq">
 			<field reporter:label="ID" name="id" reporter:datatype="id"/>
 			<field reporter:label="User" name="usr" reporter:datatype="link"/>
@@ -16795,15 +16794,43 @@ SELECT  usr,
 		</fields>
 		<links>
 			<link field="usr" reltype="has_a" key="id" map="" class="au"/>
-			<link field="widget_code" reltype="has_a" key="code" map="" class="dwdgt"/>
+			<link field="widget_code" reltype="has_a" key="code" map="" class="dw"/>
 		</links>
 		<permacrud xmlns="http://open-ils.org/spec/opensrf/IDL/permacrud/v1">
 			<actions>
 				<retrieve/>
-				<search/>
 				<update/>
 				<create/>
 				<delete/>
+			</actions>
+		</permacrud>
+	</class>
+
+	<class id="dmaac" controller="open-ils.cstore open-ils.pcrud" oils_obj:fieldmapper="dashboard::materialized_action_all_circulation" oils_persist:tablename="dashboard.materialized_action_all_circulation" reporter:label="Dashboard All Circulation" reporter:core="true">
+		<fields oils_persist:primary="id" oils_persist:sequence="dashboard.materialized_action_all_circulation_id_seq">
+			<field reporter:label="ID" name="id" reporter:datatype="id"/>
+			<field reporter:label="Day of Month" name="day" reporter:datatype="int"/>
+			<field reporter:label="Month of Year" name="month" reporter:datatype="int"/>
+			<field reporter:label="Year" name="year" reporter:datatype="int"/>
+			<field reporter:label="Circulation Library" name="circ_lib" reporter:datatype="link"/>
+			<field reporter:label="Shelving Location" name="copy_location" reporter:datatype="link"/>
+			<field reporter:label="Patron Permission Group" name="profile" reporter:datatype="link"/>
+			<field reporter:label="Is Renewal" name="is_renewal" reporter:datatype="bool"/>
+			<field reporter:label="Total" name="total" reporter:datatype="int"/>
+			<field reporter:label="Row Create Date" name="create_date" reporter:datatype="timestamp"/>
+			<field reporter:label="Row Edit Date" name="edit_date" reporter:datatype="timestamp"/>
+		</fields>
+		<links>
+            <link field="circ_lib" reltype="has_a" key="id" map="" class="aou"/>
+			<link field="copy_location" reltype="has_a" key="id" map="" class="acpl"/>
+			<link field="profile" reltype="has_a" key="code" map="" class="pgt"/>
+		</links>
+		<permacrud xmlns="http://open-ils.org/spec/opensrf/IDL/permacrud/v1">
+			<actions>
+				<retrieve permission="VIEW_CIRCULATIONS"/>
+				<update permission="ADMIN_DASHBOARD"/>
+				<create permission="ADMIN_DASHBOARD"/>
+				<delete permission="ADMIN_DASHBOARD"/>
 			</actions>
 		</permacrud>
 	</class>

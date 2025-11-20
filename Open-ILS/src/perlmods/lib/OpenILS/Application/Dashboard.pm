@@ -1140,7 +1140,7 @@ sub widgets_list {
 
     # Query widgets from database
     my $widgets = $e->search_dashboard_widgets($search, {
-        order_by => {dwdgt => 'name'}
+        order_by => {dw => 'name'}
     });
 
     # Stream results
@@ -1236,7 +1236,7 @@ sub user_widgets_get {
     my $user_widgets = $e->search_dashboard_user_widgets({
         usr => $user_id
     }, {
-        order_by => {duwdgt => 'display_order'}
+        order_by => {duw => 'display_order'}
     });
 
     my @widget_codes;
