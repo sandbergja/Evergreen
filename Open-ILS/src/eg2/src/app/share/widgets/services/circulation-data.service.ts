@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { map, catchError, toArray, tap } from 'rxjs/operators';
 import { PcrudService } from '@eg/core/pcrud.service';
 import { NetService } from '@eg/core/net.service';
@@ -301,6 +301,39 @@ export class CirculationDataService {
             catchError(error => {
                 console.error('[ItemsByCopyStatusAndLibrary] ERROR:', error);
                 throw error;
+            })
+        );
+    }
+
+    /**
+     * Get circulation by patron profile
+     * Uses materialized table - only possible with Blake's architecture
+     */
+    getCirculationByPatronProfile(params: any): Observable<any[]> {
+        // Use 'any' type to allow adding year/month properties
+        const query: any = this.processQueryParams(params);
+
+        // Convert start_date/end_date to year/month for materialized table
+        if (query.start_date) {
+            const startDate = new Date(query.start_date);
+            query.year = startDate.getFullYear();
+            query.start_month = startDate.getMonth() + 1;
+        }
+        if (query.end_date) {
+            const endDate = new Date(query.end_date);
+            query.end_month = endDate.getMonth() + 1;
+        }
+
+        return this.net.request(
+            'open-ils.dashboard',
+            'open-ils.dashboard.circulation.by_patron_profile',
+            this.auth.token(),
+            query
+        ).pipe(
+            toArray(),
+            catchError(error => {
+                console.error('Error fetching circulation by patron profile:', error);
+                return of([]);
             })
         );
     }

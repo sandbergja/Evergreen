@@ -333,7 +333,7 @@ export class DashboardService {
             const response = await lastValueFrom(
                 this.net.request(
                     'open-ils.dashboard',
-                    'open-ils.dashboard.user.widgets.get',
+                    'open-ils.dashboard.user.widget.get',
                     this.auth.token()
                 )
             );
@@ -373,7 +373,7 @@ export class DashboardService {
             const widgets = await lastValueFrom(
                 this.net.request(
                     'open-ils.dashboard',
-                    'open-ils.dashboard.widgets.list',
+                    'open-ils.dashboard.widget.list',
                     this.auth.token(),
                     query
                 ).pipe(
@@ -401,7 +401,7 @@ export class DashboardService {
             const response = await lastValueFrom(
                 this.net.request(
                     'open-ils.dashboard',
-                    'open-ils.dashboard.user.widgets.update',
+                    'open-ils.dashboard.user.widget.update',
                     this.auth.token(),
                     widgetCodes
                 )

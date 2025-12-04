@@ -1241,7 +1241,7 @@ sub user_widget_get {
 
     my @widget_codes;
 
-    if (@$user_widgets) {
+    if ($user_widgets && @$user_widgets) {
         # User has customizations - use those
         $logger->info("Dashboard.pm: User has " . scalar(@$user_widgets) . " customized widgets");
         @widget_codes = map { $_->widget_code } @$user_widgets;
@@ -1343,6 +1343,86 @@ sub user_widget_update {
     return {success => 1, count => scalar(@$widget_codes)};
 }
 
+__PACKAGE__->register_method(
+    method   => "circulation_by_patron_profile",
+    api_name => "open-ils.dashboard.circulation.by_patron_profile",
+    stream   => 1,
+    signature => {
+        params => [
+            {type => 'string', desc => 'Authentication token'},
+            {type => 'object', desc => 'Query parameters (start_date, end_date, org_unit, include_descendants)'},
+        ],
+        return => { desc => 'Stream of circulation data grouped by patron profile'}
+    }
+);
+
+sub circulation_by_patron_profile {
+    my ($self, $conn, $authtoken, $query) = @_;
+
+    $logger->info("Dashboard.pm: circulation_by_patron_profile CALLED");
+
+    # Validate authentication
+    my $e = new_editor(authtoken => $authtoken);
+    unless ($e->checkauth) {
+        $logger->error("Dashboard.pm: Authentication failed");
+        return $e->die_event;
+    }
+
+    # Get org unit and descendants
+    my $org_unit = $query->{org_unit} || $e->requestor->ws_ou;
+    my $org_list = $query->{include_descendants} ?
+        $U->get_org_descendants($org_unit) : [$org_unit];
+
+    # Query materialized table - get all rows, aggregate in Perl
+    my $raw_results = $e->json_query({
+        select => {
+            dmaac => ['profile', 'total']
+        },
+        from => 'dmaac',
+        where => {
+            circ_lib => $org_list,
+            year => int($query->{year} || (localtime)[5] + 1900),
+            month => {between => [$query->{start_month} || 1, $query->{end_month} || 12]}
+        }
+    });
+
+    # Aggregate by profile in Perl (avoid json_query GROUP BY bugs)
+    my %profile_totals;
+    foreach my $row (@$raw_results) {
+        $profile_totals{$row->{profile}} += $row->{total};
+    }
+
+    # Convert to array and sort
+    my $results = [];
+    foreach my $profile_id (sort { $profile_totals{$b} <=> $profile_totals{$a} } keys %profile_totals) {
+        push @$results, {
+            profile => $profile_id,
+            total => $profile_totals{$profile_id}
+        };
+    }
+
+    # Get profile names separately
+    my %profile_names;
+    if ($results && @$results) {
+        my @profile_ids = map { $_->{profile} } @$results;
+        my $profiles = $e->search_permission_grp_tree({id => \@profile_ids});
+        foreach my $prof (@$profiles) {
+            $profile_names{$prof->id} = $prof->name;
+        }
+    }
+
+    # Stream results with profile names
+    foreach my $row (@$results) {
+        $conn->respond({
+            profile => $row->{profile},
+            profile_name => $profile_names{$row->{profile}} || 'Unknown',
+            total => int($row->{total})
+        });
+    }
+
+    $e->disconnect;
+    return undef;
+}
 
 
 sub get_widget_data {...}
