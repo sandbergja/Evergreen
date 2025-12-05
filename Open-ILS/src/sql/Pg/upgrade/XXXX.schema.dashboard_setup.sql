@@ -192,6 +192,7 @@ INSERT into config.org_unit_setting_type
 
 -- triggered table approach
 
+-- All Circulation
 DROP TABLE IF EXISTS dashboard.materialized_action_all_circulation;
 
 CREATE TABLE dashboard.materialized_action_all_circulation (
@@ -218,6 +219,33 @@ CREATE INDEX dashboard_materialized_action_all_circulation_profile_idx ON dashbo
 CREATE INDEX dashboard_materialized_action_all_circulation_is_renewal_idx ON dashboard.materialized_action_all_circulation (is_renewal);
 CREATE INDEX dashboard_materialized_action_all_circulation_total_idx ON dashboard.materialized_action_all_circulation (total);
 
+-- Holds
+DROP TABLE IF EXISTS dashboard.materialized_action_hold_request;
+
+CREATE TABLE dashboard.materialized_action_hold_request (
+    id              BIGSERIAL   PRIMARY KEY,
+    day             INT         NOT NULL,
+    month           INT         NOT NULL,
+    year            INT         NOT NULL,
+    pickup_lib      INT         REFERENCES actor.org_unit (id),
+    hold_status     TEXT        NOT NULL DEFAULT 'NEW',
+    hold_type       TEXT        NOT NULL DEFAULT 'T',
+    profile         INT         REFERENCES permission.grp_tree (id),
+    total           BIGINT      NOT NULL,
+    create_date     TIMESTAMP WITH TIME ZONE    DEFAULT NOW(),
+    edit_date       TIMESTAMP WITH TIME ZONE    DEFAULT NOW(),
+    CONSTRAINT dmahr_one_per_total UNIQUE (day, month, year, pickup_lib, hold_status, hold_type, profile)
+);
+-- index everything FOR SPEED
+CREATE INDEX dashboard_mat_action_hold_request_day_idx ON dashboard.materialized_action_hold_request (day);
+CREATE INDEX dashboard_mat_action_hold_request_month_idx ON dashboard.materialized_action_hold_request (month);
+CREATE INDEX dashboard_mat_action_hold_request_year_idx ON dashboard.materialized_action_hold_request (year);
+CREATE INDEX dashboard_mat_action_hold_request_pickup_lib_idx ON dashboard.materialized_action_hold_request (pickup_lib);
+CREATE INDEX dashboard_mat_action_hold_request_hold_status_idx ON dashboard.materialized_action_hold_request (hold_status);
+CREATE INDEX dashboard_mat_action_hold_request_hold_type_idx ON dashboard.materialized_action_hold_request (hold_type);
+CREATE INDEX dashboard_mat_action_hold_request_profile_idx ON dashboard.materialized_action_hold_request (profile);
+CREATE INDEX dashboard_mat_action_hold_request_total_idx ON dashboard.materialized_action_hold_request (total);
+
 CREATE OR REPLACE FUNCTION action.stat_edit_date_change() RETURNS trigger AS $func$
 BEGIN
 NEW.edit_date = now();
@@ -226,8 +254,12 @@ END;
 $func$ LANGUAGE plpgsql;
 
 -- Setup the trigger so that updated rows recieve edit_date = now()
-CREATE TRIGGER dashboard_mat_table_update_trigger
+CREATE TRIGGER dashboard_mat_all_circ_update_trigger
 	BEFORE UPDATE ON dashboard.materialized_action_all_circulation
+	FOR EACH ROW EXECUTE PROCEDURE action.stat_edit_date_change();
+
+CREATE TRIGGER dashboard_mat_action_hold_request_update_trigger
+	BEFORE UPDATE ON dashboard.materialized_action_hold_request
 	FOR EACH ROW EXECUTE PROCEDURE action.stat_edit_date_change();
 
 INSERT INTO config.global_flag(name, value, label, enabled)
@@ -244,10 +276,11 @@ DECLARE
   chunk                       INTERVAL := '1 month'::INTERVAL;
   source_tables               TEXT[] := ARRAY['action.all_circulation', 'action.hold_request'];
   date_column_name            TEXT[] := ARRAY['xact_start', 'request_time'];
-  org_context_column_name     TEXT[] := ARRAY['circ_lib', 'circ_lib', 'pickup_lib'];
+  org_context_column_name     TEXT[] := ARRAY['circ_lib', 'pickup_lib'];
   table_array_pos             INT;
   q_template                  TEXT;
   q                           TEXT;
+  extra_where_clause          TEXT := '';
   pointer_template            TEXT;
   pointer                     TEXT := '1000-01-01';
   offs                        TEXT;
@@ -291,14 +324,14 @@ BEGIN
   CREATE TEMP TABLE point_temp_table (ptr TEXT);
 
   pointer_template := $query$INSERT INTO point_temp_table(ptr)
-  SELECT MIN($query$ || date_column_name[table_array_pos] || $query$::DATE)::TEXT FROM $query$ || source_table || $query$
+  SELECT MIN($query$ || source_table || $query$.$query$ || date_column_name[table_array_pos] || $query$::DATE)::TEXT FROM $query$ || source_table || $query$
   WHERE
   $query$ || date_column_name[table_array_pos] || $query$::DATE >= (now() - '$query$ || age_limit || $query$'::INTERVAL)
   AND $query$ || date_column_name[table_array_pos] || $query$::DATE > '!!!pointer!!!'::DATE$query$;
 
   IF org_unit IS NOT NULL THEN
   pointer_template := pointer_template || $query$
-  AND $query$ || org_context_column_name[table_array_pos] || $query$ IN(SELECT id FROM actor.org_unit_descendants($query$ || org_unit || $query$))$query$;
+  AND $query$ || source_table || $query$.$query$ || org_context_column_name[table_array_pos] || $query$ IN(SELECT id FROM actor.org_unit_descendants($query$ || org_unit || $query$))$query$;
   END IF;
 
   IF opt_out_orgs IS NOT NULL AND CARDINALITY(opt_out_orgs) > 0 THEN
@@ -321,37 +354,70 @@ BEGIN
         INSERT INTO dashboard.materialized_action_all_circulation
         (day, month, year, circ_lib, copy_location, profile, is_renewal, total)
         SELECT
-        DATE_PART('day', acirc.xact_start) AS "day",
-        DATE_PART('month', acirc.xact_start) AS "month",
-        DATE_PART('year', acirc.xact_start) AS "year",
-        acirc.circ_lib AS "circ_lib",
-        acirc.copy_location AS "copy_location",
-        acirc.usr_profile AS "profile",
-        acirc.parent_circ IS NOT NULL AS "is_renewal",
+        DATE_PART('day', action.all_circulation.xact_start) AS "day",
+        DATE_PART('month', action.all_circulation.xact_start) AS "month",
+        DATE_PART('year', action.all_circulation.xact_start) AS "year",
+        action.all_circulation.circ_lib AS "circ_lib",
+        action.all_circulation.copy_location AS "copy_location",
+        action.all_circulation.usr_profile AS "profile",
+        action.all_circulation.parent_circ IS NOT NULL AS "is_renewal",
         count(*) AS "total"
         FROM
-        action.all_circulation acirc
+        action.all_circulation
         WHERE
-        acirc.xact_start::DATE >= now() - '$query$ || age_limit || $query$'::INTERVAL
-        AND acirc.xact_start::DATE >= '!!!pointer!!!'::DATE AND acirc.xact_start::DATE < '!!!offs!!!'::DATE$query$;
+        !!!!extra_where_clause!!!!
+        GROUP BY 1,2,3,4,5,6,7
+    $query$;
 
-        IF org_unit IS NOT NULL THEN
-        q_template := q_template || $query$
-        AND acirc.circ_lib IN(SELECT id FROM actor.org_unit_descendants($query$ || org_unit || $query$))
-        $query$;
-        END IF;
+  ELSIF stat_table = 'materialized_action_hold_request' THEN
+    q_template := $query$
 
-        IF opt_out_orgs IS NOT NULL AND CARDINALITY(opt_out_orgs) > 0 THEN
-        q_template := q_template || $query$
-        AND acirc.circ_lib != ANY('$query$ || opt_out_orgs::TEXT || $query$'::INT[])
-        $query$;
-        END IF;
-
-        q_template := q_template || $query$
+        INSERT INTO dashboard.materialized_action_hold_request
+        (day, month, year, pickup_lib, hold_status, hold_type, profile, total)
+        SELECT
+        DATE_PART('day', action.hold_request.request_time) AS "day",
+        DATE_PART('month', action.hold_request.request_time) AS "month",
+        DATE_PART('year', action.hold_request.request_time) AS "year",
+        action.hold_request.pickup_lib AS "pickup_lib",
+        CASE WHEN action.hold_request.cancel_time IS NOT NULL THEN 'CANCELED'
+        WHEN action.hold_request.fulfillment_time IS NOT NULL THEN 'FULFILLED'
+        WHEN action.hold_request.shelf_time IS NOT NULL THEN 'READY FOR PICKUP'
+        WHEN action.hold_request.capture_time IS NOT NULL THEN 'CAPTURED'
+        WHEN action.hold_request.frozen THEN 'SUSPENDED'
+        ELSE 'NEW'
+        END AS "hold_status",
+        action.hold_request.hold_type AS "hold_type",
+        au.profile AS "profile",
+        count(*) AS "total"
+        FROM
+        action.hold_request
+        JOIN actor.usr au ON (au.id=action.hold_request.usr)
+        WHERE
+        !!!!extra_where_clause!!!!
         GROUP BY 1,2,3,4,5,6,7
 
     $query$;
   END IF;
+
+  extra_where_clause := $query$
+    $query$ || source_table || $query$.$query$ || date_column_name[table_array_pos] || $query$::DATE >= now() - '$query$ || age_limit || $query$'::INTERVAL$query$;
+
+  extra_where_clause := extra_where_clause || $query$
+    AND $query$ || source_table || $query$.$query$ || date_column_name[table_array_pos] || $query$::DATE >= '!!!pointer!!!'::DATE AND $query$ || source_table || $query$.$query$ || date_column_name[table_array_pos] || $query$::DATE < '!!!offs!!!'::DATE$query$;
+
+    IF org_unit IS NOT NULL THEN
+      extra_where_clause := extra_where_clause || $query$
+        AND $query$ || source_table || $query$.$query$ || org_context_column_name[table_array_pos] || $query$ IN(SELECT id FROM actor.org_unit_descendants($query$ || org_unit || $query$))$query$;
+    END IF;
+
+    IF opt_out_orgs IS NOT NULL AND CARDINALITY(opt_out_orgs) > 0 THEN
+      extra_where_clause := extra_where_clause || $query$
+        AND $query$ || source_table || $query$.$query$ || org_context_column_name[table_array_pos] || $query$ != ANY('$query$ || opt_out_orgs::TEXT || $query$'::INT[])$query$;
+    END IF;
+
+  q_template := REGEXP_REPLACE(q_template, $$!!!!extra_where_clause!!!!$$, extra_where_clause, $$g$$);
+
+-- RAISE NOTICE 'Query Template: %', q_template;
 
 -- END Figure out the specific table query template
 
@@ -398,10 +464,8 @@ BEGIN
 END;
 $f$ LANGUAGE PLPGSQL;
 
-
 CREATE OR REPLACE FUNCTION action.circulation_dashboard_update() RETURNS trigger AS $func$
 DECLARE
-existing_row  BIGINT := 0;
 opt_out_orgs  INT[];
 profile_id    BIGINT;
 updated_total INT;
@@ -505,6 +569,127 @@ BEGIN
 END;
 $func$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION action.hold_request_dashboard_update() RETURNS trigger AS $func$
+DECLARE
+opt_out_orgs  INT[];
+profile_id    BIGINT;
+old_hold_status_text TEXT;
+new_hold_status_text TEXT;
+updated_total INT;
+BEGIN
+
+-- Figure out which orgs want to be exempt from the dashboard stats
+  WITH orgs AS
+  (
+      SELECT b.org_unit "o"
+      FROM
+      actor.org_unit_setting b
+      WHERE
+      name='lib.dashboard.opt_out'
+      AND value = 'true'
+  )
+  SELECT INTO opt_out_orgs (SELECT array_agg(id) FROM actor.org_unit_descendants("o")) "forgs" FROM orgs;
+-- END Figure out which orgs want to be exempt from the dashboard stats
+
+-- If this is one of the exempt orgs, exit
+  IF opt_out_orgs IS NOT NULL AND NEW.circ_lib = ANY(opt_out_orgs) THEN RETURN NEW; END IF;
+
+-- Figure out what the hold status text is for the old row and the new row
+  old_hold_status_text :=
+  CASE WHEN OLD.cancel_time IS NOT NULL THEN 'CANCELED'
+  WHEN OLD.fulfillment_time IS NOT NULL THEN 'FULFILLED'
+  WHEN OLD.shelf_time IS NOT NULL THEN 'READY FOR PICKUP'
+  WHEN OLD.capture_time IS NOT NULL THEN 'CAPTURED'
+  WHEN OLD.frozen THEN 'SUSPENDED'
+  ELSE 'NEW'
+  END;
+
+  new_hold_status_text :=
+  CASE WHEN NEW.cancel_time IS NOT NULL THEN 'CANCELED'
+  WHEN NEW.fulfillment_time IS NOT NULL THEN 'FULFILLED'
+  WHEN NEW.shelf_time IS NOT NULL THEN 'READY FOR PICKUP'
+  WHEN NEW.capture_time IS NOT NULL THEN 'CAPTURED'
+  WHEN NEW.frozen THEN 'SUSPENDED'
+  ELSE 'NEW'
+  END;
+
+  IF (TG_OP = 'DELETE')
+    OR (TG_OP = 'INSERT')
+    OR (TG_OP = 'UPDATE'
+      AND (
+        NEW.xact_start <> OLD.request_time
+        OR NEW.pickup_lib <> OLD.pickup_lib
+        OR NEW.cancel_time <> OLD.cancel_time
+        OR NEW.fulfillment_time <> OLD.fulfillment_time
+        OR NEW.shelf_time <> OLD.shelf_time
+        OR NEW.capture_time <> OLD.capture_time
+        OR NEW.frozen <> OLD.frozen
+        OR NEW.hold_type <> OLD.hold_type
+        OR new_hold_status_text <> old_hold_status_text
+      )
+    )
+  THEN
+    -- We need the context user profile
+    SELECT INTO profile_id profile FROM actor.usr WHERE id = OLD.usr;
+
+    -- subtract from the previous stat
+    IF (TG_OP = 'DELETE') OR (TG_OP = 'UPDATE') THEN
+      UPDATE dashboard.materialized_action_all_circulation
+      SET
+      total = total - 1
+      WHERE day = DATE_PART('day', OLD.request_time)
+      AND month = DATE_PART('month', OLD.request_time)
+      AND year = DATE_PART('year', OLD.request_time)
+      AND pickup_lib = OLD.pickup_lib
+      AND hold_status = old_hold_status_text
+      AND hold_type = OLD.hold_type
+      AND profile = profile_id
+      -- make sure we don't go negative
+      AND total > 0;
+      GET DIAGNOSTICS updated_total = row_count;
+      -- RAISE NOTICE 'DECREMENTED: %', updated_total;
+    END IF;
+
+    IF (TG_OP = 'UPDATE') THEN
+
+      -- We need the context user profile
+      SELECT INTO profile_id profile FROM actor.usr WHERE id = NEW.usr;
+
+      -- Increase the total to the now stat
+      UPDATE dashboard.materialized_action_all_circulation
+      SET
+      total = total + 1
+      WHERE day = DATE_PART('day', NEW.request_time)
+      AND month = DATE_PART('month', NEW.request_time)
+      AND year = DATE_PART('year', NEW.request_time)
+      AND pickup_lib = NEW.pickup_lib
+      AND hold_status = new_hold_status_text
+      AND hold_type = NEW.hold_type
+      AND profile = profile_id;
+
+      GET DIAGNOSTICS updated_total = row_count;
+      -- The stat doesn't exist, let's make one
+      IF updated_total = 0 THEN
+        INSERT INTO dashboard.materialized_action_all_circulation
+        (day, month, year, pickup_lib, hold_status, hold_type, profile, total)
+        VALUES(
+          DATE_PART('day', NEW.request_time),
+          DATE_PART('month', NEW.request_time),
+          DATE_PART('year', NEW.request_time),
+          NEW.pickup_lib,
+          new_hold_status_text,
+          NEW.hold_type,
+          profile_id,
+          1 -- starting out with a total of 1 for this circ
+        );
+      END IF;
+    END IF;
+  END IF;
+
+	RETURN NEW;
+END;
+$func$ LANGUAGE plpgsql;
+
 
 -- trigger on action.circulation
 CREATE TRIGGER action_circulation_dashboard_mat_table_update_trigger
@@ -515,6 +700,36 @@ CREATE TRIGGER action_circulation_dashboard_mat_table_update_trigger
 CREATE TRIGGER action_aged_circulation_dashboard_mat_table_update_trigger
 	AFTER DELETE OR UPDATE OR INSERT ON action.aged_circulation
 	FOR EACH ROW EXECUTE PROCEDURE action.circulation_dashboard_update();
+
+-- trigger on action.hold_request
+CREATE TRIGGER action_hold_request_dashboard_mat_table_update_trigger
+	AFTER DELETE OR UPDATE OR INSERT ON action.hold_request
+	FOR EACH ROW EXECUTE PROCEDURE action.hold_request_dashboard_update();
+
+
+CREATE OR REPLACE FUNCTION dashboard.get_stats(stat_table TEXT, columns TEXT[])
+RETURNS TABLE (datas JSON)
+AS
+$func$
+DECLARE
+select_query  TEXT;
+comma_columns TEXT;
+
+BEGIN
+
+comma_columns := REGEXP_REPLACE(ARRAY_TO_STRING(columns, $$,$$),$$'$$,$$$$,'g');
+
+select_query := $query$SELECT row_to_json(t) ttable FROM (
+  SELECT
+  $query$ || comma_columns || $query$,SUM(total) AS "total"
+  FROM
+  dashboard.$query$||stat_table||$query$ ttable
+  GROUP BY $query$||comma_columns || $query$ ) t $query$;
+
+RETURN QUERY EXECUTE select_query;
+
+END;
+$func$ LANGUAGE plpgsql;
 
 
 COMMIT;
