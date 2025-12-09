@@ -306,8 +306,63 @@ export class CirculationDataService {
     }
 
     /**
+     * UNIFIED WIDGET DATA METHOD
+     * This is the ONLY method used by all dashboard widgets.
+     * All widgets query materialized tables through this method.
+     * Widget configs contain complete query specifications.
+     */
+    getWidgetData(params: any): Observable<any[]> {
+        console.log('[getWidgetData] Raw params:', params);
+
+        // Extract query spec (merged by DataSourceRegistry)
+        const querySpec = params._query;
+        if (!querySpec) {
+            console.error('[getWidgetData] No query spec found in params!');
+            throw new Error('Query specification required for getWidgetData');
+        }
+
+        console.log('[getWidgetData] Query spec:', querySpec);
+
+        // Get org unit from params or user's ws_ou
+        const user = this.auth.user();
+        const userWsOu = user?.ws_ou ? user.ws_ou() : null;
+        const orgUnit = params.org_unit || this.org.get(userWsOu)?.id() || 1;
+
+        // Build processed params (keep timeRange intact - backend needs it!)
+        const processedParams = {
+            org_unit: orgUnit,
+            include_descendants: params.include_descendants !== false,
+            timeRange: params.timeRange || 'month',
+            year: params.year,
+            start_month: params.start_month,
+            end_month: params.end_month
+        };
+
+        console.log('[getWidgetData] Processed params:', processedParams);
+
+        return this.net.request(
+            'open-ils.dashboard',
+            'open-ils.dashboard.widget.data',
+            this.auth.token(),
+            querySpec,
+            processedParams
+        ).pipe(
+            toArray(),
+            tap(data => {
+                console.log('[getWidgetData] API Response:', data);
+                console.log('[getWidgetData] Response length:', data?.length || 0);
+            }),
+            catchError(error => {
+                console.error('[getWidgetData] ERROR:', error);
+                throw error;
+            })
+        );
+    }
+
+    /**
      * Get circulation by patron profile
-     * Uses materialized table - only possible with Blake's architecture
+     * DEPRECATED: Use getWidgetData instead
+     * Kept for backward compatibility during migration
      */
     getCirculationByPatronProfile(params: any): Observable<any[]> {
         // Use 'any' type to allow adding year/month properties

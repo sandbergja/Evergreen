@@ -183,7 +183,7 @@
   position: relative;
   width: 100%;
   flex: 1;
-  overflow: hidden;
+  overflow: visible;  /* Changed from hidden to visible to show rotated labels */
   /* Dynamic sizing using CSS aspect-ratio */
   aspect-ratio: 16 / 10; /* 1.6:1 optimal for line charts */
   min-height: 300px;

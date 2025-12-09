@@ -16,1086 +16,393 @@ my $U = "OpenILS::Application::AppUtils";
 use DateTime;
 use DateTime::Format::ISO8601;
 use OpenSRF::Utils::Logger qw/$logger/;
+use OpenSRF::Utils::JSON;
 use Data::Dumper;
 
 my $date_parser = DateTime::Format::ISO8601->new;
 
+# =========================================================================
+# UNIFIED WIDGET DATA METHOD
+# =========================================================================
+# This is the ONLY method for fetching dashboard widget data.
+# All widgets query materialized tables through this method.
+# Widget configs contain complete query specifications - no code changes needed!
+# =========================================================================
+
 __PACKAGE__->register_method(
-    method   => "circulation_summary",
-    api_name => "open-ils.dashboard.circulation.summary",
+    method   => "get_widget_data",
+    api_name => "open-ils.dashboard.widget.data",
+    stream   => 1,
     signature => {
         params => [
             {type => 'string', desc => 'Authentication token'},
-            {type => 'object', desc => 'Query parameters (start_date, end_date, org_unit, include_descendants)'},
+            {type => 'object', desc => 'Query specification (table, dimensions, metrics, filters, lookups, etc.)'},
+            {type => 'object', desc => 'Query parameters (org_unit, timeRange, year, start_month, end_month, etc.)'},
         ],
-        return => { desc => 'Circulation summary including total checkouts, renewals, and holds filled'}
+        return => { desc => 'Stream of widget data based on widget query specification'}
     }
 );
 
-sub circulation_summary {
-    my ($self, $conn, $authtoken, $query) = @_;
+sub get_widget_data {
+    my ($self, $conn, $authtoken, $query_spec, $params) = @_;
 
-    $logger->info("Dashboard.pm: circulation_summary CALLED");
-    $logger->info("Query params: " . Dumper($query));
+    $logger->info("Dashboard.pm: get_widget_data CALLED");
+    $logger->info("Query spec: " . Dumper($query_spec));
+    $logger->info("Params: " . Dumper($params));
 
-    # Validate authentication
+    # 1. Authenticate
     my $e = new_editor(authtoken => $authtoken);
     unless ($e->checkauth) {
         $logger->error("Dashboard.pm: Authentication failed");
         return $e->die_event;
     }
 
-    $logger->info("Dashboard.pm: Auth successful");
+    # 2. Validate query spec
+    unless ($query_spec && $query_spec->{table}) {
+        $logger->error("Dashboard.pm: Invalid query specification");
+        return new OpenILS::Event("BAD_PARAMS", desc => "Query specification must include 'table' field");
+    }
 
-    # Get org unit (default to user's workstation org unit)
-    my $org_unit = $query->{org_unit} || $e->requestor->ws_ou;
-
-    # Check permissions
+    # 3. Check permissions
+    my $org_unit = $params->{org_unit} || $e->requestor->ws_ou;
     return $e->die_event unless $e->allowed("VIEW_CIRCULATIONS", $org_unit);
 
-    # Parse dates
-    my $start_date = $query->{start_date};
-    my $end_date = $query->{end_date};
+    # 4. Substitute variables in filters
+    my $filters = substitute_variables($query_spec->{filters}, $e, $params);
 
-    unless ($start_date && $end_date) {
-        return new OpenILS::Event("BAD_PARAMS", desc => "start_date and end_date are required");
-    }
+    $logger->info("Dashboard.pm: Filters after substitution: " . Dumper($filters));
 
-    # Get org unit tree if include_descendants is true
-    my $org_list = $query->{include_descendants} ?
-        $U->get_org_descendants($org_unit) :
-        [$org_unit];
+    # 5. Get table alias
+    my $table_alias = get_table_alias($query_spec->{table});
 
-    # Query circulation data
-    my $checkouts = $e->json_query({
+    # 6. Query the materialized table specified in query spec
+    my @select_fields = (@{$query_spec->{dimensions} || []}, @{$query_spec->{metrics} || []});
+
+    $logger->info("Dashboard.pm: Querying table $table_alias with fields: " . join(', ', @select_fields));
+
+    my $raw_results = $e->json_query({
         select => {
-            circ => [
-                {transform => 'count', column => 'id', alias => 'count'}
-            ]
+            $table_alias => \@select_fields
         },
-        from => 'circ',
-        where => {
-            circ_lib => $org_list,
-            xact_start => {
-                between => [$start_date, $end_date]
-            }
-        }
+        from => $table_alias,
+        where => $filters
     });
 
-    my $renewals = $e->json_query({
-        select => {
-            circ => [
-                {transform => 'count', column => 'id', alias => 'count'}
-            ]
-        },
-        from => 'circ',
-        where => {
-            circ_lib => $org_list,
-            xact_start => {
-                between => [$start_date, $end_date]
-            },
-            '-or' => [
-                {desk_renewal => 't'},
-                {opac_renewal => 't'},
-                {phone_renewal => 't'}
-            ]
-        }
-    });
+    $logger->info("Dashboard.pm: Raw results count: " . ($raw_results ? scalar(@$raw_results) : 0));
 
-    my $holds_filled = $e->json_query({
-        select => {
-            ahr => [
-                {transform => 'count', column => 'id', alias => 'count'}
-            ]
-        },
-        from => 'ahr',
-        where => {
-            pickup_lib => $org_list,
-            fulfillment_time => {
-                between => [$start_date, $end_date]
-            }
-        }
-    });
+    # 7. Aggregate by dimensions in Perl (json_query GROUP BY is broken!)
+    my $aggregated = aggregate_by_dimensions(
+        $raw_results,
+        $query_spec->{dimensions},
+        $query_spec->{metrics},
+        $query_spec->{aggregation}
+    );
 
-    $e->disconnect;
+    $logger->info("Dashboard.pm: Aggregated results count: " . scalar(@$aggregated));
 
-    return {
-        total_checkouts => $checkouts->[0]->{count} || 0,
-        total_renewals => $renewals->[0]->{count} || 0,
-        total_holds_filled => $holds_filled->[0]->{count} || 0,
-        period_start => $start_date,
-        period_end => $end_date,
-        org_unit => $org_unit
-    };
-}
+    # 8. Combine date dimensions if needed (year, month, day → date)
+    my $with_dates = combine_date_dimensions($aggregated, $query_spec->{dimensions});
 
-__PACKAGE__->register_method(
-    method   => "circulation_by_shelving_location",
-    api_name => "open-ils.dashboard.circulation.by_shelving_location",
-    stream   => 1,
-    signature => {
-        params => [
-            {type => 'string', desc => 'Authentication token'},
-            {type => 'object', desc => 'Query parameters'},
-        ],
-        return => { desc => 'Stream of circulation data grouped by shelving location'}
-    }
-);
+    # 9. Perform name lookups
+    my $with_names = perform_lookups($with_dates, $query_spec->{lookups}, $e);
 
-sub circulation_by_shelving_location {
-    my ($self, $conn, $authtoken, $query) = @_;
+    # 10. Sort results
+    my $sorted = sort_results($with_names, $query_spec->{sort});
 
-    $logger->info("Dashboard.pm: circulation_by_shelving_location CALLED");
-    $logger->info("Query params: " . Dumper($query));
+    # 11. Limit results
+    my $limited = limit_results($sorted, $query_spec->{limit});
 
-    # Validate authentication
-    my $e = new_editor(authtoken => $authtoken);
-    unless ($e->checkauth) {
-        $logger->error("Dashboard.pm: Authentication failed");
-        return $e->die_event;
-    }
+    $logger->info("Dashboard.pm: Final results count: " . scalar(@$limited));
 
-    $logger->info("Dashboard.pm: Auth successful");
-
-    # Get org unit
-    my $org_unit = $query->{org_unit} || $e->requestor->ws_ou;
-
-    # Check permissions
-    return $e->die_event unless $e->allowed("VIEW_CIRCULATIONS", $org_unit);
-
-    # Parse dates
-    my $start_date = $query->{start_date};
-    my $end_date = $query->{end_date};
-
-    unless ($start_date && $end_date) {
-        return new OpenILS::Event("BAD_PARAMS", desc => "start_date and end_date are required");
-    }
-
-    # Get org unit tree if include_descendants is true
-    my $org_list = $query->{include_descendants} ?
-        $U->get_org_descendants($org_unit) :
-        [$org_unit];
-
-    # Fetch all circulations in date range with copy location (simple query without GROUP BY)
-    my $circs = $e->json_query({
-        select => {
-            acp => ['location'],
-            circ => ['id', 'desk_renewal', 'opac_renewal', 'phone_renewal']
-        },
-        from => {
-            circ => {
-                acp => {
-                    field => 'id',
-                    fkey => 'target_copy'
-                }
-            }
-        },
-        where => {
-            '+circ' => {
-                circ_lib => $org_list,
-                xact_start => {
-                    between => [$start_date, $end_date]
-                }
-            }
-        }
-    });
-
-    $logger->info("Dashboard.pm: circulation_by_shelving_location - Raw circs count = " . ($circs ? scalar(@$circs) : "undef"));
-
-    # Group by location in Perl, counting checkouts vs renewals
-    my %by_location;
-    if ($circs && @$circs) {
-        foreach my $circ (@$circs) {
-            my $location_id = $circ->{location};
-            next unless $location_id;
-
-            $by_location{$location_id} ||= {checkouts => 0, renewals => 0};
-
-            # Check if this is a renewal
-            if ($circ->{desk_renewal} eq 't' || $circ->{opac_renewal} eq 't' || $circ->{phone_renewal} eq 't') {
-                $by_location{$location_id}->{renewals}++;
-            } else {
-                $by_location{$location_id}->{checkouts}++;
-            }
-        }
-    }
-
-    # Fetch location names
-    my %location_names;
-    if (%by_location) {
-        my @location_ids = keys %by_location;
-        my $locations = $e->search_asset_copy_location({id => \@location_ids});
-        foreach my $loc (@$locations) {
-            $location_names{$loc->id} = $loc->name;
-        }
-    }
-
-    $logger->info("Dashboard.pm: circulation_by_shelving_location - Grouped locations count = " . scalar(keys %by_location));
-
-    # Stream results
-    foreach my $location_id (sort keys %by_location) {
-        my $checkouts = $by_location{$location_id}->{checkouts} || 0;
-        my $renewals = $by_location{$location_id}->{renewals} || 0;
-
-        $conn->respond({
-            shelving_location => $location_id,
-            shelving_location_name => $location_names{$location_id} || "Unknown",
-            checkouts => $checkouts,
-            renewals => $renewals,
-            total => $checkouts + $renewals
-        });
+    # 12. Stream results
+    foreach my $row (@$limited) {
+        $conn->respond($row);
     }
 
     $e->disconnect;
     return undef;
 }
 
-__PACKAGE__->register_method(
-    method   => "circulation_by_item_type",
-    api_name => "open-ils.dashboard.circulation.by_item_type",
-    stream   => 1,
-    signature => {
-        params => [
-            {type => 'string', desc => 'Authentication token'},
-            {type => 'object', desc => 'Query parameters (start_date, end_date, org_unit, include_descendants)'},
-        ],
-        return => { desc => 'Stream of circulation data grouped by item type (circ_modifier)'}
-    }
-);
+# =========================================================================
+# HELPER FUNCTIONS
+# =========================================================================
 
-sub circulation_by_item_type {
-    my ($self, $conn, $authtoken, $query) = @_;
+# Helper: Get table alias for json_query
+sub get_table_alias {
+    my $table_name = shift;
 
-    $logger->info("Dashboard.pm: circulation_by_item_type CALLED");
-    $logger->info("Query params: " . Dumper($query));
+    my %aliases = (
+        'dashboard.materialized_action_all_circulation' => 'dmaac',
+        'dashboard.materialized_holds' => 'dmh',
+        'dashboard.materialized_items' => 'dmi'
+    );
 
-    # Validate authentication
-    my $e = new_editor(authtoken => $authtoken);
-    unless ($e->checkauth) {
-        $logger->error("Dashboard.pm: Authentication failed");
-        return $e->die_event;
-    }
-
-    $logger->info("Dashboard.pm: Auth successful");
-
-    # Get org unit
-    my $org_unit = $query->{org_unit} || $e->requestor->ws_ou;
-
-    # Check permissions
-    return $e->die_event unless $e->allowed("VIEW_CIRCULATIONS", $org_unit);
-
-    # Parse dates
-    my $start_date = $query->{start_date};
-    my $end_date = $query->{end_date};
-
-    unless ($start_date && $end_date) {
-        return new OpenILS::Event("BAD_PARAMS", desc => "start_date and end_date are required");
-    }
-
-    # Get org unit tree if include_descendants is true
-    my $org_list = $query->{include_descendants} ?
-        $U->get_org_descendants($org_unit) :
-        [$org_unit];
-
-    # Fetch all circulations in date range with circ_modifier (simple query without GROUP BY)
-    my $circs = $e->json_query({
-        select => {
-            acp => ['circ_modifier'],
-            circ => ['id', 'desk_renewal', 'opac_renewal', 'phone_renewal']
-        },
-        from => {
-            circ => {
-                acp => {
-                    field => 'id',
-                    fkey => 'target_copy'
-                }
-            }
-        },
-        where => {
-            '+circ' => {
-                circ_lib => $org_list,
-                xact_start => {
-                    between => [$start_date, $end_date]
-                }
-            }
-        }
-    });
-
-    $logger->info("Dashboard.pm: circulation_by_item_type - Raw circs count = " . ($circs ? scalar(@$circs) : "undef"));
-
-    # Group by circ_modifier in Perl, counting checkouts vs renewals
-    my %by_type;
-    if ($circs && @$circs) {
-        foreach my $circ (@$circs) {
-            my $modifier = $circ->{circ_modifier} || 'UNCLASSIFIED';
-
-            $by_type{$modifier} ||= {checkouts => 0, renewals => 0};
-
-            # Check if this is a renewal
-            if ($circ->{desk_renewal} eq 't' || $circ->{opac_renewal} eq 't' || $circ->{phone_renewal} eq 't') {
-                $by_type{$modifier}->{renewals}++;
-            } else {
-                $by_type{$modifier}->{checkouts}++;
-            }
-        }
-    }
-
-    # Fetch modifier names
-    my %modifier_names;
-    if (%by_type) {
-        my @modifier_codes = grep { $_ ne 'UNCLASSIFIED' } keys %by_type;
-        if (@modifier_codes) {
-            my $modifiers = $e->search_config_circ_modifier({code => \@modifier_codes});
-            foreach my $mod (@$modifiers) {
-                $modifier_names{$mod->code} = $mod->name;
-            }
-        }
-        $modifier_names{'UNCLASSIFIED'} = 'Unclassified';
-    }
-
-    $logger->info("Dashboard.pm: circulation_by_item_type - Grouped types count = " . scalar(keys %by_type));
-
-    # Stream results
-    foreach my $modifier (sort keys %by_type) {
-        my $checkouts = $by_type{$modifier}->{checkouts} || 0;
-        my $renewals = $by_type{$modifier}->{renewals} || 0;
-
-        $conn->respond({
-            circ_modifier => $modifier,
-            circ_modifier_name => $modifier_names{$modifier} || $modifier,
-            checkouts => $checkouts,
-            renewals => $renewals,
-            total => $checkouts + $renewals
-        });
-    }
-
-    $e->disconnect;
-    return undef;
+    return $aliases{$table_name} || 'dmaac';
 }
 
-__PACKAGE__->register_method(
-    method   => "circulation_by_library",
-    api_name => "open-ils.dashboard.circulation.by_library",
-    stream   => 1,
-    signature => {
-        params => [
-            {type => 'string', desc => 'Authentication token'},
-            {type => 'object', desc => 'Query parameters (start_date, end_date, org_unit, include_descendants)'},
-        ],
-        return => { desc => 'Stream of circulation data grouped by library'}
-    }
-);
+# Helper: Substitute variables in filters
+sub substitute_variables {
+    my ($filters, $e, $params) = @_;
 
-sub circulation_by_library {
-    my ($self, $conn, $authtoken, $query) = @_;
+    return {} unless $filters;
 
-    $logger->info("Dashboard.pm: circulation_by_library CALLED");
-    $logger->info("Query params: " . Dumper($query));
+    # Get org unit and descendants
+    my $org_unit = $params->{org_unit} || $e->requestor->ws_ou;
+    my $org_descendants = $params->{include_descendants} ?
+        $U->get_org_descendants($org_unit) : [$org_unit];
 
-    # Validate authentication
-    my $e = new_editor(authtoken => $authtoken);
-    unless ($e->checkauth) {
-        $logger->error("Dashboard.pm: Authentication failed");
-        return $e->die_event;
-    }
+    # Calculate date/time values
+    my ($sec, $min, $hour, $mday, $mon, $year_offset, $wday, $yday, $isdst) = localtime();
+    my $current_year = $year_offset + 1900;
+    my $current_month = $mon + 1;
 
-    $logger->info("Dashboard.pm: Auth successful");
-
-    # Get org unit
-    my $org_unit = $query->{org_unit} || $e->requestor->ws_ou;
-
-    # Check permissions
-    return $e->die_event unless $e->allowed("VIEW_CIRCULATIONS", $org_unit);
-
-    # Parse dates
-    my $start_date = $query->{start_date};
-    my $end_date = $query->{end_date};
-
-    unless ($start_date && $end_date) {
-        return new OpenILS::Event("BAD_PARAMS", desc => "start_date and end_date are required");
-    }
-
-    # Get org unit tree if include_descendants is true
-    my $org_list = $query->{include_descendants} ?
-        $U->get_org_descendants($org_unit) :
-        [$org_unit];
-
-    # Fetch all circulations in date range with circ_lib
-    my $circs = $e->json_query({
-        select => {
-            circ => ['circ_lib', 'id', 'desk_renewal', 'opac_renewal', 'phone_renewal']
-        },
-        from => 'circ',
-        where => {
-            circ_lib => $org_list,
-            xact_start => {
-                between => [$start_date, $end_date]
-            }
-        }
-    });
-
-    $logger->info("Dashboard.pm: circulation_by_library - Raw circs count = " . ($circs ? scalar(@$circs) : "undef"));
-
-    # Group by library in Perl, counting checkouts vs renewals
-    my %by_library;
-    if ($circs && @$circs) {
-        foreach my $circ (@$circs) {
-            my $lib_id = $circ->{circ_lib};
-            next unless $lib_id;
-
-            $by_library{$lib_id} ||= {checkouts => 0, renewals => 0};
-
-            # Check if this is a renewal
-            if ($circ->{desk_renewal} eq 't' || $circ->{opac_renewal} eq 't' || $circ->{phone_renewal} eq 't') {
-                $by_library{$lib_id}->{renewals}++;
-            } else {
-                $by_library{$lib_id}->{checkouts}++;
-            }
+    # Parse timeRange if provided
+    my ($start_month, $end_month) = (1, 12);
+    if ($params->{timeRange}) {
+        if ($params->{timeRange} eq 'month') {
+            $start_month = $end_month = $current_month;
+        } elsif ($params->{timeRange} eq 'quarter') {
+            my $quarter = int(($current_month - 1) / 3);
+            $start_month = $quarter * 3 + 1;
+            $end_month = $start_month + 2;
+        } elsif ($params->{timeRange} eq 'year') {
+            $start_month = 1;
+            $end_month = 12;
         }
     }
 
-    # Fetch library names
-    my %library_names;
-    if (%by_library) {
-        my @lib_ids = keys %by_library;
-        my $libraries = $e->search_actor_org_unit({id => \@lib_ids});
-        foreach my $lib (@$libraries) {
-            $library_names{$lib->id} = $lib->name;
+    # Use params if explicitly provided
+    $start_month = $params->{start_month} if defined $params->{start_month};
+    $end_month = $params->{end_month} if defined $params->{end_month};
+    my $target_year = $params->{year} || $current_year;
+
+    # Build substitution map
+    my %vars = (
+        '$org_descendants' => $org_descendants,
+        '$org_unit' => $org_unit,
+        '$current_year' => $current_year,
+        '$current_month' => $current_month,
+        '$year' => $target_year,
+        '$month_range' => {between => [$start_month, $end_month]},
+        '$start_month' => $start_month,
+        '$end_month' => $end_month
+    );
+
+    # Replace variables in filters
+    my $result = {};
+    foreach my $key (keys %$filters) {
+        my $value = $filters->{$key};
+
+        if (!ref($value) && $value =~ /^\$/) {
+            # Variable substitution
+            $result->{$key} = $vars{$value};
+        } else {
+            # Static value
+            $result->{$key} = $value;
         }
     }
 
-    $logger->info("Dashboard.pm: circulation_by_library - Grouped libraries count = " . scalar(keys %by_library));
-
-    # Stream results
-    foreach my $lib_id (sort keys %by_library) {
-        my $checkouts = $by_library{$lib_id}->{checkouts} || 0;
-        my $renewals = $by_library{$lib_id}->{renewals} || 0;
-
-        $conn->respond({
-            library_id => $lib_id,
-            library_name => $library_names{$lib_id} || "Unknown",
-            checkouts => $checkouts,
-            renewals => $renewals,
-            total => $checkouts + $renewals
-        });
-    }
-
-    $e->disconnect;
-    return undef;
+    return $result;
 }
 
-__PACKAGE__->register_method(
-    method   => "circulation_trend",
-    api_name => "open-ils.dashboard.circulation.trend",
-    stream   => 1,
-    signature => {
-        params => [
-            {type => 'string', desc => 'Authentication token'},
-            {type => 'object', desc => 'Query parameters'},
-        ],
-        return => { desc => 'Stream of daily circulation trend data'}
-    }
-);
+# Helper: Aggregate by dimensions in Perl
+sub aggregate_by_dimensions {
+    my ($raw_results, $dimensions, $metrics, $aggregation) = @_;
 
-sub circulation_trend {
-    my ($self, $conn, $authtoken, $query) = @_;
+    return [] unless $raw_results && @$raw_results;
+    return [] unless $dimensions && @$dimensions;
+    return [] unless $metrics && @$metrics;
 
-    $logger->info("Dashboard.pm: circulation_trend CALLED");
-    $logger->info("Query params: " . Dumper($query));
+    my %aggregated;
 
-    # Validate authentication
-    my $e = new_editor(authtoken => $authtoken);
-    unless ($e->checkauth) {
-        $logger->error("Dashboard.pm: Authentication failed");
-        return $e->die_event;
-    }
+    foreach my $row (@$raw_results) {
+        # Build key from dimension values
+        my $key = join('|', map { $row->{$_} || '' } @$dimensions);
 
-    $logger->info("Dashboard.pm: Auth successful");
-
-    # Get org unit
-    my $org_unit = $query->{org_unit} || $e->requestor->ws_ou;
-
-    # Check permissions
-    return $e->die_event unless $e->allowed("VIEW_CIRCULATIONS", $org_unit);
-
-    # Parse dates
-    my $start_date = $query->{start_date};
-    my $end_date = $query->{end_date};
-
-    unless ($start_date && $end_date) {
-        return new OpenILS::Event("BAD_PARAMS", desc => "start_date and end_date are required");
-    }
-
-    # Get org unit tree
-    my $org_list = $query->{include_descendants} ?
-        $U->get_org_descendants($org_unit) :
-        [$org_unit];
-
-    $logger->info("Dashboard.pm: org_list = " . Dumper($org_list));
-    $logger->info("Dashboard.pm: start_date = $start_date, end_date = $end_date");
-
-    # Fetch all circulations in date range (simple query without GROUP BY)
-    my $circs = $e->json_query({
-        select => {
-            circ => ['xact_start']
-        },
-        from => 'circ',
-        where => {
-            circ_lib => $org_list,
-            xact_start => {
-                between => [$start_date, $end_date]
+        # Initialize if first time seeing this key
+        unless ($aggregated{$key}) {
+            $aggregated{$key} = {};
+            # Copy dimension values
+            foreach my $dim (@$dimensions) {
+                $aggregated{$key}->{$dim} = $row->{$dim};
+            }
+            # Initialize metrics
+            foreach my $metric (@$metrics) {
+                $aggregated{$key}->{$metric} = 0;
             }
         }
-    });
 
-    $logger->info("Dashboard.pm: Raw circs count = " . ($circs ? scalar(@$circs) : "undef"));
+        # Aggregate metrics
+        foreach my $metric (@$metrics) {
+            my $value = $row->{$metric} || 0;
 
-    # Group by date in Perl (since json_query GROUP BY is broken)
-    my %by_date;
-    if ($circs && @$circs) {
-        foreach my $circ (@$circs) {
-            my $date_str = substr($circ->{xact_start}, 0, 10);  # Extract YYYY-MM-DD
-            $by_date{$date_str}++;
-        }
-    }
-
-    # Convert hash to sorted array
-    my @results = map {
-        { date => $_, total => $by_date{$_} }
-    } sort keys %by_date;
-
-    my $results = \@results;
-
-    $logger->info("Dashboard.pm: results count = " . scalar(@results));
-    $logger->info("Dashboard.pm: results data = " . Dumper($results));
-
-    # Stream results
-    foreach my $row (@$results) {
-        $conn->respond({
-            date => $row->{date},
-            checkouts => $row->{total} || 0,
-            total => $row->{total} || 0
-        });
-    }
-
-    $e->disconnect;
-    return undef;
-}
-
-__PACKAGE__->register_method(
-    method   => "holds_current_count",
-    api_name => "open-ils.dashboard.holds.current_count",
-    signature => {
-        params => [
-            {type => 'string', desc => 'Authentication token'},
-            {type => 'object', desc => 'Query parameters (org_unit, include_descendants)'},
-        ],
-        return => { desc => 'Current holds counts by status'}
-    }
-);
-
-sub holds_current_count {
-    my ($self, $conn, $authtoken, $query) = @_;
-
-    $logger->info("Dashboard.pm: holds_current_count CALLED");
-    $logger->info("Query params: " . Dumper($query));
-
-    # Validate authentication
-    my $e = new_editor(authtoken => $authtoken);
-    unless ($e->checkauth) {
-        $logger->error("Dashboard.pm: Authentication failed");
-        return $e->die_event;
-    }
-
-    $logger->info("Dashboard.pm: Auth successful");
-
-    # Get org unit (support both old single param and new query hash)
-    my $org_unit;
-    if (ref($query) eq 'HASH') {
-        $org_unit = $query->{org_unit} || $e->requestor->ws_ou;
-    } else {
-        # Backward compatibility: if query is just a number, treat as org_unit
-        $org_unit = $query || $e->requestor->ws_ou;
-    }
-
-    # Check permissions
-    return $e->die_event unless $e->allowed("VIEW_HOLD", $org_unit);
-
-    # Get org unit tree if include_descendants is true
-    my $org_list;
-    if (ref($query) eq 'HASH' && $query->{include_descendants}) {
-        $org_list = $U->get_org_descendants($org_unit);
-        $logger->info("Dashboard.pm: Using org descendants: " . join(', ', @$org_list));
-    } else {
-        $org_list = [$org_unit];
-        $logger->info("Dashboard.pm: Using single org: $org_unit");
-    }
-
-    # Query active holds (not cancelled, not fulfilled)
-    my $active_holds = $e->json_query({
-        select => {
-            ahr => [
-                {transform => 'count', column => 'id', alias => 'count'}
-            ]
-        },
-        from => 'ahr',
-        where => {
-            pickup_lib => $org_list,
-            cancel_time => undef,
-            fulfillment_time => undef
-        }
-    });
-
-    # Query holds on shelf (waiting for pickup)
-    my $shelf_holds = $e->json_query({
-        select => {
-            ahr => [
-                {transform => 'count', column => 'id', alias => 'count'}
-            ]
-        },
-        from => 'ahr',
-        where => {
-            pickup_lib => $org_list,
-            shelf_time => {'!=' => undef},
-            cancel_time => undef,
-            fulfillment_time => undef
-        }
-    });
-
-    # Query in-transit holds
-    my $transit_holds = $e->json_query({
-        select => {
-            ahr => [
-                {transform => 'count', column => 'id', alias => 'count'}
-            ]
-        },
-        from => {
-            ahr => {
-                ahtc => {
-                    field => 'hold',
-                    fkey => 'id'
-                }
-            }
-        },
-        where => {
-            '+ahr' => {
-                pickup_lib => $org_list,
-                cancel_time => undef,
-                fulfillment_time => undef
-            },
-            '+ahtc' => {
-                dest_recv_time => undef
+            if ($aggregation eq 'sum') {
+                $aggregated{$key}->{$metric} += $value;
+            } elsif ($aggregation eq 'count') {
+                $aggregated{$key}->{$metric}++;
+            } elsif ($aggregation eq 'avg') {
+                # For average, we'll track sum and count
+                $aggregated{$key}->{"${metric}_sum"} += $value;
+                $aggregated{$key}->{"${metric}_count"}++;
+            } elsif ($aggregation eq 'max') {
+                my $current = $aggregated{$key}->{$metric};
+                $aggregated{$key}->{$metric} = $value if $value > $current;
+            } elsif ($aggregation eq 'min') {
+                my $current = $aggregated{$key}->{$metric};
+                $aggregated{$key}->{$metric} = $value if !$current || $value < $current;
             }
         }
-    });
-
-    $e->disconnect;
-
-    return {
-        active => $active_holds->[0]->{count} || 0,
-        on_shelf => $shelf_holds->[0]->{count} || 0,
-        in_transit => $transit_holds->[0]->{count} || 0,
-        org_unit => $org_unit
-    };
-}
-
-__PACKAGE__->register_method(
-    method   => "holds_by_status",
-    api_name => "open-ils.dashboard.holds.by_status",
-    stream   => 1,
-    signature => {
-        params => [
-            {type => 'string', desc => 'Authentication token'},
-            {type => 'object', desc => 'Query parameters (org_unit, include_descendants)'},
-        ],
-        return => { desc => 'Stream of hold counts by status'}
-    }
-);
-
-sub holds_by_status {
-    my ($self, $conn, $authtoken, $query) = @_;
-
-    $logger->info("Dashboard.pm: holds_by_status CALLED");
-    $logger->info("Query params: " . Dumper($query));
-
-    # Validate authentication
-    my $e = new_editor(authtoken => $authtoken);
-    unless ($e->checkauth) {
-        $logger->error("Dashboard.pm: Authentication failed");
-        return $e->die_event;
     }
 
-    $logger->info("Dashboard.pm: Auth successful");
-
-    # Get org unit
-    my $org_unit;
-    if (ref($query) eq 'HASH') {
-        $org_unit = $query->{org_unit} || $e->requestor->ws_ou;
-    } else {
-        $org_unit = $query || $e->requestor->ws_ou;
-    }
-
-    # Check permissions
-    return $e->die_event unless $e->allowed("VIEW_HOLD", $org_unit);
-
-    # Get org unit tree if include_descendants is true
-    my $org_list;
-    if (ref($query) eq 'HASH' && $query->{include_descendants}) {
-        $org_list = $U->get_org_descendants($org_unit);
-        $logger->info("Dashboard.pm: Using org descendants: " . join(', ', @$org_list));
-    } else {
-        $org_list = [$org_unit];
-        $logger->info("Dashboard.pm: Using single org: $org_unit");
-    }
-
-    # Query holds on shelf (ready for pickup)
-    my $shelf_holds = $e->json_query({
-        select => {
-            ahr => [
-                {transform => 'count', column => 'id', alias => 'count'}
-            ]
-        },
-        from => 'ahr',
-        where => {
-            pickup_lib => $org_list,
-            shelf_time => {'!=' => undef},
-            cancel_time => undef,
-            fulfillment_time => undef
-        }
-    });
-
-    # Query in-transit holds
-    my $transit_holds = $e->json_query({
-        select => {
-            ahr => [
-                {transform => 'count', column => 'id', alias => 'count'}
-            ]
-        },
-        from => {
-            ahr => {
-                ahtc => {
-                    field => 'hold',
-                    fkey => 'id'
-                }
-            }
-        },
-        where => {
-            '+ahr' => {
-                pickup_lib => $org_list,
-                cancel_time => undef,
-                fulfillment_time => undef
-            },
-            '+ahtc' => {
-                dest_recv_time => undef
+    # Calculate averages if needed
+    if ($aggregation eq 'avg') {
+        foreach my $key (keys %aggregated) {
+            foreach my $metric (@$metrics) {
+                my $sum = $aggregated{$key}->{"${metric}_sum"} || 0;
+                my $count = $aggregated{$key}->{"${metric}_count"} || 1;
+                $aggregated{$key}->{$metric} = $sum / $count;
+                # Clean up temporary fields
+                delete $aggregated{$key}->{"${metric}_sum"};
+                delete $aggregated{$key}->{"${metric}_count"};
             }
         }
-    });
-
-    # Query suspended/frozen holds
-    my $suspended_holds = $e->json_query({
-        select => {
-            ahr => [
-                {transform => 'count', column => 'id', alias => 'count'}
-            ]
-        },
-        from => 'ahr',
-        where => {
-            pickup_lib => $org_list,
-            frozen => 't',
-            cancel_time => undef,
-            fulfillment_time => undef
-        }
-    });
-
-    # Calculate waiting holds (active but not on shelf, not in transit, not frozen)
-    my $total_active = $e->json_query({
-        select => {
-            ahr => [
-                {transform => 'count', column => 'id', alias => 'count'}
-            ]
-        },
-        from => 'ahr',
-        where => {
-            pickup_lib => $org_list,
-            cancel_time => undef,
-            fulfillment_time => undef
-        }
-    });
-
-    my $shelf_count = $shelf_holds->[0]->{count} || 0;
-    my $transit_count = $transit_holds->[0]->{count} || 0;
-    my $suspended_count = $suspended_holds->[0]->{count} || 0;
-    my $total_count = $total_active->[0]->{count} || 0;
-    my $waiting_count = $total_count - $shelf_count - $transit_count - $suspended_count;
-
-    $logger->info("Dashboard.pm: holds_by_status - Total: $total_count, Shelf: $shelf_count, Transit: $transit_count, Suspended: $suspended_count, Waiting: $waiting_count");
-
-    $e->disconnect;
-
-    # Stream each status as a separate result
-    if ($waiting_count > 0) {
-        $conn->respond({
-            status => 'WAITING',
-            status_name => 'Waiting',
-            count => $waiting_count
-        });
     }
 
-    if ($transit_count > 0) {
-        $conn->respond({
-            status => 'IN_TRANSIT',
-            status_name => 'In Transit',
-            count => $transit_count
-        });
-    }
+    # Convert hash to array
+    my @results = values %aggregated;
 
-    if ($shelf_count > 0) {
-        $conn->respond({
-            status => 'ON_SHELF',
-            status_name => 'Ready for Pickup',
-            count => $shelf_count
-        });
-    }
-
-    if ($suspended_count > 0) {
-        $conn->respond({
-            status => 'SUSPENDED',
-            status_name => 'Suspended',
-            count => $suspended_count
-        });
-    }
-
-    return undef;
+    return \@results;
 }
 
-__PACKAGE__->register_method(
-    method   => "items_by_copy_status",
-    api_name => "open-ils.dashboard.items.by_copy_status",
-    stream   => 1,
-    signature => {
-        params => [
-            {type => 'string', desc => 'Authentication token'},
-            {type => 'object', desc => 'Query parameters (org_unit, include_descendants)'},
-        ],
-        return => { desc => 'Stream of item counts by copy status'}
-    }
-);
+# Helper: Combine date dimensions into single date field
+sub combine_date_dimensions {
+    my ($data, $dimensions) = @_;
 
-sub items_by_copy_status {
-    my ($self, $conn, $authtoken, $query) = @_;
+    return $data unless $data && @$data;
+    return $data unless $dimensions && @$dimensions;
 
-    $logger->info("Dashboard.pm: items_by_copy_status CALLED");
-    $logger->info("Query params: " . Dumper($query));
+    # Check if this has date dimensions (year, month, day)
+    my $has_year = grep { $_ eq 'year' } @$dimensions;
+    my $has_month = grep { $_ eq 'month' } @$dimensions;
+    my $has_day = grep { $_ eq 'day' } @$dimensions;
 
-    # Validate authentication
-    my $e = new_editor(authtoken => $authtoken);
-    unless ($e->checkauth) {
-        $logger->error("Dashboard.pm: Authentication failed");
-        return $e->die_event;
-    }
-
-    $logger->info("Dashboard.pm: Auth successful");
-
-    # Get org unit
-    my $org_unit;
-    if (ref($query) eq 'HASH') {
-        $org_unit = $query->{org_unit} || $e->requestor->ws_ou;
-    } else {
-        $org_unit = $query || $e->requestor->ws_ou;
-    }
-
-    # Check permissions
-    return $e->die_event unless $e->allowed("VIEW_COPY_NOTES", $org_unit);
-
-    # Get org unit tree if include_descendants is true
-    my $org_list;
-    if (ref($query) eq 'HASH' && $query->{include_descendants}) {
-        $org_list = $U->get_org_descendants($org_unit);
-        $logger->info("Dashboard.pm: Using org descendants: " . join(', ', @$org_list));
-    } else {
-        $org_list = [$org_unit];
-        $logger->info("Dashboard.pm: Using single org: $org_unit");
-    }
-
-    # Fetch all items (copies) with their status
-    my $copies = $e->json_query({
-        select => {
-            acp => ['status']
-        },
-        from => 'acp',
-        where => {
-            circ_lib => $org_list,
-            deleted => 'f'
+    if ($has_year && $has_month && $has_day) {
+        # Combine into date field (YYYY-MM-DD format)
+        foreach my $row (@$data) {
+            my $year = $row->{year};
+            my $month = sprintf("%02d", $row->{month});
+            my $day = sprintf("%02d", $row->{day});
+            $row->{date} = "$year-$month-$day";
         }
-    });
-
-    $logger->info("Dashboard.pm: items_by_copy_status - Raw copies count = " . ($copies ? scalar(@$copies) : "undef"));
-
-    # Group by status in Perl
-    my %by_status;
-    if ($copies && @$copies) {
-        foreach my $copy (@$copies) {
-            my $status_id = $copy->{status};
-            next unless $status_id;
-
-            $by_status{$status_id} ||= {count => 0};
-            $by_status{$status_id}->{count}++;
+    } elsif ($has_year && $has_month) {
+        # Combine into date field (YYYY-MM format)
+        foreach my $row (@$data) {
+            my $year = $row->{year};
+            my $month = sprintf("%02d", $row->{month});
+            $row->{date} = "$year-$month";
         }
     }
 
-    # Fetch status names
-    my %status_names;
-    if (%by_status) {
-        my @status_ids = keys %by_status;
-        my $statuses = $e->search_config_copy_status({id => \@status_ids});
-        foreach my $status (@$statuses) {
-            $status_names{$status->id} = $status->name;
-        }
-    }
-
-    $logger->info("Dashboard.pm: items_by_copy_status - Grouped statuses count = " . scalar(keys %by_status));
-
-    # Stream results
-    foreach my $status_id (sort { $by_status{$b}->{count} <=> $by_status{$a}->{count} } keys %by_status) {
-        my $count = $by_status{$status_id}->{count} || 0;
-
-        $conn->respond({
-            copy_status_id => $status_id,
-            copy_status_name => $status_names{$status_id} || "Unknown",
-            count => $count
-        });
-    }
-
-    $e->disconnect;
-    return undef;
+    return $data;
 }
 
-__PACKAGE__->register_method(
-    method   => "items_by_copy_status_and_library",
-    api_name => "open-ils.dashboard.items.by_copy_status_and_library",
-    stream   => 1,
-    signature => {
-        params => [
-            {type => 'string', desc => 'Authentication token'},
-            {type => 'object', desc => 'Query parameters (org_unit, include_descendants)'},
-        ],
-        return => { desc => 'Stream of item counts by copy status and library'}
-    }
-);
+# Helper: Perform name lookups
+sub perform_lookups {
+    my ($data, $lookups, $e) = @_;
 
-sub items_by_copy_status_and_library {
-    my ($self, $conn, $authtoken, $query) = @_;
+    return $data unless $lookups && %$lookups;
+    return $data unless $data && @$data;
 
-    $logger->info("Dashboard.pm: items_by_copy_status_and_library CALLED");
-    $logger->info("Query params: " . Dumper($query));
+    foreach my $dimension (keys %$lookups) {
+        my $lookup_spec = $lookups->{$dimension};
+        my $table = $lookup_spec->{table};
+        my $key_field = $lookup_spec->{keyField} || 'id';
+        my $name_field = $lookup_spec->{nameField} || 'name';
+        my $output_field = $lookup_spec->{outputField} || "${dimension}_name";
 
-    # Validate authentication
-    my $e = new_editor(authtoken => $authtoken);
-    unless ($e->checkauth) {
-        $logger->error("Dashboard.pm: Authentication failed");
-        return $e->die_event;
-    }
-
-    $logger->info("Dashboard.pm: Auth successful");
-
-    # Get org unit
-    my $org_unit;
-    if (ref($query) eq 'HASH') {
-        $org_unit = $query->{org_unit} || $e->requestor->ws_ou;
-    } else {
-        $org_unit = $query || $e->requestor->ws_ou;
-    }
-
-    # Check permissions
-    return $e->die_event unless $e->allowed("VIEW_COPY_NOTES", $org_unit);
-
-    # Get org unit tree if include_descendants is true
-    my $org_list;
-    if (ref($query) eq 'HASH' && $query->{include_descendants}) {
-        $org_list = $U->get_org_descendants($org_unit);
-        $logger->info("Dashboard.pm: Using org descendants: " . join(', ', @$org_list));
-    } else {
-        $org_list = [$org_unit];
-        $logger->info("Dashboard.pm: Using single org: $org_unit");
-    }
-
-    # Fetch all items (copies) with their status and library
-    my $copies = $e->json_query({
-        select => {
-            acp => ['status', 'circ_lib']
-        },
-        from => 'acp',
-        where => {
-            circ_lib => $org_list,
-            deleted => 'f'
+        # Collect unique IDs
+        my %ids;
+        foreach my $row (@$data) {
+            my $id = $row->{$dimension};
+            $ids{$id} = 1 if defined $id;
         }
-    });
 
-    $logger->info("Dashboard.pm: items_by_copy_status_and_library - Raw copies count = " . ($copies ? scalar(@$copies) : "undef"));
+        next unless %ids;
 
-    # Group by library and status in Perl
-    my %by_lib_and_status;
-    if ($copies && @$copies) {
-        foreach my $copy (@$copies) {
-            my $lib_id = $copy->{circ_lib};
-            my $status_id = $copy->{status};
-            # Use defined() because status_id can be 0 (Available)
-            next unless $lib_id && defined($status_id);
+        # Fetch names based on table
+        my %names;
+        my @ids = keys %ids;
 
-            my $key = "$lib_id:$status_id";
-            $by_lib_and_status{$key} ||= {
-                lib_id => $lib_id,
-                status_id => $status_id,
-                count => 0
-            };
-            $by_lib_and_status{$key}->{count}++;
+        if ($table eq 'permission.grp_tree') {
+            my $records = $e->search_permission_grp_tree({id => \@ids});
+            foreach my $rec (@$records) {
+                $names{$rec->id()} = $rec->name();  # Call as functions!
+            }
+        } elsif ($table eq 'actor.org_unit') {
+            my $records = $e->search_actor_org_unit({id => \@ids});
+            foreach my $rec (@$records) {
+                $names{$rec->id()} = $rec->name();  # Call as functions!
+            }
+        } elsif ($table eq 'asset.copy_location') {
+            my $records = $e->search_asset_copy_location({id => \@ids});
+            foreach my $rec (@$records) {
+                $names{$rec->id()} = $rec->name();  # Call as functions!
+            }
+        } elsif ($table eq 'config.copy_status') {
+            my $records = $e->search_config_copy_status({id => \@ids});
+            foreach my $rec (@$records) {
+                $names{$rec->id()} = $rec->name();  # Call as functions!
+            }
+        }
+        # Add more table lookups as needed
+
+        # Add names to results
+        foreach my $row (@$data) {
+            my $id = $row->{$dimension};
+            $row->{$output_field} = $names{$id} || 'Unknown' if defined $id;
         }
     }
 
-    # Fetch library names
-    my %library_names;
-    if (%by_lib_and_status) {
-        my %lib_ids = map { $_->{lib_id} => 1 } values %by_lib_and_status;
-        my @lib_ids = keys %lib_ids;
-        my $libraries = $e->search_actor_org_unit({id => \@lib_ids});
-        foreach my $lib (@$libraries) {
-            $library_names{$lib->id} = $lib->shortname;
-        }
-    }
-
-    # Fetch status names
-    my %status_names;
-    if (%by_lib_and_status) {
-        my %status_ids = map { $_->{status_id} => 1 } values %by_lib_and_status;
-        my @status_ids = keys %status_ids;
-        my $statuses = $e->search_config_copy_status({id => \@status_ids});
-        foreach my $status (@$statuses) {
-            $status_names{$status->id} = $status->name;
-        }
-    }
-
-    $logger->info("Dashboard.pm: items_by_copy_status_and_library - Grouped count = " . scalar(keys %by_lib_and_status));
-
-    # Stream results - filter to only include statuses with significant counts
-    foreach my $key (sort keys %by_lib_and_status) {
-        my $data = $by_lib_and_status{$key};
-        my $count = $data->{count} || 0;
-
-        # Only include if count > 10 to avoid clutter
-        next unless $count > 10;
-
-        $conn->respond({
-            library => $library_names{$data->{lib_id}} || "Unknown",
-            library_id => $data->{lib_id},
-            copy_status => $status_names{$data->{status_id}} || "Unknown",
-            copy_status_id => $data->{status_id},
-            item_count => $count
-        });
-    }
-
-    $e->disconnect;
-    return undef;
+    return $data;
 }
+
+# Helper: Sort results
+sub sort_results {
+    my ($data, $sort_spec) = @_;
+
+    return $data unless $sort_spec && $sort_spec->{field};
+    return $data unless $data && @$data;
+
+    my $field = $sort_spec->{field};
+    my $order = $sort_spec->{order} || 'asc';
+
+    my @sorted;
+    if ($order eq 'desc') {
+        @sorted = sort { ($b->{$field} || 0) <=> ($a->{$field} || 0) } @$data;
+    } else {
+        @sorted = sort { ($a->{$field} || 0) <=> ($b->{$field} || 0) } @$data;
+    }
+
+    return \@sorted;
+}
+
+# Helper: Limit results
+sub limit_results {
+    my ($data, $limit) = @_;
+
+    return $data unless $limit && $limit > 0;
+    return $data unless $data && @$data;
+
+    my $count = scalar(@$data);
+    return $data if $count <= $limit;
+
+    my @limited = @$data[0 .. $limit - 1];
+    return \@limited;
+}
+
+# =========================================================================
+# WIDGET MANAGEMENT METHODS
+# =========================================================================
 
 __PACKAGE__->register_method(
     method   => "widget_list",
@@ -1342,90 +649,5 @@ sub user_widget_update {
 
     return {success => 1, count => scalar(@$widget_codes)};
 }
-
-__PACKAGE__->register_method(
-    method   => "circulation_by_patron_profile",
-    api_name => "open-ils.dashboard.circulation.by_patron_profile",
-    stream   => 1,
-    signature => {
-        params => [
-            {type => 'string', desc => 'Authentication token'},
-            {type => 'object', desc => 'Query parameters (start_date, end_date, org_unit, include_descendants)'},
-        ],
-        return => { desc => 'Stream of circulation data grouped by patron profile'}
-    }
-);
-
-sub circulation_by_patron_profile {
-    my ($self, $conn, $authtoken, $query) = @_;
-
-    $logger->info("Dashboard.pm: circulation_by_patron_profile CALLED");
-
-    # Validate authentication
-    my $e = new_editor(authtoken => $authtoken);
-    unless ($e->checkauth) {
-        $logger->error("Dashboard.pm: Authentication failed");
-        return $e->die_event;
-    }
-
-    # Get org unit and descendants
-    my $org_unit = $query->{org_unit} || $e->requestor->ws_ou;
-    my $org_list = $query->{include_descendants} ?
-        $U->get_org_descendants($org_unit) : [$org_unit];
-
-    # Query materialized table - get all rows, aggregate in Perl
-    my $raw_results = $e->json_query({
-        select => {
-            dmaac => ['profile', 'total']
-        },
-        from => 'dmaac',
-        where => {
-            circ_lib => $org_list,
-            year => int($query->{year} || (localtime)[5] + 1900),
-            month => {between => [$query->{start_month} || 1, $query->{end_month} || 12]}
-        }
-    });
-
-    # Aggregate by profile in Perl (avoid json_query GROUP BY bugs)
-    my %profile_totals;
-    foreach my $row (@$raw_results) {
-        $profile_totals{$row->{profile}} += $row->{total};
-    }
-
-    # Convert to array and sort
-    my $results = [];
-    foreach my $profile_id (sort { $profile_totals{$b} <=> $profile_totals{$a} } keys %profile_totals) {
-        push @$results, {
-            profile => $profile_id,
-            total => $profile_totals{$profile_id}
-        };
-    }
-
-    # Get profile names separately
-    my %profile_names;
-    if ($results && @$results) {
-        my @profile_ids = map { $_->{profile} } @$results;
-        my $profiles = $e->search_permission_grp_tree({id => \@profile_ids});
-        foreach my $prof (@$profiles) {
-            $profile_names{$prof->id} = $prof->name;
-        }
-    }
-
-    # Stream results with profile names
-    foreach my $row (@$results) {
-        $conn->respond({
-            profile => $row->{profile},
-            profile_name => $profile_names{$row->{profile}} || 'Unknown',
-            total => int($row->{total})
-        });
-    }
-
-    $e->disconnect;
-    return undef;
-}
-
-
-sub get_widget_data {...}
-
 
 1;

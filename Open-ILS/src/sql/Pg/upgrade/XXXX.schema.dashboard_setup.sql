@@ -84,11 +84,34 @@ VALUES (
         "type": "chart",
         "category": "circulations",
         "dataSource": {
-            "service": "circulation",
-            "method": "getCirculationByPatronProfile",
+            "service": "dashboard",
+            "method": "getWidgetData",
             "params": {
                 "timeRange": "month",
                 "include_descendants": true
+            },
+            "query": {
+                "table": "dashboard.materialized_action_all_circulation",
+                "dimensions": ["profile"],
+                "metrics": ["total"],
+                "aggregation": "sum",
+                "filters": {
+                    "circ_lib": "$org_descendants",
+                    "year": "$current_year",
+                    "month": "$month_range"
+                },
+                "lookups": {
+                    "profile": {
+                        "table": "permission.grp_tree",
+                        "keyField": "id",
+                        "nameField": "name",
+                        "outputField": "profile_name"
+                    }
+                },
+                "sort": {
+                    "field": "total",
+                    "order": "desc"
+                }
             },
             "cache": {
                 "enabled": true,
@@ -116,6 +139,194 @@ VALUES (
     }'::jsonb,
     TRUE
 );
+
+-- Add NEW widget definitions with unified query structure
+INSERT INTO dashboard.widget (code, name, category, description, json_config, enabled)
+VALUES
+-- Widget 1: Circulation by Library
+('circulation-by-library',
+ 'Circulation by Library',
+ 'circulations',
+ 'Pie chart showing circulation distribution across libraries/branches',
+ '{
+   "id": "circulation-by-library",
+   "name": "Circulation by Library",
+   "type": "chart",
+   "category": "circulations",
+   "dataSource": {
+     "service": "dashboard",
+     "method": "getWidgetData",
+     "params": {
+       "timeRange": "month",
+       "include_descendants": true
+     },
+     "query": {
+       "table": "dashboard.materialized_action_all_circulation",
+       "dimensions": ["circ_lib"],
+       "metrics": ["total"],
+       "aggregation": "sum",
+       "filters": {
+         "circ_lib": "$org_descendants",
+         "year": "$current_year",
+         "month": "$month_range"
+       },
+       "lookups": {
+         "circ_lib": {
+           "table": "actor.org_unit",
+           "keyField": "id",
+           "nameField": "name",
+           "outputField": "library_name"
+         }
+       },
+       "sort": {
+         "field": "total",
+         "order": "desc"
+       }
+     },
+     "cache": {
+       "enabled": true,
+       "ttl": 300
+     }
+   },
+   "transform": {
+     "type": "sort",
+     "xField": "library_name",
+     "yField": "total",
+     "sortBy": {
+       "field": "total",
+       "order": "desc"
+     }
+   },
+   "visualization": {
+     "chartType": "pie",
+     "title": "Circulation by Library",
+     "subtitle": "Last 30 days",
+     "showLegend": true,
+     "showTooltip": true,
+     "colors": ["#0d6efd", "#198754", "#ffc107", "#dc3545", "#6f42c1", "#0dcaf0", "#fd7e14", "#d63384"]
+   }
+ }'::jsonb,
+ TRUE),
+
+-- Widget 2: Circulation by Shelving Location
+('circulation-by-location',
+ 'Circulation by Shelving Location',
+ 'circulations',
+ 'Top 10 shelving locations by circulation activity',
+ '{
+   "id": "circulation-by-location",
+   "name": "Circulation by Location",
+   "type": "chart",
+   "category": "circulations",
+   "dataSource": {
+     "service": "dashboard",
+     "method": "getWidgetData",
+     "params": {
+       "timeRange": "month",
+       "include_descendants": true
+     },
+     "query": {
+       "table": "dashboard.materialized_action_all_circulation",
+       "dimensions": ["copy_location"],
+       "metrics": ["total"],
+       "aggregation": "sum",
+       "filters": {
+         "circ_lib": "$org_descendants",
+         "year": "$current_year",
+         "month": "$month_range"
+       },
+       "lookups": {
+         "copy_location": {
+           "table": "asset.copy_location",
+           "keyField": "id",
+           "nameField": "name",
+           "outputField": "shelving_location_name"
+         }
+       },
+       "sort": {
+         "field": "total",
+         "order": "desc"
+       },
+       "limit": 10
+     },
+     "cache": {
+       "enabled": true,
+       "ttl": 300
+     }
+   },
+   "transform": {
+     "type": "sort",
+     "xField": "shelving_location_name",
+     "yField": "total",
+     "sortBy": {
+       "field": "total",
+       "order": "desc"
+     }
+   },
+   "visualization": {
+     "chartType": "bar",
+     "title": "Top 10 Locations by Circulation",
+     "xAxisLabel": "Shelving Location",
+     "yAxisLabel": "Checkouts",
+     "colors": ["#0d6efd"]
+   }
+ }'::jsonb,
+ TRUE),
+
+-- Widget 3: Daily Circulation Trend
+('daily-circulation',
+ 'Daily Circulation Trend',
+ 'circulations',
+ 'Daily circulation counts over time',
+ '{
+   "id": "daily-circulation",
+   "name": "Circulation Per Day",
+   "type": "chart",
+   "category": "circulations",
+   "dataSource": {
+     "service": "dashboard",
+     "method": "getWidgetData",
+     "params": {
+       "timeRange": "month",
+       "include_descendants": true
+     },
+     "query": {
+       "table": "dashboard.materialized_action_all_circulation",
+       "dimensions": ["year", "month", "day"],
+       "metrics": ["total"],
+       "aggregation": "sum",
+       "filters": {
+         "circ_lib": "$org_descendants",
+         "year": "$current_year",
+         "month": "$month_range"
+       },
+       "sort": {
+         "field": "day",
+         "order": "asc"
+       }
+     },
+     "cache": {
+       "enabled": true,
+       "ttl": 300
+     }
+   },
+   "transform": {
+     "type": "groupBy",
+     "xField": "date",
+     "yField": "total",
+     "groupByField": "date",
+     "aggregation": "sum"
+   },
+   "visualization": {
+     "chartType": "line",
+     "title": "Daily Circulation",
+     "xAxisLabel": "Date",
+     "yAxisLabel": "Checkouts",
+     "showGrid": true,
+     "showTooltip": true
+   }
+ }'::jsonb,
+ TRUE);
 
 -- Change the org unit setting type table so that arrays may have an fm_class, if they want.
 ALTER TABLE config.org_unit_setting_type
@@ -165,7 +376,7 @@ VALUES ('ui.dashboard.default_widgets', --name
 INSERT INTO actor.org_unit_setting (org_unit, name, value)
 VALUES (1,
         'ui.dashboard.default_widgets',
-        '["circulation-by-patron-profile"]')  -- Production widget showcasing materialized table
+        '["circulation-by-patron-profile", "circulation-by-library", "circulation-by-location", "daily-circulation"]')
 ON CONFLICT (org_unit, name) DO UPDATE
     SET value = EXCLUDED.value;
 

@@ -48,7 +48,13 @@ export class DataSourceRegistryService {
      * Register all default data sources
      */
     private registerDefaultDataSources(): void {
-        // Register circulation data source
+        // Register dashboard data source with unified method
+        // This is the PRIMARY data source - all widgets should use this!
+        this.registerDataSource('dashboard', this.circulationDataService, {
+            'getWidgetData': this.circulationDataService.getWidgetData.bind(this.circulationDataService)
+        });
+
+        // Register circulation data source (DEPRECATED - for backward compatibility only)
         this.registerDataSource('circulation', this.circulationDataService, {
             'getCirculationByShelvingLocation': this.circulationDataService.getCirculationByShelvingLocation.bind(this.circulationDataService),
             'getCirculationTrend': this.circulationDataService.getCirculationTrend.bind(this.circulationDataService),
@@ -135,7 +141,16 @@ export class DataSourceRegistryService {
 
         try {
             // Invoke the method with parameters
-            const result$ = method(config.params) as Observable<any>;
+            // For getWidgetData, merge query spec into params
+            let methodParams = config.params || {};
+            if (config.method === 'getWidgetData' && (config as any).query) {
+                methodParams = {
+                    ...methodParams,
+                    _query: (config as any).query
+                };
+            }
+
+            const result$ = method(methodParams) as Observable<any>;
 
             // Wrap the result with metadata
             return new Observable(subscriber => {

@@ -40,7 +40,8 @@ export class BarChartRenderer implements ChartRenderer<ChartData> {
             }
 
             // Set up dimensions
-            const { width = 800, height = 400, margin = { top: 20, right: 20, bottom: 40, left: 40 } } = config;
+            // Increase bottom margin to 100px and left margin to 60px to accommodate rotated labels
+            const { width = 800, height = 400, margin = { top: 20, right: 20, bottom: 100, left: 60 } } = config;
             const innerWidth = width - margin.left - margin.right;
             const innerHeight = height - margin.top - margin.bottom;
 
@@ -216,7 +217,8 @@ export class BarChartRenderer implements ChartRenderer<ChartData> {
             const xScale = d3.scaleBand()
                 .domain(allData.map(d => String(d.x)))
                 .range([0, width])
-                .padding(0.1);
+                .padding(0.2)  // Increased padding to give more space for rotated labels
+                .paddingOuter(0.1);  // Add outer padding to prevent clipping at edges
 
             const yExtent = d3.extent(allData, d => d.y) as [number, number];
             const yScale = d3.scaleLinear()
@@ -274,6 +276,13 @@ export class BarChartRenderer implements ChartRenderer<ChartData> {
                 .attr('transform', `translate(0,${height})`)
                 .call(d3.axisBottom(xScale));
 
+            // Rotate x-axis labels 45 degrees for better readability
+            xAxis.selectAll('text')
+                .style('text-anchor', 'end')
+                .attr('dx', '-0.8em')
+                .attr('dy', '0.15em')
+                .attr('transform', 'rotate(-45)');
+
             // Y axis (numerical)
             const yAxis = g.append('g')
                 .attr('class', 'y-axis')
@@ -284,7 +293,7 @@ export class BarChartRenderer implements ChartRenderer<ChartData> {
                 xAxis.append('text')
                     .attr('class', 'axis-label')
                     .attr('x', width / 2)
-                    .attr('y', 35)
+                    .attr('y', 75)  // Moved down to accommodate rotated labels
                     .style('text-anchor', 'middle')
                     .style('fill', 'var(--bs-body-color)')
                     .text(data.xAxisLabel);

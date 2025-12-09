@@ -17,7 +17,7 @@ export type TransformType = 'groupBy' | 'sum' | 'average' | 'count' | 'filter' |
 /**
  * Available data source services
  */
-export type DataSourceService = 'circulation' | 'acquisitions' | 'cataloging' | 'patrons' | 'holdings';
+export type DataSourceService = 'dashboard' | 'circulation' | 'acquisitions' | 'cataloging' | 'patrons' | 'holdings';
 
 /**
  * Aggregation functions
