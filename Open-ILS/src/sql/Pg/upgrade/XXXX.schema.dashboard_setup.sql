@@ -1201,5 +1201,21 @@ RETURN QUERY EXECUTE select_query;
 END;
 $func$ LANGUAGE plpgsql;
 
+-- Populate materialized tables with existing data
+-- This ensures the dashboard shows data immediately after schema installation
+-- rather than requiring a manual population step
+DO $$
+DECLARE
+    circ_rows BIGINT;
+    hold_rows BIGINT;
+BEGIN
+    -- Populate circulation materialized table
+    SELECT dashboard.recalculate_stat_table('materialized_action_all_circulation') INTO circ_rows;
+    RAISE NOTICE 'Populated dashboard.materialized_action_all_circulation with % rows', circ_rows;
+
+    -- Populate holds materialized table
+    SELECT dashboard.recalculate_stat_table('materialized_action_hold_request') INTO hold_rows;
+    RAISE NOTICE 'Populated dashboard.materialized_action_hold_request with % rows', hold_rows;
+END $$;
 
 COMMIT;
