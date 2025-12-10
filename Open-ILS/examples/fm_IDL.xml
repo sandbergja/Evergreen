@@ -16835,6 +16835,32 @@ SELECT  usr,
 		</permacrud>
 	</class>
 
+	<class id="dmahr" controller="open-ils.cstore open-ils.pcrud" oils_obj:fieldmapper="dashboard::materialized_action_hold_request" oils_persist:tablename="dashboard.materialized_action_hold_request" reporter:label="Dashboard Hold Requests" reporter:core="true">
+		<fields oils_persist:primary="id" oils_persist:sequence="dashboard.materialized_action_hold_request_id_seq">
+			<field reporter:label="ID" name="id" reporter:datatype="id"/>
+			<field reporter:label="Day of Month" name="day" reporter:datatype="int"/>
+			<field reporter:label="Month of Year" name="month" reporter:datatype="int"/>
+			<field reporter:label="Year" name="year" reporter:datatype="int"/>
+			<field reporter:label="Pickup Library" name="pickup_lib" reporter:datatype="link"/>
+			<field reporter:label="Hold Status" name="hold_status" reporter:datatype="text"/>
+			<field reporter:label="Hold Type" name="hold_type" reporter:datatype="text"/>
+			<field reporter:label="Patron Permission Group" name="profile" reporter:datatype="link"/>
+			<field reporter:label="Total" name="total" reporter:datatype="int"/>
+			<field reporter:label="Row Create Date" name="create_date" reporter:datatype="timestamp"/>
+			<field reporter:label="Row Edit Date" name="edit_date" reporter:datatype="timestamp"/>
+		</fields>
+		<links>
+			<link field="pickup_lib" reltype="has_a" key="id" map="" class="aou"/>
+			<link field="profile" reltype="has_a" key="id" map="" class="pgt"/>
+		</links>
+		<permacrud xmlns="http://open-ils.org/spec/opensrf/IDL/permacrud/v1">
+			<actions>
+				<retrieve permission="VIEW_CIRCULATIONS"/>
+				<search permission="VIEW_CIRCULATIONS"/>
+			</actions>
+		</permacrud>
+	</class>
+
 
 	<!-- ********************************************************************************************************************* -->
 </IDL>

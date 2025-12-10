@@ -133,7 +133,7 @@ sub get_table_alias {
 
     my %aliases = (
         'dashboard.materialized_action_all_circulation' => 'dmaac',
-        'dashboard.materialized_holds' => 'dmh',
+        'dashboard.materialized_action_hold_request' => 'dmahr',
         'dashboard.materialized_items' => 'dmi'
     );
 

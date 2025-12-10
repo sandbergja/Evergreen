@@ -328,6 +328,257 @@ VALUES
  }'::jsonb,
  TRUE);
 
+-- =============================================================================
+-- HOLDS WIDGETS
+-- =============================================================================
+
+-- Widget: Holds by Status
+INSERT INTO dashboard.widget (code, name, category, description, json_config, enabled)
+VALUES (
+    'holds-by-status',
+    'Holds by Status',
+    'holds',
+    'Current holds grouped by status (New, Captured, Ready for Pickup, Fulfilled, Canceled, Suspended)',
+    '{
+      "id": "holds-by-status",
+      "name": "Holds by Status",
+      "type": "chart",
+      "category": "holds",
+      "dataSource": {
+        "service": "dashboard",
+        "method": "getWidgetData",
+        "params": {
+          "timeRange": "month",
+          "include_descendants": true
+        },
+        "query": {
+          "table": "dashboard.materialized_action_hold_request",
+          "dimensions": ["hold_status"],
+          "metrics": ["total"],
+          "aggregation": "sum",
+          "filters": {
+            "pickup_lib": "$org_descendants",
+            "year": "$current_year",
+            "month": "$month_range"
+          },
+          "sort": {
+            "field": "total",
+            "order": "desc"
+          }
+        },
+        "cache": {
+          "enabled": true,
+          "ttl": 300
+        }
+      },
+      "transform": {
+        "type": "sort",
+        "xField": "hold_status",
+        "yField": "total",
+        "sortBy": {
+          "field": "total",
+          "order": "desc"
+        }
+      },
+      "visualization": {
+        "chartType": "bar",
+        "title": "Holds by Status",
+        "subtitle": "Last 30 days",
+        "xAxisLabel": "Hold Status",
+        "yAxisLabel": "Count",
+        "colors": ["#0d6efd", "#198754", "#ffc107", "#dc3545", "#6f42c1", "#0dcaf0"]
+      }
+    }'::jsonb,
+    TRUE
+);
+
+-- Widget: Holds by Pickup Library
+INSERT INTO dashboard.widget (code, name, category, description, json_config, enabled)
+VALUES (
+    'holds-by-library',
+    'Holds by Pickup Library',
+    'holds',
+    'Holds distribution across libraries/branches by pickup location',
+    '{
+      "id": "holds-by-library",
+      "name": "Holds by Pickup Library",
+      "type": "chart",
+      "category": "holds",
+      "dataSource": {
+        "service": "dashboard",
+        "method": "getWidgetData",
+        "params": {
+          "timeRange": "month",
+          "include_descendants": true
+        },
+        "query": {
+          "table": "dashboard.materialized_action_hold_request",
+          "dimensions": ["pickup_lib"],
+          "metrics": ["total"],
+          "aggregation": "sum",
+          "filters": {
+            "pickup_lib": "$org_descendants",
+            "year": "$current_year",
+            "month": "$month_range"
+          },
+          "lookups": {
+            "pickup_lib": {
+              "table": "actor.org_unit",
+              "keyField": "id",
+              "nameField": "name",
+              "outputField": "library_name"
+            }
+          },
+          "sort": {
+            "field": "total",
+            "order": "desc"
+          }
+        },
+        "cache": {
+          "enabled": true,
+          "ttl": 300
+        }
+      },
+      "transform": {
+        "type": "sort",
+        "xField": "library_name",
+        "yField": "total",
+        "sortBy": {
+          "field": "total",
+          "order": "desc"
+        }
+      },
+      "visualization": {
+        "chartType": "pie",
+        "title": "Holds by Pickup Library",
+        "subtitle": "Last 30 days",
+        "showLegend": true,
+        "showTooltip": true,
+        "colors": ["#0d6efd", "#198754", "#ffc107", "#dc3545", "#6f42c1", "#0dcaf0", "#fd7e14", "#d63384"]
+      }
+    }'::jsonb,
+    TRUE
+);
+
+-- Widget: Holds by Type
+INSERT INTO dashboard.widget (code, name, category, description, json_config, enabled)
+VALUES (
+    'holds-by-type',
+    'Holds by Type',
+    'holds',
+    'Holds grouped by type (Title, Volume, Copy, Part)',
+    '{
+      "id": "holds-by-type",
+      "name": "Holds by Type",
+      "type": "chart",
+      "category": "holds",
+      "dataSource": {
+        "service": "dashboard",
+        "method": "getWidgetData",
+        "params": {
+          "timeRange": "month",
+          "include_descendants": true
+        },
+        "query": {
+          "table": "dashboard.materialized_action_hold_request",
+          "dimensions": ["hold_type"],
+          "metrics": ["total"],
+          "aggregation": "sum",
+          "filters": {
+            "pickup_lib": "$org_descendants",
+            "year": "$current_year",
+            "month": "$month_range"
+          },
+          "sort": {
+            "field": "total",
+            "order": "desc"
+          }
+        },
+        "cache": {
+          "enabled": true,
+          "ttl": 300
+        }
+      },
+      "transform": {
+        "type": "sort",
+        "xField": "hold_type",
+        "yField": "total",
+        "sortBy": {
+          "field": "total",
+          "order": "desc"
+        }
+      },
+      "visualization": {
+        "chartType": "bar",
+        "title": "Holds by Type",
+        "subtitle": "Last 30 days",
+        "xAxisLabel": "Hold Type",
+        "yAxisLabel": "Count",
+        "colors": ["#6f42c1"]
+      }
+    }'::jsonb,
+    TRUE
+);
+
+-- Widget: Daily New Holds Trend
+INSERT INTO dashboard.widget (code, name, category, description, json_config, enabled)
+VALUES (
+    'daily-new-holds',
+    'Daily New Holds',
+    'holds',
+    'Daily new holds trend over time',
+    '{
+      "id": "daily-new-holds",
+      "name": "Daily New Holds",
+      "type": "chart",
+      "category": "holds",
+      "dataSource": {
+        "service": "dashboard",
+        "method": "getWidgetData",
+        "params": {
+          "timeRange": "month",
+          "include_descendants": true
+        },
+        "query": {
+          "table": "dashboard.materialized_action_hold_request",
+          "dimensions": ["year", "month", "day"],
+          "metrics": ["total"],
+          "aggregation": "sum",
+          "filters": {
+            "pickup_lib": "$org_descendants",
+            "year": "$current_year",
+            "month": "$month_range"
+          },
+          "sort": {
+            "field": "day",
+            "order": "asc"
+          }
+        },
+        "cache": {
+          "enabled": true,
+          "ttl": 300
+        }
+      },
+      "transform": {
+        "type": "groupBy",
+        "xField": "date",
+        "yField": "total",
+        "groupByField": "date",
+        "aggregation": "sum"
+      },
+      "visualization": {
+        "chartType": "line",
+        "title": "Daily New Holds",
+        "xAxisLabel": "Date",
+        "yAxisLabel": "Holds Requested",
+        "showGrid": true,
+        "showTooltip": true,
+        "colors": ["#dc3545"]
+      }
+    }'::jsonb,
+    TRUE
+);
+
 -- Change the org unit setting type table so that arrays may have an fm_class, if they want.
 ALTER TABLE config.org_unit_setting_type
     DROP CONSTRAINT IF EXISTS coust_no_empty_link;
@@ -376,7 +627,7 @@ VALUES ('ui.dashboard.default_widgets', --name
 INSERT INTO actor.org_unit_setting (org_unit, name, value)
 VALUES (1,
         'ui.dashboard.default_widgets',
-        '["circulation-by-patron-profile", "circulation-by-library", "circulation-by-location", "daily-circulation"]')
+        '["circulation-by-patron-profile", "circulation-by-library", "circulation-by-location", "daily-circulation", "holds-by-status", "holds-by-library"]')
 ON CONFLICT (org_unit, name) DO UPDATE
     SET value = EXCLUDED.value;
 
@@ -399,7 +650,8 @@ INSERT into config.org_unit_setting_type
             'description'
         ),
         'bool'
-    );
+    )
+ON CONFLICT (name) DO NOTHING;
 
 -- triggered table approach
 
@@ -476,6 +728,10 @@ CREATE TRIGGER dashboard_mat_action_hold_request_update_trigger
 INSERT INTO config.global_flag(name, value, label, enabled)
 SELECT 'dashboard.age_limit.action.all_circulation', '1 year', 'Amount of time to limit the dashboard data', TRUE
 WHERE NOT EXISTS (SELECT 1 FROM config.global_flag WHERE name='dashboard.age_limit.action.all_circulation');
+
+INSERT INTO config.global_flag(name, value, label, enabled)
+SELECT 'dashboard.age_limit.action.hold_request', '1 year', 'Amount of time to limit the dashboard holds data', TRUE
+WHERE NOT EXISTS (SELECT 1 FROM config.global_flag WHERE name='dashboard.age_limit.action.hold_request');
 
 CREATE OR REPLACE FUNCTION dashboard.recalculate_stat_table (stat_table TEXT, org_unit BIGINT DEFAULT NULL) RETURNS BIGINT AS $f$
 DECLARE
@@ -845,7 +1101,7 @@ BEGIN
 
     -- subtract from the previous stat
     IF (TG_OP = 'DELETE') OR (TG_OP = 'UPDATE') THEN
-      UPDATE dashboard.materialized_action_all_circulation
+      UPDATE dashboard.materialized_action_hold_request
       SET
       total = total - 1
       WHERE day = DATE_PART('day', OLD.request_time)
@@ -867,7 +1123,7 @@ BEGIN
       SELECT INTO profile_id profile FROM actor.usr WHERE id = NEW.usr;
 
       -- Increase the total to the now stat
-      UPDATE dashboard.materialized_action_all_circulation
+      UPDATE dashboard.materialized_action_hold_request
       SET
       total = total + 1
       WHERE day = DATE_PART('day', NEW.request_time)
@@ -881,7 +1137,7 @@ BEGIN
       GET DIAGNOSTICS updated_total = row_count;
       -- The stat doesn't exist, let's make one
       IF updated_total = 0 THEN
-        INSERT INTO dashboard.materialized_action_all_circulation
+        INSERT INTO dashboard.materialized_action_hold_request
         (day, month, year, pickup_lib, hold_status, hold_type, profile, total)
         VALUES(
           DATE_PART('day', NEW.request_time),
@@ -891,7 +1147,7 @@ BEGIN
           new_hold_status_text,
           NEW.hold_type,
           profile_id,
-          1 -- starting out with a total of 1 for this circ
+          1 -- starting out with a total of 1 for this hold
         );
       END IF;
     END IF;
@@ -903,16 +1159,19 @@ $func$ LANGUAGE plpgsql;
 
 
 -- trigger on action.circulation
+DROP TRIGGER IF EXISTS action_circulation_dashboard_mat_table_update_trigger ON action.circulation;
 CREATE TRIGGER action_circulation_dashboard_mat_table_update_trigger
 	AFTER DELETE OR UPDATE OR INSERT ON action.circulation
 	FOR EACH ROW EXECUTE PROCEDURE action.circulation_dashboard_update();
 
 -- trigger on action.aged_circulation
+DROP TRIGGER IF EXISTS action_aged_circulation_dashboard_mat_table_update_trigger ON action.aged_circulation;
 CREATE TRIGGER action_aged_circulation_dashboard_mat_table_update_trigger
 	AFTER DELETE OR UPDATE OR INSERT ON action.aged_circulation
 	FOR EACH ROW EXECUTE PROCEDURE action.circulation_dashboard_update();
 
 -- trigger on action.hold_request
+DROP TRIGGER IF EXISTS action_hold_request_dashboard_mat_table_update_trigger ON action.hold_request;
 CREATE TRIGGER action_hold_request_dashboard_mat_table_update_trigger
 	AFTER DELETE OR UPDATE OR INSERT ON action.hold_request
 	FOR EACH ROW EXECUTE PROCEDURE action.hold_request_dashboard_update();
