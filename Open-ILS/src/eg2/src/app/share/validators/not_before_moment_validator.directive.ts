@@ -1,7 +1,7 @@
 import {Directive, Input} from '@angular/core';
 import {NG_VALIDATORS, AbstractControl, ValidatorFn} from '@angular/forms';
 
-import * as moment from 'moment-timezone';
+import moment from 'moment-timezone';
 
 export function notBeforeMomentValidator(notBeforeMe: moment.Moment): ValidatorFn {
     return (control: AbstractControl): {[key: string]: any} | null => {
@@ -16,7 +16,8 @@ export function notBeforeMomentValidator(notBeforeMe: moment.Moment): ValidatorF
         provide: NG_VALIDATORS,
         useExisting: NotBeforeMomentValidatorDirective,
         multi: true
-    }]
+    }],
+    standalone: false
 })
 export class NotBeforeMomentValidatorDirective {
     @Input('egNotBeforeMoment') notBeforeMoment: moment.Moment;

@@ -18,7 +18,8 @@ interface Workstation {
 }
 
 @Component({
-    templateUrl: 'workstations.component.html'
+    templateUrl: 'workstations.component.html',
+    standalone: false
 })
 export class WorkstationsComponent implements OnInit {
 

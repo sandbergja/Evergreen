@@ -18,7 +18,8 @@ export class MatchSetPointValues {
 
 @Component({
     selector: 'eg-match-set-new-point',
-    templateUrl: 'match-set-new-point.component.html'
+    templateUrl: 'match-set-new-point.component.html',
+    standalone: false
 })
 export class MatchSetNewPointComponent implements OnInit {
 

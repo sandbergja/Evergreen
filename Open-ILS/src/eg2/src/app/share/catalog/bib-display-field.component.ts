@@ -16,6 +16,8 @@ const PAD_SPACE = ' '; // U+2007
     templateUrl: 'bib-display-field.component.html',
     styleUrls: ['bib-display-field.component.css'],
     encapsulation: ViewEncapsulation.None // required for search highlighting
+    ,
+    standalone: false
 })
 export class BibDisplayFieldComponent {
 

@@ -10,7 +10,8 @@ import {Subject, takeUntil} from 'rxjs';
 
 @Component({
     selector: 'eg-fixed-field',
-    templateUrl: './fixed-field.component.html'
+    templateUrl: './fixed-field.component.html',
+    standalone: false
 })
 
 export class FixedFieldComponent implements OnInit, OnDestroy {

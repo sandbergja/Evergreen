@@ -15,7 +15,8 @@ import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
 
 @Component({
     selector: 'eg-fund-rollover-dialog',
-    templateUrl: './fund-rollover-dialog.component.html'
+    templateUrl: './fund-rollover-dialog.component.html',
+    standalone: false
 })
 
 export class FundRolloverDialogComponent

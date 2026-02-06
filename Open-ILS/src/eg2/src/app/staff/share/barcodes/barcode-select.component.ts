@@ -32,6 +32,7 @@ export interface BarcodeSelectResult {
 @Component({
     selector: 'eg-barcode-select',
     templateUrl: './barcode-select.component.html',
+    standalone: false
 })
 
 export class BarcodeSelectComponent extends DialogComponent {

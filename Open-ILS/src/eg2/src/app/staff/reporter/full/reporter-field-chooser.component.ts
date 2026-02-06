@@ -4,7 +4,8 @@ import {IdlService, IdlObject} from '@eg/core/idl.service';
 @Component({
     selector: 'eg-reporter-field-chooser',
     styleUrls: ['./reporter-field-chooser.component.css'],
-    templateUrl: './reporter-field-chooser.component.html'
+    templateUrl: './reporter-field-chooser.component.html',
+    standalone: false
 })
 
 export class ReporterFieldChooserComponent {

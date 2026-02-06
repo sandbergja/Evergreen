@@ -12,7 +12,8 @@ import {Md5} from 'ts-md5';
     selector: 'eg-reporter-field',
     templateUrl: './reporter-field.component.html',
     styleUrls: ['./reporter-field.component.css'],
-    encapsulation: ViewEncapsulation.None
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class ReporterFieldComponent implements OnInit {
 

@@ -7,7 +7,8 @@ import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
     selector: 'change-folder-dialog',
-    templateUrl: './change-folder-dialog.component.html'
+    templateUrl: './change-folder-dialog.component.html',
+    standalone: false
 })
 
 export class ChangeFolderDialogComponent extends DialogComponent {

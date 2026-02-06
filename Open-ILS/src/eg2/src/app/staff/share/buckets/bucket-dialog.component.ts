@@ -18,7 +18,8 @@ import {BucketService} from '@eg/staff/share/buckets/bucket.service';
 
 @Component({
     selector: 'eg-bucket-dialog',
-    templateUrl: 'bucket-dialog.component.html'
+    templateUrl: 'bucket-dialog.component.html',
+    standalone: false
 })
 
 export class BucketDialogComponent extends DialogComponent implements OnInit {

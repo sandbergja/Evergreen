@@ -4,7 +4,8 @@ import {GridComponent} from './grid.component';
 
 @Component({
     selector: 'eg-grid-toolbar-action',
-    template: '<ng-template></ng-template>'
+    template: '<ng-template></ng-template>',
+    standalone: false
 })
 
 export class GridToolbarActionComponent implements OnInit {

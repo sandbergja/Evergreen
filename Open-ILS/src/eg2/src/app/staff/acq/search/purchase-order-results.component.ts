@@ -10,6 +10,7 @@ import {AcqSearchFormComponent} from './acq-search-form.component';
 @Component({
     selector: 'eg-purchase-order-results',
     templateUrl: 'purchase-order-results.component.html',
+    standalone: false
 })
 export class PurchaseOrderResultsComponent implements OnInit {
 

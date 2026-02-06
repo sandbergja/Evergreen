@@ -5,7 +5,8 @@ import {GridContext} from '@eg/share/grid/grid';
 
 @Component({
     selector: 'eg-grid-print',
-    templateUrl: './grid-print.component.html'
+    templateUrl: './grid-print.component.html',
+    standalone: false
 })
 
 /**

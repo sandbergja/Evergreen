@@ -25,7 +25,8 @@ enum NoteAction {
 
 @Component({
     selector: 'eg-patron-messages',
-    templateUrl: 'messages.component.html'
+    templateUrl: 'messages.component.html',
+    standalone: false
 })
 export class PatronMessagesComponent implements OnInit, OnDestroy {
 

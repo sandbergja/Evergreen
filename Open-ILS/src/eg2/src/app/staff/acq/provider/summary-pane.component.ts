@@ -12,7 +12,8 @@ import {ProviderRecord, ProviderRecordService} from './provider-record.service';
 @Component({
     selector: 'eg-acq-provider-summary-pane',
     styleUrls: ['summary-pane.component.css'],
-    templateUrl: './summary-pane.component.html'
+    templateUrl: './summary-pane.component.html',
+    standalone: false
 })
 
 export class AcqProviderSummaryPaneComponent implements OnInit, AfterViewInit {

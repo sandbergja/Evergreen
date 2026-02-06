@@ -6,7 +6,10 @@ import {IdlObject} from '@eg/core/idl.service';
 import {GridDataSource} from '@eg/share/grid/grid';
 import {PcrudService} from '@eg/core/pcrud.service';
 
-@Component({templateUrl: 'edi.component.html'})
+@Component({
+    templateUrl: 'edi.component.html',
+    standalone: false
+})
 export class PoEdiMessagesComponent implements OnInit {
 
     poId: number;

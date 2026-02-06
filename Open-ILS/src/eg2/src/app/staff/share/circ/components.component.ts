@@ -22,7 +22,8 @@ import {ProgressDialogComponent} from '@eg/share/dialog/progress.component';
 
 @Component({
     templateUrl: 'components.component.html',
-    selector: 'eg-circ-components'
+    selector: 'eg-circ-components',
+    standalone: false
 })
 export class CircComponentsComponent {
 

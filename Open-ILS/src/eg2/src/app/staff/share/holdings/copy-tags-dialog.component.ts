@@ -42,7 +42,8 @@ export interface ICopyTagMapChanges extends IThingChanges<ICopyTagMap> {
         'kbd:first-letter { text-transform: none; }',
         '.new-tag-actions button[disabled] { display: none; }',
         '.dl-grid { grid-template-columns: auto 1fr; }'
-    ]
+    ],
+    standalone: false
 })
 export class CopyTagsDialogComponent extends
     CopyThingsDialogComponent<ICopyTagMap, ICopyTagMapChanges> {

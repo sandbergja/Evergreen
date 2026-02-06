@@ -12,7 +12,8 @@ import {HoldNotifyDialogComponent} from './notify-dialog.component';
 
 @Component({
     selector: 'eg-hold-detail',
-    templateUrl: 'detail.component.html'
+    templateUrl: 'detail.component.html',
+    standalone: false
 })
 export class HoldDetailComponent implements OnInit {
     detailTab = 'notes';

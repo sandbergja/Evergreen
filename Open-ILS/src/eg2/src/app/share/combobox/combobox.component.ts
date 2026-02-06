@@ -29,7 +29,8 @@ export interface ComboboxEntry {
 }
 
 @Directive({
-    selector: 'ng-template[egIdlClass]'
+    selector: 'ng-template[egIdlClass]',
+    standalone: false
 })
 export class IdlClassTemplateDirective {
   @Input() egIdlClass: string;
@@ -44,10 +45,11 @@ export class IdlClassTemplateDirective {
     .material-icons {font-size: 16px;font-weight:bold}
   `],
     providers: [{
-        provide: NG_VALUE_ACCESSOR,
-        useExisting: forwardRef(() => ComboboxComponent),
-        multi: true
-    }]
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => ComboboxComponent),
+            multi: true
+        }],
+    standalone: false
 })
 export class ComboboxComponent
 implements ControlValueAccessor, OnInit, AfterViewInit, OnChanges {

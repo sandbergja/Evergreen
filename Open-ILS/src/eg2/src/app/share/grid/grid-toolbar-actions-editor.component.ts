@@ -6,7 +6,8 @@ import {DialogComponent} from '@eg/share/dialog/dialog.component';
 
 @Component({
     selector: 'eg-grid-toolbar-actions-editor',
-    templateUrl: 'grid-toolbar-actions-editor.component.html'
+    templateUrl: 'grid-toolbar-actions-editor.component.html',
+    standalone: false
 })
 
 export class GridToolbarActionsEditorComponent extends DialogComponent {

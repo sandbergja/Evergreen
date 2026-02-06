@@ -22,7 +22,8 @@ import {ToastService} from '@eg/share/toast/toast.service';
 
 @Component({
     templateUrl: 'bill-statement.component.html',
-    selector: 'eg-patron-bill-statement'
+    selector: 'eg-patron-bill-statement',
+    standalone: false
 })
 export class BillStatementComponent implements OnInit {
 

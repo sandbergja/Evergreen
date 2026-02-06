@@ -23,7 +23,8 @@ interface TemplateRule {
 }
 
 @Component({
-    templateUrl: 'marcbatch.component.html'
+    templateUrl: 'marcbatch.component.html',
+    standalone: false
 })
 export class MarcBatchComponent implements OnInit {
 

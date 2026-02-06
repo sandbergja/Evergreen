@@ -10,7 +10,8 @@ import {PermService} from '@eg/core/perm.service';
 
 @Component({
     templateUrl: './shelving_location_groups.component.html',
-    styleUrls: ['./shelving_location_groups.component.css']
+    styleUrls: ['./shelving_location_groups.component.css'],
+    standalone: false
 })
 
 export class ShelvingLocationGroupsComponent implements OnInit {

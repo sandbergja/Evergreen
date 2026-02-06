@@ -13,7 +13,8 @@ import {TagTableService} from './tagtable.service';
     selector: 'eg-fixed-fields-editor',
     templateUrl: './fixed-fields-editor.component.html',
     styleUrls: ['fixed-fields-editor.component.css'],
-    encapsulation: ViewEncapsulation.None
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 
 export class FixedFieldsEditorComponent {

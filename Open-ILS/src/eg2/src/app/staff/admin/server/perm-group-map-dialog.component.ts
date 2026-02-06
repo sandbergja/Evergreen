@@ -12,7 +12,8 @@ interface PermEntry { id: number; label: string; }
 
 @Component({
     selector: 'eg-perm-group-map-dialog',
-    templateUrl: './perm-group-map-dialog.component.html'
+    templateUrl: './perm-group-map-dialog.component.html',
+    standalone: false
 })
 
 /**

@@ -12,7 +12,8 @@ const HATCH_BROWSER_PRINTING_PRINTER = 'hatch_browser_printing';
 
 @Component({
     selector: 'eg-print',
-    templateUrl: './print.component.html'
+    templateUrl: './print.component.html',
+    standalone: false
 })
 
 export class PrintComponent implements OnInit {

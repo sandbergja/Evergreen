@@ -6,7 +6,8 @@ import {DialogComponent} from '@eg/share/dialog/dialog.component';
 
 @Component({
     templateUrl: 'bad-barcode-dialog.component.html',
-    selector: 'eg-bad-barcode-dialog'
+    selector: 'eg-bad-barcode-dialog',
+    standalone: false
 })
 export class BadBarcodeDialogComponent extends DialogComponent {
 

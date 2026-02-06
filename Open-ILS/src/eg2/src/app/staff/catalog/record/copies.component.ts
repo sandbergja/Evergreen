@@ -12,7 +12,8 @@ import {PermService} from '@eg/core/perm.service';
 
 @Component({
     selector: 'eg-catalog-copies',
-    templateUrl: 'copies.component.html'
+    templateUrl: 'copies.component.html',
+    standalone: false
 })
 export class CopiesComponent implements OnInit {
 

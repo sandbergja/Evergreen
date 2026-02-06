@@ -9,7 +9,8 @@ import {VandelayService} from './vandelay.service';
 
 @Component({
     selector: 'eg-queued-record-items',
-    templateUrl: 'record-items.component.html'
+    templateUrl: 'record-items.component.html',
+    standalone: false
 })
 export class RecordItemsComponent {
 

@@ -19,7 +19,8 @@ import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
       {reservations.length, plural, =1 {this reservation} other {these {{reservations.length}} reservations}}?
     </span>
   </ng-template>
-  `
+  `,
+    standalone: false
 })
 
 export class CancelReservationDialogComponent {

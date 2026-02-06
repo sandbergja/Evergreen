@@ -6,7 +6,8 @@ import {ClipboardDialogComponent} from '@eg/share/clipboard/clipboard-dialog.com
 
 @Component({
     selector: 'eg-grid-toolbar-actions-menu',
-    templateUrl: 'grid-toolbar-actions-menu.component.html'
+    templateUrl: 'grid-toolbar-actions-menu.component.html',
+    standalone: false
 })
 
 export class GridToolbarActionsMenuComponent {

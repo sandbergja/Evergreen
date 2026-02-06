@@ -9,7 +9,8 @@ import {CatalogService} from '@eg/share/catalog/catalog.service';
 @Component({
     selector: 'eg-bib-summary',
     templateUrl: 'bib-summary.component.html',
-    styleUrls: ['bib-summary.component.css']
+    styleUrls: ['bib-summary.component.css'],
+    standalone: false
 })
 export class BibSummaryComponent implements OnInit {
 

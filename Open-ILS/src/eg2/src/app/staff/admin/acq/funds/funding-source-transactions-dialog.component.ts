@@ -15,7 +15,8 @@ import {OrgService} from '@eg/core/org.service';
 
 @Component({
     selector: 'eg-funding-source-transactions-dialog',
-    templateUrl: './funding-source-transactions-dialog.component.html'
+    templateUrl: './funding-source-transactions-dialog.component.html',
+    standalone: false
 })
 
 export class FundingSourceTransactionsDialogComponent

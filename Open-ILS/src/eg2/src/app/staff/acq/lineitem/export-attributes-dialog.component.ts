@@ -6,7 +6,8 @@ import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
 
 @Component({
     selector: 'eg-acq-export-attributes-dialog',
-    templateUrl: './export-attributes-dialog.component.html'
+    templateUrl: './export-attributes-dialog.component.html',
+    standalone: false
 })
 
 export class ExportAttributesDialogComponent extends DialogComponent {

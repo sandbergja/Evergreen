@@ -9,7 +9,8 @@ import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
     selector: 'eg-picklist-clone-dialog',
-    templateUrl: './picklist-clone-dialog.component.html'
+    templateUrl: './picklist-clone-dialog.component.html',
+    standalone: false
 })
 
 export class PicklistCloneDialogComponent

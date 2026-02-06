@@ -14,7 +14,8 @@ const MAX_FROM_SEARCH_RESULTS = 1000;
 
 @Component({
     selector: 'eg-catalog-basket-actions',
-    templateUrl: 'basket-actions.component.html'
+    templateUrl: 'basket-actions.component.html',
+    standalone: false
 })
 export class BasketActionsComponent implements OnInit {
 

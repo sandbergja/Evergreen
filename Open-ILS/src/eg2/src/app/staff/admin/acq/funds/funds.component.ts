@@ -4,7 +4,8 @@ import {Location} from '@angular/common';
 import {NgbNav, NgbNavChangeEvent} from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
-    templateUrl: './funds.component.html'
+    templateUrl: './funds.component.html',
+    standalone: false
 })
 export class FundsComponent implements OnInit {
 

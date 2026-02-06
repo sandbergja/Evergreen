@@ -23,7 +23,8 @@ import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
 
 @Component({
     selector: 'eg-patron-note-dialog',
-    templateUrl: 'note-dialog.component.html'
+    templateUrl: 'note-dialog.component.html',
+    standalone: false
 })
 
 export class PatronNoteDialogComponent

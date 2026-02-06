@@ -16,6 +16,7 @@ import {NetService} from '@eg/core/net.service';
 @Component({
     selector: 'eg-sr-reports',
     templateUrl: 'sr-my-reports.component.html',
+    standalone: false
 })
 
 export class SRReportsComponent implements OnInit {

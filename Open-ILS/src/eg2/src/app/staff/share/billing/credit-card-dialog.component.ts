@@ -15,7 +15,8 @@ import {CreditCardPaymentParams} from './billing.service';
 
 @Component({
     selector: 'eg-credit-card-dialog',
-    templateUrl: 'credit-card-dialog.component.html'
+    templateUrl: 'credit-card-dialog.component.html',
+    standalone: false
 })
 
 export class CreditCardDialogComponent

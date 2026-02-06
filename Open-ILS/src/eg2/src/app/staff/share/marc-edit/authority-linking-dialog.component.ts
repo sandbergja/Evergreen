@@ -16,7 +16,8 @@ import {MarcEditorDialogComponent} from './editor-dialog.component';
 
 @Component({
     selector: 'eg-authority-linking-dialog',
-    templateUrl: './authority-linking-dialog.component.html'
+    templateUrl: './authority-linking-dialog.component.html',
+    standalone: false
 })
 
 export class AuthorityLinkingDialogComponent

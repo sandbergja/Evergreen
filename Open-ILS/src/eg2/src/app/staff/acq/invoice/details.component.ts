@@ -14,7 +14,8 @@ import {InvoiceService} from './invoice.service';
     templateUrl: 'details.component.html',
     styleUrls: ['details.component.css'],
     selector: 'eg-acq-invoice-details',
-    encapsulation: ViewEncapsulation.None
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class InvoiceDetailsComponent implements OnInit, OnDestroy {
 

@@ -14,7 +14,8 @@ export class CompositeNewPointValues {
 
 @Component({
     selector: 'eg-composite-new-point',
-    templateUrl: 'composite-new.component.html'
+    templateUrl: 'composite-new.component.html',
+    standalone: false
 })
 export class CompositeNewPointComponent implements OnInit {
 

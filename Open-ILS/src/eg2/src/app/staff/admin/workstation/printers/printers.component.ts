@@ -13,7 +13,8 @@ import {NgbNavChangeEvent} from '@ng-bootstrap/ng-bootstrap';
 import {StringComponent} from '@eg/share/string/string.component';
 
 @Component({
-    templateUrl: 'printers.component.html'
+    templateUrl: 'printers.component.html',
+    standalone: false
 })
 export class PrintersComponent implements OnInit {
 

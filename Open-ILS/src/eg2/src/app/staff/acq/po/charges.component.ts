@@ -15,7 +15,8 @@ import {PermService} from '@eg/core/perm.service';
 
 @Component({
     templateUrl: 'charges.component.html',
-    selector: 'eg-acq-po-charges'
+    selector: 'eg-acq-po-charges',
+    standalone: false
 })
 export class PoChargesComponent implements OnInit, OnDestroy {
 

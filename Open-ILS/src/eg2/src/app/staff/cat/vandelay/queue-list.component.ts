@@ -10,7 +10,8 @@ import {GridDataSource, GridCellTextGenerator} from '@eg/share/grid/grid';
 import {VandelayService} from './vandelay.service';
 import { PcrudService } from '@eg/core/pcrud.service';
 @Component({
-    templateUrl: 'queue-list.component.html'
+    templateUrl: 'queue-list.component.html',
+    standalone: false
 })
 export class QueueListComponent {
 

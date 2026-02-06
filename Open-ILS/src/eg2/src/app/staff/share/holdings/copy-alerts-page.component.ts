@@ -4,7 +4,8 @@ import { CopyAlertsDialogComponent } from './copy-alerts-dialog.component';
 
 @Component({
     selector: 'eg-copy-alerts-page',
-    templateUrl: 'copy-alerts-page.component.html'
+    templateUrl: 'copy-alerts-page.component.html',
+    standalone: false
 })
 export class CopyAlertsPageComponent implements AfterViewInit {
     @ViewChild('copyAlertsDialog', {static: false})

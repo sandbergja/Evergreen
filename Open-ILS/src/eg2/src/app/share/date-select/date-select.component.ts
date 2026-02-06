@@ -14,11 +14,12 @@ import {DateUtil} from '@eg/share/util/date';
     selector: 'eg-date-select',
     templateUrl: './date-select.component.html',
     styleUrls: ['date-select.component.css'],
-    providers: [ {
+    providers: [{
         provide: NG_VALUE_ACCESSOR,
         useExisting: forwardRef(() => DateSelectComponent),
         multi: true
-    } ]
+    }],
+    standalone: false
 })
 export class DateSelectComponent implements OnInit, ControlValueAccessor {
 

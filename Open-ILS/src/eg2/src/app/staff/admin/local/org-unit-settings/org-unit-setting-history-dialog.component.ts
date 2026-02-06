@@ -9,7 +9,8 @@ import {GridComponent} from '@eg/share/grid/grid.component';
 
 @Component({
     selector: 'eg-admin-ou-setting-history-dialog',
-    templateUrl: './org-unit-setting-history-dialog.component.html'
+    templateUrl: './org-unit-setting-history-dialog.component.html',
+    standalone: false
 })
 
 export class OuSettingHistoryDialogComponent extends DialogComponent implements OnInit {

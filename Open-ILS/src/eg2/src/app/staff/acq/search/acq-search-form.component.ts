@@ -11,7 +11,8 @@ import {ServerStoreService} from '@eg/core/server-store.service';
 @Component({
     selector: 'eg-acq-search-form',
     styleUrls: ['acq-search-form.component.css'],
-    templateUrl: './acq-search-form.component.html'
+    templateUrl: './acq-search-form.component.html',
+    standalone: false
 })
 
 export class AcqSearchFormComponent implements OnInit, OnChanges {

@@ -17,6 +17,7 @@ import {ToastService} from '@eg/share/toast/toast.service';
 @Component({
     selector: 'eg-provider-holdings',
     templateUrl: 'provider-holdings.component.html',
+    standalone: false
 })
 export class ProviderHoldingsComponent implements OnInit, AfterViewInit, OnDestroy {
 

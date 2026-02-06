@@ -6,7 +6,8 @@ import {AuthService} from '@eg/core/auth.service';
 @Component({
     selector: 'eg-marc-html',
     // view is generated from MARC HTML
-    template: '<ng-template></ng-template>'
+    template: '<ng-template></ng-template>',
+    standalone: false
 })
 export class MarcHtmlComponent implements OnInit {
 

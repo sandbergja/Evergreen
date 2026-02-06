@@ -40,7 +40,8 @@ export interface ICopyAlertChanges extends IThingChanges<ICopyAlert> {
 
 @Component({
     selector: 'eg-copy-alerts-dialog',
-    templateUrl: 'copy-alerts-dialog.component.html'
+    templateUrl: 'copy-alerts-dialog.component.html',
+    standalone: false
 })
 export class CopyAlertsDialogComponent extends
     CopyThingsDialogComponent<ICopyAlert, ICopyAlertChanges> {
@@ -357,9 +358,10 @@ export function inactiveEntry(): ValidatorFn {
 }
 
 @Directive({
-// eslint-disable-next-line @angular-eslint/directive-selector
+    // eslint-disable-next-line @angular-eslint/directive-selector
     selector: '[validateDisabledSelection]',
-    providers: [{ provide: NG_VALIDATORS, useExisting: AlertTypeValidatorDirective, multi: true }]
+    providers: [{ provide: NG_VALIDATORS, useExisting: AlertTypeValidatorDirective, multi: true }],
+    standalone: false
 })
 
 export class AlertTypeValidatorDirective implements Validator {

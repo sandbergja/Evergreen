@@ -11,7 +11,8 @@ import {PermService} from '@eg/core/perm.service';
 
 @Component({
     selector: 'eg-precat-checkout-dialog',
-    templateUrl: 'precat-dialog.component.html'
+    templateUrl: 'precat-dialog.component.html',
+    standalone: false
 })
 
 export class PrecatCheckoutDialogComponent extends DialogComponent implements OnInit {

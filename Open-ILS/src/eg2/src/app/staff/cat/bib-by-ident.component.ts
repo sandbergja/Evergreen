@@ -7,7 +7,8 @@ import {FormControl, FormGroup} from '@angular/forms';
 /* Component for retrieving bib records by ID, TCN */
 
 @Component({
-    templateUrl: 'bib-by-ident.component.html'
+    templateUrl: 'bib-by-ident.component.html',
+    standalone: false
 })
 export class BibByIdentComponent implements OnInit, AfterViewInit {
 

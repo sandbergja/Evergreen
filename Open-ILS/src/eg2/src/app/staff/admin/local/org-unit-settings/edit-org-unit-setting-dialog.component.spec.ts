@@ -14,6 +14,7 @@ let component: EditOuSettingDialogComponent;
       </div>
       <eg-admin-edit-org-unit-setting-dialog #dialog></eg-admin-edit-org-unit-setting-dialog>
     `,
+    standalone: false
 })
 class MockModalComponent implements AfterViewInit {
     @ViewChild('dialog') componentRef: EditOuSettingDialogComponent;

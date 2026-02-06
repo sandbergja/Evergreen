@@ -9,7 +9,8 @@ import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
     selector: 'eg-picklist-merge-dialog',
-    templateUrl: './picklist-merge-dialog.component.html'
+    templateUrl: './picklist-merge-dialog.component.html',
+    standalone: false
 })
 
 export class PicklistMergeDialogComponent

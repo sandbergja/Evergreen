@@ -43,7 +43,8 @@ interface BucketView {
 @Component({
     selector: 'eg-record-bucket',
     templateUrl: 'record-bucket.component.html',
-    styleUrls: ['./record-bucket.component.css']
+    styleUrls: ['./record-bucket.component.css'],
+    standalone: false
 })
 
 export class RecordBucketComponent implements OnInit, OnDestroy {

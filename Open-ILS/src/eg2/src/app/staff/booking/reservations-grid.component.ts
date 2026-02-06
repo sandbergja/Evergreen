@@ -16,13 +16,14 @@ import {NoTimezoneSetComponent} from './no-timezone-set.component';
 import {ReservationActionsService} from './reservation-actions.service';
 import {CancelReservationDialogComponent} from './cancel-reservation-dialog.component';
 
-import * as moment from 'moment-timezone';
+import moment from 'moment-timezone';
 
 // A filterable grid of reservations used in various booking interfaces
 
 @Component({
     selector: 'eg-reservations-grid',
     templateUrl: './reservations-grid.component.html',
+    standalone: false
 })
 export class ReservationsGridComponent implements OnChanges, OnInit {
 

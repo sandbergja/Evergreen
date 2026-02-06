@@ -10,7 +10,8 @@ import {CourseAssociateMaterialComponent} from './course-associate-material.comp
 
 @Component({
     selector: 'eg-course-page',
-    templateUrl: './course-page.component.html'
+    templateUrl: './course-page.component.html',
+    standalone: false
 })
 
 export class CoursePageComponent implements OnInit {

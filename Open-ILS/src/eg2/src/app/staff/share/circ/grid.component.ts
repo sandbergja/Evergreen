@@ -63,7 +63,8 @@ const CIRC_FLESH_FIELDS = {
 
 @Component({
     templateUrl: 'grid.component.html',
-    selector: 'eg-circ-grid'
+    selector: 'eg-circ-grid',
+    standalone: false
 })
 export class CircGridComponent implements OnInit {
 

@@ -10,7 +10,8 @@ import {PrintService} from '@eg/share/print/print.service';
 
 
 @Component({
-    templateUrl: 'fines.component.html'
+    templateUrl: 'fines.component.html',
+    standalone: false
 })
 
 export class SckoFinesComponent implements OnInit {

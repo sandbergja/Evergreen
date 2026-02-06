@@ -25,7 +25,8 @@ interface FormulaApplication {
 
 @Component({
     selector: 'eg-lineitem-copies',
-    templateUrl: 'copies.component.html'
+    templateUrl: 'copies.component.html',
+    standalone: false
 })
 export class LineitemCopiesComponent implements OnInit, AfterViewInit {
 

@@ -17,7 +17,8 @@ export const WINDOW = new InjectionToken<Window>('Browser window', {  providedIn
 
 @Component({
     templateUrl: './course-list.component.html',
-    styleUrls: ['./course-page.component.css']
+    styleUrls: ['./course-page.component.css'],
+    standalone: false
 })
 
 export class CourseListComponent implements OnInit, AfterViewInit {

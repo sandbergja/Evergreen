@@ -16,7 +16,8 @@ import {StoreService} from '@eg/core/store.service';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 
 @Component({
-    templateUrl: './acq-provider.component.html'
+    templateUrl: './acq-provider.component.html',
+    standalone: false
 })
 
 export class AcqProviderComponent implements OnInit, AfterViewInit, OnDestroy {

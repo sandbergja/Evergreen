@@ -12,7 +12,8 @@ interface BrowsePage {
 
 @Component({
     selector: 'eg-catalog-browse-pager',
-    templateUrl: 'browse-pager.component.html'
+    templateUrl: 'browse-pager.component.html',
+    standalone: false
 })
 export class BrowsePagerComponent implements OnInit {
 

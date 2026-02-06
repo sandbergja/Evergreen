@@ -19,7 +19,8 @@ import {mergeMap, Observable, of} from 'rxjs';
 
 @Component({
     selector: 'eg-fund-details-dialog',
-    templateUrl: './fund-details-dialog.component.html'
+    templateUrl: './fund-details-dialog.component.html',
+    standalone: false
 })
 
 export class FundDetailsDialogComponent

@@ -15,7 +15,8 @@ import {PermService} from '@eg/core/perm.service';
 import {StringComponent} from '@eg/share/string/string.component';
 
 @Component({
-    templateUrl: 'linkchecker.component.html'
+    templateUrl: 'linkchecker.component.html',
+    standalone: false
 })
 export class LinkCheckerComponent implements OnInit {
 

@@ -5,7 +5,8 @@ import {BasketService} from '@eg/share/catalog/basket.service';
 import {Subject, takeUntil} from 'rxjs';
 
 @Component({
-    templateUrl: 'catalog.component.html'
+    templateUrl: 'catalog.component.html',
+    standalone: false
 })
 export class CatalogComponent implements OnInit, OnDestroy {
 

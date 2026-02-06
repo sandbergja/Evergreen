@@ -12,7 +12,8 @@ import {PartMergeDialogComponent} from './part-merge-dialog.component';
 
 @Component({
     selector: 'eg-catalog-record-parts',
-    templateUrl: 'parts.component.html'
+    templateUrl: 'parts.component.html',
+    standalone: false
 })
 export class PartsComponent implements OnInit {
 

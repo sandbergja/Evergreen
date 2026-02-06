@@ -12,7 +12,8 @@ import {ControlValueAccessor, NG_VALUE_ACCESSOR} from '@angular/forms';
             useExisting: forwardRef(() => BooleanSelectComponent),
             multi: true
         }
-    ]
+    ],
+    standalone: false
 })
 
 export class BooleanSelectComponent implements ControlValueAccessor {

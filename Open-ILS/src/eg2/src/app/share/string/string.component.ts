@@ -21,7 +21,8 @@ import {StringService} from '@eg/share/string/string.service';
         <span>{{text}}</span>
       </ng-container>
     </span>
-  `
+  `,
+    standalone: false
 })
 
 export class StringComponent implements OnInit {

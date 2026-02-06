@@ -7,7 +7,8 @@ import {NgbModal, NgbModalOptions} from '@ng-bootstrap/ng-bootstrap';
 @Component({
     selector: 'eg-grid-column-config',
     templateUrl: './grid-column-config.component.html',
-    styleUrls: ['./grid-column-config.component.css']
+    styleUrls: ['./grid-column-config.component.css'],
+    standalone: false
 })
 
 /**

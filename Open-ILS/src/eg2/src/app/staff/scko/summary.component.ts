@@ -3,7 +3,8 @@ import {SckoService} from './scko.service';
 
 @Component({
     selector: 'eg-scko-summary',
-    templateUrl: 'summary.component.html'
+    templateUrl: 'summary.component.html',
+    standalone: false
 })
 
 export class SckoSummaryComponent implements OnInit {

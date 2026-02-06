@@ -15,7 +15,8 @@ import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
 
 @Component({
     selector: 'eg-due-date-dialog',
-    templateUrl: 'due-date-dialog.component.html'
+    templateUrl: 'due-date-dialog.component.html',
+    standalone: false
 })
 
 export class DueDateDialogComponent

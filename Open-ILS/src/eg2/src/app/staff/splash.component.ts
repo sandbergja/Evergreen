@@ -8,7 +8,8 @@ import {Router} from '@angular/router';
 
 @Component({
     templateUrl: 'splash.component.html',
-    styleUrls: ['./splash.component.css']
+    styleUrls: ['./splash.component.css'],
+    standalone: false
 })
 
 export class StaffSplashComponent implements OnInit {
@@ -111,7 +112,8 @@ export class StaffSplashComponent implements OnInit {
 }
 
 @Directive({
-    selector: '[egAutofocus]'
+    selector: '[egAutofocus]',
+    standalone: false
 })
 export class AutofocusDirective implements AfterViewInit {
     constructor(private host: ElementRef) {}

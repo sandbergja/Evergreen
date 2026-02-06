@@ -20,7 +20,8 @@ import {FundRolloverDialogComponent} from './fund-rollover-dialog.component';
 
 @Component({
     selector: 'eg-funds-manager',
-    templateUrl: './funds-manager.component.html'
+    templateUrl: './funds-manager.component.html',
+    standalone: false
 })
 
 export class FundsManagerComponent extends AdminPageComponent implements OnInit, AfterViewInit {

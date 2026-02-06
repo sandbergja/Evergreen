@@ -9,7 +9,8 @@ import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
     selector: 'eg-picklist-delete-dialog',
-    templateUrl: './picklist-delete-dialog.component.html'
+    templateUrl: './picklist-delete-dialog.component.html',
+    standalone: false
 })
 
 export class PicklistDeleteDialogComponent

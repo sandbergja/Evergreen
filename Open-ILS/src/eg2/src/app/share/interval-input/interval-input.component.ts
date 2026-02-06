@@ -12,7 +12,8 @@ import {ControlValueAccessor, NG_VALUE_ACCESSOR} from '@angular/forms';
         provide: NG_VALUE_ACCESSOR,
         useExisting: forwardRef(() => IntervalInputComponent),
         multi: true
-    }]
+    }],
+    standalone: false
 })
 export class IntervalInputComponent implements ControlValueAccessor, OnInit {
 

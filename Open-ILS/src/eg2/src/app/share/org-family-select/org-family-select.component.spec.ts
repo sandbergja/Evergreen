@@ -8,7 +8,8 @@ import {OrgService} from '@eg/core/org.service';
 
 @Component({
     selector: 'eg-org-select',
-    template: ''
+    template: '',
+    standalone: false
 })
 class MockOrgSelectComponent {
     @Input() disabled?: boolean;

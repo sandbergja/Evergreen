@@ -12,7 +12,8 @@ const ADDR_TYPES =
 
 @Component({
     selector: 'eg-admin-org-address',
-    templateUrl: './org-addr.component.html'
+    templateUrl: './org-addr.component.html',
+    standalone: false
 })
 export class OrgAddressComponent {
 

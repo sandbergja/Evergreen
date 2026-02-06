@@ -9,7 +9,8 @@ import {NgbModal, NgbModalOptions} from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
     selector: 'eg-hold-manage-dialog',
-    templateUrl: 'manage-dialog.component.html'
+    templateUrl: 'manage-dialog.component.html',
+    standalone: false
 })
 
 export class HoldManageDialogComponent

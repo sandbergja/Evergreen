@@ -55,7 +55,8 @@ interface EditSession {
 
 @Component({
     templateUrl: 'volcopy.component.html',
-    styleUrls: ['./volcopy.component.css']
+    styleUrls: ['./volcopy.component.css'],
+    standalone: false
 })
 export class VolCopyComponent implements OnInit {
 

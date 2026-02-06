@@ -14,7 +14,8 @@ class LinkedLimitSetObjects {
 
 @Component({
     selector: 'eg-linked-circ-limit-sets',
-    templateUrl: './linked-circ-limit-sets.component.html'
+    templateUrl: './linked-circ-limit-sets.component.html',
+    standalone: false
 })
 
 export class LinkedCircLimitSetsComponent implements OnInit {

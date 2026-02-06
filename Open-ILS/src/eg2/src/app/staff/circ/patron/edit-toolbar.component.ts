@@ -27,7 +27,8 @@ interface DupeSearch {
     selector: 'eg-patron-edit-toolbar',
     styles: [
         '.pointer-not-allowed:hover { cursor: not-allowed }'
-    ]
+    ],
+    standalone: false
 })
 export class EditToolbarComponent implements OnInit {
 

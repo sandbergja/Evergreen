@@ -23,7 +23,8 @@ export interface OrgFamily {
             useExisting: forwardRef(() => OrgFamilySelectComponent),
             multi: true
         }
-    ]
+    ],
+    standalone: false
 })
 export class OrgFamilySelectComponent implements ControlValueAccessor, OnInit {
 

@@ -36,7 +36,8 @@ export interface ICopyNoteChanges extends IThingChanges<ICopyNote> {
 @Component({
     selector: 'eg-copy-notes-dialog',
     templateUrl: 'copy-notes-dialog.component.html',
-    styleUrls: ['./copy-notes-dialog.component.css']
+    styleUrls: ['./copy-notes-dialog.component.css'],
+    standalone: false
 })
 export class CopyNotesDialogComponent extends
     CopyThingsDialogComponent<ICopyNote, ICopyNoteChanges> {

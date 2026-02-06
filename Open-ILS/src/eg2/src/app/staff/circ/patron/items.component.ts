@@ -16,7 +16,8 @@ import {CircGridComponent, CircGridEntry} from '@eg/staff/share/circ/grid.compon
 
 @Component({
     templateUrl: 'items.component.html',
-    selector: 'eg-patron-items'
+    selector: 'eg-patron-items',
+    standalone: false
 })
 export class ItemsComponent implements OnInit {
 

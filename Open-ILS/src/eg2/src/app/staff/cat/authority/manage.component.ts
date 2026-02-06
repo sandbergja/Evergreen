@@ -14,7 +14,8 @@ import {OrgService} from '@eg/core/org.service';
     styles: [
         '#marcEditor { background-color: hsla(223, 25%, 91%, 1) }',
         '[data-bs-theme="dark"] :host #marcEditor { background-color: var(--bs-body-bg-alt) }'
-    ]
+    ],
+    standalone: false
 })
 export class ManageAuthorityComponent implements OnInit {
 

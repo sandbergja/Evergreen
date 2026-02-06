@@ -11,7 +11,8 @@ import {Pager} from '@eg/share/util/pager';
 @Component({
     selector: 'eg-tag-map-list',
     templateUrl: './tag-map-list.component.html',
-    styleUrls: ['./tag-map-list.component.css']
+    styleUrls: ['./tag-map-list.component.css'],
+    standalone: false
 })
 export class TagMapListComponent implements OnInit {
     @Input() maps: IdlObject[] = [];

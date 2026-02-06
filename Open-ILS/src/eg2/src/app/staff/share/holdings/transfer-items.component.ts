@@ -12,7 +12,8 @@ import {StringComponent} from '@eg/share/string/string.component';
 
 @Component({
     selector: 'eg-transfer-items',
-    templateUrl: 'transfer-items.component.html'
+    templateUrl: 'transfer-items.component.html',
+    standalone: false
 })
 
 export class TransferItemsComponent {

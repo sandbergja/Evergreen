@@ -12,7 +12,8 @@ import {GridComponent} from '@eg/share/grid/grid.component';
 import {Pager} from '@eg/share/util/pager';
 
 @Component({
-    templateUrl: './list.component.html'
+    templateUrl: './list.component.html',
+    standalone: false
 })
 export class NegativeBalancesComponent implements OnInit {
 

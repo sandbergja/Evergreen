@@ -12,7 +12,8 @@ import {ToastService} from '@eg/share/toast/toast.service';
 import {NgbNavChangeEvent} from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
-    templateUrl: './triggers.component.html'
+    templateUrl: './triggers.component.html',
+    standalone: false
 })
 
 export class TriggersComponent implements OnInit {

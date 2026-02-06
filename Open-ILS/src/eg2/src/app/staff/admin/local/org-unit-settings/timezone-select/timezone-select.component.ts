@@ -10,7 +10,8 @@ import { Timezone } from '@eg/share/util/timezone';
         provide: NG_VALUE_ACCESSOR,
         useExisting: forwardRef(() => TimezoneSelectComponent),
         multi: true
-    }]
+    }],
+    standalone: false
 })
 export class TimezoneSelectComponent implements ControlValueAccessor {
     entries: ComboboxEntry[];

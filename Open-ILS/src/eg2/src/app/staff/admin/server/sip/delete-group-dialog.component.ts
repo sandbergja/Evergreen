@@ -8,7 +8,8 @@ import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
 
 @Component({
     templateUrl: './delete-group-dialog.component.html',
-    selector: 'eg-sip-group-delete-dialog'
+    selector: 'eg-sip-group-delete-dialog',
+    standalone: false
 })
 export class DeleteGroupDialogComponent extends DialogComponent implements OnInit {
 

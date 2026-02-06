@@ -18,7 +18,8 @@ import {OrgService} from '@eg/core/org.service';
 import {OrgFamily} from '@eg/share/org-family-select/org-family-select.component';
 
   @Component({
-      templateUrl: './circ-matrix-matchpoint.component.html'
+      templateUrl: './circ-matrix-matchpoint.component.html',
+      standalone: false
   })
 export class CircMatrixMatchpointComponent implements OnInit {
     recId: number;

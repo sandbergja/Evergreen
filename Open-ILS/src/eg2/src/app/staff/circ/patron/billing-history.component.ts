@@ -22,7 +22,8 @@ import {DateUtil} from '@eg/share/util/date';
 
 @Component({
     templateUrl: 'billing-history.component.html',
-    selector: 'eg-patron-billing-history'
+    selector: 'eg-patron-billing-history',
+    standalone: false
 })
 export class BillingHistoryComponent implements OnInit {
 

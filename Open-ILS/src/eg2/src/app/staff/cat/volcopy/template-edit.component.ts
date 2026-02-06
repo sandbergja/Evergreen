@@ -12,7 +12,8 @@ import {CopyAttrsComponent} from './copy-attrs.component';
 @Component({
     selector: 'eg-volcopy-template-edit',
     templateUrl: 'template-edit.component.html',
-    styles: ['::ng-deep body:has(eg-volcopy-template-edit) { background-color: var(--bs-body-bg-highlight) }']
+    styles: ['::ng-deep body:has(eg-volcopy-template-edit) { background-color: var(--bs-body-bg-highlight) }'],
+    standalone: false
 })
 export class VolCopyTemplateEditComponent implements OnInit, OnDestroy {
 

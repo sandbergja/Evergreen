@@ -10,7 +10,8 @@ import {HttpClient, HttpResponse} from '@angular/common/http';
 
 @Component({
     selector: 'eg-upload-jacket-image-dialog',
-    templateUrl: './upload-jacket-image-dialog.component.html'
+    templateUrl: './upload-jacket-image-dialog.component.html',
+    standalone: false
 })
 
 

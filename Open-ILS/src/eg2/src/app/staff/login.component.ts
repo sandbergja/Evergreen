@@ -14,7 +14,8 @@ import {OfflineService} from '@eg/staff/share/offline.service';
 
 @Component({
     styleUrls: ['./login.component.css'],
-    templateUrl : './login.component.html'
+    templateUrl: './login.component.html',
+    standalone: false
 })
 export class StaffLoginComponent implements OnInit {
 

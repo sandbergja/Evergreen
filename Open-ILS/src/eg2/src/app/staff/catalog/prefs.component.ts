@@ -24,7 +24,8 @@ const CATALOG_PREFS = [
 ];
 
 @Component({
-    templateUrl: 'prefs.component.html'
+    templateUrl: 'prefs.component.html',
+    standalone: false
 })
 export class PreferencesComponent implements OnInit {
 

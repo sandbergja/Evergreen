@@ -20,7 +20,8 @@ const BATCH_FIELDS = [
 @Component({
     templateUrl: 'batch-copies.component.html',
     selector: 'eg-lineitem-batch-copies',
-    styleUrls: ['batch-copies.component.css']
+    styleUrls: ['batch-copies.component.css'],
+    standalone: false
 })
 export class LineitemBatchCopiesComponent implements OnInit {
 

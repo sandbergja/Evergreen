@@ -2,7 +2,8 @@ import {Component, Input, ViewChildren,
     AfterViewInit, QueryList} from '@angular/core';
 
 @Component({
-    templateUrl: './admin-acq-splash.component.html'
+    templateUrl: './admin-acq-splash.component.html',
+    standalone: false
 })
 
 export class AdminAcqSplashComponent {

@@ -9,7 +9,8 @@ import {InvoiceResultsComponent} from './invoice-results.component';
 import {PicklistResultsComponent} from './picklist-results.component';
 
 @Component({
-    templateUrl: './acq-search.component.html'
+    templateUrl: './acq-search.component.html',
+    standalone: false
 })
 
 export class AcqSearchComponent implements OnInit, OnDestroy {

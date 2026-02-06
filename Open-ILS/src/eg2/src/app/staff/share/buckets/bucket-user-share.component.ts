@@ -6,7 +6,8 @@ import {IdlObject} from '@eg/core/idl.service';
 
 @Component({
     selector: 'eg-bucket-user-share',
-    templateUrl: './bucket-user-share.component.html'
+    templateUrl: './bucket-user-share.component.html',
+    standalone: false
 })
 
 export class BucketUserShareComponent

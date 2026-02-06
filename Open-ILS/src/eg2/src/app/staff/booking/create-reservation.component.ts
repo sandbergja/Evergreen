@@ -20,7 +20,7 @@ import {FmRecordEditorComponent} from '@eg/share/fm-editor/fm-editor.component';
 import {ScheduleGridService, ScheduleRow} from './schedule-grid.service';
 import {NoTimezoneSetComponent} from './no-timezone-set.component';
 
-import * as moment from 'moment-timezone';
+import moment from 'moment-timezone';
 
 const startOfDayIsBeforeEndOfDayValidator: ValidatorFn = (fg: FormGroup): ValidationErrors | null => {
     const start = fg.get('startOfDay').value;
@@ -34,7 +34,8 @@ const startOfDayIsBeforeEndOfDayValidator: ValidatorFn = (fg: FormGroup): Valida
 
 @Component({
     templateUrl: './create-reservation.component.html',
-    styles: ['#ideal-resource-barcode {min-width: 300px;}']
+    styles: ['#ideal-resource-barcode {min-width: 300px;}'],
+    standalone: false
 })
 export class CreateReservationComponent implements OnInit, AfterViewInit, OnDestroy {
 

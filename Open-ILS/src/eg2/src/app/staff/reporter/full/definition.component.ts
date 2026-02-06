@@ -15,6 +15,7 @@ import {ReporterService, SRTemplate} from '../share/reporter.service';
 @Component({
     templateUrl: './definition.component.html',
     styleUrls: ['./definition.component.css'],
+    standalone: false
 })
 
 export class FullReporterDefinitionComponent implements OnInit {

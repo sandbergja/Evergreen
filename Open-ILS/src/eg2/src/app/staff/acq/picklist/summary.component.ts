@@ -14,7 +14,8 @@ import {BroadcastService} from '@eg/share/util/broadcast.service';
 
 @Component({
     templateUrl: 'summary.component.html',
-    selector: 'eg-acq-picklist-summary'
+    selector: 'eg-acq-picklist-summary',
+    standalone: false
 })
 export class PicklistSummaryComponent implements OnInit {
 

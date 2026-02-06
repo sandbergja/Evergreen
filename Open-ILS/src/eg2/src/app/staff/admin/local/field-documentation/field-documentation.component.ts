@@ -10,7 +10,8 @@ import {StringComponent} from '@eg/share/string/string.component';
 import {ToastService} from '@eg/share/toast/toast.service';
 
 @Component({
-    templateUrl: './field-documentation.component.html'
+    templateUrl: './field-documentation.component.html',
+    standalone: false
 })
 
 export class FieldDocumentationComponent implements OnInit {

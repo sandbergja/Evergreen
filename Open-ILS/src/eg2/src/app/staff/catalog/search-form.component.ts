@@ -25,7 +25,8 @@ const COLLAPSE_ON_PAGES = [
 @Component({
     selector: 'eg-catalog-search-form',
     styleUrls: ['search-form.component.css'],
-    templateUrl: 'search-form.component.html'
+    templateUrl: 'search-form.component.html',
+    standalone: false
 })
 export class SearchFormComponent implements OnInit, AfterViewInit {
 

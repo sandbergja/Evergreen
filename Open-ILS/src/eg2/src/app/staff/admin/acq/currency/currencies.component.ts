@@ -20,7 +20,8 @@ import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 
 @Component({
-    templateUrl: './currencies.component.html'
+    templateUrl: './currencies.component.html',
+    standalone: false
 })
 
 export class CurrenciesComponent extends AdminPageComponent implements OnInit {

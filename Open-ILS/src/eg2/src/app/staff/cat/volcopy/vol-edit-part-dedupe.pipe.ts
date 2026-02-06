@@ -2,7 +2,8 @@ import { Pipe, PipeTransform } from '@angular/core';
 import { IdlObject } from '@eg/core/idl.service';
 
 @Pipe({
-    name: 'volEditPartDedupe'
+    name: 'volEditPartDedupe',
+    standalone: false
 })
 export class VolEditPartDedupePipe implements PipeTransform {
     // In: key-value pair, where the value is an array of monographic parts. -- VolCopyService.bibParts.

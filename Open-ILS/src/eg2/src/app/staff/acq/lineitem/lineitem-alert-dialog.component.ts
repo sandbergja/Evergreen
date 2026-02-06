@@ -5,7 +5,8 @@ import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 
 @Component({
     selector: 'eg-lineitem-alert-dialog',
-    templateUrl: './lineitem-alert-dialog.component.html'
+    templateUrl: './lineitem-alert-dialog.component.html',
+    standalone: false
 })
 
 export class LineitemAlertDialogComponent {

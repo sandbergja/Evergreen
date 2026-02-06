@@ -16,7 +16,8 @@ import {StringComponent} from '@eg/share/string/string.component';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 
 @Component({
-    templateUrl: './admin-carousel.component.html'
+    templateUrl: './admin-carousel.component.html',
+    standalone: false
 })
 
 export class AdminCarouselComponent extends AdminPageComponent implements OnInit {

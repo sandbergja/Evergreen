@@ -22,6 +22,7 @@ import {NetService} from '@eg/core/net.service';
     selector: 'eg-reporter-templates',
     templateUrl: 'my-templates.component.html',
     styleUrls: ['./my-templates.component.css'],
+    standalone: false
 })
 
 export class ReportTemplatesComponent implements OnInit {

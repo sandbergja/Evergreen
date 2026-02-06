@@ -7,7 +7,8 @@ import {EventService} from '@eg/core/event.service';
 
 @Component({
     templateUrl: 'backdate-dialog.component.html',
-    selector: 'eg-backdate-dialog'
+    selector: 'eg-backdate-dialog',
+    standalone: false
 })
 export class BackdateDialogComponent extends DialogComponent implements OnInit {
 

@@ -9,7 +9,8 @@ import { CharMapDialogComponent } from './charmap-dialog.component';
     selector: 'eg-chars-canadian',
     templateUrl: './chars-canadian.component.html',
     styleUrls: ['charmap-dialog.component.css'],
-    encapsulation: ViewEncapsulation.None
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 
 export class CharsCanadianComponent {

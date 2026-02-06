@@ -11,7 +11,8 @@ import {AcqProviderSearchFormComponent} from './acq-provider-search-form.compone
 @Component({
     selector: 'eg-provider-results',
     templateUrl: 'provider-results.component.html',
-    providers: [AcqProviderSearchService]
+    providers: [AcqProviderSearchService],
+    standalone: false
 })
 export class ProviderResultsComponent implements OnInit, AfterViewInit {
 

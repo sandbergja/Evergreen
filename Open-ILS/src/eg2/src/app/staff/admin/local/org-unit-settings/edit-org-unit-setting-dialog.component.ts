@@ -5,7 +5,8 @@ import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
     selector: 'eg-admin-edit-org-unit-setting-dialog',
-    templateUrl: './edit-org-unit-setting-dialog.component.html'
+    templateUrl: './edit-org-unit-setting-dialog.component.html',
+    standalone: false
 })
 
 export class EditOuSettingDialogComponent extends DialogComponent {

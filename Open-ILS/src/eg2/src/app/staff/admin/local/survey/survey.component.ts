@@ -17,7 +17,6 @@ const DAYS_IN_WEEK = 7;
 
 @Component({
     templateUrl: './survey.component.html',
-    standalone: true,
     imports: [
         FmRecordEditorModule,
         GridModule,

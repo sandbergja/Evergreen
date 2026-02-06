@@ -6,7 +6,8 @@ import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
 
 @Component({
     selector: 'eg-acq-add-to-po-dialog',
-    templateUrl: './add-to-po-dialog.component.html'
+    templateUrl: './add-to-po-dialog.component.html',
+    standalone: false
 })
 
 export class AddToPoDialogComponent extends DialogComponent {

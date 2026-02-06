@@ -9,7 +9,8 @@ import {IdlService } from '@eg/core/idl.service';
 import {NgbNav, NgbNavChangeEvent} from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
-    templateUrl: './circ_limit_set_edit.component.html'
+    templateUrl: './circ_limit_set_edit.component.html',
+    standalone: false
 })
 
 export class CircLimitSetEditComponent  implements OnInit {

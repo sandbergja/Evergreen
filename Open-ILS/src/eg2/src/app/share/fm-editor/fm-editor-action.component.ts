@@ -4,6 +4,8 @@ import {FmRecordEditorComponent} from './fm-editor.component';
 @Component({
     selector: 'eg-fm-record-editor-action',
     template: '<ng-template></ng-template>' // no-op
+    ,
+    standalone: false
 })
 
 export class FmRecordEditorActionComponent implements OnInit {

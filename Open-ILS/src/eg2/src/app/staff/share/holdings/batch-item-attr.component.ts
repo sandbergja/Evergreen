@@ -17,7 +17,8 @@ export interface BatchChangeSelection {
 @Component({
     selector: 'eg-batch-item-attr',
     templateUrl: 'batch-item-attr.component.html',
-    styleUrls: ['batch-item-attr.component.css', '../../cat/volcopy/copy-attrs.component.css']
+    styleUrls: ['batch-item-attr.component.css', '../../cat/volcopy/copy-attrs.component.css'],
+    standalone: false
 })
 
 export class BatchItemAttrComponent implements OnInit {

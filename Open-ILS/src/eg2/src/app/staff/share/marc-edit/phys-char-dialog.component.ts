@@ -16,7 +16,8 @@ import {ComboboxComponent, ComboboxEntry} from '@eg/share/combobox/combobox.comp
 
 @Component({
     selector: 'eg-phys-char-dialog',
-    templateUrl: './phys-char-dialog.component.html'
+    templateUrl: './phys-char-dialog.component.html',
+    standalone: false
 })
 
 export class PhysCharDialogComponent

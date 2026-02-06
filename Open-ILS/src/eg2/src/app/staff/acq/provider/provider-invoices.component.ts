@@ -16,7 +16,8 @@ import {ProviderRecordService} from './provider-record.service';
 @Component({
     selector: 'eg-provider-invoices',
     templateUrl: 'provider-invoices.component.html',
-    providers: [AcqSearchService, AttrDefsService]
+    providers: [AcqSearchService, AttrDefsService],
+    standalone: false
 })
 export class ProviderInvoicesComponent implements OnInit, AfterViewInit, OnDestroy {
 

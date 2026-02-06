@@ -16,7 +16,8 @@ interface LinkTableLink {
         column-count: var(--columnCount);
       }
     `
-    ]
+    ],
+    standalone: false
 })
 
 export class LinkTableComponent {
@@ -30,7 +31,8 @@ export class LinkTableComponent {
 
 @Component({
     selector: 'eg-link-table-link',
-    template: '<ng-template></ng-template>'
+    template: '<ng-template></ng-template>',
+    standalone: false
 })
 
 export class LinkTableLinkComponent implements OnInit {

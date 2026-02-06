@@ -11,7 +11,8 @@ import {BibRecordService, BibRecordSummary} from '@eg/share/catalog/bib-record.s
 @Component({
     selector: 'eg-acq-bib-finder-dialog',
     styleUrls: ['./bib-finder-dialog.component.css'],
-    templateUrl: './bib-finder-dialog.component.html'
+    templateUrl: './bib-finder-dialog.component.html',
+    standalone: false
 })
 
 export class BibFinderDialogComponent extends DialogComponent {

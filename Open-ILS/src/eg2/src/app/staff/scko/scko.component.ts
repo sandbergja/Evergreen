@@ -10,7 +10,8 @@ import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
 @Component({
     templateUrl: 'scko.component.html',
     styleUrls: ['scko.component.css'],
-    encapsulation: ViewEncapsulation.None
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 
 export class SckoComponent implements OnInit, AfterViewInit {

@@ -7,7 +7,8 @@ import {takeUntil, switchMap, map, tap, Subject, fromEvent} from 'rxjs';
 
 @Component({
     selector: 'thead.eg-grid-header',
-    templateUrl: './grid-header.component.html'
+    templateUrl: './grid-header.component.html',
+    standalone: false
 })
 
 export class GridHeaderComponent implements OnInit, OnDestroy, AfterViewInit {
