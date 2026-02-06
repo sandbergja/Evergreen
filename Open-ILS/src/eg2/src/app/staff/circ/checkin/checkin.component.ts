@@ -58,7 +58,8 @@ const SETTINGS = [
 
 @Component({
     templateUrl: 'checkin.component.html',
-    styleUrls: ['checkin.component.css']
+    styleUrls: ['checkin.component.css'],
+    standalone: false
 })
 export class CheckinComponent implements OnInit, AfterViewInit {
     checkins: CheckinGridEntry[] = [];

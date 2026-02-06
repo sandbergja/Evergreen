@@ -16,6 +16,7 @@ import {OrgFamily} from '@eg/share/org-family-select/org-family-select.component
 @Component({
     selector: 'eg-manage-reservations',
     templateUrl: './manage-reservations.component.html',
+    standalone: false
 })
 export class ManageReservationsComponent implements OnInit, OnDestroy {
 

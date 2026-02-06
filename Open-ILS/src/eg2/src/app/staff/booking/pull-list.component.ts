@@ -23,7 +23,8 @@ interface PullListRow {
 }
 
 @Component({
-    templateUrl: './pull-list.component.html'
+    templateUrl: './pull-list.component.html',
+    standalone: false
 })
 
 export class PullListComponent implements OnInit {

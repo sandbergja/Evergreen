@@ -22,7 +22,8 @@ import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 
 @Component({
-    templateUrl: './edi-attr-sets.component.html'
+    templateUrl: './edi-attr-sets.component.html',
+    standalone: false
 })
 
 export class EdiAttrSetsComponent extends AdminPageComponent implements OnInit {

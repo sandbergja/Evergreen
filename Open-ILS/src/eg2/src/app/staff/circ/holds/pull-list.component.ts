@@ -7,7 +7,8 @@ import {StoreService} from '@eg/core/store.service';
 
 @Component({
     selector: 'eg-holds-pull-list',
-    templateUrl: 'pull-list.component.html'
+    templateUrl: 'pull-list.component.html',
+    standalone: false
 })
 export class HoldsPullListComponent {
 

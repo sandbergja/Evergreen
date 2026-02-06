@@ -8,6 +8,7 @@ import {ReporterService} from '../share/reporter.service';
     selector: 'eg-sr-field',
     templateUrl: './sr-field.component.html',
     styleUrls: ['./sr-field.component.css'],
+    standalone: false
 })
 export class SRFieldComponent implements OnInit {
 

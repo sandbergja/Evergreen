@@ -9,7 +9,8 @@ import {LineitemService, BatchLineitemStruct} from './lineitem.service';
 import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
 
 @Component({
-    templateUrl: 'detail.component.html'
+    templateUrl: 'detail.component.html',
+    standalone: false
 })
 export class LineitemDetailComponent implements OnInit {
 

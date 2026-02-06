@@ -11,7 +11,8 @@ import {StringComponent} from '@eg/share/string/string.component';
 import {QueryDialogComponent} from './query-dialog.component';
 
 @Component({
-    templateUrl: './search-filter-group-entries.component.html'
+    templateUrl: './search-filter-group-entries.component.html',
+    standalone: false
 })
 
 export class SearchFilterGroupEntriesComponent implements OnInit {

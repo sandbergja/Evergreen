@@ -8,7 +8,8 @@ import {PatronService} from '@eg/staff/share/patron/patron.service';
 
 @Component({
     templateUrl: 'test-password.component.html',
-    selector: 'eg-patron-test-password'
+    selector: 'eg-patron-test-password',
+    standalone: false
 })
 export class TestPatronPasswordComponent implements OnInit, AfterViewInit {
 

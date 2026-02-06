@@ -24,7 +24,8 @@ import {ProgressInlineComponent} from '@eg/share/dialog/progress-inline.componen
 @Component({
     selector: 'eg-z3950-search',
     styleUrls: ['z3950-search.component.css'],
-    templateUrl: 'z3950-search.component.html'
+    templateUrl: 'z3950-search.component.html',
+    standalone: false
 })
 
 export class Z3950SearchComponent implements OnInit {
@@ -788,7 +789,8 @@ export class Z3950SearchComponent implements OnInit {
 }
 
 @Directive({
-    selector: '[egautofocus]'
+    selector: '[egautofocus]',
+    standalone: false
 })
 export class AutofocusDirective implements OnInit {
     @Input() egautofocus: boolean;

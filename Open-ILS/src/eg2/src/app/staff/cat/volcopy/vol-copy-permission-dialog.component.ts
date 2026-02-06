@@ -6,7 +6,8 @@ import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
 
 @Component({
     selector: 'eg-vol-copy-permission-dialog',
-    templateUrl: './vol-copy-permission-dialog.component.html'
+    templateUrl: './vol-copy-permission-dialog.component.html',
+    standalone: false
 })
 
 export class VolCopyPermissionDialogComponent extends DialogComponent {

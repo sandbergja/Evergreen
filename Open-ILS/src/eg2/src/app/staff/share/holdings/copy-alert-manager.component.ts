@@ -19,7 +19,8 @@ import {CopyAlertsDialogComponent} from '@eg/staff/share/holdings/copy-alerts-di
 @Component({
     selector: 'eg-copy-alert-manager',
     templateUrl: 'copy-alert-manager.component.html',
-    styles: ['.acknowledged {text-decoration: line-through }']
+    styles: ['.acknowledged {text-decoration: line-through }'],
+    standalone: false
 })
 
 export class CopyAlertManagerDialogComponent extends DialogComponent {

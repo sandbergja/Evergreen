@@ -36,7 +36,8 @@ export class OrgUnitSetting {
 }
 
 @Component({
-    templateUrl: './org-unit-settings.component.html'
+    templateUrl: './org-unit-settings.component.html',
+    standalone: false
 })
 
 export class OrgUnitSettingsComponent implements OnInit {

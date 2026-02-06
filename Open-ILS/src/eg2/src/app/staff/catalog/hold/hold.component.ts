@@ -106,7 +106,8 @@ class HoldContext {
 }
 
 @Component({
-    templateUrl: 'hold.component.html'
+    templateUrl: 'hold.component.html',
+    standalone: false
 })
 export class HoldComponent implements OnInit, OnDestroy {
 

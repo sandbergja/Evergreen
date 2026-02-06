@@ -12,7 +12,8 @@ import {PermService} from '@eg/core/perm.service';
 
 @Component({
     selector: 'eg-exchange-rates-dialog',
-    templateUrl: './exchange-rates-dialog.component.html'
+    templateUrl: './exchange-rates-dialog.component.html',
+    standalone: false
 })
 
 export class ExchangeRatesDialogComponent

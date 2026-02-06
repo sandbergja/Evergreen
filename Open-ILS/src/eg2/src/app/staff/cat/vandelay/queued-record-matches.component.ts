@@ -14,7 +14,8 @@ import {VandelayService, VandelayImportSelection} from './vandelay.service';
 
 @Component({
     selector: 'eg-queued-record-matches',
-    templateUrl: 'queued-record-matches.component.html'
+    templateUrl: 'queued-record-matches.component.html',
+    standalone: false
 })
 export class QueuedRecordMatchesComponent {
 

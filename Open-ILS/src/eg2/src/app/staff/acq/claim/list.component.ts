@@ -5,7 +5,8 @@ import {AuthService} from '@eg/core/auth.service';
 import {LineitemListComponent} from '../lineitem/lineitem-list.component';
 
 @Component({
-    templateUrl: 'list.component.html'
+    templateUrl: 'list.component.html',
+    standalone: false
 })
 export class ClaimEligibleListComponent implements OnInit {
 

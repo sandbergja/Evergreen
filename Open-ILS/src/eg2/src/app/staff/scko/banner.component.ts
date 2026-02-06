@@ -11,7 +11,8 @@ const FOCUS_DELAY = 50;
 
 @Component({
     selector: 'eg-scko-banner',
-    templateUrl: 'banner.component.html'
+    templateUrl: 'banner.component.html',
+    standalone: false
 })
 
 export class SckoBannerComponent implements OnInit, AfterViewInit {

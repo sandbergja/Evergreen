@@ -16,7 +16,8 @@ import {PermService} from '@eg/core/perm.service';
 
 @Component({
     selector: 'eg-edi-attr-set-providers',
-    templateUrl: './edi-attr-set-providers.component.html'
+    templateUrl: './edi-attr-set-providers.component.html',
+    standalone: false
 })
 
 export class EdiAttrSetProvidersComponent

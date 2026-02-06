@@ -1,7 +1,8 @@
 import {Component, OnInit, ViewChild, TemplateRef} from '@angular/core';
 
 @Component({
-    templateUrl: './address-alert.component.html'
+    templateUrl: './address-alert.component.html',
+    standalone: false
 })
 
 export class AddressAlertComponent {

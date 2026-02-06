@@ -7,7 +7,8 @@ import {OrgFamily} from '@eg/share/org-family-select/org-family-select.component
 @Component({
     selector: 'eg-acq-provider-search-form',
     styleUrls: ['acq-provider-search-form.component.css'],
-    templateUrl: './acq-provider-search-form.component.html'
+    templateUrl: './acq-provider-search-form.component.html',
+    standalone: false
 })
 
 export class AcqProviderSearchFormComponent implements OnInit {

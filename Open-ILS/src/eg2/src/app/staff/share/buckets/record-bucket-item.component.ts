@@ -27,7 +27,8 @@ import {BroadcastService} from '@eg/share/util/broadcast.service';
 @Component({
     selector: 'eg-record-bucket-item',
     templateUrl: 'record-bucket-item.component.html',
-    styleUrls: ['./record-bucket-item.component.css']
+    styleUrls: ['./record-bucket-item.component.css'],
+    standalone: false
 })
 
 export class RecordBucketItemComponent implements OnInit {

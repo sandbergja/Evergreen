@@ -29,7 +29,8 @@ const SESSION_DUE_DATE = 'eg.circ.checkout.is_until_logout';
 
 @Component({
     templateUrl: 'checkout.component.html',
-    selector: 'eg-patron-checkout'
+    selector: 'eg-patron-checkout',
+    standalone: false
 })
 export class CheckoutComponent implements OnInit, AfterViewInit {
     static autoId = 0;

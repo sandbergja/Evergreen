@@ -29,7 +29,8 @@ import {OrgFamily} from '@eg/share/org-family-select/org-family-select.component
 
 @Component({
     selector: 'eg-admin-page',
-    templateUrl: './admin-page.component.html'
+    templateUrl: './admin-page.component.html',
+    standalone: false
 })
 
 export class AdminPageComponent implements OnInit {

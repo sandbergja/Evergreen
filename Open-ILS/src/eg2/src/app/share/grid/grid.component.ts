@@ -19,7 +19,8 @@ import {GridToolbarComponent} from './grid-toolbar.component';
     // share grid css globally once imported so all grid component CSS
     // can live in grid.component.css and to avoid multiple copies of
     // the CSS when multiple grids are displayed.
-    encapsulation: ViewEncapsulation.None
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 
 export class GridComponent implements OnInit, AfterViewInit, OnDestroy {

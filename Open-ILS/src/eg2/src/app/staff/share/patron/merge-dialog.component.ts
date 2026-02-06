@@ -30,7 +30,8 @@ const PATRON_FLESH_FIELDS = [
 
 @Component({
     selector: 'eg-patron-merge-dialog',
-    templateUrl: 'merge-dialog.component.html'
+    templateUrl: 'merge-dialog.component.html',
+    standalone: false
 })
 
 export class PatronMergeDialogComponent

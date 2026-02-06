@@ -14,7 +14,8 @@ export type ButtonStyle = {
 };
 
 @Directive({
-    selector: '[egButtonStyle]'
+    selector: '[egButtonStyle]',
+    standalone: false
 })
 export class ButtonStyleDirective {
     @Input('egButtonStyle') set buttonStyle(value: ButtonStyle) {

@@ -16,7 +16,8 @@ import {StringComponent} from '@eg/share/string/string.component';
 
 @Component({
     selector: 'eg-make-bookable-dialog',
-    templateUrl: 'make-bookable-dialog.component.html'
+    templateUrl: 'make-bookable-dialog.component.html',
+    standalone: false
 })
 export class MakeBookableDialogComponent
     extends DialogComponent implements OnInit, OnDestroy {

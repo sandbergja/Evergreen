@@ -11,7 +11,8 @@ import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
 
 @Component({
     selector: 'eg-picklist-create-dialog',
-    templateUrl: './picklist-create-dialog.component.html'
+    templateUrl: './picklist-create-dialog.component.html',
+    standalone: false
 })
 
 export class PicklistCreateDialogComponent

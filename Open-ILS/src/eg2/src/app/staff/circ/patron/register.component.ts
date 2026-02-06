@@ -10,7 +10,8 @@ import {PatronService} from '@eg/staff/share/patron/patron.service';
 import {PatronContextService} from './patron.service';
 
 @Component({
-    templateUrl: 'register.component.html'
+    templateUrl: 'register.component.html',
+    standalone: false
 })
 export class RegisterPatronComponent implements OnInit {
 

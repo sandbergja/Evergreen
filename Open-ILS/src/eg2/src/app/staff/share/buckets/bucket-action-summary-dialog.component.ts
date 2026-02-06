@@ -14,7 +14,8 @@ import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
       <div class="col">{{containerActionResultMap[container.id]}}</div>
     </div>
   </ng-template>
-  `
+  `,
+    standalone: false
 })
 
 export class BucketActionSummaryDialogComponent {

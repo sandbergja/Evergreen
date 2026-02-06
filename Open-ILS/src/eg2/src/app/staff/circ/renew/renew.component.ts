@@ -38,7 +38,8 @@ const TRIM_LIST_TO = 20;
 
 @Component({
     templateUrl: 'renew.component.html',
-    styleUrls: ['renew.component.css']
+    styleUrls: ['renew.component.css'],
+    standalone: false
 })
 export class RenewComponent implements OnInit, AfterViewInit {
     renewals: RenewGridEntry[] = [];

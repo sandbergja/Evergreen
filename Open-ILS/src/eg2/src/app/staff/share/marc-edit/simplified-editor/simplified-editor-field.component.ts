@@ -9,7 +9,8 @@ import {MarcField, MarcSubfield} from '../marcrecord';
 
 @Component({
     selector: 'eg-marc-simplified-editor-field',
-    template: ''
+    template: '',
+    standalone: false
 })
 export class MarcSimplifiedEditorFieldComponent implements OnInit, AfterViewInit {
 

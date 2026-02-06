@@ -14,7 +14,8 @@ import {ConjoinedItemsDialogComponent
 
 @Component({
     selector: 'eg-catalog-record-conjoined',
-    templateUrl: 'conjoined.component.html'
+    templateUrl: 'conjoined.component.html',
+    standalone: false
 })
 export class ConjoinedComponent implements OnInit {
 

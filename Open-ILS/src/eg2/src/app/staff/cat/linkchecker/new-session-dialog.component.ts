@@ -14,7 +14,8 @@ import {Subject, Subscription, Observable, debounceTime, distinctUntilChanged} f
 
 @Component({
     selector: 'eg-new-session-dialog',
-    templateUrl: './new-session-dialog.component.html'
+    templateUrl: './new-session-dialog.component.html',
+    standalone: false
 })
 
 export class NewSessionDialogComponent extends DialogComponent implements OnInit, OnDestroy {

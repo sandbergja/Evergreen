@@ -8,7 +8,8 @@ import { IdlService, IdlObject } from '@eg/core/idl.service';
 
 @Component({
     selector: 'eg-copy-alert-types',
-    templateUrl: './copy-alert-types.component.html'
+    templateUrl: './copy-alert-types.component.html',
+    standalone: false
 })
 export class CopyAlertTypesComponent implements OnInit {
 

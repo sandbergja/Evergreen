@@ -20,7 +20,8 @@ import {BillingService} from '@eg/staff/share/billing/billing.service';
 
 @Component({
     selector: 'eg-mark-damaged-dialog',
-    templateUrl: 'mark-damaged-dialog.component.html'
+    templateUrl: 'mark-damaged-dialog.component.html',
+    standalone: false
 })
 
 export class MarkDamagedDialogComponent

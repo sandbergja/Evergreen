@@ -10,7 +10,8 @@ import {Pager} from '@eg/share/util/pager';
 @Component({
     selector: 'eg-catalog-record-pagination',
     templateUrl: 'pagination.component.html',
-    styleUrls: ['pagination.component.css']
+    styleUrls: ['pagination.component.css'],
+    standalone: false
 })
 export class RecordPaginationComponent implements OnInit {
 

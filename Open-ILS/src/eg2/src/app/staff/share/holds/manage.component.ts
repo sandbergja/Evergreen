@@ -9,7 +9,8 @@ import {HoldsService} from './holds.service';
 
 @Component({
     selector: 'eg-hold-manage',
-    templateUrl: 'manage.component.html'
+    templateUrl: 'manage.component.html',
+    standalone: false
 })
 export class HoldManageComponent implements OnInit {
 

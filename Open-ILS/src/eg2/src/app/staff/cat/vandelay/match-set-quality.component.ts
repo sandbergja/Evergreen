@@ -12,7 +12,8 @@ import {MatchSetNewPointComponent} from './match-set-new-point.component';
 
 @Component({
     selector: 'eg-match-set-quality',
-    templateUrl: 'match-set-quality.component.html'
+    templateUrl: 'match-set-quality.component.html',
+    standalone: false
 })
 export class MatchSetQualityComponent {
 

@@ -10,7 +10,8 @@ import {MatchSetNewPointComponent} from './match-set-new-point.component';
 
 @Component({
     selector: 'eg-match-set-expression',
-    templateUrl: 'match-set-expression.component.html'
+    templateUrl: 'match-set-expression.component.html',
+    standalone: false
 })
 export class MatchSetExpressionComponent {
 

@@ -28,7 +28,8 @@ class SearchTemplate {
 
 @Component({
     selector: 'eg-catalog-search-templates',
-    templateUrl: 'search-templates.component.html'
+    templateUrl: 'search-templates.component.html',
+    standalone: false
 })
 export class SearchTemplatesComponent extends DialogComponent implements OnInit {
 

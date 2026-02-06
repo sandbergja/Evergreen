@@ -5,7 +5,8 @@ import {GridComponent} from './grid.component';
 
 @Component({
     selector: 'eg-grid-toolbar-button',
-    template: '<ng-template></ng-template>'
+    template: '<ng-template></ng-template>',
+    standalone: false
 })
 
 export class GridToolbarButtonComponent implements OnInit {

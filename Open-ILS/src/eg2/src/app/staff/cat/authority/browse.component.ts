@@ -16,7 +16,8 @@ import {AuthorityMergeDialogComponent} from './merge-dialog.component';
 
 @Component({
     templateUrl: 'browse.component.html',
-    styles: ['#offset-input { width: 4em; }']
+    styles: ['#offset-input { width: 4em; }'],
+    standalone: false
 })
 export class BrowseAuthorityComponent implements OnInit {
 

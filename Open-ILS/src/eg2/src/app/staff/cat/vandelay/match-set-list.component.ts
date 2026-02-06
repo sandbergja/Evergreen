@@ -10,7 +10,8 @@ import {GridDataSource, GridCellTextGenerator} from '@eg/share/grid/grid';
 import {FmRecordEditorComponent} from '@eg/share/fm-editor/fm-editor.component';
 
 @Component({
-    templateUrl: 'match-set-list.component.html'
+    templateUrl: 'match-set-list.component.html',
+    standalone: false
 })
 export class MatchSetListComponent implements AfterViewInit {
 

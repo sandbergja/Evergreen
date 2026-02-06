@@ -13,6 +13,7 @@ import {ReporterService} from '../share/reporter.service';
 @Component({
     selector: 'eg-sr-outputs',
     templateUrl: 'sr-my-outputs.component.html',
+    standalone: false
 })
 
 export class SROutputsComponent implements OnInit {

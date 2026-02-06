@@ -10,7 +10,8 @@ import {Component, OnInit, OnDestroy, Input} from '@angular/core';
 
 @Component({
     templateUrl: 'batch_receive.component.html',
-    selector: 'eg-acq-invoice-batch-receive'
+    selector: 'eg-acq-invoice-batch-receive',
+    standalone: false
 })
 export class InvoiceBatchReceiveComponent implements OnInit, OnDestroy {
 

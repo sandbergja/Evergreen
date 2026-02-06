@@ -8,7 +8,8 @@ import {ContextMenuService, ContextMenu, ContextMenuEntry} from './context-menu.
     styleUrls: ['context-menu-container.component.css'],
     /* Our CSS affects the style of the popover, which may
    * be beyond our reach for standard view encapsulation */
-    encapsulation: ViewEncapsulation.None
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 
 export class ContextMenuContainerComponent implements OnInit, AfterViewInit {

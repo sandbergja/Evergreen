@@ -14,6 +14,7 @@ import {ReporterService, SRTemplate} from '../share/reporter.service';
 @Component({
     templateUrl: './sr-editor.component.html',
     styleUrls: ['./sr-editor.component.css'],
+    standalone: false
 })
 
 export class SREditorComponent implements OnInit {

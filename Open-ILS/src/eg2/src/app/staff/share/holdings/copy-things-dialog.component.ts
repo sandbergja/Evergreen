@@ -50,7 +50,8 @@ export const THINGDATA_CONFIG = new InjectionToken<IThingConfig<any>>('THINGDATA
  * C = The changes tracking type
  */
 @Component({
-    templateUrl: './copy-things-dialog.component.html'
+    templateUrl: './copy-things-dialog.component.html',
+    standalone: false
 })
 export abstract class CopyThingsDialogComponent<
     T extends IThingObject,

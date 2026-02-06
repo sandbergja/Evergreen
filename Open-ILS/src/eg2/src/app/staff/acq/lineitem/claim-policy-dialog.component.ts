@@ -6,7 +6,8 @@ import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
 
 @Component({
     selector: 'eg-acq-claim-policy-dialog',
-    templateUrl: './claim-policy-dialog.component.html'
+    templateUrl: './claim-policy-dialog.component.html',
+    standalone: false
 })
 
 export class ClaimPolicyDialogComponent extends DialogComponent {

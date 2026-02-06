@@ -17,7 +17,8 @@ import {OrgFamily} from '@eg/share/org-family-select/org-family-select.component
 
 @Component({
     selector: 'eg-course-term-grid',
-    templateUrl: './course-term-grid.component.html'
+    templateUrl: './course-term-grid.component.html',
+    standalone: false
 })
 
 export class TermListComponent implements OnInit, AfterViewInit {

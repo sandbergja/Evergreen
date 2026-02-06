@@ -7,7 +7,8 @@ import {CheckinResult} from './circ.service';
 
 @Component({
     templateUrl: 'in-transit-dialog.component.html',
-    selector: 'eg-copy-in-transit-dialog'
+    selector: 'eg-copy-in-transit-dialog',
+    standalone: false
 })
 export class CopyInTransitDialogComponent extends DialogComponent {
 

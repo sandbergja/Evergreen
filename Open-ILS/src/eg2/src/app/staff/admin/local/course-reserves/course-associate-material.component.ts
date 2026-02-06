@@ -17,7 +17,8 @@ import {CourseService} from '@eg/staff/share/course.service';
 
 @Component({
     selector: 'eg-course-associate-material-dialog',
-    templateUrl: './course-associate-material.component.html'
+    templateUrl: './course-associate-material.component.html',
+    standalone: false
 })
 
 export class CourseAssociateMaterialComponent extends DialogComponent implements OnInit {

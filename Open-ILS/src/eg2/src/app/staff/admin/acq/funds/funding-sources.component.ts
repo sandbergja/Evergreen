@@ -22,7 +22,8 @@ import {FundingSourceTransactionsDialogComponent} from './funding-source-transac
 
 @Component({
     selector: 'eg-funding-sources',
-    templateUrl: './funding-sources.component.html'
+    templateUrl: './funding-sources.component.html',
+    standalone: false
 })
 
 export class FundingSourcesComponent extends AdminPageComponent implements OnInit, AfterViewInit {

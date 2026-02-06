@@ -14,7 +14,8 @@ import {MarcEditContext, MARC_RECORD_TYPE} from './editor-context';
 
 @Component({
     selector: 'eg-marc-editor-dialog',
-    templateUrl: './editor-dialog.component.html'
+    templateUrl: './editor-dialog.component.html',
+    standalone: false
 })
 
 export class MarcEditorDialogComponent

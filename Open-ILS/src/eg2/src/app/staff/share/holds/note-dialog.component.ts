@@ -8,7 +8,8 @@ import {DialogComponent} from '@eg/share/dialog/dialog.component';
 
 @Component({
     selector: 'eg-hold-note-dialog',
-    templateUrl: 'note-dialog.component.html'
+    templateUrl: 'note-dialog.component.html',
+    standalone: false
 })
 export class HoldNoteDialogComponent extends DialogComponent {
     pub = false;

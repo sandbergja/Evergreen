@@ -12,7 +12,8 @@ import {PrintService} from '@eg/share/print/print.service';
 
 @Component({
     selector: 'eg-acq-manage-claims-dialog',
-    templateUrl: './manage-claims-dialog.component.html'
+    templateUrl: './manage-claims-dialog.component.html',
+    standalone: false
 })
 
 export class ManageClaimsDialogComponent extends DialogComponent {

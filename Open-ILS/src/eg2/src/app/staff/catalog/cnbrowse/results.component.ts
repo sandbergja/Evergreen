@@ -14,7 +14,8 @@ import {OrgService} from '@eg/core/org.service';
 @Component({
     selector: 'eg-catalog-cn-browse-results',
     templateUrl: 'results.component.html',
-    styleUrls: ['results.component.css']
+    styleUrls: ['results.component.css'],
+    standalone: false
 })
 export class CnBrowseResultsComponent implements OnInit, OnDestroy {
 

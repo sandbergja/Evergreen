@@ -5,7 +5,8 @@ import {VandelayService} from './vandelay.service';
 import {OrgService}  from '@eg/core/org.service';
 
 @Component({
-    templateUrl: 'vandelay.component.html'
+    templateUrl: 'vandelay.component.html',
+    standalone: false
 })
 export class VandelayComponent implements OnInit {
     tab: string;

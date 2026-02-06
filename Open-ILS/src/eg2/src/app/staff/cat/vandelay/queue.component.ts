@@ -14,7 +14,8 @@ import {GridDataSource, GridColumn, GridCellTextGenerator} from '@eg/share/grid/
 import {VandelayService, VandelayImportSelection} from './vandelay.service';
 
 @Component({
-    templateUrl: 'queue.component.html'
+    templateUrl: 'queue.component.html',
+    standalone: false
 })
 export class QueueComponent implements AfterViewInit {
 

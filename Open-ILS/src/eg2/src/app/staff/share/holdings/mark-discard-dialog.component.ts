@@ -15,7 +15,8 @@ import {StringComponent} from '@eg/share/string/string.component';
 
 @Component({
     selector: 'eg-mark-discard-dialog',
-    templateUrl: 'mark-discard-dialog.component.html'
+    templateUrl: 'mark-discard-dialog.component.html',
+    standalone: false
 })
 
 export class MarkDiscardDialogComponent

@@ -20,7 +20,8 @@ import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
  */
 
 @Component({
-    templateUrl: 'print-template.component.html'
+    templateUrl: 'print-template.component.html',
+    standalone: false
 })
 
 export class PrintTemplateComponent implements OnInit {

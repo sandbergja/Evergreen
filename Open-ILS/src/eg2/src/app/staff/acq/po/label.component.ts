@@ -6,7 +6,8 @@ import {PoService} from './po.service';
 
 @Component({
     templateUrl: 'label.component.html',
-    selector: 'eg-po-label'
+    selector: 'eg-po-label',
+    standalone: false
 })
 export class PoLabelComponent implements OnInit {
 

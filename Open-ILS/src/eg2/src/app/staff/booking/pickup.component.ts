@@ -12,7 +12,8 @@ import {PatronBarcodeValidator} from '@eg/share/validators/patron_barcode_valida
 
 
 @Component({
-    templateUrl: './pickup.component.html'
+    templateUrl: './pickup.component.html',
+    standalone: false
 })
 
 export class PickupComponent implements OnInit, OnDestroy {

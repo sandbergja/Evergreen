@@ -17,7 +17,8 @@ import { ServerStoreService } from '@eg/core/server-store.service';
 @Component({
     selector: 'eg-catalog-record',
     templateUrl: 'record.component.html',
-    styleUrls: ['./record.component.css']
+    styleUrls: ['./record.component.css'],
+    standalone: false
 })
 export class RecordComponent implements OnInit, OnDestroy {
 

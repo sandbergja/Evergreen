@@ -18,6 +18,7 @@ import {ChangeFolderDialogComponent} from './change-folder-dialog.component';
 @Component({
     selector: 'eg-reporter-outputs',
     templateUrl: 'my-outputs.component.html',
+    standalone: false
 })
 
 export class FullReporterOutputsComponent implements OnInit {

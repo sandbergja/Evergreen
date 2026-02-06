@@ -3,12 +3,13 @@ import {Component, EventEmitter, Input, Output, ViewChild, OnInit, Optional, Sel
 import {FormatService} from '@eg/core/format.service';
 import {AbstractControl, ControlValueAccessor, FormControl, FormGroup, NgControl} from '@angular/forms';
 import {DatetimeValidator} from '@eg/share/validators/datetime_validator.directive';
-import * as moment from 'moment-timezone';
+import moment from 'moment-timezone';
 import {DateUtil} from '@eg/share/util/date';
 
 @Component({
     selector: 'eg-datetime-select',
     templateUrl: './datetime-select.component.html',
+    standalone: false
 })
 export class DateTimeSelectComponent implements OnInit, ControlValueAccessor {
     @Input() domId = '';

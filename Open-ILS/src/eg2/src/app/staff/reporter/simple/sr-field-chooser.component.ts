@@ -5,7 +5,8 @@ import {ReporterService} from '../share/reporter.service';
 @Component({
     selector: 'eg-sr-field-chooser',
     styleUrls: ['./sr-field-chooser.component.css'],
-    templateUrl: './sr-field-chooser.component.html'
+    templateUrl: './sr-field-chooser.component.html',
+    standalone: false
 })
 
 export class SRFieldChooserComponent {

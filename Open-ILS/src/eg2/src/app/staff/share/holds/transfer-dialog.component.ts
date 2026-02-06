@@ -16,7 +16,8 @@ import {StringComponent} from '@eg/share/string/string.component';
 
 @Component({
     selector: 'eg-hold-transfer-dialog',
-    templateUrl: 'transfer-dialog.component.html'
+    templateUrl: 'transfer-dialog.component.html',
+    standalone: false
 })
 
 export class HoldTransferDialogComponent

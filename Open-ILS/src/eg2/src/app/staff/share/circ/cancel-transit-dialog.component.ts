@@ -12,7 +12,8 @@ import {ToastService} from '@eg/share/toast/toast.service';
 
 @Component({
     templateUrl: 'cancel-transit-dialog.component.html',
-    selector: 'eg-cancel-transit-dialog'
+    selector: 'eg-cancel-transit-dialog',
+    standalone: false
 })
 export class CancelTransitDialogComponent extends DialogComponent implements OnInit {
 

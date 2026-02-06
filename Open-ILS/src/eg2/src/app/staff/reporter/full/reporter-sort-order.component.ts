@@ -4,7 +4,8 @@ import {IdlService, IdlObject} from '@eg/core/idl.service';
 @Component({
     selector: 'eg-reporter-sort-order',
     styleUrls: ['./reporter-sort-order.component.css'],
-    templateUrl: './reporter-sort-order.component.html'
+    templateUrl: './reporter-sort-order.component.html',
+    standalone: false
 })
 
 export class ReporterSortOrderComponent {

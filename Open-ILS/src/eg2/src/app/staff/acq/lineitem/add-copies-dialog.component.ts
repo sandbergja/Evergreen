@@ -6,7 +6,8 @@ import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
 
 @Component({
     selector: 'eg-acq-add-copies-dialog',
-    templateUrl: './add-copies-dialog.component.html'
+    templateUrl: './add-copies-dialog.component.html',
+    standalone: false
 })
 
 export class AddCopiesDialogComponent extends DialogComponent {

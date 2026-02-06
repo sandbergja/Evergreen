@@ -11,7 +11,8 @@ import { NG_VALUE_ACCESSOR } from '@angular/forms';
             useExisting: forwardRef(() => SortOrderSelectComponent),
             multi: true
         }
-    ]
+    ],
+    standalone: false
 })
 export class SortOrderSelectComponent {
 

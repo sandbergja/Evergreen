@@ -35,7 +35,8 @@ nodeClicked(node: TreeNode) {
 @Component({
     selector: 'eg-tree',
     templateUrl: 'tree.component.html',
-    styleUrls: ['tree.component.css']
+    styleUrls: ['tree.component.css'],
+    standalone: false
 })
 export class TreeComponent {
 

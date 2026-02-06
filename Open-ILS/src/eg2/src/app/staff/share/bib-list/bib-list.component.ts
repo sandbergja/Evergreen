@@ -12,7 +12,8 @@ import {GridDataSource, GridCellTextGenerator} from '@eg/share/grid/grid';
 
 @Component({
     templateUrl: 'bib-list.component.html',
-    selector: 'eg-bib-list'
+    selector: 'eg-bib-list',
+    standalone: false
 })
 export class BibListComponent implements OnInit {
 

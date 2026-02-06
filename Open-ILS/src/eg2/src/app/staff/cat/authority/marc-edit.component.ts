@@ -3,7 +3,8 @@ import {Router, ActivatedRoute, ParamMap} from '@angular/router';
 import {MarcSavedEvent} from '@eg/staff/share/marc-edit/editor.component';
 
 @Component({
-    templateUrl: 'marc-edit.component.html'
+    templateUrl: 'marc-edit.component.html',
+    standalone: false
 })
 export class AuthorityMarcEditComponent implements AfterViewInit {
 

@@ -21,7 +21,8 @@ import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 
 @Component({
-    templateUrl: './distribution-formulas.component.html'
+    templateUrl: './distribution-formulas.component.html',
+    standalone: false
 })
 
 export class DistributionFormulasComponent extends AdminPageComponent implements OnInit {

@@ -16,7 +16,8 @@ import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
 
 @Component({
     selector: 'eg-conjoined-items-dialog',
-    templateUrl: 'conjoined-items-dialog.component.html'
+    templateUrl: 'conjoined-items-dialog.component.html',
+    standalone: false
 })
 
 export class ConjoinedItemsDialogComponent

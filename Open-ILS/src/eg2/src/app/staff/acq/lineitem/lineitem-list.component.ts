@@ -58,7 +58,8 @@ const SORT_ORDER_MAP = {
 @Component({
     templateUrl: 'lineitem-list.component.html',
     selector: 'eg-lineitem-list',
-    styleUrls: ['lineitem-list.component.css']
+    styleUrls: ['lineitem-list.component.css'],
+    standalone: false
 })
 export class LineitemListComponent implements OnInit, OnDestroy, OnChanges {
 

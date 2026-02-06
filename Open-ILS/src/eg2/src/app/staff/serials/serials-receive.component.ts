@@ -19,7 +19,6 @@ import { SerialsService } from './serials.service';
 
 @Component({
     selector: 'eg-serials-receive',
-    standalone: true,
     imports: [CommonModule, ItemLocationSelectModule, CommonWidgetsModule, ReactiveFormsModule, SerialsNoteComponent],
     providers: [SerialsService],
     templateUrl: './serials-receive.component.html',

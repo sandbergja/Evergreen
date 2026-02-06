@@ -11,7 +11,8 @@ import {BasketService} from '@eg/share/catalog/basket.service';
 
 
 @Component({
-    templateUrl: 'export.component.html'
+    templateUrl: 'export.component.html',
+    standalone: false
 })
 export class ExportComponent implements AfterViewInit, OnInit {
 

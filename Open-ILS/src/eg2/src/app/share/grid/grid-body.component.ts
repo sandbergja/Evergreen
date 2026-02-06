@@ -6,7 +6,8 @@ import {NgbPopover} from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
     selector: 'tbody.eg-grid-body',
-    templateUrl: './grid-body.component.html'
+    templateUrl: './grid-body.component.html',
+    standalone: false
 })
 
 export class GridBodyComponent {

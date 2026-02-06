@@ -35,7 +35,8 @@ import {Component, Input, ViewChild, TemplateRef} from '@angular/core';
 @Component({
     selector: 'eg-progress-inline',
     templateUrl: './progress-inline.component.html',
-    styleUrls: ['progress-inline.component.css']
+    styleUrls: ['progress-inline.component.css'],
+    standalone: false
 })
 export class ProgressInlineComponent {
 

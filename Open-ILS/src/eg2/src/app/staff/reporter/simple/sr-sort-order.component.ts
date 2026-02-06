@@ -5,7 +5,8 @@ import {ReporterService} from '../share/reporter.service';
 @Component({
     selector: 'eg-sr-sort-order',
     styleUrls: ['./sr-sort-order.component.css'],
-    templateUrl: './sr-sort-order.component.html'
+    templateUrl: './sr-sort-order.component.html',
+    standalone: false
 })
 
 export class SRSortOrderComponent {

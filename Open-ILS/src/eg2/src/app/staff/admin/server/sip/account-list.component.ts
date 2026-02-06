@@ -16,7 +16,8 @@ import {GridComponent} from '@eg/share/grid/grid.component';
 import {Pager} from '@eg/share/util/pager';
 
 @Component({
-    templateUrl: './account-list.component.html'
+    templateUrl: './account-list.component.html',
+    standalone: false
 })
 export class SipAccountListComponent implements OnInit {
 

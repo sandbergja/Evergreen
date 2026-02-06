@@ -13,7 +13,8 @@ const PERMS = ['UPDATE_PATRON_ACTIVE_CARD', 'UPDATE_PATRON_PRIMARY_CARD'];
 @Component({
     selector: 'eg-patron-barcodes',
     templateUrl: 'barcodes.component.html',
-    styleUrls: ['barcodes.component.css']
+    styleUrls: ['barcodes.component.css'],
+    standalone: false
 })
 
 export class PatronBarcodesDialogComponent extends DialogComponent {

@@ -9,7 +9,8 @@ import {StringComponent} from '@eg/share/string/string.component';
 import {ToastService} from '@eg/share/toast/toast.service';
 
 @Component({
-    templateUrl: './standing-penalty.component.html'
+    templateUrl: './standing-penalty.component.html',
+    standalone: false
 })
 
 export class StandingPenaltyComponent implements OnInit {

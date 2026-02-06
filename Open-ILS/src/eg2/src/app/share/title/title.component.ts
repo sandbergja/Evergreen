@@ -13,7 +13,8 @@ import {StringComponent} from '@eg/share/string/string.component';
 
 @Component({
     selector: 'eg-title',
-    templateUrl: 'title.component.html'
+    templateUrl: 'title.component.html',
+    standalone: false
 })
 
 export class TitleComponent implements AfterViewInit {

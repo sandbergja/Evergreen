@@ -13,7 +13,8 @@ import {PatronBarcodeValidator} from '@eg/share/validators/patron_barcode_valida
 
 
 @Component({
-    templateUrl: './return.component.html'
+    templateUrl: './return.component.html',
+    standalone: false
 })
 
 export class ReturnComponent implements OnInit, OnDestroy {

@@ -3,7 +3,8 @@ import {NetService} from '@eg/core/net.service';
 
 @Component({
     selector: 'eg-about',
-    templateUrl: 'about.component.html'
+    templateUrl: 'about.component.html',
+    standalone: false
 })
 
 export class AboutComponent implements OnInit {

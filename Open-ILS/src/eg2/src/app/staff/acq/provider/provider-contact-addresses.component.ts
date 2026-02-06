@@ -18,6 +18,7 @@ import {ToastService} from '@eg/share/toast/toast.service';
 @Component({
     selector: 'eg-provider-contact-addresses',
     templateUrl: 'provider-contact-addresses.component.html',
+    standalone: false
 })
 export class ProviderContactAddressesComponent implements OnInit, AfterViewInit {
 

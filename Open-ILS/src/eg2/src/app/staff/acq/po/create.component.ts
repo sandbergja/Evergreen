@@ -20,7 +20,8 @@ const VALID_PRE_PO_LI_STATES = [
 
 @Component({
     templateUrl: 'create.component.html',
-    selector: 'eg-acq-po-create'
+    selector: 'eg-acq-po-create',
+    standalone: false
 })
 export class PoCreateComponent implements OnInit {
 

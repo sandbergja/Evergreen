@@ -12,7 +12,8 @@ import {CustomOrgUnitTreesDialogComponent} from './custom-org-unit-trees-dialog.
 
 @Component({
     templateUrl: './custom-org-unit-trees.component.html',
-    styleUrls: [ './custom-org-unit-trees.component.css' ],
+    styleUrls: ['./custom-org-unit-trees.component.css'],
+    standalone: false
 })
 
 export class CustomOrgUnitTreesComponent implements OnInit {

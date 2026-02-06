@@ -16,7 +16,8 @@ import {VolCopyService} from './volcopy.service';
 
 @Component({
     selector: 'eg-volcopy-template-grid',
-    templateUrl: 'template-grid.component.html'
+    templateUrl: 'template-grid.component.html',
+    standalone: false
 })
 export class VolCopyTemplateGridComponent implements OnInit, OnDestroy {
 

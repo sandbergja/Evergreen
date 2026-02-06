@@ -3,7 +3,8 @@ import {DialogComponent} from '@eg/share/dialog/dialog.component';
 
 @Component({
     selector: 'eg-prompt-dialog',
-    templateUrl: './prompt.component.html'
+    templateUrl: './prompt.component.html',
+    standalone: false
 })
 
 /**

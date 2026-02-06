@@ -15,7 +15,8 @@ export const AC_CLEAR_CACHE_PATH = '/opac/extras/ac/clearcache/all/r/';
 
 @Component({
     selector: 'eg-catalog-record-actions',
-    templateUrl: 'actions.component.html'
+    templateUrl: 'actions.component.html',
+    standalone: false
 })
 export class RecordActionsComponent implements OnInit {
 

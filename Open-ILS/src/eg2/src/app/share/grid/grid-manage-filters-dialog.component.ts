@@ -11,7 +11,8 @@ import {Subject, Subscription, debounceTime, distinctUntilChanged} from 'rxjs';
 
 @Component({
     selector: 'eg-grid-manage-filters-dialog',
-    templateUrl: './grid-manage-filters-dialog.component.html'
+    templateUrl: './grid-manage-filters-dialog.component.html',
+    standalone: false
 })
 
 export class GridManageFiltersDialogComponent extends DialogComponent implements OnInit, OnDestroy {

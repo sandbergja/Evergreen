@@ -15,7 +15,8 @@ import { VolEditPartDedupePipe } from './vol-edit-part-dedupe.pipe';
 @Component({
     selector: 'eg-vol-edit',
     templateUrl: 'vol-edit.component.html',
-    styleUrls: ['vol-edit.component.css']
+    styleUrls: ['vol-edit.component.css'],
+    standalone: false
 })
 
 

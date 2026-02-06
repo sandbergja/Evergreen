@@ -11,7 +11,8 @@ const HOLD_FOR_PATRON_KEY = 'eg.circ.patron_hold_target';
 
 @Component({
     templateUrl: 'holds.component.html',
-    selector: 'eg-patron-holds'
+    selector: 'eg-patron-holds',
+    standalone: false
 })
 export class HoldsComponent {
 

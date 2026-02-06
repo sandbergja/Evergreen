@@ -20,6 +20,7 @@ import {ToastService} from '@eg/share/toast/toast.service';
 @Component({
     selector: 'eg-provider-contacts',
     templateUrl: 'provider-contacts.component.html',
+    standalone: false
 })
 export class ProviderContactsComponent implements OnInit, AfterViewInit, OnDestroy {
 

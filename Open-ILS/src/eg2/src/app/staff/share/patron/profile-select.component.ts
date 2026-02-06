@@ -26,7 +26,8 @@ const PAD_SPACE = ' '; // U+2007
         provide: NG_VALUE_ACCESSOR,
         useExisting: forwardRef(() => ProfileSelectComponent),
         multi: true
-    }]
+    }],
+    standalone: false
 })
 export class ProfileSelectComponent implements ControlValueAccessor, OnInit {
 

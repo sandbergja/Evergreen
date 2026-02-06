@@ -7,7 +7,8 @@ const EG_TOAST_TIMEOUT = 10000;
 @Component({
     selector: 'eg-toast',
     templateUrl: './toast.component.html',
-    styleUrls: ['./toast.component.css']
+    styleUrls: ['./toast.component.css'],
+    standalone: false
 })
 export class ToastComponent implements OnInit {
 

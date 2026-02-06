@@ -7,7 +7,8 @@ import {DialogComponent} from '@eg/share/dialog/dialog.component';
 
 @Component({
     selector: 'eg-circ-matrix-matchpoint-dialog',
-    templateUrl: './circ-matrix-matchpoint-dialog.component.html'
+    templateUrl: './circ-matrix-matchpoint-dialog.component.html',
+    standalone: false
 })
 export class CircMatrixMatchpointDialogComponent extends DialogComponent implements OnInit {
 

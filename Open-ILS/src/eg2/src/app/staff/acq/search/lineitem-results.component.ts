@@ -29,7 +29,8 @@ import {EventService} from '@eg/core/event.service';
 
 @Component({
     selector: 'eg-lineitem-results',
-    templateUrl: 'lineitem-results.component.html'
+    templateUrl: 'lineitem-results.component.html',
+    standalone: false
 })
 export class LineitemResultsComponent implements OnInit, OnDestroy {
 

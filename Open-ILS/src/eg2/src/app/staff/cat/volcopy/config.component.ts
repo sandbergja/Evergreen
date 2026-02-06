@@ -6,7 +6,8 @@ import {VolCopyService} from './volcopy.service';
 
 @Component({
     selector: 'eg-volcopy-config',
-    templateUrl: 'config.component.html'
+    templateUrl: 'config.component.html',
+    standalone: false
 })
 export class VolCopyConfigComponent implements OnInit, DoCheck {
 

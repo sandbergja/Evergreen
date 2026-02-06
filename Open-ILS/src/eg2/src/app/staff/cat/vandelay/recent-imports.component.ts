@@ -6,7 +6,8 @@ import {PcrudService} from '@eg/core/pcrud.service';
 import {VandelayService} from './vandelay.service';
 
 @Component({
-    templateUrl: 'recent-imports.component.html'
+    templateUrl: 'recent-imports.component.html',
+    standalone: false
 })
 
 export class RecentImportsComponent implements OnInit {

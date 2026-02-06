@@ -61,7 +61,8 @@ const ORG_SETTINGS = [
 
 @Component({
     selector: 'eg-acq-upload',
-    templateUrl: './upload.component.html'
+    templateUrl: './upload.component.html',
+    standalone: false
 })
 export class UploadComponent implements AfterViewInit, OnDestroy {
 

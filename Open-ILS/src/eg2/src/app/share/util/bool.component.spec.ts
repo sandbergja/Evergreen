@@ -5,7 +5,8 @@ import { Component, ViewChild } from '@angular/core';
 describe('BoolDisplayComponent', () => {
     @Component({
         selector: 'eg-host-component',
-        template: '<eg-bool></eg-bool>'
+        template: '<eg-bool></eg-bool>',
+        standalone: false
     })
     class TestHostComponent {
         @ViewChild(BoolDisplayComponent, {static: false})

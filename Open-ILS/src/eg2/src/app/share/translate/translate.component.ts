@@ -9,7 +9,8 @@ import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
     selector: 'eg-translate',
-    templateUrl: 'translate.component.html'
+    templateUrl: 'translate.component.html',
+    standalone: false
 })
 
 export class TranslateComponent

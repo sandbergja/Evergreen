@@ -5,7 +5,8 @@ import {IdlObject} from '@eg/core/idl.service';
 
 @Component({
     selector: 'eg-acq-disencumber-charge-dialog',
-    templateUrl: './disencumber-charge-dialog.component.html'
+    templateUrl: './disencumber-charge-dialog.component.html',
+    standalone: false
 })
 
 export class DisencumberChargeDialogComponent extends DialogComponent {

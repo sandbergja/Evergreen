@@ -18,7 +18,8 @@ import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
 
 @Component({
     templateUrl: 'group.component.html',
-    selector: 'eg-patron-group'
+    selector: 'eg-patron-group',
+    standalone: false
 })
 export class PatronGroupComponent implements OnInit {
 

@@ -6,7 +6,8 @@ import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
 
 @Component({
     selector: 'eg-acq-link-invoice-dialog',
-    templateUrl: './link-invoice-dialog.component.html'
+    templateUrl: './link-invoice-dialog.component.html',
+    standalone: false
 })
 
 export class LinkInvoiceDialogComponent extends DialogComponent {

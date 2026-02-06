@@ -8,7 +8,8 @@ import {StaffCatalogService} from '../catalog.service';
 
 @Component({
     selector: 'eg-catalog-browse-results',
-    templateUrl: 'results.component.html'
+    templateUrl: 'results.component.html',
+    standalone: false
 })
 export class BrowseResultsComponent implements OnInit, OnDestroy {
 

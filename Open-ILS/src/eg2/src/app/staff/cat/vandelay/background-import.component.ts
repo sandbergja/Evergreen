@@ -12,7 +12,8 @@ import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 import {ProgressDialogComponent} from '@eg/share/dialog/progress.component';
 
 @Component({
-    templateUrl: 'background-import.component.html'
+    templateUrl: 'background-import.component.html',
+    standalone: false
 })
 export class BackgroundImportComponent {
 

@@ -110,7 +110,8 @@ interface StatCat {
 @Component({
     templateUrl: 'edit.component.html',
     selector: 'eg-patron-edit',
-    styleUrls: ['edit.component.css']
+    styleUrls: ['edit.component.css'],
+    standalone: false
 })
 export class EditComponent implements OnInit {
 

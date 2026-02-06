@@ -11,6 +11,7 @@ import {ToastService} from '@eg/share/toast/toast.service';
 @Component({
     selector: 'eg-provider-details',
     templateUrl: 'provider-details.component.html',
+    standalone: false
 })
 export class ProviderDetailsComponent implements OnInit {
 

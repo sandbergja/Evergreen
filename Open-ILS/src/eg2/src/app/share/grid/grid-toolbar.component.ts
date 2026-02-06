@@ -8,7 +8,8 @@ import {GridColumn} from './grid';
 @Component({
     selector: 'eg-grid-toolbar',
     templateUrl: 'grid-toolbar.component.html',
-    styleUrls: ['grid-toolbar.component.css']
+    styleUrls: ['grid-toolbar.component.css'],
+    standalone: false
 })
 
 export class GridToolbarComponent implements OnInit, AfterViewInit {

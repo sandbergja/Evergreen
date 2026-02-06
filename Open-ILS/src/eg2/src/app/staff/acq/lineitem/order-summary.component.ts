@@ -3,7 +3,8 @@ import {IdlObject} from '@eg/core/idl.service';
 
 @Component({
     templateUrl: 'order-summary.component.html',
-    selector: 'eg-lineitem-order-summary'
+    selector: 'eg-lineitem-order-summary',
+    standalone: false
 })
 export class LineitemOrderSummaryComponent {
     @Input() li: IdlObject;

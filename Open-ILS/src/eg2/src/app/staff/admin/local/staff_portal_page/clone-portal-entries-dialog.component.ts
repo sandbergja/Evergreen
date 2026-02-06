@@ -5,7 +5,8 @@ import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
     selector: 'eg-clone-portal-entries-dialog',
-    templateUrl: './clone-portal-entries-dialog.component.html'
+    templateUrl: './clone-portal-entries-dialog.component.html',
+    standalone: false
 })
 
 export class ClonePortalEntriesDialogComponent

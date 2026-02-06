@@ -20,7 +20,8 @@ import {BadBarcodeDialogComponent} from './bad-barcode-dialog.component';
 
 @Component({
     templateUrl: 'components.component.html',
-    selector: 'eg-circ-components'
+    selector: 'eg-circ-components',
+    standalone: false
 })
 export class CircComponentsComponent {
 

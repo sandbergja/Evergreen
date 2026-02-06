@@ -5,7 +5,8 @@ import {PcrudService} from '@eg/core/pcrud.service';
 import {IdlObject} from '@eg/core/idl.service';
 
 @Component({
-    templateUrl: 'queued-record.component.html'
+    templateUrl: 'queued-record.component.html',
+    standalone: false
 })
 export class QueuedRecordComponent {
 

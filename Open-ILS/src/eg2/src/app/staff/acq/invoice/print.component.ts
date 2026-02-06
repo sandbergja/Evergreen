@@ -27,7 +27,8 @@ const SORT_ORDERS = [
 
 @Component({
     selector: 'eg-acq-invoice-print',
-    templateUrl: 'print.component.html'
+    templateUrl: 'print.component.html',
+    standalone: false
 })
 export class PrintComponent implements OnInit, AfterViewInit {
 

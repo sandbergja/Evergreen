@@ -14,7 +14,8 @@ import {PermService} from '@eg/core/perm.service';
 
 @Component({
     selector: 'eg-distribution-formula-edit-dialog',
-    templateUrl: './distribution-formula-edit-dialog.component.html'
+    templateUrl: './distribution-formula-edit-dialog.component.html',
+    standalone: false
 })
 
 export class DistributionFormulaEditDialogComponent

@@ -17,7 +17,8 @@ const NEW_TAB_DESCRIBER_ID = 'link-opens-newtab';
     template: `
         <a id="same-tab" href="#" target="_self">Same Tab Link</a>
         <a id="new-tab" href="#" target="_blank">New Tab Link</a>
-    `
+    `,
+    standalone: false
 })
 class TestComponent {}
 
