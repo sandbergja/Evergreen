@@ -1,4 +1,4 @@
-import {QRCodeModule} from 'angularx-qrcode';
+import {QRCodeComponent} from 'angularx-qrcode';
 
 import {NgModule} from '@angular/core';
 import {StaffCommonModule} from '@eg/staff/common.module';
@@ -27,7 +27,7 @@ import { CommonWidgetsModule } from '@eg/share/common-widgets.module';
     imports: [
         StaffCommonModule.forRoot(),
         StaffRoutingModule,
-        QRCodeModule,
+        QRCodeComponent,
         CommonWidgetsModule
     ]
 })

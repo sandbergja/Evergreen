@@ -86,7 +86,8 @@ export class HoldingsEntry {
     selector: 'eg-holdings-maintenance',
     templateUrl: 'holdings.component.html',
     styleUrls: ['holdings.component.css'],
-    encapsulation: ViewEncapsulation.None
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class HoldingsMaintenanceComponent implements OnInit {
 

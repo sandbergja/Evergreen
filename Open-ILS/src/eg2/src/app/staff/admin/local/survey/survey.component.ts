@@ -12,7 +12,8 @@ import {NetService} from '@eg/core/net.service';
 import {AuthService} from '@eg/core/auth.service';
 
 @Component({
-    templateUrl: './survey.component.html'
+    templateUrl: './survey.component.html',
+    standalone: false
 })
 
 export class SurveyComponent implements OnInit {

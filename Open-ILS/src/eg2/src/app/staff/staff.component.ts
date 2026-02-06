@@ -13,7 +13,8 @@ const WS_MANAGE_PATH = '/staff/admin/workstation/workstations/manage';
 
 @Component({
     templateUrl: 'staff.component.html',
-    styleUrls: ['staff.component.css']
+    styleUrls: ['staff.component.css'],
+    standalone: false
 })
 
 export class StaffComponent implements OnInit {

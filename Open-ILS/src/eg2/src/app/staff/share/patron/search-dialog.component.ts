@@ -13,7 +13,8 @@ import {PatronSearchComponent} from './search.component';
 
 @Component({
     selector: 'eg-patron-search-dialog',
-    templateUrl: 'search-dialog.component.html'
+    templateUrl: 'search-dialog.component.html',
+    standalone: false
 })
 
 export class PatronSearchDialogComponent

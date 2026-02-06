@@ -10,7 +10,8 @@ import {ProgressInlineComponent} from '@eg/share/dialog/progress-inline.componen
 
 @Component({
     templateUrl: 'perms.component.html',
-    selector: 'eg-patron-perms'
+    selector: 'eg-patron-perms',
+    standalone: false
 })
 export class PatronPermsComponent implements OnInit, AfterViewInit {
 

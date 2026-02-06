@@ -4,7 +4,8 @@ import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
 import {StoreService} from '@eg/core/store.service';
 
 @Component({
-    templateUrl: 'last.component.html'
+    templateUrl: 'last.component.html',
+    standalone: false
 })
 export class LastPatronComponent implements OnInit {
     noRecents = false;

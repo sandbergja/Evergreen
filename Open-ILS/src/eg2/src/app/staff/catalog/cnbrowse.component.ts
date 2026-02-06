@@ -3,7 +3,8 @@ import {StaffCatalogService} from './catalog.service';
 import {SearchFormComponent} from './search-form.component';
 
 @Component({
-    templateUrl: 'cnbrowse.component.html'
+    templateUrl: 'cnbrowse.component.html',
+    standalone: false
 })
 export class CnBrowseComponent implements OnInit {
 

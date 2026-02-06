@@ -12,7 +12,8 @@ import {PrintService} from '@eg/share/print/print.service';
 
 @Component({
     templateUrl: 'route-dialog.component.html',
-    selector: 'eg-circ-route-dialog'
+    selector: 'eg-circ-route-dialog',
+    standalone: false
 })
 export class RouteDialogComponent extends DialogComponent {
 

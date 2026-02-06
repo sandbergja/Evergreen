@@ -16,12 +16,13 @@ import {PatronSearchDialogComponent} from '@eg/staff/share/patron/search-dialog.
 import {ToastService} from '@eg/share/toast/toast.service';
 import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
 import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
-import * as moment from 'moment-timezone';
+import moment from 'moment-timezone';
 import { datesInOrderValidator } from '@eg/share/validators/dates_in_order_validator.directive';
 
 @Component({
     selector: 'eg-create-reservation-dialog',
-    templateUrl: './create-reservation-dialog.component.html'
+    templateUrl: './create-reservation-dialog.component.html',
+    standalone: false
 })
 
 export class CreateReservationDialogComponent

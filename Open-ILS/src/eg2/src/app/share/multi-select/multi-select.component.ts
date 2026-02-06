@@ -16,7 +16,8 @@ import { ComboboxEntry } from '@eg/share/combobox/combobox.component';
     styles: [`
     .icons {margin-inline-start:-18px}
     .material-icons {font-size: 16px;font-weight:bold}
-  `]
+  `],
+    standalone: false
 })
 export class MultiSelectComponent implements OnInit {
 

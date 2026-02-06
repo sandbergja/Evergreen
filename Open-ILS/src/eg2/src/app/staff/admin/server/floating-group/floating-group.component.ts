@@ -16,7 +16,8 @@ import {AdminPageComponent} from '../../../share/admin-page/admin-page.component
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 
 @Component({
-    templateUrl: './floating-group.component.html'
+    templateUrl: './floating-group.component.html',
+    standalone: false
 })
 
 export class FloatingGroupComponent extends AdminPageComponent implements OnInit {

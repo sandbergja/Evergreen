@@ -6,7 +6,8 @@ import {PcrudService} from '@eg/core/pcrud.service';
 import {IdlObject, IdlService } from '@eg/core/idl.service';
 
 @Component({
-    templateUrl: './edit-floating-group.component.html'
+    templateUrl: './edit-floating-group.component.html',
+    standalone: false
 })
 
 export class EditFloatingGroupComponent implements OnInit {

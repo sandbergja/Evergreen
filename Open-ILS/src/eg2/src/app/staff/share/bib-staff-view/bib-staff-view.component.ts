@@ -10,7 +10,8 @@ import { firstValueFrom, Observable } from 'rxjs';
 @Component({
     selector: 'eg-bib-staff-view',
     templateUrl: 'bib-staff-view.component.html',
-    styleUrls: ['bib-staff-view.component.css']
+    styleUrls: ['bib-staff-view.component.css'],
+    standalone: false
 })
 export class BibStaffViewComponent implements OnInit {
 

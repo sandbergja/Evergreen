@@ -16,7 +16,8 @@ import {StringComponent} from '@eg/share/string/string.component';
 
 @Component({
     selector: 'eg-hold-transfer-via-bibs-dialog',
-    templateUrl: 'transfer-via-bibs-dialog.component.html'
+    templateUrl: 'transfer-via-bibs-dialog.component.html',
+    standalone: false
 })
 
 export class HoldTransferViaBibsDialogComponent

@@ -17,7 +17,8 @@ import {NgbTypeahead} from '@ng-bootstrap/ng-bootstrap';
     selector: 'eg-marc-editable-content',
     templateUrl: './editable-content.component.html',
     styleUrls: ['./editable-content.component.css'],
-    encapsulation: ViewEncapsulation.None
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 
 export class EditableContentComponent

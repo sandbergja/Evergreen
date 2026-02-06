@@ -4,7 +4,8 @@ import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
     selector: 'eg-edi-attr-set-providers-dialog',
-    templateUrl: './edi-attr-set-providers-dialog.component.html'
+    templateUrl: './edi-attr-set-providers-dialog.component.html',
+    standalone: false
 })
 
 export class EdiAttrSetProvidersDialogComponent

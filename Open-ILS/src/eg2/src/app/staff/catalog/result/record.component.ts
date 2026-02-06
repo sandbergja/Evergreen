@@ -20,7 +20,8 @@ import {ResultFacetsComponent} from './facets.component';
 @Component({
     selector: 'eg-catalog-result-record',
     templateUrl: 'record.component.html',
-    styleUrls: ['record.component.css']
+    styleUrls: ['record.component.css'],
+    standalone: false
 })
 export class ResultRecordComponent implements OnInit, OnDestroy {
 

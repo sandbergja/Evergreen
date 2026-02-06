@@ -16,7 +16,8 @@ import {StringComponent} from '@eg/share/string/string.component';
 import {AdminPageComponent} from '../../../share/admin-page/admin-page.component';
 
 @Component({
-    templateUrl: './search-filter-group.component.html'
+    templateUrl: './search-filter-group.component.html',
+    standalone: false
 })
 
 export class SearchFilterGroupComponent extends AdminPageComponent implements OnInit {

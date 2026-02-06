@@ -12,7 +12,8 @@ import {Observable, map} from 'rxjs';
 
 @Component({
     selector: 'eg-fund-tags',
-    templateUrl: './fund-tags.component.html'
+    templateUrl: './fund-tags.component.html',
+    standalone: false
 })
 export class FundTagsComponent implements OnInit {
 

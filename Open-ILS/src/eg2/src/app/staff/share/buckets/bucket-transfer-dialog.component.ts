@@ -14,7 +14,8 @@ import {BucketActionSummaryDialogComponent} from './bucket-action-summary-dialog
 
 @Component({
     selector: 'eg-bucket-transfer-dialog',
-    templateUrl: './bucket-transfer-dialog.component.html'
+    templateUrl: './bucket-transfer-dialog.component.html',
+    standalone: false
 })
 
 export class BucketTransferDialogComponent

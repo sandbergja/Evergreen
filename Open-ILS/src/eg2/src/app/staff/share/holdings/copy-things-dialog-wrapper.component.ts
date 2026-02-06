@@ -3,7 +3,8 @@ import { IdlObject } from '@eg/core/idl.service';
 
 @Component({
     selector: 'eg-copy-things-dialog',
-    templateUrl: './copy-things-dialog-wrapper.component.html'
+    templateUrl: './copy-things-dialog-wrapper.component.html',
+    standalone: false
 })
 export class CopyThingsDialogWrapperComponent {
     @Input() thingType: string;

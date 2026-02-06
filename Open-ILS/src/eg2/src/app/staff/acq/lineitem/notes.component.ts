@@ -8,7 +8,8 @@ import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
 
 @Component({
     templateUrl: 'notes.component.html',
-    selector: 'eg-lineitem-notes'
+    selector: 'eg-lineitem-notes',
+    standalone: false
 })
 export class LineitemNotesComponent implements OnInit, AfterViewInit {
 

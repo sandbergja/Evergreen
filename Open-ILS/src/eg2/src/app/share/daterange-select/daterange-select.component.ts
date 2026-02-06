@@ -10,12 +10,13 @@ export interface DateRange {
 @Component({
     selector: 'eg-daterange-select',
     templateUrl: './daterange-select.component.html',
-    styleUrls: [ './daterange-select.component.css' ],
+    styleUrls: ['./daterange-select.component.css'],
     providers: [{
         provide: NG_VALUE_ACCESSOR,
         useExisting: forwardRef(() => DateRangeSelectComponent),
         multi: true
-    }]
+    }],
+    standalone: false
 })
 export class DateRangeSelectComponent implements ControlValueAccessor, OnInit {
 

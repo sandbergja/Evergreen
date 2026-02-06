@@ -12,7 +12,8 @@ import { ScriptService } from '@eg/share/util/script.service';
 @Component({
     selector: 'eg-catalog-added-content',
     templateUrl: './added-content.component.html',
-    styleUrls: ['./added-content.component.css']
+    styleUrls: ['./added-content.component.css'],
+    standalone: false
 })
 export class AddedContentComponent implements OnInit {
 

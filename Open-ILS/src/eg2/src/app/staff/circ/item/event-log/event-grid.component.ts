@@ -18,7 +18,8 @@ import {BibRecordService} from '@eg/share/catalog/bib-record.service';
 
 @Component({
     selector: 'eg-item-event-grid',
-    templateUrl: './event-grid.component.html'
+    templateUrl: './event-grid.component.html',
+    standalone: false
 })
 
 export class ItemEventGridComponent implements OnChanges, OnInit {

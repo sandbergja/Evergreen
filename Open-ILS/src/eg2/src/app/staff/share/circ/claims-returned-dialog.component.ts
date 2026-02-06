@@ -8,7 +8,8 @@ import {EventService} from '@eg/core/event.service';
 
 @Component({
     templateUrl: 'claims-returned-dialog.component.html',
-    selector: 'eg-claims-returned-dialog'
+    selector: 'eg-claims-returned-dialog',
+    standalone: false
 })
 export class ClaimsReturnedDialogComponent
     extends DialogComponent implements OnInit {

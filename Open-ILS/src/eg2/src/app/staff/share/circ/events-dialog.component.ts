@@ -11,7 +11,8 @@ import {StringService} from '@eg/share/string/string.service';
 
 @Component({
     templateUrl: 'events-dialog.component.html',
-    selector: 'eg-circ-events-dialog'
+    selector: 'eg-circ-events-dialog',
+    standalone: false
 })
 export class CircEventsComponent extends DialogComponent implements OnInit {
 

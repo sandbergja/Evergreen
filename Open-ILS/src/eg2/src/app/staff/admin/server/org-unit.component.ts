@@ -15,7 +15,8 @@ import {PermService} from '@eg/core/perm.service';
 
 @Component({
     templateUrl: './org-unit.component.html',
-    styleUrls: [ './org-unit.component.css' ],
+    styleUrls: ['./org-unit.component.css'],
+    standalone: false
 })
 export class OrgUnitComponent implements OnInit {
 

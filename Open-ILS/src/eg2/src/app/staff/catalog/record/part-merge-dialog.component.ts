@@ -9,7 +9,8 @@ import { EmptyError, firstValueFrom, lastValueFrom, map, tap, toArray} from 'rxj
 
 @Component({
     selector: 'eg-catalog-part-merge-dialog',
-    templateUrl: './part-merge-dialog.component.html'
+    templateUrl: './part-merge-dialog.component.html',
+    standalone: false
 })
 
 /**

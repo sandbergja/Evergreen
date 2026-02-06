@@ -19,7 +19,8 @@ import { ServerStoreService } from '@eg/core/server-store.service';
 
 @Component({
     templateUrl: 'invoice.component.html',
-    styleUrls:  ['invoice.component.css']
+    styleUrls: ['invoice.component.css'],
+    standalone: false
 })
 export class InvoiceComponent implements OnInit, OnDestroy, CanComponentDeactivate {
 

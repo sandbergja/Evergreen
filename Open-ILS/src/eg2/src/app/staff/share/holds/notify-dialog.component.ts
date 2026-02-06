@@ -9,7 +9,8 @@ import {DialogComponent} from '@eg/share/dialog/dialog.component';
 
 @Component({
     selector: 'eg-hold-notify-dialog',
-    templateUrl: 'notify-dialog.component.html'
+    templateUrl: 'notify-dialog.component.html',
+    standalone: false
 })
 export class HoldNotifyDialogComponent extends DialogComponent {
     method: string;

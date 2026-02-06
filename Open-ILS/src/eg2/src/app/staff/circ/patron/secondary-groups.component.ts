@@ -13,7 +13,8 @@ import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
     selector: 'eg-patron-secondary-groups',
-    templateUrl: 'secondary-groups.component.html'
+    templateUrl: 'secondary-groups.component.html',
+    standalone: false
 })
 
 export class SecondaryGroupsDialogComponent

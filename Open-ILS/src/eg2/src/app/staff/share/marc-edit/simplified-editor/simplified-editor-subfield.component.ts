@@ -8,7 +8,8 @@ import {MarcSimplifiedEditorFieldComponent} from './simplified-editor-field.comp
 
 @Component({
     selector: 'eg-marc-simplified-editor-subfield',
-    template: ''
+    template: '',
+    standalone: false
 })
 export class MarcSimplifiedEditorSubfieldComponent implements OnInit {
 

@@ -25,7 +25,8 @@ import {ItemLocationService} from './item-location-select.service';
         provide: NG_VALUE_ACCESSOR,
         useExisting: forwardRef(() => ItemLocationSelectComponent),
         multi: true
-    }]
+    }],
+    standalone: false
 })
 export class ItemLocationSelectComponent
 implements OnInit, AfterViewInit, ControlValueAccessor {

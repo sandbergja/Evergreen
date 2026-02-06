@@ -4,7 +4,8 @@ import {DialogComponent} from '@eg/share/dialog/dialog.component';
 @Component({
     selector: 'eg-progress-dialog',
     templateUrl: './progress.component.html',
-    styleUrls: ['progress.component.css']
+    styleUrls: ['progress.component.css'],
+    standalone: false
 })
 
 /**

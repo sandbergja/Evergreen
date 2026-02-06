@@ -29,7 +29,8 @@ import {ToastService} from '@eg/share/toast/toast.service';
 @Component({
     selector: 'eg-copy-attrs',
     templateUrl: 'copy-attrs.component.html',
-    styleUrls: ['copy-attrs.component.css']
+    styleUrls: ['copy-attrs.component.css'],
+    standalone: false
 })
 export class CopyAttrsComponent implements OnInit, OnDestroy, AfterViewInit {
 

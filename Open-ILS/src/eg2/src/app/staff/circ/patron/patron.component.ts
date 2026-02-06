@@ -21,7 +21,8 @@ import {PatronStatCatsComponent} from '@eg/staff/circ/patron/statcats.component'
 
 @Component({
     templateUrl: 'patron.component.html',
-    styleUrls: ['patron.component.css']
+    styleUrls: ['patron.component.css'],
+    standalone: false
 })
 export class PatronComponent implements OnInit {
 

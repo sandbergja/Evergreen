@@ -11,7 +11,8 @@ import {WorkLogService, WorkLogEntry} from './worklog.service';
 
 @Component({
     templateUrl: 'strings.component.html',
-    selector: 'eg-worklog-strings-components'
+    selector: 'eg-worklog-strings-components',
+    standalone: false
 })
 export class WorkLogStringsComponent {
 

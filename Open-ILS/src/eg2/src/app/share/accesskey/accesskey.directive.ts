@@ -15,7 +15,8 @@ import {Directive, ElementRef, Input, OnInit} from '@angular/core';
 import {AccessKeyService} from '@eg/share/accesskey/accesskey.service';
 
 @Directive({
-    selector: '[egAccessKey]'
+    selector: '[egAccessKey]',
+    standalone: false
 })
 export class AccessKeyDirective implements OnInit {
 

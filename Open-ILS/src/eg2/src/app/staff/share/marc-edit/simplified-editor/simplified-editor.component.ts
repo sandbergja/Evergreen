@@ -14,7 +14,8 @@ const DEFAULT_RECORD_TYPE = 'BKS';
 
 @Component({
     selector: 'eg-marc-simplified-editor',
-    templateUrl: './simplified-editor.component.html'
+    templateUrl: './simplified-editor.component.html',
+    standalone: false
 })
 export class MarcSimplifiedEditorComponent implements AfterViewInit, OnInit {
 

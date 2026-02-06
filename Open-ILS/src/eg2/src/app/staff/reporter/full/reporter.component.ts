@@ -17,6 +17,7 @@ import {Tree, TreeNode} from '@eg/share/tree/tree';
 @Component({
     templateUrl: './reporter.component.html',
     styleUrls: ['./reporter.component.css'],
+    standalone: false
 })
 
 export class FullReporterComponent implements OnInit {

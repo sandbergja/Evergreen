@@ -8,7 +8,8 @@ import {FormatService} from '@eg/core/format.service';
 import {BibRecordService} from '@eg/share/catalog/bib-record.service';
 
 @Component({
-    templateUrl: 'hopeless.component.html'
+    templateUrl: 'hopeless.component.html',
+    standalone: false
 })
 export class HopelessComponent implements OnInit {
 

@@ -11,7 +11,8 @@ import {FmRecordEditorComponent} from '@eg/share/fm-editor/fm-editor.component';
 
 @Component({
     templateUrl: './org-unit-type.component.html',
-    styleUrls: [ './org-unit.component.css' ],
+    styleUrls: ['./org-unit.component.css'],
+    standalone: false
 })
 
 export class OrgUnitTypeComponent implements OnInit {

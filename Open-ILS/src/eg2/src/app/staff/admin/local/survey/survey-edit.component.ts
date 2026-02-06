@@ -9,7 +9,8 @@ import {IdlObject, IdlService } from '@eg/core/idl.service';
 import {NgbNav, NgbNavChangeEvent} from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
-    templateUrl: './survey-edit.component.html'
+    templateUrl: './survey-edit.component.html',
+    standalone: false
 })
 
 export class SurveyEditComponent implements OnInit {

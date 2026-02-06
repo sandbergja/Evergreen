@@ -17,7 +17,8 @@ const SAME_TAB_TARGETS = new Set(['_self', '_parent', '_top']);
 
 @Directive({
     // eslint-disable-next-line @angular-eslint/directive-selector
-    selector: 'a[target]'
+    selector: 'a[target]',
+    standalone: false
 })
 export class LinkTargetDirective {
 

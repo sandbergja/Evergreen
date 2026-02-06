@@ -19,7 +19,8 @@ const DEFAULT_BILLING_TYPE = 101; // Stock "Misc"
 
 @Component({
     selector: 'eg-add-billing-dialog',
-    templateUrl: 'billing-dialog.component.html'
+    templateUrl: 'billing-dialog.component.html',
+    standalone: false
 })
 
 export class AddBillingDialogComponent

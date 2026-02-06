@@ -13,7 +13,8 @@ import {StringComponent} from '@eg/share/string/string.component';
 
 @Component({
     selector: 'eg-authority-merge-dialog',
-    templateUrl: 'merge-dialog.component.html'
+    templateUrl: 'merge-dialog.component.html',
+    standalone: false
 })
 
 export class AuthorityMergeDialogComponent

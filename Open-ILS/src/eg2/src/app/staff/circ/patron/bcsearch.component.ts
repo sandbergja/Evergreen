@@ -6,7 +6,8 @@ import {BarcodeSelectComponent} from '@eg/staff/share/barcodes/barcode-select.co
 
 @Component({
     templateUrl: 'bcsearch.component.html',
-    selector: 'eg-patron-barcode-search'
+    selector: 'eg-patron-barcode-search',
+    standalone: false
 })
 
 export class BcSearchComponent implements OnInit, AfterViewInit {

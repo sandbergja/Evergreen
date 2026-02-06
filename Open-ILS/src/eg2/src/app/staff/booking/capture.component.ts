@@ -10,7 +10,8 @@ import {ReservationActionsService} from './reservation-actions.service';
 import {ReservationsGridComponent} from './reservations-grid.component';
 
 @Component({
-    templateUrl: './capture.component.html'
+    templateUrl: './capture.component.html',
+    standalone: false
 })
 
 export class CaptureComponent implements OnInit, OnDestroy {

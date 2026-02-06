@@ -13,7 +13,8 @@ import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 
 @Component({
     selector: 'eg-record-bucket-item-upload-dialog',
-    templateUrl: './record-bucket-item-upload-dialog.component.html'
+    templateUrl: './record-bucket-item-upload-dialog.component.html',
+    standalone: false
 })
 export class RecordBucketItemUploadDialogComponent
     extends DialogComponent implements OnInit, OnDestroy {

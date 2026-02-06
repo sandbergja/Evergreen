@@ -8,7 +8,8 @@ import {NgbDate} from '@ng-bootstrap/ng-bootstrap';
 @Component({
     // eslint-disable-next-line @angular-eslint/component-selector
     selector: 'ngb-datepicker',
-    template: ''
+    template: '',
+    standalone: false
 })
 class EgMockDateSelectComponent {
     @Input() displayMonths: number;

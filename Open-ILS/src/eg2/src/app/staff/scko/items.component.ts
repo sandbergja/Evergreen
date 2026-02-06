@@ -9,7 +9,8 @@ import {SckoService, ActionContext} from './scko.service';
 import {PrintService} from '@eg/share/print/print.service';
 
 @Component({
-    templateUrl: 'items.component.html'
+    templateUrl: 'items.component.html',
+    standalone: false
 })
 
 export class SckoItemsComponent implements OnInit {

@@ -6,7 +6,8 @@ import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
     selector: 'eg-edi-attr-set-edit-dialog',
-    templateUrl: './edi-attr-set-edit-dialog.component.html'
+    templateUrl: './edi-attr-set-edit-dialog.component.html',
+    standalone: false
 })
 
 export class EdiAttrSetEditDialogComponent

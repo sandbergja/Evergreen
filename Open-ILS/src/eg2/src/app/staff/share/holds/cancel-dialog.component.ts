@@ -17,7 +17,8 @@ import {WorkLogService, WorkLogEntry} from '@eg/staff/share/worklog/worklog.serv
 
 @Component({
     selector: 'eg-hold-cancel-dialog',
-    templateUrl: 'cancel-dialog.component.html'
+    templateUrl: 'cancel-dialog.component.html',
+    standalone: false
 })
 
 export class HoldCancelDialogComponent

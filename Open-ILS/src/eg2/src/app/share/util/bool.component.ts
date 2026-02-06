@@ -11,7 +11,8 @@ import {Component, Input} from '@angular/core';
         <ng-container *ngIf="value === null">
           <span *ngIf="ternary" class="badge badge-light p-1" i18n>Unset</span>
           <span *ngIf="!ternary"> </span>
-      </ng-container>`
+      </ng-container>`,
+    standalone: false
 })
 export class BoolDisplayComponent {
 

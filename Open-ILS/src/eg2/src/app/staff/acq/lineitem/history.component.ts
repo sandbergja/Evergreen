@@ -8,7 +8,8 @@ import {PcrudService} from '@eg/core/pcrud.service';
 
 @Component({
     templateUrl: 'history.component.html',
-    selector: 'eg-lineitem-history'
+    selector: 'eg-lineitem-history',
+    standalone: false
 })
 export class LineitemHistoryComponent implements OnInit {
 

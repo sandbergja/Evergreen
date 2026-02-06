@@ -6,7 +6,8 @@ import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
 
 @Component({
     selector: 'eg-acq-delete-lineitems-dialog',
-    templateUrl: './delete-lineitems-dialog.component.html'
+    templateUrl: './delete-lineitems-dialog.component.html',
+    standalone: false
 })
 
 export class DeleteLineitemsDialogComponent extends DialogComponent {

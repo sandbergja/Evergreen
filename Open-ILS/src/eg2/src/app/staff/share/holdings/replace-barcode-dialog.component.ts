@@ -17,7 +17,8 @@ import {StringComponent} from '@eg/share/string/string.component';
 
 @Component({
     selector: 'eg-replace-barcode-dialog',
-    templateUrl: 'replace-barcode-dialog.component.html'
+    templateUrl: 'replace-barcode-dialog.component.html',
+    standalone: false
 })
 
 export class ReplaceBarcodeDialogComponent

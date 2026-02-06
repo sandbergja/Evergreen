@@ -5,7 +5,8 @@ import { ComboboxEntry, ComboboxComponent } from '@eg/share/combobox/combobox.co
 
 @Component({
     selector: 'eg-org-depth-selector',
-    templateUrl: 'depth-select.component.html'
+    templateUrl: 'depth-select.component.html',
+    standalone: false
 })
 export class DepthSelectComponent implements OnInit, OnChanges {
     @Input() contextOrgId: number;

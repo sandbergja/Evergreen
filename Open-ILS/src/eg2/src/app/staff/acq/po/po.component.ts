@@ -4,7 +4,8 @@ import {IdlObject} from '@eg/core/idl.service';
 import {PoService} from './po.service';
 
 @Component({
-    templateUrl: 'po.component.html'
+    templateUrl: 'po.component.html',
+    standalone: false
 })
 export class PoComponent implements OnInit {
 

@@ -11,7 +11,8 @@ import {PcrudService} from '@eg/core/pcrud.service';
 import {ProgressDialogComponent} from '@eg/share/dialog/progress.component';
 
 @Component({
-    templateUrl: 'urls.component.html'
+    templateUrl: 'urls.component.html',
+    standalone: false
 })
 export class LinkCheckerUrlsComponent implements OnInit {
 

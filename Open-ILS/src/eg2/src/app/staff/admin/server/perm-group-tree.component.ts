@@ -18,7 +18,8 @@ import {NgbNav, NgbNavChangeEvent} from '@ng-bootstrap/ng-bootstrap';
 /** Manage permission groups and group permissions */
 
 @Component({
-    templateUrl: './perm-group-tree.component.html'
+    templateUrl: './perm-group-tree.component.html',
+    standalone: false
 })
 
 export class PermGroupTreeComponent implements OnInit {

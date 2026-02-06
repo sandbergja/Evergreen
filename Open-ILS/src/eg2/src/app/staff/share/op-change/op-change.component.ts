@@ -7,7 +7,8 @@ import {NetRequest, NetService} from '@eg/core/net.service';
 
 @Component({
     selector: 'eg-op-change',
-    templateUrl: 'op-change.component.html'
+    templateUrl: 'op-change.component.html',
+    standalone: false
 })
 
 export class OpChangeComponent

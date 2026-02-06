@@ -9,7 +9,8 @@ import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
 
 @Component({
     selector: 'eg-acq-batch-update-copies-dialog',
-    templateUrl: './batch-update-copies-dialog.component.html'
+    templateUrl: './batch-update-copies-dialog.component.html',
+    standalone: false
 })
 
 export class BatchUpdateCopiesDialogComponent extends DialogComponent {

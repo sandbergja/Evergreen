@@ -11,7 +11,8 @@ import {PatronContextService} from './patron.service';
 
 @Component({
     templateUrl: 'statcats.component.html',
-    selector: 'eg-patron-statcats'
+    selector: 'eg-patron-statcats',
+    standalone: false
 })
 export class PatronStatCatsComponent implements OnInit {
 

@@ -17,6 +17,7 @@ import {PcrudService} from '@eg/core/pcrud.service';
 @Component({
     selector: 'eg-provider-edi-accounts',
     templateUrl: 'provider-edi-accounts.component.html',
+    standalone: false
 })
 export class ProviderEdiAccountsComponent implements OnInit, AfterViewInit, OnDestroy {
 

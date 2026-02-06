@@ -22,8 +22,9 @@ const PO_ACTIVATION_WARNINGS = [
 
 @Component({
     templateUrl: 'summary.component.html',
-    styleUrls: [ './summary.component.css' ],
-    selector: 'eg-acq-po-summary'
+    styleUrls: ['./summary.component.css'],
+    selector: 'eg-acq-po-summary',
+    standalone: false
 })
 export class PoSummaryComponent implements OnInit, OnDestroy {
 

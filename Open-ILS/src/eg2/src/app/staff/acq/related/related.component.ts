@@ -11,7 +11,8 @@ import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
 import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
 
 @Component({
-    templateUrl: 'related.component.html'
+    templateUrl: 'related.component.html',
+    standalone: false
 })
 export class RelatedComponent implements OnInit {
 

@@ -10,7 +10,8 @@ import {EventService} from '@eg/core/event.service';
 import {PatronNoteDialogComponent} from '@eg/staff/share/patron/note-dialog.component';
 
 @Component({
-    templateUrl: 'missing-pieces.component.html'
+    templateUrl: 'missing-pieces.component.html',
+    standalone: false
 })
 export class MarkItemMissingPiecesComponent implements AfterViewInit {
 

@@ -33,7 +33,8 @@ import {HoldCopyLocationsDialogComponent} from './copy-locations-dialog.componen
 @Component({
     selector: 'eg-holds-grid',
     templateUrl: 'grid.component.html',
-    styles: ['.input-group > .form-control { width: auto; flex-grow: 0; }']
+    styles: ['.input-group > .form-control { width: auto; flex-grow: 0; }'],
+    standalone: false
 })
 export class HoldsGridComponent implements OnInit {
 

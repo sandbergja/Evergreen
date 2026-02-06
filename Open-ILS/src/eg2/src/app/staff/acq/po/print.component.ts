@@ -31,7 +31,8 @@ const ORDER_IDENT_ATTRS = [
 ];
 
 @Component({
-    templateUrl: 'print.component.html'
+    templateUrl: 'print.component.html',
+    standalone: false
 })
 export class PrintComponent implements OnInit, AfterViewInit {
 

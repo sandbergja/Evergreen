@@ -20,7 +20,8 @@ import {ActivatedRoute} from '@angular/router';
             </div>
         </div>
         <eg-course-term-map-grid [courseId]="courseId"></eg-course-term-map-grid>
-    `
+    `,
+    standalone: false
 })
 
 export class CourseTermMapComponent {

@@ -6,7 +6,8 @@ import {InvoiceService} from '../invoice/invoice.service';
 
 @Component({
     selector: 'eg-acq-add-extra-items-for-order-dialog',
-    templateUrl: './add-extra-items-for-order-dialog.component.html'
+    templateUrl: './add-extra-items-for-order-dialog.component.html',
+    standalone: false
 })
 
 export class AddExtraItemsForOrderDialogComponent extends DialogComponent implements OnInit {

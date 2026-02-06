@@ -22,7 +22,8 @@ import {BehaviorSubject, Observable, Subject, of, catchError, exhaustMap,
  */
 @Component({
     selector: 'eg-hold-copy-locations-dialog',
-    templateUrl: './copy-locations-dialog.component.html'
+    templateUrl: './copy-locations-dialog.component.html',
+    standalone: false
 })
 export class HoldCopyLocationsDialogComponent
     extends DialogComponent implements OnDestroy {

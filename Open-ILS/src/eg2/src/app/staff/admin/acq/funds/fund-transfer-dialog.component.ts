@@ -14,7 +14,8 @@ import {Observable, map} from 'rxjs';
 
 @Component({
     selector: 'eg-fund-transfer-dialog',
-    templateUrl: './fund-transfer-dialog.component.html'
+    templateUrl: './fund-transfer-dialog.component.html',
+    standalone: false
 })
 
 export class FundTransferDialogComponent

@@ -6,7 +6,8 @@ import {StaffCatalogService} from '../catalog.service';
 @Component({
     selector: 'eg-catalog-result-pagination',
     styleUrls: ['pagination.component.css'],
-    templateUrl: 'pagination.component.html'
+    templateUrl: 'pagination.component.html',
+    standalone: false
 })
 export class ResultPaginationComponent implements OnInit {
 

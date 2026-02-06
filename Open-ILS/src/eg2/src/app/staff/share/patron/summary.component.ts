@@ -11,7 +11,8 @@ import {ServerStoreService} from '@eg/core/server-store.service';
 @Component({
     templateUrl: 'summary.component.html',
     styleUrls: ['summary.component.css'],
-    selector: 'eg-patron-summary'
+    selector: 'eg-patron-summary',
+    standalone: false
 })
 export class PatronSummaryComponent implements OnInit {
 

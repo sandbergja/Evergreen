@@ -22,7 +22,8 @@ export interface HoldNotifyMod {
 
 @Component({
     selector: 'eg-hold-notify-update-dialog',
-    templateUrl: 'hold-notify-update.component.html'
+    templateUrl: 'hold-notify-update.component.html',
+    standalone: false
 })
 
 export class HoldNotifyUpdateDialogComponent

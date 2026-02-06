@@ -8,7 +8,8 @@ import { BasicAdminPageComponent } from './basic-admin-page.component';
 
 @Component({
     selector: 'eg-title',
-    template: ''
+    template: '',
+    standalone: false
 })
 class MockTitleComponent {
     @Input() prefix: string;
@@ -16,7 +17,8 @@ class MockTitleComponent {
 
 @Component({
     selector: 'eg-staff-banner',
-    template: ''
+    template: '',
+    standalone: false
 })
 class MockStaffBannerComponent {
     @Input() bannerText: string;
@@ -24,7 +26,8 @@ class MockStaffBannerComponent {
 
 @Component({
     selector: 'eg-admin-page',
-    template: ''
+    template: '',
+    standalone: false
 })
 class MockAdminPageComponent {
     @Input() configLinkBasePath: string;

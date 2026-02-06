@@ -12,6 +12,7 @@ import {FmRecordEditorComponent} from '@eg/share/fm-editor/fm-editor.component';
 @Component({
     selector: 'eg-course-term-map-grid',
     templateUrl: './course-term-map-grid.component.html',
+    standalone: false
 })
 export class CourseTermMapGridComponent implements OnInit {
     @Input() courseId: number;

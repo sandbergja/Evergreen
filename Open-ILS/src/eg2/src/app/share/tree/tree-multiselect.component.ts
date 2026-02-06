@@ -32,7 +32,8 @@ import {TreeComponent} from './tree.component';
   overflow-y: auto;   /* Adds scrollbar only when needed. 'scroll' would show the scroll gutter at all times. */
   overflow-x: clip;   /* Avoid scrollbar */
 }
-    `]
+    `],
+    standalone: false
 })
 export class TreeMultiselectComponent implements OnInit {
 

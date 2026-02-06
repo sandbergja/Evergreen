@@ -8,7 +8,8 @@ import { Component, Input } from '@angular/core';
       <span class="material-icons" aria-hidden="true">keyboard_backspace</span>
       {{ label }}
     </button>
-  `
+  `,
+    standalone: false
 })
 export class BackButtonComponent {
   @Input() label: string = $localize`Return`;

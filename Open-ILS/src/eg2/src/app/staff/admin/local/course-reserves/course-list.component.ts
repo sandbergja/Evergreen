@@ -22,7 +22,8 @@ import {CourseAssociateUsersComponent
 
 @Component({
     templateUrl: './course-list.component.html',
-    styleUrls: ['./course-page.component.css']
+    styleUrls: ['./course-page.component.css'],
+    standalone: false
 })
 
 export class CourseListComponent implements OnInit, AfterViewInit {

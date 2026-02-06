@@ -9,7 +9,8 @@ import {CompositeNewPointComponent} from './composite-new.component';
 import {StringComponent} from '@eg/share/string/string.component';
 
 @Component({
-    templateUrl: './composite-def.component.html'
+    templateUrl: './composite-def.component.html',
+    standalone: false
 })
 
 export class CompositeDefComponent implements OnInit {

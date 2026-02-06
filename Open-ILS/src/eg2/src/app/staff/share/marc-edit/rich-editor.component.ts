@@ -19,7 +19,8 @@ import {CharMapDialogComponent} from './charmap/charmap-dialog.component';
 @Component({
     selector: 'eg-marc-rich-editor',
     templateUrl: './rich-editor.component.html',
-    styleUrls: ['rich-editor.component.css', 'rich-editor-colors.css']
+    styleUrls: ['rich-editor.component.css', 'rich-editor-colors.css'],
+    standalone: false
 })
 
 export class MarcRichEditorComponent implements OnInit {

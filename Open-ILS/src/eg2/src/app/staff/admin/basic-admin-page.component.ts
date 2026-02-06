@@ -32,7 +32,8 @@ import {Observable, tap, switchMap} from 'rxjs';
         [disableEdit]="disableEdit"
         [disableOrgFilter]="disableOrgFilter"></eg-admin-page>
       </ng-container>
-    `
+    `,
+    standalone: false
 })
 
 export class BasicAdminPageComponent implements OnInit {

@@ -4,7 +4,8 @@ import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
     selector: 'eg-admin-ou-setting-json-dialog',
-    templateUrl: './org-unit-setting-json-dialog.component.html'
+    templateUrl: './org-unit-setting-json-dialog.component.html',
+    standalone: false
 })
 
 export class OuSettingJsonDialogComponent extends DialogComponent {

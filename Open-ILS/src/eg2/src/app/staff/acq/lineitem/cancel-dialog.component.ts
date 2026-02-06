@@ -6,7 +6,8 @@ import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
 
 @Component({
     selector: 'eg-acq-cancel-dialog',
-    templateUrl: './cancel-dialog.component.html'
+    templateUrl: './cancel-dialog.component.html',
+    standalone: false
 })
 
 export class CancelDialogComponent extends DialogComponent {

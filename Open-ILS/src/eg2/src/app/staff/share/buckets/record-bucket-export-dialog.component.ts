@@ -5,7 +5,8 @@ import {DialogComponent} from '@eg/share/dialog/dialog.component';
 
 @Component({
     selector: 'eg-record-bucket-export-dialog',
-    templateUrl: './record-bucket-export-dialog.component.html'
+    templateUrl: './record-bucket-export-dialog.component.html',
+    standalone: false
 })
 
 export class RecordBucketExportDialogComponent extends DialogComponent {

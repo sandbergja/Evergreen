@@ -17,7 +17,8 @@ import {AcqSearchFormComponent} from './acq-search-form.component';
 
 @Component({
     selector: 'eg-picklist-results',
-    templateUrl: 'picklist-results.component.html'
+    templateUrl: 'picklist-results.component.html',
+    standalone: false
 })
 export class PicklistResultsComponent implements OnInit {
 

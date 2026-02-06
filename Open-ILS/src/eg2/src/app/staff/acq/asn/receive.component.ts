@@ -20,7 +20,8 @@ interface ReceiveResponse {
 }
 
 @Component({
-    templateUrl: 'receive.component.html'
+    templateUrl: 'receive.component.html',
+    standalone: false
 })
 export class AsnReceiveComponent implements OnInit {
 

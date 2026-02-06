@@ -14,7 +14,8 @@ import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
 
 @Component({
     templateUrl: './copy-loc-order.component.html',
-    styleUrls: ['copy-loc-order.component.css']
+    styleUrls: ['copy-loc-order.component.css'],
+    standalone: false
 })
 export class CopyLocOrderComponent implements OnInit {
 

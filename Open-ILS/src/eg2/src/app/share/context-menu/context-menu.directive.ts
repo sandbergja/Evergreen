@@ -17,7 +17,8 @@ import {NgbPopoverConfig} from '@ng-bootstrap/ng-bootstrap';
 
 @Directive({
     selector: '[egContextMenu]',
-    exportAs: 'egContextMenu'
+    exportAs: 'egContextMenu',
+    standalone: false
 })
 export class ContextMenuDirective extends NgbPopover {
 

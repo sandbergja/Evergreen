@@ -12,7 +12,8 @@ import { AuthService } from '@eg/core/auth.service';
 
 @Component({
     selector: 'eg-catalog-record-notes',
-    templateUrl: 'notes.component.html'
+    templateUrl: 'notes.component.html',
+    standalone: false
 })
 export class NotesComponent implements OnInit {
 

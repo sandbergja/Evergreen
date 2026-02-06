@@ -24,7 +24,8 @@ class UserTotals {
 }
 
 @Component({
-    templateUrl: './cash-reports.component.html'
+    templateUrl: './cash-reports.component.html',
+    standalone: false
 })
 export class CashReportsComponent implements OnInit {
     initDone = false;

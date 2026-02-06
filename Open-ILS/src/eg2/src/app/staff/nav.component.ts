@@ -18,7 +18,8 @@ import {AccessKeyInfoComponent} from '@eg/share/accesskey/accesskey-info.compone
 @Component({
     selector: 'eg-staff-nav-bar',
     styleUrls: ['nav.component.css'],
-    templateUrl: 'nav.component.html'
+    templateUrl: 'nav.component.html',
+    standalone: false
 })
 
 export class StaffNavComponent implements OnInit, OnDestroy {

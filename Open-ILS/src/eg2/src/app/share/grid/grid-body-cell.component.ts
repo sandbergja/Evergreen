@@ -5,7 +5,8 @@ import {GridContext, GridColumn} from './grid';
     selector: 'eg-grid-body-cell',
     templateUrl: './grid-body-cell.component.html',
     // eslint-disable-next-line max-len
-    styles: ['.eg-grid-body-row.selected .user-favorite { text-shadow: 0 0 1em var(--bs-primary), 0 0 0.2em var(--bs-primary); -webkit-text-stroke: 1px var(--star-stroke); }']
+    styles: ['.eg-grid-body-row.selected .user-favorite { text-shadow: 0 0 1em var(--bs-primary), 0 0 0.2em var(--bs-primary); -webkit-text-stroke: 1px var(--star-stroke); }'],
+    standalone: false
 })
 
 export class GridBodyCellComponent {

@@ -6,7 +6,8 @@ import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
     selector: 'eg-custom-org-unit-trees-dialog',
-    templateUrl: './custom-org-unit-trees-dialog.component.html'
+    templateUrl: './custom-org-unit-trees-dialog.component.html',
+    standalone: false
 })
 
 export class CustomOrgUnitTreesDialogComponent

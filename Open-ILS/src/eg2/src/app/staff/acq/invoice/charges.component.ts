@@ -16,8 +16,9 @@ import {DisencumberChargeDialogComponent} from './disencumber-charge-dialog.comp
 
 @Component({
     templateUrl: 'charges.component.html',
-    styleUrls:  ['charges.component.css'],
-    selector: 'eg-acq-invoice-charges'
+    styleUrls: ['charges.component.css'],
+    selector: 'eg-acq-invoice-charges',
+    standalone: false
 })
 export class InvoiceChargesComponent implements OnInit, OnDestroy {
 

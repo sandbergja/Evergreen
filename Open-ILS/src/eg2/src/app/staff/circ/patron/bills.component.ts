@@ -30,7 +30,8 @@ import {WorkLogService} from '@eg/staff/share/worklog/worklog.service';
 @Component({
     templateUrl: 'bills.component.html',
     selector: 'eg-patron-bills',
-    styleUrls: ['bills.component.css']
+    styleUrls: ['bills.component.css'],
+    standalone: false
 })
 export class BillsComponent implements OnInit, AfterViewInit {
 

@@ -10,7 +10,8 @@ import {ServerStoreService} from '@eg/core/server-store.service';
 @Component({
     selector: 'eg-charmap-dialog',
     templateUrl: './charmap-dialog.component.html',
-    styleUrls: ['charmap-dialog.component.css']
+    styleUrls: ['charmap-dialog.component.css'],
+    standalone: false
 })
 
 export class CharMapDialogComponent extends DialogComponent implements OnInit {

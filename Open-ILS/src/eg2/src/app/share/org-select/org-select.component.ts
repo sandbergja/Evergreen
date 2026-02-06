@@ -35,7 +35,8 @@ interface OrgDisplay {
 
 @Component({
     selector: 'eg-org-select',
-    templateUrl: './org-select.component.html'
+    templateUrl: './org-select.component.html',
+    standalone: false
 })
 export class OrgSelectComponent implements OnInit, AfterViewInit {
     static _domId = 0;

@@ -22,7 +22,8 @@ import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 
 @Component({
     selector: 'eg-bucket-share-dialog',
-    templateUrl: './bucket-share-dialog.component.html'
+    templateUrl: './bucket-share-dialog.component.html',
+    standalone: false
 })
 
 export class BucketShareDialogComponent

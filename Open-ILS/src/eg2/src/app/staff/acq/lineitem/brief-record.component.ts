@@ -23,7 +23,8 @@ const MARC_XML_BASE = `
 
 @Component({
     templateUrl: 'brief-record.component.html',
-    selector: 'eg-lineitem-brief-record'
+    selector: 'eg-lineitem-brief-record',
+    standalone: false
 })
 export class BriefRecordComponent implements OnInit, OnDestroy {
 

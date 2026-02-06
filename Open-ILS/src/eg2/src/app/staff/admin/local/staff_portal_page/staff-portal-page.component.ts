@@ -19,7 +19,8 @@ import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 import {merge, Observable, EMPTY} from 'rxjs';
 
 @Component({
-    templateUrl: './staff-portal-page.component.html'
+    templateUrl: './staff-portal-page.component.html',
+    standalone: false
 })
 
 export class AdminStaffPortalPageComponent extends AdminPageComponent implements OnInit {

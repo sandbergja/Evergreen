@@ -16,7 +16,8 @@ import {Component, TemplateRef, OnInit, Input, ViewEncapsulation} from '@angular
     </div>
     `,
     styleUrls: ['staff-banner.component.css'],
-    encapsulation: ViewEncapsulation.None
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 
 export class StaffBannerComponent {

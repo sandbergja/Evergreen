@@ -13,7 +13,8 @@ import {ServerStoreService} from '@eg/core/server-store.service';
 @Component({
     templateUrl: 'from-bib-ids.component.html',
     selector: 'eg-lineitem-from-bib-ids',
-    styleUrls: ['./from-bib-ids.component.css']
+    styleUrls: ['./from-bib-ids.component.css'],
+    standalone: false
 })
 export class LineitemFromBibIdsComponent implements OnInit {
 

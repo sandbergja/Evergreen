@@ -8,11 +8,12 @@ import {IdlObject, IdlService} from '@eg/core/idl.service';
 import {OfflineService} from '@eg/staff/share/offline.service';
 import {StoreService} from '@eg/core/store.service';
 import {OrgService} from '@eg/core/org.service';
-import * as moment from 'moment-timezone';
+import moment from 'moment-timezone';
 
 @Component({
     styleUrls: ['./mfa.component.css'],
-    templateUrl : './mfa.component.html'
+    templateUrl: './mfa.component.html',
+    standalone: false
 })
 
 export class StaffMFAComponent implements OnInit {

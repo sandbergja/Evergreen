@@ -9,7 +9,8 @@ import {NgForm} from '@angular/forms';
 
 @Component({
     selector: 'eg-query-dialog',
-    templateUrl: './query-dialog.component.html'
+    templateUrl: './query-dialog.component.html',
+    standalone: false
 })
 
 export class QueryDialogComponent extends DialogComponent implements OnInit {

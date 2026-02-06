@@ -9,7 +9,8 @@ import {Pager} from '@eg/share/util/pager';
 import {PcrudService} from '@eg/core/pcrud.service';
 
 @Component({
-    templateUrl: 'attempts.component.html'
+    templateUrl: 'attempts.component.html',
+    standalone: false
 })
 export class LinkCheckerAttemptsComponent implements OnInit {
 

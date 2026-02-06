@@ -17,7 +17,8 @@ import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
 
 @Component({
     selector: 'eg-course-associate-users-dialog',
-    templateUrl: './course-associate-users.component.html'
+    templateUrl: './course-associate-users.component.html',
+    standalone: false
 })
 
 export class CourseAssociateUsersComponent extends DialogComponent implements OnInit {

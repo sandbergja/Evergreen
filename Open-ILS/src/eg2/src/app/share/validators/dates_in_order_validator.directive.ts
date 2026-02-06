@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-expressions */
 import { Directive, Input } from '@angular/core';
 import { AbstractControl, NG_VALIDATORS, ValidationErrors, Validator, ValidatorFn } from '@angular/forms';
-import * as moment from 'moment';
+import moment from 'moment';
 
 export function datesInOrderValidator(fieldNames: string[]): ValidatorFn {
     return (control: AbstractControl): {[key: string]: any} | null => {
@@ -30,7 +30,8 @@ function fieldsAreInOrder(fieldNames: string[], control: AbstractControl): boole
 
 @Directive({
     selector: '[egDateFieldOrderList]',
-    providers: [{ provide: NG_VALIDATORS, useExisting: DatesInOrderValidatorDirective, multi: true }]
+    providers: [{ provide: NG_VALIDATORS, useExisting: DatesInOrderValidatorDirective, multi: true }],
+    standalone: false
 })
 export class DatesInOrderValidatorDirective implements Validator {
     @Input('egDateFieldOrderList') dateFieldOrderList = '';

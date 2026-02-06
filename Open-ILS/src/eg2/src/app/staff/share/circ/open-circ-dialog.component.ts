@@ -15,7 +15,8 @@ import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
 
 @Component({
     selector: 'eg-open-circ-dialog',
-    templateUrl: 'open-circ-dialog.component.html'
+    templateUrl: 'open-circ-dialog.component.html',
+    standalone: false
 })
 
 export class OpenCircDialogComponent extends DialogComponent {

@@ -14,7 +14,8 @@ import {PermService} from '@eg/core/perm.service';
 @Component({
     templateUrl: 'copy-attrs.component.html',
     styleUrls: ['copy-attrs.component.css'],
-    selector: 'eg-lineitem-copy-attrs'
+    selector: 'eg-lineitem-copy-attrs',
+    standalone: false
 })
 export class LineitemCopyAttrsComponent implements OnInit {
 

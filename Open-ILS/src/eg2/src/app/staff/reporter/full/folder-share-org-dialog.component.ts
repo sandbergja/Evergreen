@@ -9,7 +9,8 @@ import {ReporterService} from '../share/reporter.service';
 
 @Component({
     selector: 'folder-share-org-dialog',
-    templateUrl: './folder-share-org-dialog.component.html'
+    templateUrl: './folder-share-org-dialog.component.html',
+    standalone: false
 })
 
 export class FolderShareOrgDialogComponent extends DialogComponent {

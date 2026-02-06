@@ -12,7 +12,8 @@ import {MarcEditContext} from './editor-context';
 @Component({
     selector: 'eg-marc-flat-editor',
     templateUrl: './flat-editor.component.html',
-    styleUrls: ['flat-editor.component.css']
+    styleUrls: ['flat-editor.component.css'],
+    standalone: false
 })
 
 export class MarcFlatEditorComponent implements OnInit {

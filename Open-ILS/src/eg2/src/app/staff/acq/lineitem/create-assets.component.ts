@@ -19,7 +19,8 @@ interface AssetCreationResponse {
 }
 
 @Component({
-    templateUrl: 'create-assets.component.html'
+    templateUrl: 'create-assets.component.html',
+    standalone: false
 })
 export class CreateAssetsComponent implements OnInit {
 

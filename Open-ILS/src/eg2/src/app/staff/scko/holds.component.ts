@@ -10,7 +10,8 @@ import {ServerStoreService} from '@eg/core/server-store.service';
 import {PrintService} from '@eg/share/print/print.service';
 
 @Component({
-    templateUrl: 'holds.component.html'
+    templateUrl: 'holds.component.html',
+    standalone: false
 })
 
 export class SckoHoldsComponent implements OnInit {

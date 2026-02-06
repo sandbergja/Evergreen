@@ -8,8 +8,9 @@ import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 @Component({
     selector: 'eg-accesskey-info',
     templateUrl: './accesskey-info.component.html',
-    styleUrls: [ 'accesskey-info.component.css' ],
-    encapsulation: ViewEncapsulation.None
+    styleUrls: ['accesskey-info.component.css'],
+    encapsulation: ViewEncapsulation.None,
+    standalone: false
 })
 export class AccessKeyInfoComponent extends DialogComponent {
 

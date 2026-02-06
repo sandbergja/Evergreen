@@ -12,7 +12,8 @@ import {StringComponent} from '@eg/share/string/string.component';
 
 @Component({
     selector: 'eg-add-to-carousel-dialog',
-    templateUrl: './add-to-carousel-dialog.component.html'
+    templateUrl: './add-to-carousel-dialog.component.html',
+    standalone: false
 })
 
 
