@@ -2,15 +2,18 @@ import {Component, Input} from '@angular/core';
 import {IdlService} from '@eg/core/idl.service';
 import {PcrudService} from '@eg/core/pcrud.service';
 import {AuthService} from '@eg/core/auth.service';
-import {NgbModal, NgbModalOptions} from '@ng-bootstrap/ng-bootstrap';
+import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {DialogComponent} from '@eg/share/dialog/dialog.component';
+import { FormsModule } from '@angular/forms';
 
 /** New hold notify dialog */
 
 @Component({
     selector: 'eg-hold-notify-dialog',
     templateUrl: 'notify-dialog.component.html',
-    standalone: false
+    imports: [
+        FormsModule
+    ]
 })
 export class HoldNotifyDialogComponent extends DialogComponent {
     method: string;

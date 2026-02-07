@@ -8,8 +8,7 @@ interface ClipboardValues {
 
 @Component({
     selector: 'eg-clipboard-dialog',
-    templateUrl: './clipboard-dialog.component.html',
-    standalone: false
+    templateUrl: './clipboard-dialog.component.html'
 })
 
 /**

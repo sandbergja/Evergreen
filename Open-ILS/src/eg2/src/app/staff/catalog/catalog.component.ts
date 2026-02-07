@@ -1,19 +1,22 @@
 import {Component, HostListener, OnDestroy, OnInit} from '@angular/core';
 import {IdlObject} from '@eg/core/idl.service';
 import {StaffCatalogService} from './catalog.service';
-import {BasketService} from '@eg/share/catalog/basket.service';
 import {Subject, takeUntil} from 'rxjs';
+import { StaffCommonModule } from '../common.module';
+import { SearchFormComponent } from './search-form.component';
 
 @Component({
     templateUrl: 'catalog.component.html',
-    standalone: false
+    imports: [
+        SearchFormComponent,
+        StaffCommonModule
+    ]
 })
 export class CatalogComponent implements OnInit, OnDestroy {
 
     private onDestroy = new Subject<null>();
 
     constructor(
-        private basket: BasketService,
         private staffCat: StaffCatalogService
     ) {}
 

@@ -24,13 +24,24 @@ import {GridComponent} from '@eg/share/grid/grid.component';
 import moment from 'moment-timezone';
 import {SampleDataService} from '@eg/share/util/sample-data.service';
 import {HtmlToTxtService} from '@eg/share/util/htmltotxt.service';
+import { StaffCommonModule } from '../common.module';
+import { OrgFamilySelectComponent } from '@eg/share/org-family-select/org-family-select.component';
+import { TranslateComponent } from '@eg/share/translate/translate.component';
+import { Z3950SearchComponent } from '../share/z3950-search/z3950-search.component';
 
 @Component({
     templateUrl: 'sandbox.component.html',
     styles: ['.date-time-input.ng-invalid {border: 5px purple solid;}',
         '.date-time-input.ng-valid {border: 5px green solid; animation: slide 5s linear 1s infinite alternate;}',
         '@keyframes slide {0% {margin-inline-start:0px;} 50% {margin-inline-start:200px;}}'],
-    standalone: false
+    imports: [
+        FmRecordEditorComponent,
+        OrgFamilySelectComponent,
+        PatronNoteDialogComponent,
+        StaffCommonModule,
+        TranslateComponent,
+        Z3950SearchComponent
+    ]
 })
 export class SandboxComponent implements OnInit {
 

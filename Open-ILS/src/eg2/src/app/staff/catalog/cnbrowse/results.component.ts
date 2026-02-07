@@ -10,12 +10,13 @@ import {CatalogUrlService} from '@eg/share/catalog/catalog-url.service';
 import {CatalogSearchContext, CatalogSearchState} from '@eg/share/catalog/search-context';
 import {StaffCatalogService} from '../catalog.service';
 import {OrgService} from '@eg/core/org.service';
+import { StaffCommonModule } from '@eg/staff/common.module';
 
 @Component({
     selector: 'eg-catalog-cn-browse-results',
     templateUrl: 'results.component.html',
     styleUrls: ['results.component.css'],
-    standalone: false
+    imports: [StaffCommonModule]
 })
 export class CnBrowseResultsComponent implements OnInit, OnDestroy {
 

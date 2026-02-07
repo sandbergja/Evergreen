@@ -1,6 +1,7 @@
 import {Component, Input, Output, EventEmitter, OnInit, ViewChild,
     AfterViewInit, TemplateRef, ViewEncapsulation} from '@angular/core';
 import {ContextMenuService, ContextMenu, ContextMenuEntry} from './context-menu.service';
+import { NgFor, NgIf } from '@angular/common';
 
 @Component({
     selector: 'eg-context-menu-container',
@@ -9,7 +10,7 @@ import {ContextMenuService, ContextMenu, ContextMenuEntry} from './context-menu.
     /* Our CSS affects the style of the popover, which may
    * be beyond our reach for standard view encapsulation */
     encapsulation: ViewEncapsulation.None,
-    standalone: false
+    imports: [NgFor, NgIf]
 })
 
 export class ContextMenuContainerComponent implements OnInit, AfterViewInit {

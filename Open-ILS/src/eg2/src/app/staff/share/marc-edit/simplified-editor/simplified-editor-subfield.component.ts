@@ -1,4 +1,4 @@
-import {Directive, Input, Host, OnInit, Component} from '@angular/core';
+import {Input, Host, OnInit, Component} from '@angular/core';
 import {MarcSimplifiedEditorFieldComponent} from './simplified-editor-field.component';
 
 /**
@@ -8,8 +8,7 @@ import {MarcSimplifiedEditorFieldComponent} from './simplified-editor-field.comp
 
 @Component({
     selector: 'eg-marc-simplified-editor-subfield',
-    template: '',
-    standalone: false
+    template: ''
 })
 export class MarcSimplifiedEditorSubfieldComponent implements OnInit {
 

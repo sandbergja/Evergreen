@@ -11,8 +11,10 @@ import {StringComponent} from '@eg/share/string/string.component';
 import {DialogComponent} from '@eg/share/dialog/dialog.component';
 import {NgbModal, NgbModalOptions} from '@ng-bootstrap/ng-bootstrap';
 import {BibRecordService, BibRecordSummary} from '@eg/share/catalog/bib-record.service';
-import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
+import {ComboboxComponent, ComboboxEntry} from '@eg/share/combobox/combobox.component';
 import {BillingService} from '@eg/staff/share/billing/billing.service';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 /**
  * Dialog for marking items damaged and asessing related bills.
@@ -21,7 +23,12 @@ import {BillingService} from '@eg/staff/share/billing/billing.service';
 @Component({
     selector: 'eg-mark-damaged-dialog',
     templateUrl: 'mark-damaged-dialog.component.html',
-    standalone: false
+    imports: [
+        ComboboxComponent,
+        CommonModule,
+        FormsModule,
+        StringComponent
+    ]
 })
 
 export class MarkDamagedDialogComponent

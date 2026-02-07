@@ -4,11 +4,12 @@ import {DialogComponent} from '@eg/share/dialog/dialog.component';
 import {IdlObject} from '@eg/core/idl.service';
 import {ReporterService} from '../share/reporter.service';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
+import { StaffCommonModule } from '@eg/staff/common.module';
 
 @Component({
     selector: 'change-folder-dialog',
     templateUrl: './change-folder-dialog.component.html',
-    standalone: false
+    imports: [StaffCommonModule]
 })
 
 export class ChangeFolderDialogComponent extends DialogComponent {

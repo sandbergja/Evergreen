@@ -374,8 +374,7 @@ export class FormatService {
 
 // Pipe-ify the above formating logic for use in templates
 @Pipe({
-    name: 'formatValue',
-    standalone: false
+    name: 'formatValue'
 })
 export class FormatValuePipe implements PipeTransform {
     constructor(private formatter: FormatService) {}
@@ -386,8 +385,7 @@ export class FormatValuePipe implements PipeTransform {
 }
 
 @Pipe({
-    name: 'egOrgDateInContext',
-    standalone: false
+    name: 'egOrgDateInContext'
 })
 export class OrgDateInContextPipe implements PipeTransform {
     constructor(private formatter: FormatService) {}
@@ -403,8 +401,7 @@ export class OrgDateInContextPipe implements PipeTransform {
 }
 
 @Pipe({
-    name: 'egDueDate',
-    standalone: false
+    name: 'egDueDate'
 })
 export class DueDatePipe implements PipeTransform {
     constructor(private formatter: FormatService) {}
@@ -420,8 +417,7 @@ export class DueDatePipe implements PipeTransform {
 }
 
 @Pipe({
-    name: 'egOrUnderscores',
-    standalone: false
+    name: 'egOrUnderscores'
 })
 export class OrUnderscoresPipe implements PipeTransform {
     constructor() {}
@@ -432,8 +428,7 @@ export class OrUnderscoresPipe implements PipeTransform {
 }
 
 @Pipe({
-    name: 'js2json',
-    standalone: false
+    name: 'js2json'
 })
 export class Js2JsonPipe implements PipeTransform {
     transform(value: any): string {
@@ -443,8 +438,7 @@ export class Js2JsonPipe implements PipeTransform {
 
 /* TODO: this should probably be moved elsewhere, within the acq/ hierarchy */
 @Pipe({
-    name: 'fundLabel', pure: false,
-    standalone: false
+    name: 'fundLabel', pure: false
 })
 export class FundLabelPipe implements PipeTransform {
     private cache = new Map<number, string>();
@@ -471,8 +465,7 @@ export class FundLabelPipe implements PipeTransform {
 }
 
 @Pipe({
-    name: 'usrnameOrId',
-    standalone: false
+    name: 'usrnameOrId'
 })
 export class UsrnameOrIdPipe implements PipeTransform {
     transform(user: IdlObject): any {

@@ -20,7 +20,9 @@ import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
     </span>
   </ng-template>
   `,
-    standalone: false
+    imports: [
+        ConfirmDialogComponent
+    ]
 })
 
 export class CancelReservationDialogComponent {

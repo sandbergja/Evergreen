@@ -1,13 +1,21 @@
-import {Component, Input, OnInit, Host, ViewChild} from '@angular/core';
+import {Component, Input, ViewChild} from '@angular/core';
 import {GridToolbarAction, GridContext} from '@eg/share/grid/grid';
 import {ClipboardDialogComponent} from '@eg/share/clipboard/clipboard-dialog.component';
+import { NgClass, NgFor, NgIf } from '@angular/common';
+import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 
 /** Models a list of toolbar action menu entries */
 
 @Component({
     selector: 'eg-grid-toolbar-actions-menu',
     templateUrl: 'grid-toolbar-actions-menu.component.html',
-    standalone: false
+    imports: [
+        ClipboardDialogComponent,
+        NgbDropdownModule,
+        NgClass,
+        NgFor,
+        NgIf
+    ]
 })
 
 export class GridToolbarActionsMenuComponent {

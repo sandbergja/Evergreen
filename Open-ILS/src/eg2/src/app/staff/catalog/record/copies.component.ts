@@ -9,11 +9,12 @@ import {GridComponent} from '@eg/share/grid/grid.component';
 import {BroadcastService} from '@eg/share/util/broadcast.service';
 import {CourseService} from '@eg/staff/share/course.service';
 import {PermService} from '@eg/core/perm.service';
+import { StaffCommonModule } from '@eg/staff/common.module';
 
 @Component({
     selector: 'eg-catalog-copies',
     templateUrl: 'copies.component.html',
-    standalone: false
+    imports: [StaffCommonModule]
 })
 export class CopiesComponent implements OnInit {
 

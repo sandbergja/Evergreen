@@ -1,13 +1,11 @@
 import {Component, OnInit, Input, ElementRef} from '@angular/core';
 import {NetService} from '@eg/core/net.service';
-import {OrgService} from '@eg/core/org.service';
 import {AuthService} from '@eg/core/auth.service';
 
 @Component({
     selector: 'eg-marc-html',
     // view is generated from MARC HTML
-    template: '<ng-template></ng-template>',
-    standalone: false
+    template: '<ng-template></ng-template>'
 })
 export class MarcHtmlComponent implements OnInit {
 

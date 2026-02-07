@@ -12,10 +12,11 @@ import {ProgressDialogComponent} from '@eg/share/dialog/progress.component';
 import {GridComponent} from '@eg/share/grid/grid.component';
 import {GridDataSource, GridColumn, GridCellTextGenerator} from '@eg/share/grid/grid';
 import {VandelayService, VandelayImportSelection} from './vandelay.service';
+import { StaffCommonModule } from '@eg/staff/common.module';
 
 @Component({
     templateUrl: 'queue.component.html',
-    standalone: false
+    imports: [StaffCommonModule]
 })
 export class QueueComponent implements AfterViewInit {
 

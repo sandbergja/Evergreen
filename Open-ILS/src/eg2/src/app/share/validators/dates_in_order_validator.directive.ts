@@ -31,7 +31,6 @@ function fieldsAreInOrder(fieldNames: string[], control: AbstractControl): boole
 @Directive({
     selector: '[egDateFieldOrderList]',
     providers: [{ provide: NG_VALIDATORS, useExisting: DatesInOrderValidatorDirective, multi: true }],
-    standalone: false
 })
 export class DatesInOrderValidatorDirective implements Validator {
     @Input('egDateFieldOrderList') dateFieldOrderList = '';

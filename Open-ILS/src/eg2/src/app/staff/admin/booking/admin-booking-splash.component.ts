@@ -1,9 +1,14 @@
-import {Component, Input, ViewChildren,
-    AfterViewInit, QueryList} from '@angular/core';
+import {Component} from '@angular/core';
+import { StaffCommonModule } from '@eg/staff/common.module';
+import { LinkTableComponent, LinkTableLinkComponent } from '@eg/staff/share/link-table/link-table.component';
 
 @Component({
     templateUrl: './admin-booking-splash.component.html',
-    standalone: false
+    imports: [
+        LinkTableComponent,
+        LinkTableLinkComponent,
+        StaffCommonModule
+    ]
 })
 
 export class AdminBookingSplashComponent {

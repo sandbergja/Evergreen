@@ -1,4 +1,6 @@
+import { CommonModule } from '@angular/common';
 import {Component, Input, OnInit, Host} from '@angular/core';
+import { RouterModule } from '@angular/router';
 
 interface LinkTableLink {
     label: string;
@@ -17,7 +19,10 @@ interface LinkTableLink {
       }
     `
     ],
-    standalone: false
+    imports: [
+        CommonModule,
+        RouterModule
+    ]
 })
 
 export class LinkTableComponent {
@@ -31,8 +36,7 @@ export class LinkTableComponent {
 
 @Component({
     selector: 'eg-link-table-link',
-    template: '<ng-template></ng-template>',
-    standalone: false
+    template: '<ng-template></ng-template>'
 })
 
 export class LinkTableLinkComponent implements OnInit {

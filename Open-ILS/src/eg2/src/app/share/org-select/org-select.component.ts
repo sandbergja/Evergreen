@@ -7,7 +7,8 @@ import {OrgService} from '@eg/core/org.service';
 import {IdlObject} from '@eg/core/idl.service';
 import {PermService} from '@eg/core/perm.service';
 import {NgbTypeahead, NgbTypeaheadSelectItemEvent} from '@ng-bootstrap/ng-bootstrap';
-import {FormControl, FormGroup} from '@angular/forms';
+import {FormControl, FormGroup, FormsModule, ReactiveFormsModule} from '@angular/forms';
+import { NgIf } from '@angular/common';
 
 /** Org unit selector
  *
@@ -36,7 +37,7 @@ interface OrgDisplay {
 @Component({
     selector: 'eg-org-select',
     templateUrl: './org-select.component.html',
-    standalone: false
+    imports: [NgIf, NgbTypeahead, FormsModule, ReactiveFormsModule]
 })
 export class OrgSelectComponent implements OnInit, AfterViewInit {
     static _domId = 0;

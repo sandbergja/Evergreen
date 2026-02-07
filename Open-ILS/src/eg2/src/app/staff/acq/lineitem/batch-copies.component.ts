@@ -6,6 +6,8 @@ import {AuthService} from '@eg/core/auth.service';
 import {LineitemService} from './lineitem.service';
 import {CancelDialogComponent} from './cancel-dialog.component';
 import {LineitemAlertDialogComponent} from './lineitem-alert-dialog.component';
+import { LineitemCopyAttrsComponent } from './copy-attrs.component';
+import { CommonModule } from '@angular/common';
 
 const BATCH_FIELDS = [
     'owning_lib',
@@ -21,7 +23,12 @@ const BATCH_FIELDS = [
     templateUrl: 'batch-copies.component.html',
     selector: 'eg-lineitem-batch-copies',
     styleUrls: ['batch-copies.component.css'],
-    standalone: false
+    imports: [
+        CancelDialogComponent,
+        CommonModule,
+        LineitemAlertDialogComponent,
+        LineitemCopyAttrsComponent
+    ]
 })
 export class LineitemBatchCopiesComponent implements OnInit {
 

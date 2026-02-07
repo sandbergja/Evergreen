@@ -1,4 +1,4 @@
-import {Component, OnInit, Output, Input, ViewChild, EventEmitter} from '@angular/core';
+import {Component, ViewChild} from '@angular/core';
 import {CircService} from './circ.service';
 import {PrecatCheckoutDialogComponent} from './precat-dialog.component';
 import {CircEventsComponent} from './events-dialog.component';
@@ -12,6 +12,7 @@ import {CopyAlertManagerDialogComponent
 import {BadBarcodeDialogComponent} from './bad-barcode-dialog.component';
 import {CircEmailReceiptDialogComponent} from './circ-email-receipt-dialog.component';
 import {ProgressDialogComponent} from '@eg/share/dialog/progress.component';
+import { CommonModule } from '@angular/common';
 
 /* Container component for sub-components used by circulation actions.
  *
@@ -23,7 +24,18 @@ import {ProgressDialogComponent} from '@eg/share/dialog/progress.component';
 @Component({
     templateUrl: 'components.component.html',
     selector: 'eg-circ-components',
-    standalone: false
+    imports: [
+        AlertDialogComponent,
+        BadBarcodeDialogComponent,
+        CircEventsComponent,
+        CommonModule,
+        CopyAlertManagerDialogComponent,
+        CopyInTransitDialogComponent,
+        RouteDialogComponent,
+        OpenCircDialogComponent,
+        PrecatCheckoutDialogComponent,
+        StringComponent
+    ]
 })
 export class CircComponentsComponent {
 

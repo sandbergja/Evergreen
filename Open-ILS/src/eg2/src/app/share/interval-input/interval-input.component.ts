@@ -3,7 +3,7 @@
  * </eg-interval-input>
  */
 import {Component, OnInit, Input, Output, EventEmitter, forwardRef} from '@angular/core';
-import {ControlValueAccessor, NG_VALUE_ACCESSOR} from '@angular/forms';
+import {ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR} from '@angular/forms';
 
 @Component({
     selector: 'eg-interval-input',
@@ -13,7 +13,7 @@ import {ControlValueAccessor, NG_VALUE_ACCESSOR} from '@angular/forms';
         useExisting: forwardRef(() => IntervalInputComponent),
         multi: true
     }],
-    standalone: false
+    imports: [FormsModule]
 })
 export class IntervalInputComponent implements ControlValueAccessor, OnInit {
 

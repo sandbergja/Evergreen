@@ -1,6 +1,8 @@
 /* eslint-disable no-magic-numbers */
+import { CommonModule } from '@angular/common';
 import {Component, OnInit, Input, Output, TemplateRef,
     EventEmitter} from '@angular/core';
+import { FormsModule } from '@angular/forms';
 
 /**
  * Displays attribute values and associated copy counts for managing
@@ -18,7 +20,10 @@ export interface BatchChangeSelection {
     selector: 'eg-batch-item-attr',
     templateUrl: 'batch-item-attr.component.html',
     styleUrls: ['batch-item-attr.component.css', '../../cat/volcopy/copy-attrs.component.css'],
-    standalone: false
+    imports: [
+        CommonModule,
+        FormsModule
+    ]
 })
 
 export class BatchItemAttrComponent implements OnInit {

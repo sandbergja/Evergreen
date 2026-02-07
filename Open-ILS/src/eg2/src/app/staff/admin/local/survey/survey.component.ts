@@ -11,7 +11,7 @@ import {NetService} from '@eg/core/net.service';
 import {AuthService} from '@eg/core/auth.service';
 import { FmRecordEditorModule } from '@eg/share/fm-editor/fm-editor.module';
 import { GridModule } from '@eg/share/grid/grid.module';
-import { StaffCommonModule } from '@eg/staff/common.module';
+import { StaffBannerComponent } from '@eg/staff/share/staff-banner.component';
 
 const DAYS_IN_WEEK = 7;
 
@@ -20,7 +20,8 @@ const DAYS_IN_WEEK = 7;
     imports: [
         FmRecordEditorModule,
         GridModule,
-        StaffCommonModule
+        FmRecordEditorComponent,
+        StaffBannerComponent
     ]
 })
 

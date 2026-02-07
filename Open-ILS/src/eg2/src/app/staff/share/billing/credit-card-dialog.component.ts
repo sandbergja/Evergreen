@@ -10,13 +10,14 @@ import {ServerStoreService} from '@eg/core/server-store.service';
 import {DialogComponent} from '@eg/share/dialog/dialog.component';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {CreditCardPaymentParams} from './billing.service';
+import { StaffCommonModule } from '@eg/staff/common.module';
 
 /* Dialog for collecting credit card payment information */
 
 @Component({
     selector: 'eg-credit-card-dialog',
     templateUrl: 'credit-card-dialog.component.html',
-    standalone: false
+    imports: [StaffCommonModule]
 })
 
 export class CreditCardDialogComponent

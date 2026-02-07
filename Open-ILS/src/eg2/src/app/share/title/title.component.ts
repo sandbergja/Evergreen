@@ -1,3 +1,4 @@
+import { NgIf, SlicePipe } from '@angular/common';
 import {Component, Input, AfterViewInit, ViewChild} from '@angular/core';
 import {Title} from '@angular/platform-browser';
 import {StringComponent} from '@eg/share/string/string.component';
@@ -14,7 +15,11 @@ import {StringComponent} from '@eg/share/string/string.component';
 @Component({
     selector: 'eg-title',
     templateUrl: 'title.component.html',
-    standalone: false
+    imports: [
+        NgIf,
+        SlicePipe,
+        StringComponent
+    ]
 })
 
 export class TitleComponent implements AfterViewInit {

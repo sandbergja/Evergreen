@@ -7,10 +7,11 @@ import {GridFlatDataService} from '@eg/share/grid/grid-flat-data.service';
 import {IdlService} from '@eg/core/idl.service';
 import {Pager} from '@eg/share/util/pager';
 import {PcrudService} from '@eg/core/pcrud.service';
+import { StaffCommonModule } from '@eg/staff/common.module';
 
 @Component({
     templateUrl: 'attempts.component.html',
-    standalone: false
+    imports: [StaffCommonModule]
 })
 export class LinkCheckerAttemptsComponent implements OnInit {
 

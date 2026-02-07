@@ -6,7 +6,7 @@ describe('BoolDisplayComponent', () => {
     @Component({
         selector: 'eg-host-component',
         template: '<eg-bool></eg-bool>',
-        standalone: false
+        imports: [BoolDisplayComponent]
     })
     class TestHostComponent {
         @ViewChild(BoolDisplayComponent, {static: false})
@@ -18,7 +18,7 @@ describe('BoolDisplayComponent', () => {
 
     beforeEach(waitForAsync(() => {
         TestBed.configureTestingModule({
-            declarations: [ BoolDisplayComponent, TestHostComponent ],
+            imports: [ BoolDisplayComponent, TestHostComponent ],
         })
             .compileComponents();
     }));

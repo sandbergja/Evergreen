@@ -1,5 +1,7 @@
 import {Component} from '@angular/core';
 import {ActivatedRoute} from '@angular/router';
+import { StaffCommonModule } from '@eg/staff/common.module';
+import { CourseTermMapGridComponent } from './course-term-map-grid.component';
 
 /**
  * Very basic page for editing course/term map
@@ -21,7 +23,7 @@ import {ActivatedRoute} from '@angular/router';
         </div>
         <eg-course-term-map-grid [courseId]="courseId"></eg-course-term-map-grid>
     `,
-    standalone: false
+    imports: [CourseTermMapGridComponent, StaffCommonModule]
 })
 
 export class CourseTermMapComponent {

@@ -10,10 +10,14 @@ import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 import {StringComponent} from '@eg/share/string/string.component';
 import {ToastService} from '@eg/share/toast/toast.service';
 import {NgbNavChangeEvent} from '@ng-bootstrap/ng-bootstrap';
+import { StaffCommonModule } from '@eg/staff/common.module';
 
 @Component({
     templateUrl: './triggers.component.html',
-    standalone: false
+    imports: [
+        FmRecordEditorComponent,
+        StaffCommonModule
+    ]
 })
 
 export class TriggersComponent implements OnInit {

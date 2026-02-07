@@ -30,8 +30,7 @@ import {NgbModal, NgbModalRef, NgbModalOptions} from '@ng-bootstrap/ng-bootstrap
 
 @Component({
     selector: 'eg-dialog',
-    template: '<ng-template></ng-template>',
-    standalone: false
+    template: '<ng-template></ng-template>'
 })
 export class DialogComponent implements OnInit {
 

@@ -3,7 +3,6 @@ import { IdlObject } from '@eg/core/idl.service';
 
 @Pipe({
     name: 'volEditPartDedupe',
-    standalone: false
 })
 export class VolEditPartDedupePipe implements PipeTransform {
     // In: key-value pair, where the value is an array of monographic parts. -- VolCopyService.bibParts.

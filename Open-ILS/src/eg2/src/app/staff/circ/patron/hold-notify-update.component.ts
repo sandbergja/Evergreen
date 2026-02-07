@@ -10,6 +10,7 @@ import {OrgService} from '@eg/core/org.service';
 import {DialogComponent} from '@eg/share/dialog/dialog.component';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
+import { StaffCommonModule } from '@eg/staff/common.module';
 
 /* Apply notification changes to affected holds */
 
@@ -23,7 +24,7 @@ export interface HoldNotifyMod {
 @Component({
     selector: 'eg-hold-notify-update-dialog',
     templateUrl: 'hold-notify-update.component.html',
-    standalone: false
+    imports: [StaffCommonModule]
 })
 
 export class HoldNotifyUpdateDialogComponent

@@ -1,11 +1,10 @@
 import {Component, OnInit, AfterViewInit} from '@angular/core';
-import {Location} from '@angular/common';
-import {Router, ActivatedRoute} from '@angular/router';
-import {AuthService, AuthWsState} from '@eg/core/auth.service';
+import {RouterModule} from '@angular/router';
+import {AuthService} from '@eg/core/auth.service';
 
 @Component({
     templateUrl: './login-not-allowed.component.html',
-    standalone: false
+    imports: [RouterModule]
 })
 
 export class StaffLoginNotAllowedComponent implements OnInit, AfterViewInit {
@@ -14,9 +13,6 @@ export class StaffLoginNotAllowedComponent implements OnInit, AfterViewInit {
     userId: number;
 
     constructor(
-      private router: Router,
-      private route: ActivatedRoute,
-      private ngLocation: Location,
       private auth: AuthService
     ) {}
 

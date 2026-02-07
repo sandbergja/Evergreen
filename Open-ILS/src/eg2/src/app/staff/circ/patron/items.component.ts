@@ -13,11 +13,12 @@ import {StoreService} from '@eg/core/store.service';
 import {ServerStoreService} from '@eg/core/server-store.service';
 import {AudioService} from '@eg/share/util/audio.service';
 import {CircGridComponent, CircGridEntry} from '@eg/staff/share/circ/grid.component';
+import { StaffCommonModule } from '@eg/staff/common.module';
 
 @Component({
     templateUrl: 'items.component.html',
     selector: 'eg-patron-items',
-    standalone: false
+    imports: [StaffCommonModule]
 })
 export class ItemsComponent implements OnInit {
 

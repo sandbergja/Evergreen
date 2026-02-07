@@ -1,5 +1,6 @@
 import {Component, Input, ViewChild} from '@angular/core';
 import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
+import { StaffCommonModule } from '@eg/staff/common.module';
 
 @Component({
     selector: 'eg-bucket-action-summary-dialog',
@@ -15,7 +16,7 @@ import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
     </div>
   </ng-template>
   `,
-    standalone: false
+    imports: [StaffCommonModule]
 })
 
 export class BucketActionSummaryDialogComponent {

@@ -11,10 +11,11 @@ import {FmRecordEditorComponent} from '@eg/share/fm-editor/fm-editor.component';
 import {StringComponent} from '@eg/share/string/string.component';
 import {ToastService} from '@eg/share/toast/toast.service';
 import {NgbNavChangeEvent} from '@ng-bootstrap/ng-bootstrap';
+import { StaffCommonModule } from '@eg/staff/common.module';
 
 @Component({
     templateUrl: './trigger-edit.component.html',
-    standalone: false
+    imports: [StaffCommonModule]
 })
 
 export class EditEventDefinitionComponent implements OnInit {
