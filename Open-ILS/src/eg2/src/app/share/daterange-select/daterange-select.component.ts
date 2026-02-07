@@ -1,5 +1,5 @@
 import {Component, Input, forwardRef, OnInit} from '@angular/core';
-import {NgbDate, NgbCalendar} from '@ng-bootstrap/ng-bootstrap';
+import {NgbDate, NgbCalendar, NgbDatepicker} from '@ng-bootstrap/ng-bootstrap';
 import {ControlValueAccessor, NG_VALUE_ACCESSOR} from '@angular/forms';
 
 export interface DateRange {
@@ -16,7 +16,7 @@ export interface DateRange {
         useExisting: forwardRef(() => DateRangeSelectComponent),
         multi: true
     }],
-    standalone: false
+    imports: [NgbDatepicker]
 })
 export class DateRangeSelectComponent implements ControlValueAccessor, OnInit {
 

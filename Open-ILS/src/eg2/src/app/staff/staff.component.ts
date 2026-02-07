@@ -1,10 +1,14 @@
 import {Component, OnInit, NgZone, HostListener} from '@angular/core';
 import {Location} from '@angular/common';
-import {Router, ActivatedRoute, NavigationEnd} from '@angular/router';
+import {Router, ActivatedRoute, NavigationEnd, RouterModule} from '@angular/router';
 import {AuthService, AuthWsState} from '@eg/core/auth.service';
 import {NetService} from '@eg/core/net.service';
 import {AccessKeyService} from '@eg/share/accesskey/accesskey.service';
 import {AccessKeyInfoComponent} from '@eg/share/accesskey/accesskey-info.component';
+import { StaffNavComponent } from './nav.component';
+import { ToastComponent } from '@eg/share/toast/toast.component';
+import { PrintComponent } from '@eg/share/print/print.component';
+import { ContextMenuContainerComponent } from '@eg/share/context-menu/context-menu-container.component';
 
 const MFA_PATH = '/staff/mfa';
 const LOGIN_PATH = '/staff/login';
@@ -14,7 +18,14 @@ const WS_MANAGE_PATH = '/staff/admin/workstation/workstations/manage';
 @Component({
     templateUrl: 'staff.component.html',
     styleUrls: ['staff.component.css'],
-    standalone: false
+    imports: [
+        AccessKeyInfoComponent,
+        ContextMenuContainerComponent,
+        PrintComponent,
+        RouterModule,
+        StaffNavComponent,
+        ToastComponent,
+    ]
 })
 
 export class StaffComponent implements OnInit {

@@ -4,7 +4,6 @@ import {StaffCommonModule} from '@eg/staff/common.module';
 import {CatalogRoutingModule} from './routing.module';
 import {HoldsModule} from '@eg/staff/share/holds/holds.module';
 import {HoldingsModule} from '@eg/staff/share/holdings/holdings.module';
-import {BookingModule} from '@eg/staff/share/booking/booking.module';
 import {PatronModule} from '@eg/staff/share/patron/patron.module';
 import {CatalogComponent} from './catalog.component';
 import {SearchFormComponent} from './search-form.component';
@@ -40,9 +39,10 @@ import {WorkLogModule} from '@eg/staff/share/worklog/worklog.module';
 import {VolCopyModule} from '@eg/staff/cat/volcopy/volcopy.module';
 import { SortOrderSelectComponent } from './sort-order-select/sort-order-select.component';
 import { CatalogOrgSelectComponent } from './catalog-org-select/catalog-org-select.component';
+import { MakeBookableDialogComponent } from '../share/booking/make-bookable-dialog.component';
 
 @NgModule({
-    declarations: [
+    imports: [
         CatalogComponent,
         ResultsComponent,
         RecordComponent,
@@ -69,15 +69,13 @@ import { CatalogOrgSelectComponent } from './catalog-org-select/catalog-org-sele
         PreferencesComponent,
         CnBrowseResultsComponent,
         BrowsePagerComponent,
-        SortOrderSelectComponent
-    ],
-    imports: [
+        SortOrderSelectComponent,
         StaffCommonModule,
         FmRecordEditorModule,
         CatalogRoutingModule,
         HoldsModule,
         HoldingsModule,
-        BookingModule,
+        MakeBookableDialogComponent,
         PatronModule,
         MarcEditModule,
         HttpClientModule,

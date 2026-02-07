@@ -8,12 +8,19 @@ import {ToastService} from '@eg/share/toast/toast.service';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 import {AuthService} from '@eg/core/auth.service';
 import {ProviderRecord, ProviderRecordService} from './provider-record.service';
+import { CommonModule } from '@angular/common';
+import { BoolDisplayComponent } from '@eg/share/util/bool.component';
 
 @Component({
     selector: 'eg-acq-provider-summary-pane',
     styleUrls: ['summary-pane.component.css'],
     templateUrl: './summary-pane.component.html',
-    standalone: false
+    imports: [
+        BoolDisplayComponent,
+        CommonModule,
+        ConfirmDialogComponent,
+        StringComponent
+    ]
 })
 
 export class AcqProviderSummaryPaneComponent implements OnInit, AfterViewInit {

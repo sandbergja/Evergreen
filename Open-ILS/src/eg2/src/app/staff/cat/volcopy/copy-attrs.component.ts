@@ -23,14 +23,14 @@ import {ICopyNote, CopyNotesDialogComponent
 import {ComboboxComponent, ComboboxEntry} from '@eg/share/combobox/combobox.component';
 import {BatchItemAttrComponent, BatchChangeSelection
 } from '@eg/staff/share/holdings/batch-item-attr.component';
-import {FileExportService} from '@eg/share/util/file-export.service';
 import {ToastService} from '@eg/share/toast/toast.service';
+import { StaffCommonModule } from '@eg/staff/common.module';
 
 @Component({
     selector: 'eg-copy-attrs',
     templateUrl: 'copy-attrs.component.html',
     styleUrls: ['copy-attrs.component.css'],
-    standalone: false
+    imports: [StaffCommonModule]
 })
 export class CopyAttrsComponent implements OnInit, OnDestroy, AfterViewInit {
 

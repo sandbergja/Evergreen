@@ -1,4 +1,4 @@
-import { Component, DebugElement } from '@angular/core';
+import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { LinkTargetDirective } from './link-target.directive';
@@ -18,7 +18,7 @@ const NEW_TAB_DESCRIBER_ID = 'link-opens-newtab';
         <a id="same-tab" href="#" target="_self">Same Tab Link</a>
         <a id="new-tab" href="#" target="_blank">New Tab Link</a>
     `,
-    standalone: false
+    imports: [LinkTargetDirective]
 })
 class TestComponent {}
 
@@ -29,7 +29,7 @@ function createFixtureContext(initialSetting: boolean): FixtureContext {
     });
 
     TestBed.configureTestingModule({
-        declarations: [TestComponent, LinkTargetDirective],
+        imports: [TestComponent],
         providers: [
             { provide: LinkTargetService, useValue: service }
         ]

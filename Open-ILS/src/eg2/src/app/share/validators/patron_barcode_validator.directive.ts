@@ -40,8 +40,7 @@ export class PatronBarcodeValidator implements AsyncValidator {
         provide: NG_ASYNC_VALIDATORS,
         useExisting: forwardRef(() => PatronBarcodeValidator),
         multi: true
-    }],
-    standalone: false
+    }]
 })
 export class PatronBarcodeValidatorDirective {
     constructor(

@@ -13,12 +13,19 @@ import {LineitemService} from '../lineitem/lineitem.service';
 import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 import {DisencumberChargeDialogComponent} from './disencumber-charge-dialog.component';
+import { ComboboxComponent } from '@eg/share/combobox/combobox.component';
+import { CommonModule } from '@angular/common';
 
 @Component({
     templateUrl: 'charges.component.html',
     styleUrls: ['charges.component.css'],
     selector: 'eg-acq-invoice-charges',
-    standalone: false
+    imports: [
+        AlertDialogComponent,
+        ComboboxComponent,
+        CommonModule,
+        ConfirmDialogComponent
+    ]
 })
 export class InvoiceChargesComponent implements OnInit, OnDestroy {
 

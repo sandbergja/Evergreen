@@ -2,6 +2,7 @@ import { Component, ViewChild, forwardRef } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { ComboboxComponent, ComboboxEntry } from '@eg/share/combobox/combobox.component';
 import { Timezone } from '@eg/share/util/timezone';
+import { StaffCommonModule } from '@eg/staff/common.module';
 
 @Component({
     selector: 'eg-timezone-select',
@@ -11,7 +12,7 @@ import { Timezone } from '@eg/share/util/timezone';
         useExisting: forwardRef(() => TimezoneSelectComponent),
         multi: true
     }],
-    standalone: false
+    imports: [StaffCommonModule]
 })
 export class TimezoneSelectComponent implements ControlValueAccessor {
     entries: ComboboxEntry[];

@@ -13,11 +13,12 @@ import {GridFlatDataService} from '@eg/share/grid/grid-flat-data.service';
 import {Pager} from '@eg/share/util/pager';
 import {VolCopyContext} from './volcopy';
 import {VolCopyService} from './volcopy.service';
+import { StaffCommonModule } from '@eg/staff/common.module';
 
 @Component({
     selector: 'eg-volcopy-template-grid',
     templateUrl: 'template-grid.component.html',
-    standalone: false
+    imports: [StaffCommonModule]
 })
 export class VolCopyTemplateGridComponent implements OnInit, OnDestroy {
 

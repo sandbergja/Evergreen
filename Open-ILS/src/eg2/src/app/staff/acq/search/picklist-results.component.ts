@@ -1,5 +1,5 @@
 import {Component, OnInit, Input, ViewChild} from '@angular/core';
-import {Router, ActivatedRoute} from '@angular/router';
+import {Router, ActivatedRoute, RouterModule} from '@angular/router';
 import {ToastService} from '@eg/share/toast/toast.service';
 import {StringComponent} from '@eg/share/string/string.component';
 import {IdlObject} from '@eg/core/idl.service';
@@ -14,11 +14,21 @@ import {PicklistCloneDialogComponent} from './picklist-clone-dialog.component';
 import {PicklistDeleteDialogComponent} from './picklist-delete-dialog.component';
 import {PicklistMergeDialogComponent} from './picklist-merge-dialog.component';
 import {AcqSearchFormComponent} from './acq-search-form.component';
+import { GridModule } from '@eg/share/grid/grid.module';
 
 @Component({
     selector: 'eg-picklist-results',
     templateUrl: 'picklist-results.component.html',
-    standalone: false
+    imports: [
+        AcqSearchFormComponent,
+        GridModule,
+        RouterModule,
+        PicklistCloneDialogComponent,
+        PicklistCreateDialogComponent,
+        PicklistDeleteDialogComponent,
+        PicklistMergeDialogComponent,
+        StringComponent
+    ]
 })
 export class PicklistResultsComponent implements OnInit {
 

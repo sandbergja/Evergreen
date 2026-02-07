@@ -10,12 +10,10 @@ import {BibDisplayFieldComponent} from './bib-display-field.component';
 
 
 @NgModule({
-    declarations: [
-        MarcHtmlComponent,
-        BibDisplayFieldComponent
-    ],
     imports: [
-        EgCommonModule
+        BibDisplayFieldComponent,
+        EgCommonModule,
+        MarcHtmlComponent,
     ],
     exports: [
         MarcHtmlComponent,

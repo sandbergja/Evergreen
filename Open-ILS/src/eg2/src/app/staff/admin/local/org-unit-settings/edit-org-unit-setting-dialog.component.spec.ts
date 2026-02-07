@@ -2,6 +2,8 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { EditOuSettingDialogComponent } from './edit-org-unit-setting-dialog.component';
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 import { AfterViewInit, CUSTOM_ELEMENTS_SCHEMA, ChangeDetectorRef, Component, TemplateRef, ViewChild } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { AuthService } from '@eg/core/auth.service';
 
 const modal = jasmine.createSpyObj<NgbModal>(['open']);
 let fixture: ComponentFixture<EditOuSettingDialogComponent>;
@@ -14,7 +16,7 @@ let component: EditOuSettingDialogComponent;
       </div>
       <eg-admin-edit-org-unit-setting-dialog #dialog></eg-admin-edit-org-unit-setting-dialog>
     `,
-    standalone: false
+    imports: [CommonModule, EditOuSettingDialogComponent]
 })
 class MockModalComponent implements AfterViewInit {
     @ViewChild('dialog') componentRef: EditOuSettingDialogComponent;
@@ -30,8 +32,9 @@ describe('EditOuSettingDialogComponent', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
             providers: [
-                { provide: NgbModal, useValue: modal}
-            ], declarations: [
+                { provide: NgbModal, useValue: modal},
+                { provide: AuthService, useValue: {} }
+            ], imports: [
                 MockModalComponent,
                 EditOuSettingDialogComponent
             ], schemas: [

@@ -15,13 +15,13 @@ import {CourseService} from '@eg/staff/share/course.service';
 import {AuthService} from '@eg/core/auth.service';
 import {ToastService} from '@eg/share/toast/toast.service';
 import {BucketDialogComponent} from '@eg/staff/share/buckets/bucket-dialog.component';
-import {ResultFacetsComponent} from './facets.component';
+import { StaffCommonModule } from '@eg/staff/common.module';
 
 @Component({
     selector: 'eg-catalog-result-record',
     templateUrl: 'record.component.html',
     styleUrls: ['record.component.css'],
-    standalone: false
+    imports: [StaffCommonModule]
 })
 export class ResultRecordComponent implements OnInit, OnDestroy {
 

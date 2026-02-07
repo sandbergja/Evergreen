@@ -5,11 +5,12 @@ import {ReporterService, SRTemplate} from '../share/reporter.service';
 import {Tree} from '@eg/share/tree/tree';
 import moment from 'moment-timezone';
 import { AuthService } from '@eg/core/auth.service';
+import { StaffCommonModule } from '@eg/staff/common.module';
 
 @Component({
     selector: 'eg-reporter-output-options',
     templateUrl: './reporter-output-options.component.html',
-    standalone: false
+    imports: [StaffCommonModule]
 })
 
 export class ReporterOutputOptionsComponent implements OnInit {

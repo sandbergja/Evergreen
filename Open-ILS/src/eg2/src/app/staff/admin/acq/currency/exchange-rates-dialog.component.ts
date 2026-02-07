@@ -9,11 +9,17 @@ import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {StringComponent} from '@eg/share/string/string.component';
 import {ToastService} from '@eg/share/toast/toast.service';
 import {PermService} from '@eg/core/perm.service';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 @Component({
     selector: 'eg-exchange-rates-dialog',
     templateUrl: './exchange-rates-dialog.component.html',
-    standalone: false
+    imports: [
+        StringComponent,
+        CommonModule,
+        FormsModule
+    ]
 })
 
 export class ExchangeRatesDialogComponent

@@ -1,12 +1,11 @@
 import {Component, Input, Output, OnInit, Host, TemplateRef, EventEmitter} from '@angular/core';
-import {ButtonStyle} from '@eg/share/util/button-style.directive';
+import {ButtonStyle, ButtonStyleDirective} from '@eg/share/util/button-style.directive';
 import {GridToolbarButton} from './grid';
 import {GridComponent} from './grid.component';
 
 @Component({
     selector: 'eg-grid-toolbar-button',
-    template: '<ng-template></ng-template>',
-    standalone: false
+    template: '<ng-template></ng-template>'
 })
 
 export class GridToolbarButtonComponent implements OnInit {

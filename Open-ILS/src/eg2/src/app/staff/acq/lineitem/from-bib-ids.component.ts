@@ -7,14 +7,20 @@ import {EventService} from '@eg/core/event.service';
 import {PcrudService} from '@eg/core/pcrud.service';
 import {AuthService} from '@eg/core/auth.service';
 import {LineitemService} from './lineitem.service';
-import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
+import {ComboboxComponent, ComboboxEntry} from '@eg/share/combobox/combobox.component';
 import {ServerStoreService} from '@eg/core/server-store.service';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 @Component({
     templateUrl: 'from-bib-ids.component.html',
     selector: 'eg-lineitem-from-bib-ids',
     styleUrls: ['./from-bib-ids.component.css'],
-    standalone: false
+    imports: [
+        ComboboxComponent,
+        CommonModule,
+        FormsModule
+    ]
 })
 export class LineitemFromBibIdsComponent implements OnInit {
 

@@ -6,6 +6,7 @@ import {AuthService} from '@eg/core/auth.service';
 import {DialogComponent} from '@eg/share/dialog/dialog.component';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {StringComponent} from '@eg/share/string/string.component';
+import { StaffCommonModule } from '@eg/staff/common.module';
 
 /**
  * Dialog for merging authority records.
@@ -14,7 +15,7 @@ import {StringComponent} from '@eg/share/string/string.component';
 @Component({
     selector: 'eg-authority-merge-dialog',
     templateUrl: 'merge-dialog.component.html',
-    standalone: false
+    imports: [StaffCommonModule]
 })
 
 export class AuthorityMergeDialogComponent

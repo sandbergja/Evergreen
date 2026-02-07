@@ -12,11 +12,16 @@ import {StringService} from '@eg/share/string/string.service';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
 import {PermService} from '@eg/core/perm.service';
+import { StaffCommonModule } from '@eg/staff/common.module';
+import { TreeComponent } from '@eg/share/tree/tree.component';
 
 @Component({
     templateUrl: './org-unit.component.html',
     styleUrls: ['./org-unit.component.css'],
-    standalone: false
+    imports: [
+        StaffCommonModule,
+        TreeComponent
+    ]
 })
 export class OrgUnitComponent implements OnInit {
 

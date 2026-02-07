@@ -4,6 +4,7 @@ import {Component, OnInit, Input, Output, EventEmitter, ViewChild} from '@angula
 import { IdlService} from '@eg/core/idl.service';
 import {ToastService} from '@eg/share/toast/toast.service';
 import { ComboboxComponent } from '@eg/share/combobox/combobox.component';
+import { StaffCommonModule } from '@eg/staff/common.module';
 
 class LinkedLimitSetObjects {
     linkedLimitSet: any;
@@ -15,7 +16,7 @@ class LinkedLimitSetObjects {
 @Component({
     selector: 'eg-linked-circ-limit-sets',
     templateUrl: './linked-circ-limit-sets.component.html',
-    standalone: false
+    imports: [StaffCommonModule]
 })
 
 export class LinkedCircLimitSetsComponent implements OnInit {

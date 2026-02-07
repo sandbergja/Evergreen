@@ -15,12 +15,21 @@ import {FmRecordEditorComponent} from '@eg/share/fm-editor/fm-editor.component';
 import {StringComponent} from '@eg/share/string/string.component';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 import {ToastService} from '@eg/share/toast/toast.service';
+import { CommonModule } from '@angular/common';
+import { GridModule } from '@eg/share/grid/grid.module';
 
 
 @Component({
     selector: 'eg-provider-contacts',
     templateUrl: 'provider-contacts.component.html',
-    standalone: false
+    imports: [
+        CommonModule,
+        ConfirmDialogComponent,
+        FmRecordEditorComponent,
+        GridModule,
+        ProviderContactAddressesComponent,
+        StringComponent
+    ]
 })
 export class ProviderContactsComponent implements OnInit, AfterViewInit, OnDestroy {
 

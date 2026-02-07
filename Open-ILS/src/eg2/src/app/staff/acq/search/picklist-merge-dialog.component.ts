@@ -6,11 +6,15 @@ import {EventService} from '@eg/core/event.service';
 import {NetService} from '@eg/core/net.service';
 import {AuthService} from '@eg/core/auth.service';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
+import { FormsModule } from '@angular/forms';
 
 @Component({
     selector: 'eg-picklist-merge-dialog',
     templateUrl: './picklist-merge-dialog.component.html',
-    standalone: false
+    imports: [
+        AlertDialogComponent,
+        FormsModule
+    ]
 })
 
 export class PicklistMergeDialogComponent

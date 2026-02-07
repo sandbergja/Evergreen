@@ -10,10 +10,11 @@ import {StringService} from '@eg/share/string/string.service';
 import {GridDataSource, GridCellTextGenerator} from '@eg/share/grid/grid';
 import {GridComponent} from '@eg/share/grid/grid.component';
 import {Pager} from '@eg/share/util/pager';
+import { StaffCommonModule } from '@eg/staff/common.module';
 
 @Component({
     templateUrl: './list.component.html',
-    standalone: false
+    imports: [StaffCommonModule]
 })
 export class NegativeBalancesComponent implements OnInit {
 

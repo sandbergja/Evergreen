@@ -1,8 +1,9 @@
 import {Component} from '@angular/core';
+import { RouterModule } from '@angular/router';
 
 @Component({
     templateUrl: 'lineitem.component.html',
-    standalone: false
+    imports: [RouterModule]
 })
 export class LineitemComponent {
 }

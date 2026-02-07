@@ -2,6 +2,8 @@ import {Component, OnInit, Input} from '@angular/core';
 import {Observable} from 'rxjs';
 import {DialogComponent} from '@eg/share/dialog/dialog.component';
 import {NgbModal, NgbModalOptions} from '@ng-bootstrap/ng-bootstrap';
+import { CommonModule } from '@angular/common';
+import { HoldManageComponent } from './manage.component';
 
 /**
  * Dialog wrapper for ManageHoldsComponent.
@@ -10,7 +12,10 @@ import {NgbModal, NgbModalOptions} from '@ng-bootstrap/ng-bootstrap';
 @Component({
     selector: 'eg-hold-manage-dialog',
     templateUrl: 'manage-dialog.component.html',
-    standalone: false
+    imports: [
+        CommonModule,
+        HoldManageComponent,
+    ]
 })
 
 export class HoldManageDialogComponent

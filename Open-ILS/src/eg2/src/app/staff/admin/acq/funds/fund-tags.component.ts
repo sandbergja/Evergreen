@@ -9,11 +9,12 @@ import {StringComponent} from '@eg/share/string/string.component';
 import {ToastService} from '@eg/share/toast/toast.service';
 import {ComboboxComponent, ComboboxEntry} from '@eg/share/combobox/combobox.component';
 import {Observable, map} from 'rxjs';
+import { StaffCommonModule } from '@eg/staff/common.module';
 
 @Component({
     selector: 'eg-fund-tags',
     templateUrl: './fund-tags.component.html',
-    standalone: false
+    imports: [StaffCommonModule]
 })
 export class FundTagsComponent implements OnInit {
 

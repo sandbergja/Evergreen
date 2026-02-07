@@ -1,6 +1,6 @@
 import {Component, OnInit} from '@angular/core';
-import {NgbNav, NgbNavChangeEvent} from '@ng-bootstrap/ng-bootstrap';
-import {Location} from '@angular/common';
+import {NgbNav, NgbNavChangeEvent, NgbNavModule} from '@ng-bootstrap/ng-bootstrap';
+import {Location, NgIf} from '@angular/common';
 import {Router, ActivatedRoute} from '@angular/router';
 import {AuthService, AuthWsState} from '@eg/core/auth.service';
 import {NetService} from '@eg/core/net.service';
@@ -13,7 +13,10 @@ import moment from 'moment-timezone';
 @Component({
     styleUrls: ['./mfa.component.css'],
     templateUrl: './mfa.component.html',
-    standalone: false
+    imports: [
+        NgbNavModule,
+        NgIf,
+    ]
 })
 
 export class StaffMFAComponent implements OnInit {

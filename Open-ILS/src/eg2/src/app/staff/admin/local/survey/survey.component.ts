@@ -10,10 +10,14 @@ import {StringComponent} from '@eg/share/string/string.component';
 import {ToastService} from '@eg/share/toast/toast.service';
 import {NetService} from '@eg/core/net.service';
 import {AuthService} from '@eg/core/auth.service';
+import { StaffCommonModule } from '@eg/staff/common.module';
 
 @Component({
     templateUrl: './survey.component.html',
-    standalone: false
+    imports: [
+        FmRecordEditorComponent,
+        StaffCommonModule
+    ]
 })
 
 export class SurveyComponent implements OnInit {

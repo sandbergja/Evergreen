@@ -1,6 +1,6 @@
 import {Component, OnInit, AfterViewInit, OnDestroy, Input, ViewChild} from '@angular/core';
 import {Subscription} from 'rxjs';
-import {Router, ActivatedRoute} from '@angular/router';
+import {Router, ActivatedRoute, RouterModule} from '@angular/router';
 import {IdlObject} from '@eg/core/idl.service';
 import {EventService} from '@eg/core/event.service';
 import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
@@ -12,12 +12,16 @@ import {GridDataSource, GridCellTextGenerator} from '@eg/share/grid/grid';
 import {AcqSearchService, AcqSearchTerm} from '../search/acq-search.service';
 import {AttrDefsService} from '../search/attr-defs.service';
 import {ProviderRecordService} from './provider-record.service';
+import { GridModule } from '@eg/share/grid/grid.module';
 
 @Component({
     selector: 'eg-provider-purchase-orders',
     templateUrl: 'provider-purchase-orders.component.html',
     providers: [AcqSearchService, AttrDefsService],
-    standalone: false
+    imports: [
+        GridModule,
+        RouterModule
+    ]
 })
 export class ProviderPurchaseOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 

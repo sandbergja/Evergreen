@@ -13,6 +13,7 @@ import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { GridModule } from '@eg/share/grid/grid.module';
 import { PrintService } from '@eg/share/print/print.service';
 import { GridDataSource } from '@eg/share/grid/grid';
+import { LocaleService } from '@eg/core/locale.service';
 
 describe('AdminPageComponent', () => {
     let component: AdminPageComponent;
@@ -35,14 +36,12 @@ describe('AdminPageComponent', () => {
                 {provide: PcrudService, useValue: {}},
                 {provide: PermService, useValue: {}},
                 {provide: ToastService, useValue: {}},
-                {provide: PrintService, useValue: {}}
+                {provide: PrintService, useValue: {}},
+                {provide: LocaleService, useValue: {}}
             ],
             schemas: [CUSTOM_ELEMENTS_SCHEMA],
-            declarations: [
-                AdminPageComponent,
-            ],
             imports: [
-                GridModule
+                AdminPageComponent,
             ]
         });
         fixture = TestBed.createComponent(AdminPageComponent);

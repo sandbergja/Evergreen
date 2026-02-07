@@ -1,6 +1,5 @@
-import {Component, Input, ViewChild, TemplateRef, OnInit} from '@angular/core';
+import {Component, Input, ViewChild, OnInit} from '@angular/core';
 import {DialogComponent} from '@eg/share/dialog/dialog.component';
-import {NgForm} from '@angular/forms';
 import {IdlService, IdlObject} from '@eg/core/idl.service';
 import {EventService} from '@eg/core/event.service';
 import {NetService} from '@eg/core/net.service';
@@ -10,14 +9,14 @@ import {GridDataSource, GridCellTextGenerator} from '@eg/share/grid/grid';
 import {GridComponent} from '@eg/share/grid/grid.component';
 import {Pager} from '@eg/share/util/pager';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
-import {StringComponent} from '@eg/share/string/string.component';
 import {ToastService} from '@eg/share/toast/toast.service';
 import {PermService} from '@eg/core/perm.service';
+import { GridModule } from '@eg/share/grid/grid.module';
 
 @Component({
     selector: 'eg-edi-attr-set-providers',
     templateUrl: './edi-attr-set-providers.component.html',
-    standalone: false
+    imports: [GridModule]
 })
 
 export class EdiAttrSetProvidersComponent

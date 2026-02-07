@@ -1,5 +1,5 @@
 /* eslint-disable */
-import {Component, Input, Output, ViewChild, QueryList, EventEmitter, TemplateRef, OnInit} from '@angular/core';
+import {Component, Input, Output, ViewChild, EventEmitter, TemplateRef, OnInit} from '@angular/core';
 import {map} from 'rxjs/operators';
 import {PcrudService} from '@eg/core/pcrud.service';
 import {IdlService} from '@eg/core/idl.service';
@@ -33,7 +33,7 @@ import {TreeComponent} from './tree.component';
   overflow-x: clip;   /* Avoid scrollbar */
 }
     `],
-    standalone: false
+    imports: [TreeComponent]
 })
 export class TreeMultiselectComponent implements OnInit {
 

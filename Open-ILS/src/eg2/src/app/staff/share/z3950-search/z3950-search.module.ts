@@ -7,15 +7,13 @@ import {Z3950SearchService} from './z3950.service';
 import {MarcEditModule} from '@eg/staff/share/marc-edit/marc-edit.module';
 
 @NgModule({
-    declarations: [
-        Z3950SearchComponent,
-        AutofocusDirective
-    ],
     imports: [
+        AutofocusDirective,
         MarcEditModule,
         StaffCommonModule,
         GridModule,
-        ReactiveFormsModule
+        ReactiveFormsModule,
+        Z3950SearchComponent,
     ],
     exports: [
         Z3950SearchComponent,

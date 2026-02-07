@@ -4,11 +4,12 @@ import {DialogComponent} from '@eg/share/dialog/dialog.component';
 import {NetService} from '@eg/core/net.service';
 import {AuthService} from '@eg/core/auth.service';
 import {EventService} from '@eg/core/event.service';
+import { StaffCommonModule } from '@eg/staff/common.module';
 
 @Component({
     templateUrl: 'backdate-dialog.component.html',
     selector: 'eg-backdate-dialog',
-    standalone: false
+    imports: [StaffCommonModule]
 })
 export class BackdateDialogComponent extends DialogComponent implements OnInit {
 

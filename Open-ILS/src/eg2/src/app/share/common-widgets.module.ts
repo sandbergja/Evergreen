@@ -3,7 +3,7 @@
   in other shared components. Components included here should be
   unlikely to ever need to embed one another.
 */
-import {NgModule, ModuleWithProviders} from '@angular/core';
+import {NgModule} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {NgbModule} from '@ng-bootstrap/ng-bootstrap';
@@ -25,27 +25,25 @@ import { CredentialInputComponent } from './util/credential-input.component';
 
 
 @NgModule({
-    declarations: [
+    imports: [
+        BooleanSelectComponent,
         ButtonStyleDirective,
+        ClipboardDialogComponent,
         ComboboxComponent,
         ComboboxEntryComponent,
-        DateSelectComponent,
-        BooleanSelectComponent,
-        OrgSelectComponent,
-        DepthSelectComponent,
+        CommonModule,
+        CredentialInputComponent,
         DateRangeSelectComponent,
+        DateSelectComponent,
         DateTimeSelectComponent,
+        DepthSelectComponent,
         FileReaderComponent,
-        ClipboardDialogComponent,
+        FormsModule,
         IdlClassTemplateDirective,
         IntervalInputComponent,
-        CredentialInputComponent
-    ],
-    imports: [
-        CommonModule,
-        FormsModule,
         ReactiveFormsModule,
         NgbModule,
+        OrgSelectComponent,
         EgCoreModule,
         ContextMenuModule
     ],

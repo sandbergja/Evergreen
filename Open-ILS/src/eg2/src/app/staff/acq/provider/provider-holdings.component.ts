@@ -12,12 +12,21 @@ import {ProviderRecordService} from './provider-record.service';
 import {FmRecordEditorComponent} from '@eg/share/fm-editor/fm-editor.component';
 import {StringComponent} from '@eg/share/string/string.component';
 import {ToastService} from '@eg/share/toast/toast.service';
+import { CommonModule } from '@angular/common';
+import { GridModule } from '@eg/share/grid/grid.module';
+import { ComboboxComponent } from '@eg/share/combobox/combobox.component';
 
 
 @Component({
     selector: 'eg-provider-holdings',
     templateUrl: 'provider-holdings.component.html',
-    standalone: false
+    imports: [
+        ComboboxComponent,
+        CommonModule,
+        FmRecordEditorComponent,
+        GridModule,
+        StringComponent,
+    ]
 })
 export class ProviderHoldingsComponent implements OnInit, AfterViewInit, OnDestroy {
 

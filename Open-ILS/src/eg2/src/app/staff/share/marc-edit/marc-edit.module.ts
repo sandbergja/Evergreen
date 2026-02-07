@@ -1,7 +1,6 @@
 import {NgModule} from '@angular/core';
 import {StaffCommonModule} from '@eg/staff/common.module';
 import {CommonWidgetsModule} from '@eg/share/common-widgets.module';
-import {MarcEditorComponent} from './editor.component';
 import {MarcRichEditorComponent} from './rich-editor.component';
 import {MarcFlatEditorComponent} from './flat-editor.component';
 import {FixedFieldsEditorComponent} from './fixed-fields-editor.component';
@@ -18,28 +17,22 @@ import { CharsLatinComponent } from './charmap/chars-latin.component';
 import { CharsPunctuationComponent } from './charmap/chars-punctuation.component';
 
 @NgModule({
-    declarations: [
-        MarcEditorComponent,
-        MarcRichEditorComponent,
-        MarcFlatEditorComponent,
-        FixedFieldsEditorComponent,
-        FixedFieldComponent,
-        EditableContentComponent,
-        MarcEditorDialogComponent,
-        PhysCharDialogComponent,
+    imports: [
+        AuthorityLinkingDialogComponent,
         CharMapDialogComponent,
         CharsCanadianComponent,
         CharsLatinComponent,
         CharsPunctuationComponent,
-        AuthorityLinkingDialogComponent
-    ],
-    imports: [
+        EditableContentComponent,
+        FixedFieldComponent,
+        FixedFieldsEditorComponent,
         StaffCommonModule,
         CommonWidgetsModule,
-        HoldingsModule
-    ],
-    exports: [
-        MarcEditorComponent
+        HoldingsModule,
+        MarcEditorDialogComponent,
+        MarcRichEditorComponent,
+        MarcFlatEditorComponent,
+        PhysCharDialogComponent,
     ],
     providers: [
         TagTableService

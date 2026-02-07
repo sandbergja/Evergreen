@@ -30,7 +30,8 @@ import {RecentImportsComponent} from './recent-imports.component';
 import {MarcEditModule} from '@eg/staff/share/marc-edit/marc-edit.module';
 
 @NgModule({
-    declarations: [
+    imports: [
+        AcqCommonModule,
         VandelayComponent,
         ImportComponent,
         ExportComponent,
@@ -49,10 +50,7 @@ import {MarcEditModule} from '@eg/staff/share/marc-edit/marc-edit.module';
         MatchSetExpressionComponent,
         MatchSetQualityComponent,
         MatchSetNewPointComponent,
-        RecentImportsComponent
-    ],
-    imports: [
-        AcqCommonModule,
+        RecentImportsComponent,
         TreeModule,
         StaffCommonModule,
         FmRecordEditorModule,

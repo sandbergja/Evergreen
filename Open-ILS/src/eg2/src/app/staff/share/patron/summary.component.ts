@@ -1,18 +1,20 @@
 import {Component, OnInit, Input} from '@angular/core';
-import {Router, ActivatedRoute, ParamMap} from '@angular/router';
-import {NgbNav, NgbNavChangeEvent} from '@ng-bootstrap/ng-bootstrap';
 import {OrgService} from '@eg/core/org.service';
 import {IdlObject} from '@eg/core/idl.service';
 import {NetService} from '@eg/core/net.service';
 import {PrintService} from '@eg/share/print/print.service';
 import {PatronService, PatronSummary} from './patron.service';
 import {ServerStoreService} from '@eg/core/server-store.service';
+import { CommonModule, NgClass, NgIf, NgSwitch, NgSwitchCase } from '@angular/common';
+import { RouterModule } from '@angular/router';
 
 @Component({
     templateUrl: 'summary.component.html',
     styleUrls: ['summary.component.css'],
     selector: 'eg-patron-summary',
-    standalone: false
+    imports: [
+        CommonModule
+    ]
 })
 export class PatronSummaryComponent implements OnInit {
 

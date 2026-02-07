@@ -7,10 +7,14 @@ import {PcrudService} from '@eg/core/pcrud.service';
 import {FmRecordEditorComponent} from '@eg/share/fm-editor/fm-editor.component';
 import {StringComponent} from '@eg/share/string/string.component';
 import {ToastService} from '@eg/share/toast/toast.service';
+import { StaffCommonModule } from '@eg/staff/common.module';
 
 @Component({
     templateUrl: './standing-penalty.component.html',
-    standalone: false
+    imports: [
+        FmRecordEditorComponent,
+        StaffCommonModule
+    ]
 })
 
 export class StandingPenaltyComponent implements OnInit {

@@ -27,11 +27,6 @@ mockAuth.user.and.returnValue(mockIdlObject);
 describe('CashReportsComponent', () => {
     it('alerts the user if end date is before start date', async () => {
         await TestBed.configureTestingModule({
-            declarations: [
-                CashReportsComponent,
-                DateSelectComponent,
-                DatesInOrderValidatorDirective
-            ],
             providers: [
                 {provide: IdlService, useValue: {}},
                 {provide: NetService, useValue: mockNet},
@@ -40,9 +35,7 @@ describe('CashReportsComponent', () => {
                 {provide: PrintService, useValue: null}
             ],
             imports: [
-                NgbNavModule,
-                NgbDatepickerModule,
-                FormsModule
+                CashReportsComponent,
             ],
             schemas: [CUSTOM_ELEMENTS_SCHEMA]
         }).compileComponents();

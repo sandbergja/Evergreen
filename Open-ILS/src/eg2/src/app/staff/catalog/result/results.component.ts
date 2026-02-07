@@ -10,6 +10,7 @@ import {StaffCatalogService} from '../catalog.service';
 import {IdlObject} from '@eg/core/idl.service';
 import {BasketService} from '@eg/share/catalog/basket.service';
 import {ServerStoreService} from '@eg/core/server-store.service';
+import { StaffCommonModule } from '@eg/staff/common.module';
 
 /* eslint-disable no-magic-numbers */
 const resultsCols = [10,12];
@@ -20,7 +21,7 @@ const mobileWidth = 992;
     selector: 'eg-catalog-results',
     templateUrl: 'results.component.html',
     styleUrls: ['results.component.css'],
-    standalone: false
+    imports: [StaffCommonModule]
 })
 export class ResultsComponent implements OnInit, OnDestroy {
 

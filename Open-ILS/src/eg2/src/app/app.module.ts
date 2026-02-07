@@ -14,16 +14,14 @@ import {BaseRoutingModule} from './routing.module';
 import {WelcomeComponent} from './welcome.component';
 
 @NgModule({
-    declarations: [
-        BaseComponent,
-        WelcomeComponent
-    ],
+    declarations: [BaseComponent],
     imports: [
         EgCommonModule.forRoot(),
         BaseRoutingModule,
         BrowserModule,
         NgbModule,
-        CookieModule.forRoot()
+        CookieModule.forRoot(),
+        WelcomeComponent
     ],
     exports: [],
     bootstrap: [BaseComponent]

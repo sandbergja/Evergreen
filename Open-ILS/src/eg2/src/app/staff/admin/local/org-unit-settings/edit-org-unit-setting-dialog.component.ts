@@ -2,11 +2,14 @@ import {Component} from '@angular/core';
 import {DialogComponent} from '@eg/share/dialog/dialog.component';
 import {IdlObject} from '@eg/core/idl.service';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
+import { StaffCommonModule } from '@eg/staff/common.module';
 
 @Component({
     selector: 'eg-admin-edit-org-unit-setting-dialog',
     templateUrl: './edit-org-unit-setting-dialog.component.html',
-    standalone: false
+    imports: [
+        StaffCommonModule
+    ]
 })
 
 export class EditOuSettingDialogComponent extends DialogComponent {

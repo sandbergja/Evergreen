@@ -3,8 +3,7 @@ import {DialogComponent} from '@eg/share/dialog/dialog.component';
 
 @Component({
     selector: 'eg-no-timezone-set-dialog',
-    templateUrl: './no-timezone-set.component.html',
-    standalone: false
+    templateUrl: './no-timezone-set.component.html'
 })
 
 /**

@@ -6,6 +6,9 @@ import {Pager} from '@eg/share/util/pager';
 import {NetService} from '@eg/core/net.service';
 import {PcrudService} from '@eg/core/pcrud.service';
 import {OrgService} from '@eg/core/org.service';
+import { StaffCommonModule } from '@eg/staff/common.module';
+import { BibListComponent } from '@eg/staff/share/bib-list/bib-list.component';
+import { MarcEditorComponent } from '@eg/staff/share/marc-edit/editor.component';
 
 /* Find, merge, and edit authority records */
 
@@ -15,7 +18,11 @@ import {OrgService} from '@eg/core/org.service';
         '#marcEditor { background-color: hsla(223, 25%, 91%, 1) }',
         '[data-bs-theme="dark"] :host #marcEditor { background-color: var(--bs-body-bg-alt) }'
     ],
-    standalone: false
+    imports: [
+        BibListComponent,
+        MarcEditorComponent,
+        StaffCommonModule
+    ]
 })
 export class ManageAuthorityComponent implements OnInit {
 

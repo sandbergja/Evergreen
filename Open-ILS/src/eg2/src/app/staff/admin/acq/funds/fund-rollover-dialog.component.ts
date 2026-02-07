@@ -12,11 +12,12 @@ import {PermService} from '@eg/core/perm.service';
 import {OrgService} from '@eg/core/org.service';
 import {ProgressInlineComponent} from '@eg/share/dialog/progress-inline.component';
 import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
+import { StaffCommonModule } from '@eg/staff/common.module';
 
 @Component({
     selector: 'eg-fund-rollover-dialog',
     templateUrl: './fund-rollover-dialog.component.html',
-    standalone: false
+    imports: [StaffCommonModule]
 })
 
 export class FundRolloverDialogComponent

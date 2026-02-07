@@ -9,6 +9,7 @@ import {PermService} from '@eg/core/perm.service';
 import {PcrudService} from '@eg/core/pcrud.service';
 import {ComboboxComponent, ComboboxEntry} from '@eg/share/combobox/combobox.component';
 import {ItemLocationService} from './item-location-select.service';
+import { NgIf } from '@angular/common';
 
 /**
  * Item (Copy) Location Selector.
@@ -21,12 +22,16 @@ import {ItemLocationService} from './item-location-select.service';
 @Component({
     selector: 'eg-item-location-select',
     templateUrl: './item-location-select.component.html',
-    providers: [{
-        provide: NG_VALUE_ACCESSOR,
-        useExisting: forwardRef(() => ItemLocationSelectComponent),
-        multi: true
-    }],
-    standalone: false
+    providers: [
+        ItemLocationService, {
+            provide: NG_VALUE_ACCESSOR,
+            useExisting: forwardRef(() => ItemLocationSelectComponent),
+            multi: true
+        }],
+    imports: [
+        ComboboxComponent,
+        NgIf
+    ]
 })
 export class ItemLocationSelectComponent
 implements OnInit, AfterViewInit, ControlValueAccessor {

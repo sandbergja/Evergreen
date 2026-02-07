@@ -8,7 +8,11 @@ import { StoreService } from '@eg/core/store.service';
 import { PcrudService } from '@eg/core/pcrud.service';
 import { IdlService } from '@eg/core/idl.service';
 import { OrgService } from '@eg/core/org.service';
-import { ComboboxEntry } from '@eg/share/combobox/combobox.component';
+import { ComboboxComponent, ComboboxEntry } from '@eg/share/combobox/combobox.component';
+import { ItemLocationSelectComponent } from '../item-location-select/item-location-select.component';
+import { OrgSelectComponent } from '../org-select/org-select.component';
+import { FormsModule } from '@angular/forms';
+import { NgFor, NgIf } from '@angular/common';
 
 @Component({
     selector: 'eg-multi-select',
@@ -17,7 +21,14 @@ import { ComboboxEntry } from '@eg/share/combobox/combobox.component';
     .icons {margin-inline-start:-18px}
     .material-icons {font-size: 16px;font-weight:bold}
   `],
-    standalone: false
+    imports: [
+        ComboboxComponent,
+        FormsModule,
+        ItemLocationSelectComponent,
+        NgFor,
+        NgIf,
+        OrgSelectComponent,
+    ]
 })
 export class MultiSelectComponent implements OnInit {
 

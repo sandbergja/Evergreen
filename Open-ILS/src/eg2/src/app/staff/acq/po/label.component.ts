@@ -3,11 +3,12 @@ import {Component, Input} from '@angular/core';
 import {OnInit} from '@angular/core';
 import {IdlService, IdlObject} from '@eg/core/idl.service';
 import {PoService} from './po.service';
+import { CommonModule } from '@angular/common';
 
 @Component({
     templateUrl: 'label.component.html',
     selector: 'eg-po-label',
-    standalone: false
+    imports: [CommonModule]
 })
 export class PoLabelComponent implements OnInit {
 

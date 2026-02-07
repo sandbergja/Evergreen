@@ -4,6 +4,8 @@ import {OrgService} from '@eg/core/org.service';
 import {MarcRecord} from './marcrecord';
 import {MarcEditContext} from './editor-context';
 import {TagTableService} from './tagtable.service';
+import { CommonModule } from '@angular/common';
+import { FixedFieldComponent } from './fixed-field.component';
 
 /**
  * MARC Fixed Fields Editor Component
@@ -14,7 +16,10 @@ import {TagTableService} from './tagtable.service';
     templateUrl: './fixed-fields-editor.component.html',
     styleUrls: ['fixed-fields-editor.component.css'],
     encapsulation: ViewEncapsulation.None,
-    standalone: false
+    imports: [
+        CommonModule,
+        FixedFieldComponent
+    ]
 })
 
 export class FixedFieldsEditorComponent {

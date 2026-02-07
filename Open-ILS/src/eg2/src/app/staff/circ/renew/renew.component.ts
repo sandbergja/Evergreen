@@ -27,6 +27,9 @@ import {CancelTransitDialogComponent
 } from '@eg/staff/share/circ/cancel-transit-dialog.component';
 import {HoldingsService} from '@eg/staff/share/holdings/holdings.service';
 import {AnonCacheService} from '@eg/share/util/anon-cache.service';
+import { StaffCommonModule } from '@eg/staff/common.module';
+import { WorkLogStringsComponent } from '@eg/staff/share/worklog/strings.component';
+import { CircComponentsComponent } from '@eg/staff/share/circ/components.component';
 
 
 interface RenewGridEntry extends CheckoutResult {
@@ -39,7 +42,14 @@ const TRIM_LIST_TO = 20;
 @Component({
     templateUrl: 'renew.component.html',
     styleUrls: ['renew.component.css'],
-    standalone: false
+    imports: [
+        BarcodeSelectComponent,
+        CancelTransitDialogComponent,
+        CircComponentsComponent,
+        CopyAlertsDialogComponent,
+        StaffCommonModule,
+        WorkLogStringsComponent
+    ]
 })
 export class RenewComponent implements OnInit, AfterViewInit {
     renewals: RenewGridEntry[] = [];

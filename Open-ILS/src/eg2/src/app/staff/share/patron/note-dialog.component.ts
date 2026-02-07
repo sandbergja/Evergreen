@@ -12,7 +12,10 @@ import {PcrudService} from '@eg/core/pcrud.service';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {DialogComponent} from '@eg/share/dialog/dialog.component';
 import {StringComponent} from '@eg/share/string/string.component';
-import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
+import {ComboboxComponent, ComboboxEntry} from '@eg/share/combobox/combobox.component';
+import { FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { DepthSelectComponent } from '@eg/share/depth-select/depth-select.component';
 
 /**
  * Dialog container for patron note (penalty/message) application
@@ -24,7 +27,13 @@ import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
 @Component({
     selector: 'eg-patron-note-dialog',
     templateUrl: 'note-dialog.component.html',
-    standalone: false
+    imports: [
+        ComboboxComponent,
+        CommonModule,
+        FormsModule,
+        DepthSelectComponent,
+        StringComponent
+    ]
 })
 
 export class PatronNoteDialogComponent

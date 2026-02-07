@@ -1,7 +1,7 @@
 /* eslint-disable */
 import {Component, ViewChild, OnInit, Input, TemplateRef, Directive, AfterViewInit, ElementRef} from '@angular/core';
 import {ActivatedRoute} from '@angular/router';
-import {FormBuilder, FormGroup, FormControl, Validators, FormArray} from '@angular/forms';
+import {FormBuilder, FormGroup, FormControl, Validators, FormArray, FormsModule} from '@angular/forms';
 import {map, mergeMap, defaultIfEmpty, last} from 'rxjs/operators';
 import {EMPTY, Observable, of, from, finalize} from 'rxjs';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
@@ -20,12 +20,30 @@ import {EventService} from '@eg/core/event.service';
 import {HoldingsService} from '@eg/staff/share/holdings/holdings.service';
 import {ComboboxEntry, ComboboxComponent} from '@eg/share/combobox/combobox.component';
 import {ProgressInlineComponent} from '@eg/share/dialog/progress-inline.component';
+import { StaffBannerComponent } from '../staff-banner.component';
+import { TitleComponent } from '@eg/share/title/title.component';
+import { MarcEditorComponent } from '../marc-edit/editor.component';
+import { CommonModule } from '@angular/common';
+import { OrgSelectComponent } from '@eg/share/org-select/org-select.component';
+import { GridModule } from '@eg/share/grid/grid.module';
 
 @Component({
     selector: 'eg-z3950-search',
     styleUrls: ['z3950-search.component.css'],
     templateUrl: 'z3950-search.component.html',
-    standalone: false
+    imports: [
+        ComboboxComponent,
+        CommonModule,
+        ConfirmDialogComponent,
+        FormsModule,
+        GridModule,
+        MarcEditorComponent,
+        OrgSelectComponent,
+        ProgressInlineComponent,
+        PromptDialogComponent,
+        StaffBannerComponent,
+        TitleComponent
+    ]
 })
 
 export class Z3950SearchComponent implements OnInit {
@@ -789,8 +807,7 @@ export class Z3950SearchComponent implements OnInit {
 }
 
 @Directive({
-    selector: '[egautofocus]',
-    standalone: false
+    selector: '[egautofocus]'
 })
 export class AutofocusDirective implements OnInit {
     @Input() egautofocus: boolean;

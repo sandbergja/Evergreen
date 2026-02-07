@@ -10,6 +10,10 @@ import {MarcEditContext} from './editor-context';
 import {AuthorityLinkingDialogComponent} from './authority-linking-dialog.component';
 import {PhysCharDialogComponent} from './phys-char-dialog.component';
 import {CharMapDialogComponent} from './charmap/charmap-dialog.component';
+import { CommonModule } from '@angular/common';
+import { EditableContentComponent } from './editable-content.component';
+import { FixedFieldsEditorComponent } from './fixed-fields-editor.component';
+import { ProgressInlineComponent } from '@eg/share/dialog/progress-inline.component';
 
 
 /**
@@ -20,7 +24,15 @@ import {CharMapDialogComponent} from './charmap/charmap-dialog.component';
     selector: 'eg-marc-rich-editor',
     templateUrl: './rich-editor.component.html',
     styleUrls: ['rich-editor.component.css', 'rich-editor-colors.css'],
-    standalone: false
+    imports: [
+        AuthorityLinkingDialogComponent,
+        CharMapDialogComponent,
+        CommonModule,
+        EditableContentComponent,
+        FixedFieldsEditorComponent,
+        PhysCharDialogComponent,
+        ProgressInlineComponent
+    ]
 })
 
 export class MarcRichEditorComponent implements OnInit {

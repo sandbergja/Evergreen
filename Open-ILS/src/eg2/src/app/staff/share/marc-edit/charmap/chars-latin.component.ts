@@ -9,8 +9,7 @@ import { CharMapDialogComponent } from './charmap-dialog.component';
     selector: 'eg-chars-latin',
     templateUrl: './chars-latin.component.html',
     styleUrls: ['charmap-dialog.component.css'],
-    encapsulation: ViewEncapsulation.None,
-    standalone: false
+    encapsulation: ViewEncapsulation.None
 })
 
 export class CharsLatinComponent {

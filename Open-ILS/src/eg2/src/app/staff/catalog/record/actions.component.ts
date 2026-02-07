@@ -10,13 +10,20 @@ import {BasketService} from '@eg/share/catalog/basket.service';
 import {StringService} from '@eg/share/string/string.service';
 import {ToastService} from '@eg/share/toast/toast.service';
 import {HoldingsService} from '@eg/staff/share/holdings/holdings.service';
+import { StaffCommonModule } from '@eg/staff/common.module';
+import { UploadJacketImageDialogComponent } from './upload-jacket-image-dialog.component';
+import { AddToCarouselDialogComponent } from './add-to-carousel-dialog.component';
 
 export const AC_CLEAR_CACHE_PATH = '/opac/extras/ac/clearcache/all/r/';
 
 @Component({
     selector: 'eg-catalog-record-actions',
     templateUrl: 'actions.component.html',
-    standalone: false
+    imports: [
+        AddToCarouselDialogComponent,
+        StaffCommonModule,
+        UploadJacketImageDialogComponent
+    ]
 })
 export class RecordActionsComponent implements OnInit {
 

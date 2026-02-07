@@ -1,5 +1,5 @@
 import {Component, ViewChild, OnInit} from '@angular/core';
-import {Location} from '@angular/common';
+import {CommonModule, Location} from '@angular/common';
 import {FormatService} from '@eg/core/format.service';
 import {GridDataSource, GridCellTextGenerator} from '@eg/share/grid/grid';
 import {GridComponent} from '@eg/share/grid/grid.component';
@@ -19,10 +19,28 @@ import {DistributionFormulaEditDialogComponent} from './distribution-formula-edi
 import {Observable, forkJoin, of, mergeMap} from 'rxjs';
 import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
+import { StaffBannerComponent } from '@eg/staff/share/staff-banner.component';
+import { TitleComponent } from '@eg/share/title/title.component';
+import { FormsModule } from '@angular/forms';
+import { TranslateComponent } from '@eg/share/translate/translate.component';
+import { GridModule } from '@eg/share/grid/grid.module';
+import { FmRecordEditorComponent } from '@eg/share/fm-editor/fm-editor.component';
 
 @Component({
     templateUrl: './distribution-formulas.component.html',
-    standalone: false
+    imports: [
+        AlertDialogComponent,
+        CommonModule,
+        ConfirmDialogComponent,
+        DistributionFormulaEditDialogComponent,
+        FmRecordEditorComponent,
+        FormsModule,
+        GridModule,
+        StaffBannerComponent,
+        StringComponent,
+        TitleComponent,
+        TranslateComponent
+    ]
 })
 
 export class DistributionFormulasComponent extends AdminPageComponent implements OnInit {

@@ -9,6 +9,8 @@ import {MarcField} from './marcrecord';
 import {MarcEditContext} from './editor-context';
 import {Pager} from '@eg/share/util/pager';
 import {MarcEditorDialogComponent} from './editor-dialog.component';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 /**
  * MARC Authority Linking Dialog
@@ -17,7 +19,11 @@ import {MarcEditorDialogComponent} from './editor-dialog.component';
 @Component({
     selector: 'eg-authority-linking-dialog',
     templateUrl: './authority-linking-dialog.component.html',
-    standalone: false
+    imports: [
+        CommonModule,
+        FormsModule,
+        MarcEditorDialogComponent
+    ]
 })
 
 export class AuthorityLinkingDialogComponent

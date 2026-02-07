@@ -18,6 +18,7 @@ import {HttpClient, HttpRequest, HttpEventType,
 import {ProgressInlineComponent} from '@eg/share/dialog/progress-inline.component';
 import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
 import {ServerStoreService} from '@eg/core/server-store.service';
+import { StaffCommonModule } from '@eg/staff/common.module';
 
 const TEMPLATE_SETTING_NAME = 'eg.cat.vandelay.import.templates';
 
@@ -67,7 +68,7 @@ interface ImportOptions {
 
 @Component({
     templateUrl: 'import.component.html',
-    standalone: false
+    imports: [StaffCommonModule]
 })
 export class ImportComponent implements OnInit, AfterViewInit, OnDestroy {
 

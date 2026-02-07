@@ -6,11 +6,17 @@ import {AuthService} from '@eg/core/auth.service';
 import {PcrudService} from '@eg/core/pcrud.service';
 import {DialogComponent} from '@eg/share/dialog/dialog.component';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
+import { NgFor, NgIf } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 @Component({
     selector: 'eg-translate',
     templateUrl: 'translate.component.html',
-    standalone: false
+    imports: [
+        FormsModule,
+        NgFor,
+        NgIf
+    ]
 })
 
 export class TranslateComponent

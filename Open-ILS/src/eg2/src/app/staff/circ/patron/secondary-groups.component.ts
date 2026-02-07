@@ -8,13 +8,14 @@ import {AuthService} from '@eg/core/auth.service';
 import {OrgService} from '@eg/core/org.service';
 import {DialogComponent} from '@eg/share/dialog/dialog.component';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
+import { StaffCommonModule } from '@eg/staff/common.module';
 
 /* Add/Remove Secondary Groups */
 
 @Component({
     selector: 'eg-patron-secondary-groups',
     templateUrl: 'secondary-groups.component.html',
-    standalone: false
+    imports: [StaffCommonModule]
 })
 
 export class SecondaryGroupsDialogComponent

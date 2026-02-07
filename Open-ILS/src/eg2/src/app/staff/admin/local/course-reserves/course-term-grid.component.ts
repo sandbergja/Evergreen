@@ -5,7 +5,7 @@ import {PcrudService} from '@eg/core/pcrud.service';
 import {CourseService} from '@eg/staff/share/course.service';
 import {GridComponent} from '@eg/share/grid/grid.component';
 import {Pager} from '@eg/share/util/pager';
-import {GridDataSource, GridColumn} from '@eg/share/grid/grid';
+import {GridDataSource} from '@eg/share/grid/grid';
 import {FmRecordEditorComponent} from '@eg/share/fm-editor/fm-editor.component';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 import {StringComponent} from '@eg/share/string/string.component';
@@ -13,12 +13,13 @@ import {ToastService} from '@eg/share/toast/toast.service';
 import {LocaleService} from '@eg/core/locale.service';
 import {AuthService} from '@eg/core/auth.service';
 import {OrgService} from '@eg/core/org.service';
-import {OrgFamily} from '@eg/share/org-family-select/org-family-select.component';
+import {OrgFamily, OrgFamilySelectComponent} from '@eg/share/org-family-select/org-family-select.component';
+import { StaffCommonModule } from '@eg/staff/common.module';
 
 @Component({
     selector: 'eg-course-term-grid',
     templateUrl: './course-term-grid.component.html',
-    standalone: false
+    imports: [FmRecordEditorComponent, OrgFamilySelectComponent, StaffCommonModule]
 })
 
 export class TermListComponent implements OnInit, AfterViewInit {

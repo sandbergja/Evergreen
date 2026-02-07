@@ -1,15 +1,12 @@
 import {ComponentFixture, TestBed} from '@angular/core/testing';
-import {Component, DebugElement, Input, TemplateRef} from '@angular/core';
-import {By} from '@angular/platform-browser';
-import {DateRange, DateRangeSelectComponent} from './daterange-select.component';
-import {ReactiveFormsModule} from '@angular/forms';
+import {Component, Input, TemplateRef} from '@angular/core';
+import {DateRangeSelectComponent} from './daterange-select.component';
 import {NgbDate} from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
     // eslint-disable-next-line @angular-eslint/component-selector
     selector: 'ngb-datepicker',
-    template: '',
-    standalone: false
+    template: ''
 })
 class EgMockDateSelectComponent {
     @Input() displayMonths: number;
@@ -26,7 +23,7 @@ describe('Component: DateRangeSelect', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
-            declarations: [
+            imports: [
                 DateRangeSelectComponent,
                 EgMockDateSelectComponent,
             ]});

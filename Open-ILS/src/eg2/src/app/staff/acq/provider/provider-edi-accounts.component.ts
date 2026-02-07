@@ -1,6 +1,6 @@
 import {Component, OnInit, AfterViewInit, OnDestroy, Input, Output, EventEmitter, ViewChild, ChangeDetectorRef} from '@angular/core';
 import {EMPTY, from, Subscription} from 'rxjs';
-import {Router, ActivatedRoute, ParamMap} from '@angular/router';
+import {Router, ActivatedRoute} from '@angular/router';
 import {Pager} from '@eg/share/util/pager';
 import {IdlService, IdlObject} from '@eg/core/idl.service';
 import {NetService} from '@eg/core/net.service';
@@ -13,11 +13,24 @@ import {StringComponent} from '@eg/share/string/string.component';
 import {ToastService} from '@eg/share/toast/toast.service';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 import {PcrudService} from '@eg/core/pcrud.service';
+import { GridColumnComponent } from '@eg/share/grid/grid-column.component';
+import { NgIf } from '@angular/common';
+import { GridToolbarButtonComponent } from '@eg/share/grid/grid-toolbar-button.component';
+import { GridToolbarActionComponent } from '@eg/share/grid/grid-toolbar-action.component';
 
 @Component({
     selector: 'eg-provider-edi-accounts',
     templateUrl: 'provider-edi-accounts.component.html',
-    standalone: false
+    imports: [
+        ConfirmDialogComponent,
+        FmRecordEditorComponent,
+        GridColumnComponent,
+        GridComponent,
+        GridToolbarButtonComponent,
+        GridToolbarActionComponent,
+        NgIf,
+        StringComponent,
+    ]
 })
 export class ProviderEdiAccountsComponent implements OnInit, AfterViewInit, OnDestroy {
 

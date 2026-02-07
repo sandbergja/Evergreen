@@ -3,12 +3,13 @@ import {Router, ActivatedRoute, ParamMap} from '@angular/router';
 import {NetService} from '@eg/core/net.service';
 import {PcrudService} from '@eg/core/pcrud.service';
 import {FormControl, FormGroup} from '@angular/forms';
+import { StaffCommonModule } from '../common.module';
 
 /* Component for retrieving bib records by ID, TCN */
 
 @Component({
     templateUrl: 'bib-by-ident.component.html',
-    standalone: false
+    imports: [StaffCommonModule]
 })
 export class BibByIdentComponent implements OnInit, AfterViewInit {
 

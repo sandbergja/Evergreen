@@ -8,6 +8,9 @@ import { PcrudService } from '@eg/core/pcrud.service';
 import { TestBed, waitForAsync } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { LocaleService } from '@eg/core/locale.service';
+import { AuthService } from '@eg/core/auth.service';
+import { StringService } from '../string/string.service';
 
 describe('FmRecordEditorComponent', () => {
     let component: FmRecordEditorComponent;
@@ -47,11 +50,14 @@ describe('FmRecordEditorComponent', () => {
         TestBed.configureTestingModule({
             providers: [
                 {provide: NgbModal, useValue: mockModal},
+                {provide: AuthService, useValue: {}},
                 {provide: IdlService, useValue: mockIdl},
+                {provide: LocaleService, useValue: {}},
                 {provide: ToastService, useValue: mockToast},
                 {provide: FormatService, useValue: mockFormat},
                 {provide: OrgService, useValue: mockOrg},
-                {provide: PcrudService, useValue: mockPcrud}
+                {provide: PcrudService, useValue: mockPcrud},
+                {provide: StringService, useValue: {}}
             ],
             schemas: [NO_ERRORS_SCHEMA],
         }).compileComponents();

@@ -11,11 +11,12 @@ import {ToastService} from '@eg/share/toast/toast.service';
 import {PermService} from '@eg/core/perm.service';
 import {ComboboxComponent, ComboboxEntry} from '@eg/share/combobox/combobox.component';
 import {Observable, map} from 'rxjs';
+import { StaffCommonModule } from '@eg/staff/common.module';
 
 @Component({
     selector: 'eg-fund-transfer-dialog',
     templateUrl: './fund-transfer-dialog.component.html',
-    standalone: false
+    imports: [StaffCommonModule]
 })
 
 export class FundTransferDialogComponent

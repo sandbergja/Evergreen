@@ -25,6 +25,8 @@ import {HoldNotifyUpdateDialogComponent} from './hold-notify-update.component';
 import {BroadcastService} from '@eg/share/util/broadcast.service';
 import {PrintService} from '@eg/share/print/print.service';
 import {WorkLogService} from '@eg/staff/share/worklog/worklog.service';
+import { StaffCommonModule } from '@eg/staff/common.module';
+import { PatronBarcodesDialogComponent } from './barcodes.component';
 
 const PATRON_FLESH_FIELDS = [
     'cards',
@@ -111,7 +113,13 @@ interface StatCat {
     templateUrl: 'edit.component.html',
     selector: 'eg-patron-edit',
     styleUrls: ['edit.component.css'],
-    standalone: false
+    imports: [
+        HoldNotifyUpdateDialogComponent,
+        PatronBarcodesDialogComponent,
+        ProfileSelectComponent,
+        SecondaryGroupsDialogComponent,
+        StaffCommonModule
+    ]
 })
 export class EditComponent implements OnInit {
 

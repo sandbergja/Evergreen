@@ -11,11 +11,12 @@ import {AuthService} from '@eg/core/auth.service';
 import {PcrudService} from '@eg/core/pcrud.service';
 import {BibRecordService, BibRecordSummary} from '@eg/share/catalog/bib-record.service';
 import {VandelayService, VandelayImportSelection} from './vandelay.service';
+import { StaffCommonModule } from '@eg/staff/common.module';
 
 @Component({
     selector: 'eg-queued-record-matches',
     templateUrl: 'queued-record-matches.component.html',
-    standalone: false
+    imports: [StaffCommonModule]
 })
 export class QueuedRecordMatchesComponent {
 

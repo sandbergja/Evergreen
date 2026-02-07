@@ -1,4 +1,6 @@
+import { NgClass, NgIf } from '@angular/common';
 import {Component, TemplateRef, OnInit, Input, ViewEncapsulation} from '@angular/core';
+import { TitleComponent } from '@eg/share/title/title.component';
 
 @Component({
     selector: 'eg-staff-banner',
@@ -17,7 +19,11 @@ import {Component, TemplateRef, OnInit, Input, ViewEncapsulation} from '@angular
     `,
     styleUrls: ['staff-banner.component.css'],
     encapsulation: ViewEncapsulation.None,
-    standalone: false
+    imports: [
+        NgClass,
+        NgIf,
+        TitleComponent
+    ]
 })
 
 export class StaffBannerComponent {

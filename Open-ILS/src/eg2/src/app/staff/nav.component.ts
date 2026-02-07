@@ -1,6 +1,6 @@
 import {Component, OnInit, OnDestroy, QueryList, ViewChild, ViewChildren} from '@angular/core';
-import {Router} from '@angular/router';
-import {ViewportScroller} from '@angular/common';
+import {Router, RouterModule} from '@angular/router';
+import {NgClass, NgIf, ViewportScroller} from '@angular/common';
 import {Subscription} from 'rxjs';
 import {OrgService} from '@eg/core/org.service';
 import {AuthService} from '@eg/core/auth.service';
@@ -12,14 +12,26 @@ import {NetRequest, NetService} from '@eg/core/net.service';
 import {OpChangeComponent} from '@eg/staff/share/op-change/op-change.component';
 import {PermService} from '@eg/core/perm.service';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
-import {NgbCollapseModule, NgbDropdown} from '@ng-bootstrap/ng-bootstrap';
+import {NgbCollapseModule, NgbDropdown, NgbDropdownItem, NgbDropdownMenu, NgbDropdownToggle} from '@ng-bootstrap/ng-bootstrap';
 import {AccessKeyInfoComponent} from '@eg/share/accesskey/accesskey-info.component';
 
 @Component({
     selector: 'eg-staff-nav-bar',
     styleUrls: ['nav.component.css'],
     templateUrl: 'nav.component.html',
-    standalone: false
+    imports: [
+        AccessKeyInfoComponent,
+        ConfirmDialogComponent,
+        NgbCollapseModule,
+        NgbDropdown,
+        NgbDropdownItem,
+        NgbDropdownMenu,
+        NgbDropdownToggle,
+        NgClass,
+        NgIf,
+        OpChangeComponent,
+        RouterModule
+    ]
 })
 
 export class StaffNavComponent implements OnInit, OnDestroy {

@@ -1,16 +1,21 @@
 import {Component, OnInit, Input, ViewChild} from '@angular/core';
-import {Router, ActivatedRoute, ParamMap} from '@angular/router';
+import {Router, ActivatedRoute, ParamMap, RouterModule} from '@angular/router';
 import {NetService} from '@eg/core/net.service';
 import {AuthService} from '@eg/core/auth.service';
 import {GridComponent} from '@eg/share/grid/grid.component';
 import {GridDataSource, GridCellTextGenerator} from '@eg/share/grid/grid';
 import {AcqSearchService, AcqSearchTerm, AcqSearch} from './acq-search.service';
 import {AcqSearchFormComponent} from './acq-search-form.component';
+import { GridModule } from '@eg/share/grid/grid.module';
 
 @Component({
     selector: 'eg-purchase-order-results',
     templateUrl: 'purchase-order-results.component.html',
-    standalone: false
+    imports: [
+        AcqSearchFormComponent,
+        GridModule,
+        RouterModule,
+    ]
 })
 export class PurchaseOrderResultsComponent implements OnInit {
 

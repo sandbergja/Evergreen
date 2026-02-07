@@ -1,7 +1,7 @@
 import {Injectable} from '@angular/core';
 import {IdlObject} from '@eg/core/idl.service';
 
-@Injectable()
+@Injectable({providedIn: 'root'})
 export class ItemLocationService {
 
     filterOrgsCache: {[perm: string]: number[]} = {};

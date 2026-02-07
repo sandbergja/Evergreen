@@ -1,4 +1,4 @@
-import {Component, Input, ViewChild, TemplateRef, OnInit} from '@angular/core';
+import {Component, Input, ViewChild, OnInit} from '@angular/core';
 import {DialogComponent} from '@eg/share/dialog/dialog.component';
 import {IdlService, IdlObject} from '@eg/core/idl.service';
 import {FormatService} from '@eg/core/format.service';
@@ -14,11 +14,15 @@ import {StringComponent} from '@eg/share/string/string.component';
 import {ToastService} from '@eg/share/toast/toast.service';
 import {GridComponent} from '@eg/share/grid/grid.component';
 import {OrgService} from '@eg/core/org.service';
+import { StaffCommonModule } from '@eg/staff/common.module';
 
 @Component({
     selector: 'eg-funding-source-transactions-dialog',
     templateUrl: './funding-source-transactions-dialog.component.html',
-    standalone: false
+    imports: [
+        FmRecordEditorComponent,
+        StaffCommonModule
+    ]
 })
 
 export class FundingSourceTransactionsDialogComponent

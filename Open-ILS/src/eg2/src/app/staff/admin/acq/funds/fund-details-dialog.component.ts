@@ -16,11 +16,16 @@ import {StringComponent} from '@eg/share/string/string.component';
 import {ToastService} from '@eg/share/toast/toast.service';
 import {FundTransferDialogComponent} from './fund-transfer-dialog.component';
 import {mergeMap, Observable, of} from 'rxjs';
+import { StaffCommonModule } from '@eg/staff/common.module';
 
 @Component({
     selector: 'eg-fund-details-dialog',
     templateUrl: './fund-details-dialog.component.html',
-    standalone: false
+    imports: [
+        FmRecordEditorComponent,
+        FundTransferDialogComponent,
+        StaffCommonModule
+    ]
 })
 
 export class FundDetailsDialogComponent

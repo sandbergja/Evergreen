@@ -3,8 +3,7 @@ import {ComboboxComponent} from './combobox.component';
 
 @Component({
     selector: 'eg-combobox-entry',
-    template: '<ng-template></ng-template>',
-    standalone: false
+    template: '<ng-template></ng-template>'
 })
 export class ComboboxEntryComponent implements OnInit {
 

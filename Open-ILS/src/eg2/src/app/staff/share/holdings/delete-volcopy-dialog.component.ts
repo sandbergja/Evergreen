@@ -19,7 +19,10 @@ import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 @Component({
     selector: 'eg-delete-holding-dialog',
     templateUrl: 'delete-volcopy-dialog.component.html',
-    standalone: false
+    imports: [
+        ConfirmDialogComponent,
+        StringComponent
+    ]
 })
 
 export class DeleteHoldingDialogComponent

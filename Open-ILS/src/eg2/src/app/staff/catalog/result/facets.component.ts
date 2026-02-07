@@ -11,6 +11,7 @@ import {ToastService} from '@eg/share/toast/toast.service';
 import {BasketService} from '@eg/share/catalog/basket.service';
 import {EventService} from '@eg/core/event.service';
 import {NgbNavChangeEvent} from '@ng-bootstrap/ng-bootstrap';
+import { StaffCommonModule } from '@eg/staff/common.module';
 
 export const FACET_CONFIG = {
     display: [
@@ -26,7 +27,7 @@ export const FACET_CONFIG = {
     selector: 'eg-catalog-result-facets',
     templateUrl: 'facets.component.html',
     styleUrls: ['./facets.component.css'],
-    standalone: false
+    imports: [StaffCommonModule]
 })
 export class ResultFacetsComponent implements OnInit {
 

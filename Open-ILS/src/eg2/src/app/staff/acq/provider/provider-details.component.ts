@@ -11,7 +11,10 @@ import {ToastService} from '@eg/share/toast/toast.service';
 @Component({
     selector: 'eg-provider-details',
     templateUrl: 'provider-details.component.html',
-    standalone: false
+    imports: [
+        FmRecordEditorComponent,
+        StringComponent
+    ]
 })
 export class ProviderDetailsComponent implements OnInit {
 

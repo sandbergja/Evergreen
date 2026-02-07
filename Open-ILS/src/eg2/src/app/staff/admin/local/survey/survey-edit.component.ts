@@ -6,11 +6,12 @@ import {ToastService} from '@eg/share/toast/toast.service';
 import {NetService} from '@eg/core/net.service';
 import {AuthService} from '@eg/core/auth.service';
 import {IdlObject, IdlService } from '@eg/core/idl.service';
-import {NgbNav, NgbNavChangeEvent} from '@ng-bootstrap/ng-bootstrap';
+import {NgbNavChangeEvent} from '@ng-bootstrap/ng-bootstrap';
+import { StaffCommonModule } from '@eg/staff/common.module';
 
 @Component({
     templateUrl: './survey-edit.component.html',
-    standalone: false
+    imports: [StaffCommonModule]
 })
 
 export class SurveyEditComponent implements OnInit {

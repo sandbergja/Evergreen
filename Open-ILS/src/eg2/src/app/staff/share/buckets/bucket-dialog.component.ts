@@ -6,11 +6,12 @@ import {EventService} from '@eg/core/event.service';
 import {ToastService} from '@eg/share/toast/toast.service';
 import {AuthService} from '@eg/core/auth.service';
 import {DialogComponent} from '@eg/share/dialog/dialog.component';
-import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
+import {NgbModal, NgbNav, NgbNavContent, NgbNavItem, NgbNavLink, NgbNavOutlet} from '@ng-bootstrap/ng-bootstrap';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
 import {StringComponent} from '@eg/share/string/string.component';
 import {BucketService} from '@eg/staff/share/buckets/bucket.service';
+import { NgIf } from '@angular/common';
 
 /**
  * Dialog for adding bib records to new and existing record buckets.
@@ -19,7 +20,16 @@ import {BucketService} from '@eg/staff/share/buckets/bucket.service';
 @Component({
     selector: 'eg-bucket-dialog',
     templateUrl: 'bucket-dialog.component.html',
-    standalone: false
+    imports: [
+        ConfirmDialogComponent,
+        NgbNav,
+        NgbNavContent,
+        NgbNavItem,
+        NgbNavLink,
+        NgbNavOutlet,
+        NgIf,
+        StringComponent
+    ]
 })
 
 export class BucketDialogComponent extends DialogComponent implements OnInit {

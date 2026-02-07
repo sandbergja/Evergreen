@@ -1,10 +1,11 @@
 import {Component} from '@angular/core';
 import {Router, ActivatedRoute, ParamMap} from '@angular/router';
-import {NgbNav, NgbNavChangeEvent} from '@ng-bootstrap/ng-bootstrap';
+import { StaffCommonModule } from '@eg/staff/common.module';
+import {NgbNavChangeEvent} from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
     templateUrl: 'display-attrs.component.html',
-    standalone: false
+    imports: [StaffCommonModule]
 })
 export class DisplayAttrsComponent {
 

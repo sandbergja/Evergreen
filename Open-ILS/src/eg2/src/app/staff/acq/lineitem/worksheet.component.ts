@@ -9,8 +9,7 @@ import {LineitemService} from './lineitem.service';
 import {PrintService} from '@eg/share/print/print.service';
 
 @Component({
-    templateUrl: 'worksheet.component.html',
-    standalone: false
+    templateUrl: 'worksheet.component.html'
 })
 export class LineitemWorksheetComponent implements OnInit, AfterViewInit {
 

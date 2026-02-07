@@ -8,12 +8,13 @@ import { ServerStoreService } from '@eg/core/server-store.service';
 import { CatalogService } from '@eg/share/catalog/catalog.service';
 import { StaffCatalogService } from '@eg/staff/catalog/catalog.service';
 import { ScriptService } from '@eg/share/util/script.service';
+import { NgIf } from '@angular/common';
 
 @Component({
     selector: 'eg-catalog-added-content',
     templateUrl: './added-content.component.html',
     styleUrls: ['./added-content.component.css'],
-    standalone: false
+    imports: [NgIf]
 })
 export class AddedContentComponent implements OnInit {
 

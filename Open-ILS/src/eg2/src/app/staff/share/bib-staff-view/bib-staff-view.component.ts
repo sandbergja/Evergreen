@@ -6,12 +6,15 @@ import {ServerStoreService} from '@eg/core/server-store.service';
 import {CatalogService} from '@eg/share/catalog/catalog.service';
 import {StaffCatalogService} from '@eg/staff/catalog/catalog.service';
 import { firstValueFrom, Observable } from 'rxjs';
+import { CommonModule } from '@angular/common';
 
 @Component({
     selector: 'eg-bib-staff-view',
     templateUrl: 'bib-staff-view.component.html',
     styleUrls: ['bib-staff-view.component.css'],
-    standalone: false
+    imports: [
+        CommonModule
+    ]
 })
 export class BibStaffViewComponent implements OnInit {
 

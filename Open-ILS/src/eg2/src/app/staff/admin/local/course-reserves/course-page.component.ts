@@ -7,11 +7,12 @@ import {ToastService} from '@eg/share/toast/toast.service';
 import {CourseService} from '@eg/staff/share/course.service';
 import {CourseAssociateUsersComponent} from './course-associate-users.component';
 import {CourseAssociateMaterialComponent} from './course-associate-material.component';
+import { StaffCommonModule } from '@eg/staff/common.module';
 
 @Component({
     selector: 'eg-course-page',
     templateUrl: './course-page.component.html',
-    standalone: false
+    imports: [StaffCommonModule]
 })
 
 export class CoursePageComponent implements OnInit {

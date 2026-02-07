@@ -11,11 +11,21 @@ import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {StringComponent} from '@eg/share/string/string.component';
 import {ToastService} from '@eg/share/toast/toast.service';
 import {PermService} from '@eg/core/perm.service';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { OrgSelectComponent } from '@eg/share/org-select/org-select.component';
+import { ComboboxComponent } from '@eg/share/combobox/combobox.component';
 
 @Component({
     selector: 'eg-distribution-formula-edit-dialog',
     templateUrl: './distribution-formula-edit-dialog.component.html',
-    standalone: false
+    imports: [
+        ComboboxComponent,
+        CommonModule,
+        FormsModule,
+        OrgSelectComponent,
+        StringComponent
+    ]
 })
 
 export class DistributionFormulaEditDialogComponent

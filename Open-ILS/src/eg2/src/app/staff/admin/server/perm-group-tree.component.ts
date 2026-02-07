@@ -13,13 +13,24 @@ import {FmRecordEditorComponent, FmFieldOptions} from '@eg/share/fm-editor/fm-ed
 import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
 import {PermGroupMapDialogComponent} from './perm-group-map-dialog.component';
 import {ProgressInlineComponent} from '@eg/share/dialog/progress-inline.component';
-import {NgbNav, NgbNavChangeEvent} from '@ng-bootstrap/ng-bootstrap';
+import {NgbNav, NgbNavChangeEvent, NgbNavModule} from '@ng-bootstrap/ng-bootstrap';
+import { StaffBannerComponent } from '@eg/staff/share/staff-banner.component';
+import { TreeComponent } from '@eg/share/tree/tree.component';
 
 /** Manage permission groups and group permissions */
 
 @Component({
     templateUrl: './perm-group-tree.component.html',
-    standalone: false
+    imports: [
+        ConfirmDialogComponent,
+        FmRecordEditorComponent,
+        NgbNavModule,
+        PermGroupMapDialogComponent,
+        ProgressInlineComponent,
+        StaffBannerComponent,
+        StringComponent,
+        TreeComponent
+    ]
 })
 
 export class PermGroupTreeComponent implements OnInit {

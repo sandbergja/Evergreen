@@ -8,14 +8,12 @@ import {PcrudService} from '@eg/core/pcrud.service';
 import {ToastService} from '@eg/share/toast/toast.service';
 import {StringComponent} from '@eg/share/string/string.component';
 import {StringService} from '@eg/share/string/string.service';
-import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
-import {FmRecordEditorComponent} from '@eg/share/fm-editor/fm-editor.component';
-import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
+import { StaffCommonModule } from '@eg/staff/common.module';
 
 @Component({
     templateUrl: './copy-loc-order.component.html',
     styleUrls: ['copy-loc-order.component.css'],
-    standalone: false
+    imports: [StaffCommonModule]
 })
 export class CopyLocOrderComponent implements OnInit {
 

@@ -5,11 +5,20 @@ import {PcrudService} from '@eg/core/pcrud.service';
 import {ToastService} from '@eg/share/toast/toast.service';
 import {StringComponent} from '@eg/share/string/string.component';
 import {Router} from '@angular/router';
+import { TitleComponent } from '@eg/share/title/title.component';
+import { NgFor, NgIf } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 @Component({
     templateUrl: 'splash.component.html',
     styleUrls: ['./splash.component.css'],
-    standalone: false
+    imports: [
+        FormsModule,
+        NgFor,
+        NgIf,
+        StringComponent,
+        TitleComponent
+    ]
 })
 
 export class StaffSplashComponent implements OnInit {
@@ -112,8 +121,7 @@ export class StaffSplashComponent implements OnInit {
 }
 
 @Directive({
-    selector: '[egAutofocus]',
-    standalone: false
+    selector: '[egAutofocus]'
 })
 export class AutofocusDirective implements AfterViewInit {
     constructor(private host: ElementRef) {}

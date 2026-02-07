@@ -19,11 +19,18 @@ import {mergeMap, Observable, forkJoin, of} from 'rxjs';
 import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 import {FundingSourceTransactionsDialogComponent} from './funding-source-transactions-dialog.component';
+import { StaffCommonModule } from '@eg/staff/common.module';
+import { TranslateComponent } from '@eg/share/translate/translate.component';
 
 @Component({
     selector: 'eg-funding-sources',
     templateUrl: './funding-sources.component.html',
-    standalone: false
+    imports: [
+        FmRecordEditorComponent,
+        FundingSourceTransactionsDialogComponent,
+        StaffCommonModule,
+        TranslateComponent
+    ]
 })
 
 export class FundingSourcesComponent extends AdminPageComponent implements OnInit, AfterViewInit {

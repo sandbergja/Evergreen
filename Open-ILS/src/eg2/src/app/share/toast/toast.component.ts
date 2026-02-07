@@ -1,6 +1,7 @@
 import {Component, Input, OnInit, ViewChild} from '@angular/core';
 import {ToastService, ToastMessage} from '@eg/share/toast/toast.service';
 import {ServerStoreService} from '@eg/core/server-store.service';
+import { NgFor, NgIf } from '@angular/common';
 
 const EG_TOAST_TIMEOUT = 10000;
 
@@ -8,7 +9,7 @@ const EG_TOAST_TIMEOUT = 10000;
     selector: 'eg-toast',
     templateUrl: './toast.component.html',
     styleUrls: ['./toast.component.css'],
-    standalone: false
+    imports: [NgFor, NgIf]
 })
 export class ToastComponent implements OnInit {
 

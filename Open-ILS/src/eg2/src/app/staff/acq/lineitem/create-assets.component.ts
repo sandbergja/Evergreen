@@ -1,12 +1,14 @@
-import {Component, OnInit, Input, Output} from '@angular/core';
-import {ActivatedRoute, Router, ParamMap, NavigationStart} from '@angular/router';
-import {IdlService, IdlObject} from '@eg/core/idl.service';
+import {Component, OnInit} from '@angular/core';
+import {ActivatedRoute, Router, ParamMap} from '@angular/router';
+import {IdlService} from '@eg/core/idl.service';
 import {NetService} from '@eg/core/net.service';
 import {EventService, EgEvent} from '@eg/core/event.service';
 import {PcrudService} from '@eg/core/pcrud.service';
 import {AuthService} from '@eg/core/auth.service';
 import {LineitemService} from './lineitem.service';
-import {UploadComponent} from '../picklist/upload.component';
+import { UploadComponent } from '../picklist/upload.component';
+import { ProgressInlineComponent } from '@eg/share/dialog/progress-inline.component';
+import { CommonModule } from '@angular/common';
 
 
 interface AssetCreationResponse {
@@ -20,7 +22,11 @@ interface AssetCreationResponse {
 
 @Component({
     templateUrl: 'create-assets.component.html',
-    standalone: false
+    imports: [
+        CommonModule,
+        ProgressInlineComponent,
+        UploadComponent,
+    ]
 })
 export class CreateAssetsComponent implements OnInit {
 

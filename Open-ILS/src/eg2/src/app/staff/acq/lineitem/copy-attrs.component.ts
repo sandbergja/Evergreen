@@ -10,12 +10,21 @@ import {ComboboxComponent, ComboboxEntry} from '@eg/share/combobox/combobox.comp
 import {ItemLocationService} from '@eg/share/item-location-select/item-location-select.service';
 import {ItemLocationSelectComponent} from '@eg/share/item-location-select/item-location-select.component';
 import {PermService} from '@eg/core/perm.service';
+import { CommonModule } from '@angular/common';
+import { OrgSelectComponent } from '@eg/share/org-select/org-select.component';
+import { FormsModule } from '@angular/forms';
 
 @Component({
     templateUrl: 'copy-attrs.component.html',
     styleUrls: ['copy-attrs.component.css'],
     selector: 'eg-lineitem-copy-attrs',
-    standalone: false
+    imports: [
+        ComboboxComponent,
+        CommonModule,
+        FormsModule,
+        ItemLocationSelectComponent,
+        OrgSelectComponent,
+    ]
 })
 export class LineitemCopyAttrsComponent implements OnInit {
 

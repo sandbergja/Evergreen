@@ -11,13 +11,11 @@ import {BrowseService} from './browse.service';
 import {BibListModule} from '@eg/staff/share/bib-list/bib-list.module';
 
 @NgModule({
-    declarations: [
+    imports: [
         AuthorityMarcEditComponent,
         BrowseAuthorityComponent,
         ManageAuthorityComponent,
-        AuthorityMergeDialogComponent
-    ],
-    imports: [
+        AuthorityMergeDialogComponent,
         StaffCommonModule,
         CommonWidgetsModule,
         MarcEditModule,

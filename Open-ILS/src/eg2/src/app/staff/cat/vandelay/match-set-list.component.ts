@@ -8,10 +8,14 @@ import {AuthService} from '@eg/core/auth.service';
 import {GridComponent} from '@eg/share/grid/grid.component';
 import {GridDataSource, GridCellTextGenerator} from '@eg/share/grid/grid';
 import {FmRecordEditorComponent} from '@eg/share/fm-editor/fm-editor.component';
+import { StaffCommonModule } from '@eg/staff/common.module';
 
 @Component({
     templateUrl: 'match-set-list.component.html',
-    standalone: false
+    imports: [
+        FmRecordEditorComponent,
+        StaffCommonModule
+    ]
 })
 export class MatchSetListComponent implements AfterViewInit {
 
