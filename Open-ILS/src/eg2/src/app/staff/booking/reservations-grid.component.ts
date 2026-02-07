@@ -17,13 +17,28 @@ import {ReservationActionsService} from './reservation-actions.service';
 import {CancelReservationDialogComponent} from './cancel-reservation-dialog.component';
 
 import moment from 'moment-timezone';
+import { GridToolbarActionComponent } from '@eg/share/grid/grid-toolbar-action.component';
+import { GridToolbarButtonComponent } from '@eg/share/grid/grid-toolbar-button.component';
+import { GridColumnComponent } from '@eg/share/grid/grid-column.component';
+import { NgIf } from '@angular/common';
+import { DateTimeSelectComponent } from '@eg/share/datetime-select/datetime-select.component';
 
 // A filterable grid of reservations used in various booking interfaces
 
 @Component({
     selector: 'eg-reservations-grid',
     templateUrl: './reservations-grid.component.html',
-    standalone: false
+    imports: [
+        CancelReservationDialogComponent,
+        DateTimeSelectComponent,
+        FmRecordEditorComponent,
+        GridColumnComponent,
+        GridComponent,
+        GridToolbarActionComponent,
+        GridToolbarButtonComponent,
+        NgIf,
+        NoTimezoneSetComponent,
+    ]
 })
 export class ReservationsGridComponent implements OnChanges, OnInit {
 

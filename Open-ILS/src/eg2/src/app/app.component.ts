@@ -1,11 +1,11 @@
 import {Component} from '@angular/core';
-import {Router, NavigationEnd} from '@angular/router';
+import { Router, NavigationEnd, RouterOutlet } from '@angular/router';
 import {DialogComponent} from '@eg/share/dialog/dialog.component';
 
 @Component({
     selector: 'eg-root',
     template: '<router-outlet></router-outlet>',
-    standalone: false
+    imports: [RouterOutlet]
 })
 
 export class BaseComponent {

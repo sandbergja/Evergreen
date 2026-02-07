@@ -3,11 +3,23 @@ import {Component, Input, Host} from '@angular/core';
 import {GridContext} from './grid';
 import {GridComponent} from './grid.component';
 import {NgbPopover} from '@ng-bootstrap/ng-bootstrap';
+import { NgClass, NgFor, NgIf } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { GridBodyCellComponent } from './grid-body-cell.component';
+import { GridToolbarActionsMenuComponent } from './grid-toolbar-actions-menu.component';
 
 @Component({
     selector: 'tbody.eg-grid-body',
     templateUrl: './grid-body.component.html',
-    standalone: false
+    imports: [
+        FormsModule,
+        GridBodyCellComponent,
+        GridToolbarActionsMenuComponent,
+        NgbPopover,
+        NgClass,
+        NgFor,
+        NgIf,
+    ]
 })
 
 export class GridBodyComponent {

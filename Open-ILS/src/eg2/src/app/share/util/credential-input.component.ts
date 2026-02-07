@@ -10,8 +10,7 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
         provide: NG_VALUE_ACCESSOR,
         useExisting: forwardRef(() => CredentialInputComponent),
         multi: true
-    }],
-    standalone: false
+    }]
 })
 export class CredentialInputComponent implements ControlValueAccessor, OnInit {
 

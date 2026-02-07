@@ -26,8 +26,7 @@ export class BookingResourceBarcodeValidator implements AsyncValidator {
         provide: NG_ASYNC_VALIDATORS,
         useExisting: forwardRef(() => BookingResourceBarcodeValidator),
         multi: true
-    }],
-    standalone: false
+    }]
 })
 
 export class BookingResourceBarcodeValidatorDirective {

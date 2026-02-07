@@ -1,5 +1,5 @@
 import {Component, OnInit, ViewChild, ViewChildren, QueryList, OnDestroy} from '@angular/core';
-import {NgbNav, NgbNavChangeEvent} from '@ng-bootstrap/ng-bootstrap';
+import {NgbNav, NgbNavChangeEvent, NgbNavModule} from '@ng-bootstrap/ng-bootstrap';
 import {Router, ActivatedRoute, ParamMap, NavigationEnd} from '@angular/router';
 import {filter, takeUntil, Subject} from 'rxjs';
 import {AcqSearchTerm} from './acq-search.service';
@@ -7,10 +7,18 @@ import {LineitemResultsComponent} from './lineitem-results.component';
 import {PurchaseOrderResultsComponent} from './purchase-order-results.component';
 import {InvoiceResultsComponent} from './invoice-results.component';
 import {PicklistResultsComponent} from './picklist-results.component';
+import { StaffBannerComponent } from '@eg/staff/share/staff-banner.component';
 
 @Component({
     templateUrl: './acq-search.component.html',
-    standalone: false
+    imports: [
+        InvoiceResultsComponent,
+        LineitemResultsComponent,
+        NgbNavModule,
+        PicklistResultsComponent,
+        PurchaseOrderResultsComponent,
+        StaffBannerComponent,
+    ]
 })
 
 export class AcqSearchComponent implements OnInit, OnDestroy {

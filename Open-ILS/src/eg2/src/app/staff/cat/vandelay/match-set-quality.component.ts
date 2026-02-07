@@ -9,11 +9,15 @@ import {GridComponent} from '@eg/share/grid/grid.component';
 import {GridDataSource} from '@eg/share/grid/grid';
 import {Pager} from '@eg/share/util/pager';
 import {MatchSetNewPointComponent} from './match-set-new-point.component';
+import { StaffCommonModule } from '@eg/staff/common.module';
 
 @Component({
     selector: 'eg-match-set-quality',
     templateUrl: 'match-set-quality.component.html',
-    standalone: false
+    imports: [
+        MatchSetNewPointComponent,
+        StaffCommonModule
+    ]
 })
 export class MatchSetQualityComponent {
 

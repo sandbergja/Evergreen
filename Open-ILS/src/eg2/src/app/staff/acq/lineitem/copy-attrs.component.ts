@@ -1,21 +1,27 @@
-import {Component, OnInit, AfterViewInit, ViewChild, Input, Output, EventEmitter} from '@angular/core';
-import {tap} from 'rxjs';
-import {Pager} from '@eg/share/util/pager';
+import {Component, OnInit, ViewChild, Input, Output, EventEmitter} from '@angular/core';
 import {IdlObject, IdlService} from '@eg/core/idl.service';
 import {NetService} from '@eg/core/net.service';
 import {AuthService} from '@eg/core/auth.service';
 import {OrgService} from '@eg/core/org.service';
 import {LineitemService, COPY_ORDER_DISPOSITION} from './lineitem.service';
 import {ComboboxComponent, ComboboxEntry} from '@eg/share/combobox/combobox.component';
-import {ItemLocationService} from '@eg/share/item-location-select/item-location-select.service';
 import {ItemLocationSelectComponent} from '@eg/share/item-location-select/item-location-select.component';
 import {PermService} from '@eg/core/perm.service';
+import { CommonModule } from '@angular/common';
+import { OrgSelectComponent } from '@eg/share/org-select/org-select.component';
+import { FormsModule } from '@angular/forms';
 
 @Component({
     templateUrl: 'copy-attrs.component.html',
     styleUrls: ['copy-attrs.component.css'],
     selector: 'eg-lineitem-copy-attrs',
-    standalone: false
+    imports: [
+        ComboboxComponent,
+        CommonModule,
+        FormsModule,
+        ItemLocationSelectComponent,
+        OrgSelectComponent,
+    ]
 })
 export class LineitemCopyAttrsComponent implements OnInit {
 
@@ -79,7 +85,6 @@ export class LineitemCopyAttrsComponent implements OnInit {
         private net: NetService,
         private auth: AuthService,
         private org: OrgService,
-        private loc: ItemLocationService,
         private liService: LineitemService,
         private perm: PermService
     ) {}

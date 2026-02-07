@@ -18,7 +18,7 @@ import {WorkLogModule} from '@eg/staff/share/worklog/worklog.module';
 import {BadBarcodeDialogComponent} from './bad-barcode-dialog.component';
 
 @NgModule({
-    declarations: [
+    imports: [
         CircGridComponent,
         CircComponentsComponent,
         DueDateDialogComponent,
@@ -30,9 +30,7 @@ import {BadBarcodeDialogComponent} from './bad-barcode-dialog.component';
         CopyInTransitDialogComponent,
         CancelTransitDialogComponent,
         BadBarcodeDialogComponent,
-        OpenCircDialogComponent
-    ],
-    imports: [
+        OpenCircDialogComponent,
         StaffCommonModule,
         HoldingsModule,
         BillingModule,

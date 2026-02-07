@@ -16,8 +16,7 @@ export function notBeforeMomentValidator(notBeforeMe: moment.Moment): ValidatorF
         provide: NG_VALIDATORS,
         useExisting: NotBeforeMomentValidatorDirective,
         multi: true
-    }],
-    standalone: false
+    }]
 })
 export class NotBeforeMomentValidatorDirective {
     @Input('egNotBeforeMoment') notBeforeMoment: moment.Moment;

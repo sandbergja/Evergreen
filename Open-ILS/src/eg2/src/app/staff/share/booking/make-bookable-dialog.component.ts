@@ -9,6 +9,8 @@ import {AuthService} from '@eg/core/auth.service';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {DialogComponent} from '@eg/share/dialog/dialog.component';
 import {StringComponent} from '@eg/share/string/string.component';
+import { NgIf } from '@angular/common';
+import { RouterModule } from '@angular/router';
 
 /**
  * Dialog for making items bookable
@@ -17,7 +19,11 @@ import {StringComponent} from '@eg/share/string/string.component';
 @Component({
     selector: 'eg-make-bookable-dialog',
     templateUrl: 'make-bookable-dialog.component.html',
-    standalone: false
+    imports: [
+        NgIf,
+        RouterModule,
+        StringComponent,
+    ]
 })
 export class MakeBookableDialogComponent
     extends DialogComponent implements OnInit, OnDestroy {

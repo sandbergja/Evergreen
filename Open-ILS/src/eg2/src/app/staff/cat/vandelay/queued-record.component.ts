@@ -1,12 +1,13 @@
 import {Component} from '@angular/core';
 import {Router, ActivatedRoute, ParamMap} from '@angular/router';
-import {NgbNav, NgbNavChangeEvent} from '@ng-bootstrap/ng-bootstrap';
+import {NgbNavChangeEvent} from '@ng-bootstrap/ng-bootstrap';
 import {PcrudService} from '@eg/core/pcrud.service';
 import {IdlObject} from '@eg/core/idl.service';
+import { StaffCommonModule } from '@eg/staff/common.module';
 
 @Component({
     templateUrl: 'queued-record.component.html',
-    standalone: false
+    imports: [StaffCommonModule]
 })
 export class QueuedRecordComponent {
 

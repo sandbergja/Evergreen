@@ -19,11 +19,12 @@ import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 import {BillingService} from '@eg/staff/share/billing/billing.service';
 import {AudioService} from '@eg/share/util/audio.service';
 import {ToastService} from '@eg/share/toast/toast.service';
+import { StaffCommonModule } from '@eg/staff/common.module';
 
 @Component({
     templateUrl: 'bill-statement.component.html',
     selector: 'eg-patron-bill-statement',
-    standalone: false
+    imports: [StaffCommonModule]
 })
 export class BillStatementComponent implements OnInit {
 

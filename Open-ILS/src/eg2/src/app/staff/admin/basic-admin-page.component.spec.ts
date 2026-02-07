@@ -5,11 +5,20 @@ import { ActivatedRoute, ParamMap } from '@angular/router';
 import { IdlObject, IdlService } from '@eg/core/idl.service';
 import { of } from 'rxjs';
 import { BasicAdminPageComponent } from './basic-admin-page.component';
+import { FormatService } from '@eg/core/format.service';
+import { OrgService } from '@eg/core/org.service';
+import { AuthService } from '@eg/core/auth.service';
+import { PcrudService } from '@eg/core/pcrud.service';
+import { ToastService } from '@eg/share/toast/toast.service';
+import { LocaleService } from '@eg/core/locale.service';
+import { PrintService } from '@eg/share/print/print.service';
+import { AdminPageComponent } from '../share/admin-page/admin-page.component';
+import { TitleComponent } from '@eg/share/title/title.component';
+import { StaffBannerComponent } from '../share/staff-banner.component';
 
 @Component({
     selector: 'eg-title',
-    template: '',
-    standalone: false
+    template: ''
 })
 class MockTitleComponent {
     @Input() prefix: string;
@@ -17,8 +26,7 @@ class MockTitleComponent {
 
 @Component({
     selector: 'eg-staff-banner',
-    template: '',
-    standalone: false
+    template: ''
 })
 class MockStaffBannerComponent {
     @Input() bannerText: string;
@@ -26,8 +34,7 @@ class MockStaffBannerComponent {
 
 @Component({
     selector: 'eg-admin-page',
-    template: '',
-    standalone: false
+    template: ''
 })
 class MockAdminPageComponent {
     @Input() configLinkBasePath: string;
@@ -96,17 +103,17 @@ describe('Component: BasicAdminPage', () => {
         };
 
         TestBed.configureTestingModule({
-            imports: [],
+            imports: [
+                BasicAdminPageComponent,
+            ],
             providers: [
+                { provide: FormatService, useValue: {} },
                 { provide: IdlService, useValue: idlServiceStub },
                 { provide: ActivatedRoute, useValue: routeStub }
             ],
-            declarations: [
-                BasicAdminPageComponent,
-                MockTitleComponent,
-                MockStaffBannerComponent,
-                MockAdminPageComponent
-            ]
+        }).overrideComponent(BasicAdminPageComponent, {
+            remove: { imports: [AdminPageComponent, TitleComponent, StaffBannerComponent] },
+            add: { imports: [MockAdminPageComponent, MockTitleComponent, MockStaffBannerComponent]}
         });
         fixture = TestBed.createComponent(BasicAdminPageComponent);
         component = fixture.componentInstance;

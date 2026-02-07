@@ -5,11 +5,12 @@ import {EventService} from '@eg/core/event.service';
 import {NetService} from '@eg/core/net.service';
 import {AuthService} from '@eg/core/auth.service';
 import {PatronService} from '@eg/staff/share/patron/patron.service';
+import { StaffCommonModule } from '@eg/staff/common.module';
 
 @Component({
     templateUrl: 'test-password.component.html',
     selector: 'eg-patron-test-password',
-    standalone: false
+    imports: [StaffCommonModule]
 })
 export class TestPatronPasswordComponent implements OnInit, AfterViewInit {
 

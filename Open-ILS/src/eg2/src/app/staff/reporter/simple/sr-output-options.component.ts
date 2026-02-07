@@ -2,11 +2,12 @@ import {Component, Input} from '@angular/core';
 import {IdlService} from '@eg/core/idl.service';
 import {ReporterService, SRTemplate} from '../share/reporter.service';
 import moment from 'moment-timezone';
+import { StaffCommonModule } from '@eg/staff/common.module';
 
 @Component({
     selector: 'eg-sr-output-options',
     templateUrl: './sr-output-options.component.html',
-    standalone: false
+    imports: [StaffCommonModule]
 })
 
 export class SROutputOptionsComponent {

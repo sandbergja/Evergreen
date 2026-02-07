@@ -14,10 +14,15 @@ import {AuthService} from '@eg/core/auth.service';
 import {BroadcastService} from '@eg/share/util/broadcast.service';
 import {AdminPageComponent} from '../../../share/admin-page/admin-page.component';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
+import { StaffCommonModule } from '@eg/staff/common.module';
+import { FmRecordEditorComponent } from '@eg/share/fm-editor/fm-editor.component';
 
 @Component({
     templateUrl: './floating-group.component.html',
-    standalone: false
+    imports: [
+        FmRecordEditorComponent,
+        StaffCommonModule
+    ]
 })
 
 export class FloatingGroupComponent extends AdminPageComponent implements OnInit {

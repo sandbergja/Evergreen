@@ -14,19 +14,17 @@ import {StaffLoginNotAllowedComponent} from './login-not-allowed.component';
 import { CommonWidgetsModule } from '@eg/share/common-widgets.module';
 
 @NgModule({
-    declarations: [
-        StaffComponent,
-        StaffNavComponent,
-        StaffSplashComponent,
-        AutofocusDirective,
-        StaffLoginComponent,
-        StaffMFAComponent,
-        StaffLoginNotAllowedComponent,
-        AboutComponent
-    ],
     imports: [
+        AboutComponent,
+        AutofocusDirective,
         StaffCommonModule.forRoot(),
+        StaffComponent,
+        StaffLoginComponent,
+        StaffLoginNotAllowedComponent,
+        StaffMFAComponent,
+        StaffNavComponent,
         StaffRoutingModule,
+        StaffSplashComponent,
         QRCodeComponent,
         CommonWidgetsModule
     ]

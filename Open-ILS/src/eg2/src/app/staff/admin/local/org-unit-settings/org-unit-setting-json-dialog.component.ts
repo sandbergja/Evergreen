@@ -1,11 +1,12 @@
 import {Component, Input} from '@angular/core';
 import {DialogComponent} from '@eg/share/dialog/dialog.component';
+import { StaffCommonModule } from '@eg/staff/common.module';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
     selector: 'eg-admin-ou-setting-json-dialog',
     templateUrl: './org-unit-setting-json-dialog.component.html',
-    standalone: false
+    imports: [StaffCommonModule]
 })
 
 export class OuSettingJsonDialogComponent extends DialogComponent {

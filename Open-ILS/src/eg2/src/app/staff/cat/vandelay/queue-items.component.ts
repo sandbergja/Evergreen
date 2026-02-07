@@ -6,10 +6,11 @@ import {AuthService} from '@eg/core/auth.service';
 import {GridComponent} from '@eg/share/grid/grid.component';
 import {GridDataSource} from '@eg/share/grid/grid';
 import {VandelayService} from './vandelay.service';
+import { StaffCommonModule } from '@eg/staff/common.module';
 
 @Component({
     templateUrl: 'queue-items.component.html',
-    standalone: false
+    imports: [StaffCommonModule]
 })
 export class QueueItemsComponent {
 

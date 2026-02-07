@@ -8,6 +8,7 @@ import {AuthService} from '@eg/core/auth.service';
 import {DialogComponent} from '@eg/share/dialog/dialog.component';
 import {NgbModal, NgbModalOptions} from '@ng-bootstrap/ng-bootstrap';
 import {StringComponent} from '@eg/share/string/string.component';
+import { CommonModule } from '@angular/common';
 
 
 /**
@@ -17,7 +18,10 @@ import {StringComponent} from '@eg/share/string/string.component';
 @Component({
     selector: 'eg-hold-transfer-via-bibs-dialog',
     templateUrl: 'transfer-via-bibs-dialog.component.html',
-    standalone: false
+    imports: [
+        CommonModule,
+        StringComponent
+    ]
 })
 
 export class HoldTransferViaBibsDialogComponent

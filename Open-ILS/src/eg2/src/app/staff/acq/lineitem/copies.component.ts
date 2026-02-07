@@ -4,13 +4,15 @@ import {ActivatedRoute, ParamMap} from '@angular/router';
 import {Observable, of, tap, map} from 'rxjs';
 import {IdlService, IdlObject} from '@eg/core/idl.service';
 import {OrgService} from '@eg/core/org.service';
-import {NetService} from '@eg/core/net.service';
 import {PcrudService} from '@eg/core/pcrud.service';
 import {AuthService} from '@eg/core/auth.service';
 import {LineitemService, FleshCacheParams} from './lineitem.service';
-import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
-import {ItemLocationService} from '@eg/share/item-location-select/item-location-select.service';
+import {ComboboxComponent, ComboboxEntry} from '@eg/share/combobox/combobox.component';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
+import { CommonModule } from '@angular/common';
+import { ProgressInlineComponent } from '@eg/share/dialog/progress-inline.component';
+import { LineitemBatchCopiesComponent } from './batch-copies.component';
+import { FormsModule } from '@angular/forms';
 
 const FORMULA_FIELDS = [
     'owning_lib',
@@ -28,7 +30,14 @@ interface FormulaApplication {
 @Component({
     selector: 'eg-lineitem-copies',
     templateUrl: 'copies.component.html',
-    standalone: false
+    imports: [
+        ComboboxComponent,
+        CommonModule,
+        ConfirmDialogComponent,
+        FormsModule,
+        LineitemBatchCopiesComponent,
+        ProgressInlineComponent,
+    ]
 })
 export class LineitemCopiesComponent implements OnInit, AfterViewInit {
 
@@ -67,10 +76,8 @@ export class LineitemCopiesComponent implements OnInit, AfterViewInit {
         private route: ActivatedRoute,
         private idl: IdlService,
         private org: OrgService,
-        private net: NetService,
         private pcrud: PcrudService,
         private auth: AuthService,
-        private loc: ItemLocationService,
         private liService: LineitemService
     ) {}
 

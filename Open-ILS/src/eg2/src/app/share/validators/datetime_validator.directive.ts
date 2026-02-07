@@ -24,8 +24,7 @@ export class DatetimeValidator implements Validator {
         provide: NG_VALIDATORS,
         useExisting: DatetimeValidatorDirective,
         multi: true
-    }],
-    standalone: false
+    }]
 })
 export class DatetimeValidatorDirective {
     constructor(

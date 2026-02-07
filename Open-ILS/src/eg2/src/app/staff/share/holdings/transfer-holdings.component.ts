@@ -13,7 +13,11 @@ import {ProgressDialogComponent} from '@eg/share/dialog/progress.component';
 @Component({
     selector: 'eg-transfer-holdings',
     templateUrl: 'transfer-holdings.component.html',
-    standalone: false
+    imports: [
+        AlertDialogComponent,
+        ProgressDialogComponent,
+        StringComponent
+    ]
 })
 
 export class TransferHoldingsComponent {

@@ -6,6 +6,7 @@ import {NetService} from '@eg/core/net.service';
 import {AuthService} from '@eg/core/auth.service';
 import {PatronSearchFieldSet} from '@eg/staff/share/patron/search.component';
 import {ServerStoreService} from '@eg/core/server-store.service';
+import { StaffCommonModule } from '@eg/staff/common.module';
 
 export enum VisibilityLevel {
     ALL_FIELDS = 0,
@@ -28,7 +29,7 @@ interface DupeSearch {
     styles: [
         '.pointer-not-allowed:hover { cursor: not-allowed }'
     ],
-    standalone: false
+    imports: [StaffCommonModule]
 })
 export class EditToolbarComponent implements OnInit {
 
