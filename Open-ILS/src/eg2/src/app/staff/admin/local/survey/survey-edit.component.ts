@@ -50,14 +50,31 @@ export class SurveyEditComponent implements OnInit {
             'open-ils.circ.survey.fleshed.retrieve',
             this.surveyId
         ).subscribe(res => {
-            this.surveyObj = res;
-            this.buildLocalArray(res);
+            this.setRecord(res);
             return res;
         });
     }
 
     onNavChange(event: NgbNavChangeEvent) {
         this.surveyTab = event.nextId;
+    }
+
+    setRecord(record: IdlObject) {
+        // Unlike most PCRUD calls, this API uses 0 and 1 (rather than 'f' and 't') to represent boolean values
+        // We need to normalize them before the FieldMapper Editor (which can handle booleans or 'f' and 't') sees them.
+        const normalizeBooleanValue = (value: number) => {
+            switch (value) {
+                case 0:
+                    return false;
+                case 1:
+                    return true;
+                default:
+                    return value;
+            }
+        };
+        this.booleanFieldNames.forEach(field => record[field](normalizeBooleanValue(record[field]())));
+        this.surveyObj = record;
+        this.buildLocalArray(record);
     }
 
     buildLocalArray(res) {
@@ -276,6 +293,12 @@ export class SurveyEditComponent implements OnInit {
             return true;
         }
         return false;
+    }
+
+    private get booleanFieldNames(): string[] {
+        return this.idl.classes['asv'].fields
+            .filter((field: any) => field.datatype === 'bool')
+            .map((field: any) => field.name);
     }
 }
 
