@@ -6,7 +6,7 @@ on:
       - 'Makefile.am'
       - 'configure.ac'
       - 'Open-ILS/src/c-apps/**'
-      - 'Open-ILS/src/extras/install'
+      - 'Open-ILS/src/extras/**'
       - 'Open-ILS/src/Makefile.am'
       - 'Open-ILS/src/perlmods/**'
   pull_request:
@@ -15,7 +15,7 @@ on:
       - 'Makefile.am'
       - 'configure.ac'
       - 'Open-ILS/src/c-apps/**'
-      - 'Open-ILS/src/extras/install'
+      - 'Open-ILS/src/extras/**'
       - 'Open-ILS/src/Makefile.am'
       - 'Open-ILS/src/perlmods/**'
   workflow_dispatch:

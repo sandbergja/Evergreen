@@ -3,11 +3,13 @@ on:
   push:
     paths:
       - '.github/workflows/**'
+      - 'Open-ILS/src/extras/**'
       - 'Open-ILS/src/sql/**'
       - 'Open-ILS/tests/datasets/**'
   pull_request:
     paths:
       - '.github/workflows/**'
+      - 'Open-ILS/src/extras/**'
       - 'Open-ILS/src/sql/**'
       - 'Open-ILS/tests/datasets/**'
   workflow_dispatch:
