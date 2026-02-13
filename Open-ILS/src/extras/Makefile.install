@@ -4,7 +4,7 @@
 #
 # Makefile to install prerequisites for OpenSRF and Evergreen
 #
-# Currently supports Debian (trixie, bookworm, bullseye, buster),
+# Currently supports Debian (trixie, bookworm, bullseye),
 # Ubuntu (22.04), Ubuntu (24.04).
 #
 # Installs Perl prereqs, libdbi, libdbi-drivers, and libyaz
@@ -15,8 +15,6 @@
 # 	make -f Makefile.install debian-bookworm
 # 	- or -
 # 	make -f Makefile.install debian-bullseye
-# 	- or -
-# 	make -f Makefile.install debian-buster
 # 	- or -
 # 	make -f Makefile.install ubuntu-noble
 # 	- or -
@@ -78,8 +76,6 @@ debian-bookworm:
 	@make -f $(DIR)/Makefile.debian-bookworm
 debian-bullseye:
 	@make -f $(DIR)/Makefile.debian-bullseye
-debian-buster:
-	@make -f $(DIR)/Makefile.debian-buster
 ubuntu-noble:
 	@make -f $(DIR)/Makefile.ubuntu-noble
 ubuntu-jammy:
@@ -115,16 +111,6 @@ postgres-server-debian-bullseye-16:
 	@make -f $(DIR)/Makefile.debian-bullseye install_postgres_server_16
 postgres-server-debian-bullseye-17:
 	@make -f $(DIR)/Makefile.debian-bullseye install_postgres_server_17
-postgres-server-debian-buster-13:
-	@make -f $(DIR)/Makefile.debian-buster install_postgres_server_13
-postgres-server-debian-buster-14:
-	@make -f $(DIR)/Makefile.debian-buster install_postgres_server_14
-postgres-server-debian-buster-15:
-	@make -f $(DIR)/Makefile.debian-buster install_postgres_server_15
-postgres-server-debian-buster-16:
-	@make -f $(DIR)/Makefile.debian-buster install_postgres_server_16
-postgres-server-debian-buster-17:
-	@make -f $(DIR)/Makefile.debian-buster install_postgres_server_17
 postgres-server-ubuntu-noble-13:
 	@make -f $(DIR)/Makefile.ubuntu-noble install_postgres_server_13
 postgres-server-ubuntu-noble-14:
@@ -157,8 +143,6 @@ debian-bookworm-developer:
 	@make -f $(DIR)/Makefile.debian-bookworm install_developer
 debian-bullseye-developer:
 	@make -f $(DIR)/Makefile.debian-bullseye install_developer
-debian-buster-developer:
-	@make -f $(DIR)/Makefile.debian-buster install_developer
 
 ubuntu-noble-translator:
 	@make -f $(DIR)/Makefile.ubuntu-noble install_translator
@@ -170,8 +154,6 @@ debian-bookworm-translator:
 	@make -f $(DIR)/Makefile.debian-bookworm install_translator
 debian-bullseye-translator:
 	@make -f $(DIR)/Makefile.debian-bullseye install_translator
-debian-buster-translator:
-	@make -f $(DIR)/Makefile.debian-buster install_translator
 
 ubuntu-noble-packager:
 	@make -f $(DIR)/Makefile.ubuntu-noble install_packager
@@ -183,7 +165,5 @@ debian-bookworm-packager:
 	@make -f $(DIR)/Makefile.debian-bookworm install_packager
 debian-bullseye-packager:
 	@make -f $(DIR)/Makefile.debian-bullseye install_packager
-debian-buster-packager:
-	@make -f $(DIR)/Makefile.debian-buster install_packager
 
 # vim:noet:sw=4:ts=4:

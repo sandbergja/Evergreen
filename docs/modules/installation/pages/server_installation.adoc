@@ -54,7 +54,6 @@ autoreconf -i
     Debian Trixie (13),
     Debian Bookworm (12),
     Debian Bullseye (11),
-    Debian Buster (10), 
     Ubuntu Noble Numbat (24.04),
     and Ubuntu Jammy Jellyfish (22.04).
     If you are running an older version of these distributions, you may want 
@@ -71,7 +70,7 @@ before you can successfully configure, compile, and install Evergreen.
 +
 2. Issue the following commands as the *root* Linux account to install
    prerequisites using the `Makefile.install` prerequisite installer,
-   substituting `debian-bookworm`,`debian-bullseye`,`debian-buster`,`ubuntu-jammy`,
+   substituting `debian-bookworm`,`debian-bullseye`,`ubuntu-jammy`,
    or `ubuntu-noble` for <osname> below:
 +
 [source, bash]
@@ -514,7 +513,6 @@ jit_above_cost = -1
 make -f Open-ILS/src/extras/Makefile.install postgres-server-debian-trixie-13
 make -f Open-ILS/src/extras/Makefile.install postgres-server-debian-bookworm-13
 make -f Open-ILS/src/extras/Makefile.install postgres-server-debian-bullseye-13
-make -f Open-ILS/src/extras/Makefile.install postgres-server-debian-buster-13
 make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-jammy-13
 make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-noble-13
 ------------------------------------------------------------------------------
@@ -537,7 +535,6 @@ jit_above_cost = -1
 make -f Open-ILS/src/extras/Makefile.install postgres-server-debian-trixie-14
 make -f Open-ILS/src/extras/Makefile.install postgres-server-debian-bookworm-14
 make -f Open-ILS/src/extras/Makefile.install postgres-server-debian-bullseye-14
-make -f Open-ILS/src/extras/Makefile.install postgres-server-debian-buster-14
 make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-jammy-14
 make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-noble-14
 ------------------------------------------------------------------------------
@@ -560,7 +557,6 @@ jit_above_cost = -1
 make -f Open-ILS/src/extras/Makefile.install postgres-server-debian-trixie-15
 make -f Open-ILS/src/extras/Makefile.install postgres-server-debian-bookworm-15
 make -f Open-ILS/src/extras/Makefile.install postgres-server-debian-bullseye-15
-make -f Open-ILS/src/extras/Makefile.install postgres-server-debian-buster-15
 make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-jammy-15
 make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-noble-15
 ------------------------------------------------------------------------------
@@ -583,7 +579,6 @@ jit_above_cost = -1
 make -f Open-ILS/src/extras/Makefile.install postgres-server-debian-trixie-16
 make -f Open-ILS/src/extras/Makefile.install postgres-server-debian-bookworm-16
 make -f Open-ILS/src/extras/Makefile.install postgres-server-debian-bullseye-16
-make -f Open-ILS/src/extras/Makefile.install postgres-server-debian-buster-16
 make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-jammy-16
 make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-noble-16
 ------------------------------------------------------------------------------
@@ -606,7 +601,6 @@ jit_above_cost = -1
 make -f Open-ILS/src/extras/Makefile.install postgres-server-debian-trixie-17
 make -f Open-ILS/src/extras/Makefile.install postgres-server-debian-bookworm-17
 make -f Open-ILS/src/extras/Makefile.install postgres-server-debian-bullseye-17
-make -f Open-ILS/src/extras/Makefile.install postgres-server-debian-buster-17
 make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-jammy-17
 make -f Open-ILS/src/extras/Makefile.install postgres-server-ubuntu-noble-17
 ------------------------------------------------------------------------------
