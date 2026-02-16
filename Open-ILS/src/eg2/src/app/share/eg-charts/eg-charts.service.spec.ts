@@ -155,7 +155,7 @@ describe('EgChartsService', () => {
         });
 
         it('should throw error for invalid data', () => {
-            expect(() => service.calculateStatistics({} as any)).toThrow('Invalid chart data provided');
+            expect(() => service.calculateStatistics({} as any)).toThrow(new Error('Invalid chart data provided'));
         });
     });
 

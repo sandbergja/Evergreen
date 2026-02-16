@@ -2,29 +2,6 @@
     <div class="eg-chart-title" *ngIf="chartData?.title">
         <h2>{{ chartData?.title }}</h2>
         <div class="chart-actions">
-            <!--          <div class="chart-type-selector" *ngIf="allowChartTypeToggle">-->
-            <!--            <div class="btn-group" role="group" [attr.aria-label]="'Chart type selector for ' + chartData?.title">-->
-            <!--              <button *ngFor="let chartType of supportedChartTypes" -->
-            <!--                      type="button"-->
-            <!--                      class="btn btn-sm"-->
-            <!--                      [class.btn-primary]="currentChartType === chartType"-->
-            <!--                      [class.btn-outline-primary]="currentChartType !== chartType"-->
-            <!--                      (click)="onChartTypeChange(chartType)"-->
-            <!--                      [attr.aria-pressed]="currentChartType === chartType"-->
-            <!--                      [title]="getChartTypeLabel(chartType)">-->
-            <!--                <span class="material-icons" [attr.aria-hidden]="true">{{ getChartTypeIcon(chartType) }}</span>-->
-            <!--              </button>-->
-            <!--            </div>-->
-            <!--          </div>-->
-            <!-- <button
-                type="button"
-                class="accessibility-toggle-btn"
-                (click)="toggleAccessibilityPatterns()"
-                [attr.aria-label]="'Toggle accessibility patterns for ' + chartData?.title"
-                [title]="(chartData?.accessibility?.patterns ? 'Disable' : 'Enable') + ' accessibility patterns for color-blind users'">
-                <span class="material-icons me-1" aria-hidden="true">{{ chartData?.accessibility?.patterns ? 'visibility_off' : 'visibility' }}</span>
-                {{ chartData?.accessibility?.patterns ? 'Hide' : 'Show' }} Patterns
-            </button> -->
             @for (filter of filters; track $index) {
                 @if (filter?.multi) {
                     <eg-tree-multiselect objectList="filterChoice"/>

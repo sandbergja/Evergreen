@@ -8,7 +8,9 @@ import { PatternService } from './services/pattern.service';
 import * as d3 from 'd3';
 import { IdlService, IdlObject } from '@eg/core/idl.service';
 import { EMPTY, Observable, Subscription } from 'rxjs';
-import { ComboboxEntry  } from '../combobox/combobox.component';
+import { ComboboxComponent, ComboboxEntry  } from '../combobox/combobox.component';
+import { CommonModule } from '@angular/common';
+import { TreeModule } from '../tree/tree.module';
 
 
 // Some weird typing chicanery to update possible chart types all in one location
@@ -50,7 +52,13 @@ export interface ChartBuildInfo {
 @Component({
     selector: 'eg-chart',
     templateUrl: './eg-chart.component.html',
-    styleUrls: ['./eg-chart.component.css']
+    styleUrls: ['./eg-chart.component.css'],
+    standalone: true,
+    imports: [
+        ComboboxComponent,
+        CommonModule,
+        TreeModule
+    ]
 })
 export class EgChartComponent implements OnInit, OnDestroy {
     @Input() type: EgChartType = 'line';
