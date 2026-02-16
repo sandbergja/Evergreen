@@ -1,3 +1,4 @@
+/* eslint-disable no-magic-numbers */
 import { Injectable, inject } from '@angular/core';
 import { ChartRenderer, ValidationResult, PerformanceMetrics } from '../interfaces/chart-renderer.interface';
 import { ChartData, ChartConfiguration, CurveType, LineStyleConfiguration } from '../interfaces/chart-data.interface';

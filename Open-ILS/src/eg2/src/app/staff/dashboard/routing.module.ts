@@ -6,11 +6,11 @@ const routes: Routes = [{
     loadChildren: () =>
         import('./display/display.module').then(m => m.DashboardDisplayModule)
 },
-    {
-        path: '',
-        redirectTo: 'display',
-        pathMatch: 'full'
-    }];
+{
+    path: '',
+    redirectTo: 'display',
+    pathMatch: 'full'
+}];
 
 @NgModule({
     imports: [RouterModule.forChild(routes)],

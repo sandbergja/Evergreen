@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, ElementRef, ViewChild, HostListener, inject } from '@angular/core';
-import { ChartData, ChartConfiguration, ChartPoint } from './interfaces/chart-data.interface';
+import { ChartData, ChartConfiguration, ChartPoint, ChartSeries } from './interfaces/chart-data.interface';
 import { LineChartRenderer } from './renderers/line-chart-renderer';
 import { BarChartRenderer } from './renderers/bar-chart-renderer';
 import { PieChartRenderer } from './renderers/pie-chart-renderer';
@@ -7,9 +7,8 @@ import { ColorService } from './services/color.service';
 import { PatternService } from './services/pattern.service';
 import * as d3 from 'd3';
 import { IdlService, IdlObject } from '@eg/core/idl.service';
-import { ChartSeries } from './interfaces/chart-data.interface';
 import { EMPTY, Observable, Subscription } from 'rxjs';
-import { ComboboxComponent, ComboboxEntry  } from '../combobox/combobox.component';
+import { ComboboxEntry  } from '../combobox/combobox.component';
 
 
 // Some weird typing chicanery to update possible chart types all in one location
@@ -18,8 +17,8 @@ export type EgChartType = typeof EG_CHART_TYPES[number];
 
 /**
  * Can't figure out how to get the name of what we split our dataset by (for the tooltip),
- * so we make the caller of idlToChartPoints do it. 
- * 
+ * so we make the caller of idlToChartPoints do it.
+ *
  * Would look something like
  * filters: [{
  *      get_value: (idl) => idl.circ_lib().id(),
@@ -64,9 +63,9 @@ export class EgChartComponent implements OnInit, OnDestroy {
         showTooltip: true,
         animated: true
     };
-    @Input() allowChartTypeToggle: boolean = false;
+    @Input() allowChartTypeToggle = false;
     @Input() supportedChartTypes: EgChartType[] = [...EG_CHART_TYPES];
-    @Input() showExportButton: boolean = true;
+    @Input() showExportButton = true;
     @Input() colors: string[] = [
         'var(--primary)',       // Dark blue - Professional chart color
         'var(--success)',       // Dark green - Success/positive metrics
@@ -88,7 +87,7 @@ export class EgChartComponent implements OnInit, OnDestroy {
     private svg: d3.Selection<SVGElement, unknown, null, undefined> | null = null;
     private tooltip: d3.Selection<HTMLDivElement, unknown, null, undefined> | null = null;
     private resizeObserver!: ResizeObserver;
-    private colorIndex: number = 0;
+    private colorIndex = 0;
     private shownSeries: ChartSeries[];
 
     private filters: ChartAxis[] = [];
@@ -113,7 +112,7 @@ export class EgChartComponent implements OnInit, OnDestroy {
             this.initializeChart();
             this.setupResizeObserver();
         });
-        
+
     }
 
     ngOnDestroy(): void {
@@ -139,21 +138,19 @@ export class EgChartComponent implements OnInit, OnDestroy {
         }
 
         if (!this.get_data) {
-            throw new Error("Either chartData or get_data must be defined!!");
-            return EMPTY.subscribe();
+            throw new Error('Either chartData or get_data must be defined!!');
         }
 
         // Fetch the stuff from the database and assign it
         return this.get_data.subscribe({
             next: (resp: ChartBuildInfo) => {
-                debugger;
                 this.filters = resp.fetchInfo.filters;
-                let series = this.idlToChartPoints(resp.data, resp.fetchInfo);
-                this.filterChoice = series.map(s => {return {id: s.name, label: s.name}});
+                const series = this.idlToChartPoints(resp.data, resp.fetchInfo);
+                this.filterChoice = series.map(s => {return {id: s.name, label: s.name};});
                 this.chartData = {
                     series: series,
                     ...resp.incompleteChartData
-                }
+                };
             }
         });
     }
@@ -328,13 +325,16 @@ export class EgChartComponent implements OnInit, OnDestroy {
             const date = data.x instanceof Date ? data.x.toLocaleDateString() : data.x;
             const series = this.chartData?.series?.find(s => s?.data.includes(data));
             const seriesName = series?.name || 'Value';
+            // eslint-disable-next-line max-len
             content = `<strong>${seriesName}</strong><br/>\n                     <strong>Date:</strong> ${date}<br/>\n                     <strong>Count:</strong> ${data.y?.toLocaleString() || data.y}`;
         } else if (this.currentChartType === 'bar') {
-           const series = this.chartData?.series?.find(s => s?.data.includes(data));
+            const series = this.chartData?.series?.find(s => s?.data.includes(data));
             const seriesName = series?.name || 'Value';
+            // eslint-disable-next-line max-len
             content = `<strong>${seriesName}</strong><br/>\n                     <strong>${data.x}:</strong> ${data.y?.toLocaleString() || data.y}`;
         } else if (this.currentChartType === 'pie') {
             const percentage = this.getSlicePercentage(data.data);
+            // eslint-disable-next-line max-len
             content = `<strong>${data.data.x}</strong><br/>\n                     <strong>Count:</strong> ${data.data.y?.toLocaleString() || data.data.y}<br/>\n                     <strong>Percentage:</strong> ${percentage}`;
         }
 
@@ -553,25 +553,25 @@ export class EgChartComponent implements OnInit, OnDestroy {
     }
 
     /**
-     * Create an array of ChartSeries to go into our chart from the 
-     * 
+     * Create an array of ChartSeries to go into our chart from the
+     *
      * TODO: create nested for loop to go through more than one filterField to split the dataset
-     * @param idlArr 
-     * @param xAxisField 
-     * @param yAxisField 
-     * @param filterFields 
-     * @returns 
+     * @param idlArr
+     * @param xAxisField
+     * @param yAxisField
+     * @param filterFields
+     * @returns
      */
     public idlToChartPoints(idlArr: IdlObject[], fetchInfo: ChartFetcher) : ChartSeries[] {
-        let series = [];
+        const series = [];
 
-        let foundFilterVals = [];
+        const foundFilterVals = [];
         if (!fetchInfo.filters) {
             series.push({
                 name: 'This was a placeholder you fool',
                 color: this.getNewColor(),
                 data: []
-            })
+            });
         }
 
         idlArr.forEach(obj => {
@@ -587,9 +587,9 @@ export class EgChartComponent implements OnInit, OnDestroy {
                 });
             }
 
-            let newPoint = {
-                x: this.guaranteeIdlDataType(fetchInfo.xAxis , obj), 
-                y: this.guaranteeIdlDataType(fetchInfo.yAxis, obj), 
+            const newPoint = {
+                x: this.guaranteeIdlDataType(fetchInfo.xAxis , obj),
+                y: this.guaranteeIdlDataType(fetchInfo.yAxis, obj),
                 color: undefined
             };
             if (['pie'].includes(fetchInfo?.chartType)) {
@@ -598,7 +598,7 @@ export class EgChartComponent implements OnInit, OnDestroy {
 
 
             if (fetchInfo.filters) {
-                series.find(s => s.name == thisObjFilterName).data.push(newPoint);
+                series.find(s => s.name === thisObjFilterName).data.push(newPoint);
             } else {
                 series[0].data.push(newPoint);
             }
@@ -609,14 +609,14 @@ export class EgChartComponent implements OnInit, OnDestroy {
 
     /**
      * Gotta return a real Date() object for our timestamps, so add this as a guarantee we convert it, if the idlField is a timestamp
-     * 
-     * @param fieldName 
-     * @param obj 
-     * @returns 
+     *
+     * @param fieldName
+     * @param obj
+     * @returns
      */
     private guaranteeIdlDataType(axisInfo: ChartAxis, obj: IdlObject) {
         const fieldType = this.idl.classes[obj.classname].fields.find(field => field.name === axisInfo.get_name(obj))?.datatype;
-        if (fieldType === "timestamp") {
+        if (fieldType === 'timestamp') {
             return new Date(axisInfo.get_value(obj));
         }
         return axisInfo.get_value(obj);
@@ -631,8 +631,8 @@ export class EgChartComponent implements OnInit, OnDestroy {
     changeSeries(series: ComboboxEntry) {
         this.chartData.shownSeries = [series.id];
         this.shownSeries = this.chartData.shownSeries.map(shown => {
-            return this.chartData.series.find(s => s.name == shown);
-        })
+            return this.chartData.series.find(s => s.name === shown);
+        });
         this.initializeChart();
         this.setupResizeObserver();
     }

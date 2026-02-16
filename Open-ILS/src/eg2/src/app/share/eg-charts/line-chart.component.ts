@@ -122,9 +122,10 @@ export class LineChartComponent extends BaseChartComponent<ChartData> {
 
         // Simple resize behavior - only update width if container width changes significantly
         const containerWidth = this.chartWrapper?.nativeElement.clientWidth || this.config.width;
-        
+
         // Only update if container width changed by more than 20px to avoid thrashing
-        if (Math.abs(containerWidth - (this.config.width || 0)) > 20) {
+        const RESIZE_STEP = 20;
+        if (Math.abs(containerWidth - (this.config.width || 0)) > RESIZE_STEP) {
             this.config = {
                 ...this.config,
                 width: containerWidth

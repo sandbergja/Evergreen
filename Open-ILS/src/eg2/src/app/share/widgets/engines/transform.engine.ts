@@ -124,10 +124,12 @@ export class TransformEngine {
 
         // Group the data
         data.forEach(item => {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             const key = this.getNestedValue(item, config.groupByField!);
             if (!groups.has(key)) {
                 groups.set(key, []);
             }
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             groups.get(key)!.push(item);
         });
 
@@ -193,6 +195,7 @@ export class TransformEngine {
         }
 
         // Simple filter expression parsing (field=value, field>value, etc.)
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         return data.filter(item => this.evaluateFilterExpression(item, config.filterExpression!));
     }
 
@@ -251,7 +254,9 @@ export class TransformEngine {
         const categories = new Set<any>();
 
         data.forEach(item => {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             const seriesKey = this.getNestedValue(item, config.seriesField!);
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             const category = this.getNestedValue(item, config.xField!);
             const value = this.getNestedValue(item, config.yField);
 
@@ -261,6 +266,7 @@ export class TransformEngine {
                 seriesMap.set(seriesKey, new Map());
             }
 
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             const categoryMap = seriesMap.get(seriesKey)!;
             const existingValue = categoryMap.get(category) || 0;
 
@@ -339,7 +345,7 @@ export class TransformEngine {
             const aVal = this.getNestedValue(a, field);
             const bVal = this.getNestedValue(b, field);
 
-            if (aVal === bVal) return 0;
+            if (aVal === bVal) {return 0;}
 
             let comparison = 0;
             if (typeof aVal === 'number' && typeof bVal === 'number') {
@@ -390,9 +396,9 @@ export class TransformEngine {
         // Perform comparison
         switch (operator) {
             case '=':
-                return actualValue == typedExpectedValue;
+                return actualValue === typedExpectedValue;
             case '!=':
-                return actualValue != typedExpectedValue;
+                return actualValue !== typedExpectedValue;
             case '>':
                 return actualValue > typedExpectedValue;
             case '<':

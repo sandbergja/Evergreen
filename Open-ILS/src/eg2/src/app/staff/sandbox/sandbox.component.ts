@@ -25,7 +25,7 @@ import * as Moment from 'moment-timezone';
 import {SampleDataService} from '@eg/share/util/sample-data.service';
 import {HtmlToTxtService} from '@eg/share/util/htmltotxt.service';
 import {Z3950SearchComponent} from '@eg/staff/share/z3950-search/z3950-search.component';
-import {ChartConfiguration, ChartData} from "@eg/share/eg-charts/interfaces/chart-data.interface";
+import {ChartConfiguration, ChartData} from '@eg/share/eg-charts/interfaces/chart-data.interface';
 import { EgChartType } from '@eg/share/eg-charts/eg-chart.component';
 @Component({
     templateUrl: 'sandbox.component.html',

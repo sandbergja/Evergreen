@@ -1,3 +1,4 @@
+/* eslint-disable no-magic-numbers */
 import { Injectable } from '@angular/core';
 
 /**
@@ -240,9 +241,9 @@ export class ColorService {
             const match = computedColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
             if (match) {
                 return {
-                    r: parseInt(match[1]),
-                    g: parseInt(match[2]),
-                    b: parseInt(match[3])
+                    r: parseInt(match[1], 10),
+                    g: parseInt(match[2], 10),
+                    b: parseInt(match[3], 10)
                 };
             }
 

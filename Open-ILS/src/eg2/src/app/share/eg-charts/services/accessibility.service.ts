@@ -1,3 +1,4 @@
+/* eslint-disable no-magic-numbers */
 import { Injectable } from '@angular/core';
 import { ChartData } from '../interfaces/chart-data.interface';
 
@@ -358,9 +359,9 @@ export class AccessibilityService {
         const match = computedColor.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
         if (match) {
             return {
-                r: parseInt(match[1]),
-                g: parseInt(match[2]),
-                b: parseInt(match[3])
+                r: parseInt(match[1], 10),
+                g: parseInt(match[2], 10),
+                b: parseInt(match[3], 10)
             };
         }
 

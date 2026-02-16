@@ -1,6 +1,5 @@
 import { Component, Input, OnInit, OnDestroy, ViewChild, inject, ElementRef } from '@angular/core';
-import { Subject } from 'rxjs';
-import { takeUntil, catchError } from 'rxjs/operators';
+import { Subject, takeUntil, catchError } from 'rxjs';
 import { WidgetJsonConfig } from '@eg/staff/dashboard/interfaces/widget-json-config.interface';
 import { ChartData, ChartConfiguration } from '@eg/share/eg-charts/interfaces/chart-data.interface';
 import { WidgetConfigEngine } from '../engines/widget-config.engine';
@@ -94,7 +93,7 @@ export class JsonChartWidgetComponent implements OnInit, OnDestroy {
      * Configure chart based on visualization settings
      */
     private configureChart(): void {
-        if (!this.config.visualization) return;
+        if (!this.config.visualization) {return;}
 
         const viz = this.config.visualization;
 
@@ -111,7 +110,7 @@ export class JsonChartWidgetComponent implements OnInit, OnDestroy {
      * Load chart data from configuration
      */
     private loadChartData(): void {
-        if (this.hasError) return;
+        if (this.hasError) {return;}
 
         this.isLoading = true;
         this.hasError = false;
@@ -119,6 +118,7 @@ export class JsonChartWidgetComponent implements OnInit, OnDestroy {
 
         this.widgetEngine.executeChartWidget(this.config)
             .pipe(
+                // eslint-disable-next-line rxjs-x/no-unsafe-takeuntil
                 takeUntil(this.destroy$),
                 catchError(error => {
                     console.error('Error loading chart data:', error);
@@ -190,7 +190,7 @@ export class JsonChartWidgetComponent implements OnInit, OnDestroy {
      * Export data as JSON
      */
     private exportAsJson(): void {
-        if (!this.chartData) return;
+        if (!this.chartData) {return;}
 
         const exportData = {
             widget: this.config.name,
@@ -214,7 +214,7 @@ export class JsonChartWidgetComponent implements OnInit, OnDestroy {
      * Get chart data without title (to prevent duplicate titles in header and chart)
      */
     public get chartDataWithoutTitle(): ChartData | null {
-        if (!this.chartData) return null;
+        if (!this.chartData) {return null;}
 
         return {
             ...this.chartData,

@@ -22,9 +22,9 @@ export enum CurveType {
 // Unified chart data interface for all chart types
 export interface ChartData {
   series: ChartSeries[];
-  // string "name"s of which series should be shown. 
+  // string "name"s of which series should be shown.
   // In non multi chart types, only the first series in this list is shown.
-  shownSeries?: string[]; 
+  shownSeries?: string[];
   title?: string;
   xAxisLabel?: string;
   yAxisLabel?: string;

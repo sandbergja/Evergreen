@@ -1,3 +1,4 @@
+/* eslint-disable no-magic-numbers */
 import { Injectable, inject } from '@angular/core';
 import { ChartRenderer, ValidationResult, PerformanceMetrics } from '../interfaces/chart-renderer.interface';
 import { ChartData, ChartConfiguration } from '../interfaces/chart-data.interface';
@@ -68,7 +69,9 @@ export class BarChartRenderer implements ChartRenderer<ChartData> {
                     series.color || this.colorService.getAccessibleColor(seriesIndex)
                 );
                 console.log('Pattern generation colors:', colors);
-                this.patternService.generatePatternDefinitions(defs as d3.Selection<SVGDefsElement, unknown, null, undefined>, colors, chartId);
+                this.patternService.generatePatternDefinitions(
+                    defs as d3.Selection<SVGDefsElement, unknown, null, undefined>, colors, chartId
+                );
 
                 // Store chart ID for later use in pattern requests
                 (svg.node() as any)._chartId = chartId;
@@ -360,7 +363,10 @@ export class BarChartRenderer implements ChartRenderer<ChartData> {
         }
     }
 
-    private drawGroupedBars(g: any, xScale: any, yScale: any, data: ChartData, config: ChartConfiguration, orientation: string, cornerRadius: number, opacity: number): void {
+    private drawGroupedBars(
+        g: any, xScale: any, yScale: any, data: ChartData, config: ChartConfiguration,
+        orientation: string, cornerRadius: number, opacity: number
+    ): void {
         // Create sub-scale for grouping
         const groupScale = d3.scaleBand()
             .domain(data.series.map(s => s.name))
@@ -449,7 +455,8 @@ export class BarChartRenderer implements ChartRenderer<ChartData> {
         });
     }
 
-    private drawStackedBars(g: any, xScale: any, yScale: any, data: ChartData, config: ChartConfiguration, orientation: string, cornerRadius: number, opacity: number): void {
+    private drawStackedBars(g: any, xScale: any, yScale: any, data: ChartData,
+        config: ChartConfiguration, orientation: string, cornerRadius: number, opacity: number): void {
         // For stacked bars, we need to calculate cumulative values
         const categories = Array.from(new Set(data.series.flatMap(s => s.data.map(d => String(d.x)))));
 

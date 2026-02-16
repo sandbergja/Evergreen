@@ -1,3 +1,4 @@
+/* eslint-disable no-magic-numbers */
 import { Injectable } from '@angular/core';
 import { ChartData, ChartSeries, ChartPoint } from './interfaces/chart-data.interface';
 
@@ -71,7 +72,9 @@ export class EgChartsService {
             series,
             accessibility: {
                 description: `Line chart showing ${seriesCount} data series with ${pointCount} points each`,
-                longDescription: 'This is a sample line chart demonstrating the eg-charts library functionality with multiple data series showing trending values over time.',
+                longDescription:
+                    'This is a sample line chart demonstrating the eg-charts library functionality ' +
+                    'with multiple data series showing trending values over time.',
                 dataTable: true
             }
         };

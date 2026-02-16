@@ -198,7 +198,7 @@ export class PieChartComponent extends BaseChartComponent<ChartData> {
      * Generate CSV rows for pie charts
      */
     protected override generateCSVRows(): string {
-        if (!this.chartData) return '';
+        if (!this.chartData) {return '';}
 
         const dataPoints = this.getDataPoints();
         let rows = '';

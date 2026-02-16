@@ -1,6 +1,5 @@
 import { Component, Input, OnInit, OnDestroy, inject } from '@angular/core';
-import { Subject } from 'rxjs';
-import { takeUntil, catchError } from 'rxjs/operators';
+import { Subject, takeUntil, catchError } from 'rxjs';
 import { WidgetJsonConfig, MetricData } from '@eg/staff/dashboard/interfaces/widget-json-config.interface';
 import { WidgetConfigEngine } from '../engines/widget-config.engine';
 
@@ -45,7 +44,7 @@ import { WidgetConfigEngine } from '../engines/widget-config.engine';
                         <span class="material-icons error-icon">error</span>
                         <div class="error-message">Error Loading Metric</div>
                         <p class="error-details small">{{ errorMessage || 'Failed to load metric data' }}</p>
-                        <button class="btn btn-sm btn-outline-danger mt-2" (click)="refresh()">
+                        <button class="btn btn-sm btn-outline-danger mt-2" (click)="refresh()" type="button">
                             <span class="material-icons">refresh</span> Retry
                         </button>
                     </div>
@@ -69,6 +68,7 @@ import { WidgetConfigEngine } from '../engines/widget-config.engine';
                                 {{ metricData.title }}
                             </h5>
                             <button class="btn btn-sm btn-outline-secondary"
+                                    type="button"
                                     (click)="refresh()"
                                     [disabled]="isLoading"
                                     title="Refresh">
@@ -123,7 +123,7 @@ import { WidgetConfigEngine } from '../engines/widget-config.engine';
                     <div class="no-data-content">
                         <span class="material-icons no-data-icon">help_outline</span>
                         <div class="no-data-message">No data available</div>
-                        <button class="btn btn-sm btn-outline-primary mt-2" (click)="refresh()">
+                        <button class="btn btn-sm btn-outline-primary mt-2" (click)="refresh()" type="button">
                             <span class="material-icons">refresh</span> Refresh
                         </button>
                     </div>
@@ -437,7 +437,7 @@ export class JsonMetricWidgetComponent implements OnInit, OnDestroy {
      * Load metric data from configuration
      */
     private loadMetricData(): void {
-        if (this.hasError) return;
+        if (this.hasError) {return;}
 
         this.isLoading = true;
         this.hasError = false;
@@ -445,6 +445,7 @@ export class JsonMetricWidgetComponent implements OnInit, OnDestroy {
 
         this.widgetEngine.executeMetricWidget(this.config)
             .pipe(
+                // eslint-disable-next-line rxjs-x/no-unsafe-takeuntil
                 takeUntil(this.destroy$),
                 catchError(error => {
                     console.error('Error loading metric data:', error);
@@ -518,7 +519,7 @@ export class JsonMetricWidgetComponent implements OnInit, OnDestroy {
      * Get aria-label for accessibility
      */
     public getAriaLabel(): string {
-        if (!this.metricData) return '';
+        if (!this.metricData) {return '';}
 
         let label = `${this.metricData.title}: ${this.metricData.value}`;
 

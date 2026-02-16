@@ -1,3 +1,4 @@
+/* eslint-disable no-magic-numbers */
 import { Component, Input, OnInit, OnDestroy, ElementRef, ViewChild, HostListener, inject, SimpleChanges, OnChanges } from '@angular/core';
 import { ChartData, ChartConfiguration } from './interfaces/chart-data.interface';
 import { ChartRenderer } from './interfaces/chart-renderer.interface';
@@ -151,7 +152,7 @@ export abstract class BaseChartComponent<T extends ChartData = ChartData> implem
         // Calculate dimensions - use container height if config height not specified
         const width = this.config.width || 800;
         const height = this.config.height || this.chartWrapper?.nativeElement?.clientHeight || 400;
-        
+
         this.svg
             .attr('width', width)
             .attr('height', height)
@@ -411,7 +412,7 @@ export abstract class BaseChartComponent<T extends ChartData = ChartData> implem
             const className = classList[i];
             const match = className.match(/series-(\d+)/);
             if (match) {
-                return parseInt(match[1]);
+                return parseInt(match[1], 10);
             }
         }
         return 0;
@@ -428,7 +429,7 @@ export abstract class BaseChartComponent<T extends ChartData = ChartData> implem
      * Get CSV headers - can be overridden by subclasses
      */
     protected getCSVHeaders(): string[] {
-        if (!this.chartData) return [];
+        if (!this.chartData) {return [];}
         return ['X Value', ...this.chartData.series.map(s => s.name)];
     }
 
@@ -436,7 +437,7 @@ export abstract class BaseChartComponent<T extends ChartData = ChartData> implem
      * Generate CSV rows - can be overridden by subclasses
      */
     protected generateCSVRows(): string {
-        if (!this.chartData) return '';
+        if (!this.chartData) {return '';}
 
         const maxLength = Math.max(...this.chartData.series.map(s => s.data.length));
         let rows = '';

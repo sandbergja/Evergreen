@@ -1,3 +1,4 @@
+/* eslint-disable no-magic-numbers */
 import { Injectable, inject } from '@angular/core';
 import { ChartRenderer, ValidationResult, PerformanceMetrics } from '../interfaces/chart-renderer.interface';
 import { ChartData, ChartConfiguration } from '../interfaces/chart-data.interface';
@@ -58,7 +59,7 @@ export class PieChartRenderer implements ChartRenderer<ChartData> {
             const cornerRadius = pieStyle.cornerRadius || 0;
 
             // Process data - use first series for single series implementation
-            const series = data.series.find(s => s.name == data.shownSeries?.[0]) ?? data.series[0];
+            const series = data.series.find(s => s.name === data.shownSeries?.[0]) ?? data.series[0];
             if (!series) {
                 throw new Error('No data series found for pie chart');
             }
@@ -76,7 +77,9 @@ export class PieChartRenderer implements ChartRenderer<ChartData> {
                 const colors = series.data.map((point, pointIndex) =>
                     point.color || series.color || this.colorService.getAccessibleColor(pointIndex)
                 );
-                this.patternService.generatePatternDefinitions(defs as d3.Selection<SVGDefsElement, unknown, null, undefined>, colors, chartId);
+                this.patternService.generatePatternDefinitions(
+                    defs as d3.Selection<SVGDefsElement, unknown, null, undefined>, colors, chartId
+                );
 
                 // Store chart ID for later use in pattern requests
                 (svg.node() as any)._chartId = chartId;

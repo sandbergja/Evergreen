@@ -1,9 +1,7 @@
 import {Injectable} from '@angular/core';
-import {Observable, lastValueFrom} from 'rxjs';
-import {toArray} from 'rxjs/operators';
+import {lastValueFrom, toArray} from 'rxjs';
 import {NetService} from '@eg/core/net.service';
 import {AuthService} from '@eg/core/auth.service';
-import {OrgService} from '@eg/core/org.service';
 import {
     FilterOption,
     AppliedFilter,
@@ -11,7 +9,6 @@ import {
     FilterValue
 } from './interfaces';
 import {WidgetJsonConfig} from './interfaces/widget-json-config.interface';
-import {CirculationDataService} from '@eg/share/widgets/services/circulation-data.service';
 
 @Injectable({
     providedIn: 'root'
@@ -20,9 +17,7 @@ export class DashboardService {
 
     constructor(
         private net: NetService,
-        private auth: AuthService,
-        private org: OrgService,
-        private circulationDataService: CirculationDataService
+        private auth: AuthService
     ) {
     }
 
@@ -253,7 +248,7 @@ export class DashboardService {
 
         // Example filter application logic for circulation data
         if (widgetType === 'circulations' && data.circulation_by_library) {
-            let filteredData = {...data};
+            const filteredData = {...data};
 
             appliedFilters.forEach(filter => {
                 switch (filter.filterId) {
@@ -419,7 +414,7 @@ export class DashboardService {
      */
     getFilterOptions(widgetType: string, filterId: string): FilterValue[] {
         const filters = this.WIDGET_FILTERS[widgetType];
-        if (!filters) return [];
+        if (!filters) {return [];}
 
         const filter = filters.find(f => f.id === filterId);
         return filter?.options || [];

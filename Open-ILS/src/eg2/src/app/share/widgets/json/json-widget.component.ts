@@ -237,7 +237,7 @@ export class JsonWidgetComponent implements OnInit {
      * Get widget type display name
      */
     public getWidgetTypeDisplay(): string {
-        if (!this.config?.type) return 'Unknown';
+        if (!this.config?.type) {return 'Unknown';}
 
         return this.config.type.charAt(0).toUpperCase() + this.config.type.slice(1);
     }
@@ -246,7 +246,7 @@ export class JsonWidgetComponent implements OnInit {
      * Get widget summary for logging
      */
     public getWidgetSummary(): string {
-        if (!this.config) return 'No configuration';
+        if (!this.config) {return 'No configuration';}
 
         return `${this.getWidgetTypeDisplay()} Widget: ${this.config.name} (${this.config.id})`;
     }

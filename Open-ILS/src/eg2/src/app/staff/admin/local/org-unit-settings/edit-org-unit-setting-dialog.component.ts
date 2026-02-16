@@ -40,7 +40,7 @@ export class EditOuSettingDialogComponent extends DialogComponent {
 
     setMultiselectInputValue(inputValue) {
         // Remove the curly braces on the outside of our multiselect boyos
-        this.setInputValue(inputValue.replace(/^[{}]+|[{}]+$/g, ''))
+        this.setInputValue(inputValue.replace(/^[{}]+|[{}]+$/g, ''));
     }
 
     getFieldClass() {

@@ -183,7 +183,7 @@ export class BarChartComponent extends BaseChartComponent<ChartData> {
      * Get CSV headers for bar charts
      */
     protected override getCSVHeaders(): string[] {
-        if (!this.chartData) return [];
+        if (!this.chartData) {return [];}
         return ['Category', ...this.chartData.series.map(s => s.name)];
     }
 
@@ -191,13 +191,14 @@ export class BarChartComponent extends BaseChartComponent<ChartData> {
      * Generate CSV rows for bar charts
      */
     protected override generateCSVRows(): string {
-        if (!this.chartData) return '';
+        if (!this.chartData) {return '';}
 
         const categories = this.getCategories();
         let rows = '';
 
         categories.forEach(category => {
             const row = [category];
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             this.chartData!.series.forEach(series => {
                 const point = series.data.find(d => String(d.x) === category);
                 row.push(point ? point.y.toString() : '0');

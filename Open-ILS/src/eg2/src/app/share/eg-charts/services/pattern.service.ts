@@ -1,3 +1,4 @@
+/* eslint-disable no-magic-numbers */
 import { Injectable } from '@angular/core';
 import * as d3 from 'd3';
 
@@ -5,7 +6,10 @@ export interface PatternDefinition {
     id: string;
     name: string;
     description: string;
-    generator: (defs: d3.Selection<SVGDefsElement, unknown, null, undefined>, color: string, patternId: string, service: PatternService) => void;
+    generator: (
+        defs: d3.Selection<SVGDefsElement, unknown, null, undefined>, color: string,
+        patternId: string, service: PatternService
+        ) => void;
 }
 
 /**
@@ -258,7 +262,7 @@ export class PatternService {
 
         colors.forEach((color, colorIndex) => {
             this.patterns.forEach((patternDef) => {
-                if (patternDef.id === 'solid') return;
+                if (patternDef.id === 'solid') {return;}
 
                 const patternId = `pattern-${uniqueChartId}-${colorIndex}-${patternDef.id}`;
                 patternDef.generator(defs, color, patternId, this);
@@ -415,7 +419,7 @@ export class PatternService {
     enableHighContrastPatterns(): void {
         // Override pattern definitions with high contrast versions
         this.patterns = this.patterns.map(pattern => {
-            if (pattern.id === 'solid') return pattern;
+            if (pattern.id === 'solid') {return pattern;}
 
             return {
                 ...pattern,

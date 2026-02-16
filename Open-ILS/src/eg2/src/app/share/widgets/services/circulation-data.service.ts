@@ -1,6 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, of } from 'rxjs';
-import { map, catchError, toArray, tap } from 'rxjs/operators';
+import { Observable, of, map, catchError, toArray, tap } from 'rxjs';
 import { PcrudService } from '@eg/core/pcrud.service';
 import { NetService } from '@eg/core/net.service';
 import { AuthService } from '@eg/core/auth.service';
@@ -529,22 +528,25 @@ export class CirculationDataService {
     private getDateRangeFromTimeRange(timeRange: string): { start: Date, end: Date } {
         const end = new Date();
         const start = new Date();
+        const DAYS_IN_ONE_WEEK = 7;
+        const MONTHS_IN_ONE_QUARTER = 3;
 
         switch (timeRange) {
             case 'today':
             case 'day':
                 // Today only
                 start.setHours(0, 0, 0, 0);
+                // eslint-disable-next-line no-magic-numbers
                 end.setHours(23, 59, 59, 999);
                 break;
             case 'week':
-                start.setDate(end.getDate() - 7);
+                start.setDate(end.getDate() - DAYS_IN_ONE_WEEK);
                 break;
             case 'month':
                 start.setMonth(end.getMonth() - 1);
                 break;
             case 'quarter':
-                start.setMonth(end.getMonth() - 3);
+                start.setMonth(end.getMonth() - MONTHS_IN_ONE_QUARTER);
                 break;
             case 'year':
                 start.setFullYear(end.getFullYear() - 1);

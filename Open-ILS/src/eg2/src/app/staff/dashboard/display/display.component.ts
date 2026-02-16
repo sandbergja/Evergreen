@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { DashboardService } from '../dashboard.service';
 import { WidgetJsonConfig } from '../interfaces/widget-json-config.interface';
 
@@ -14,7 +14,7 @@ import { WidgetJsonConfig } from '../interfaces/widget-json-config.interface';
     templateUrl: './display.component.html',
     styleUrls: ['./display.component.css']
 })
-export class DashboardDisplayComponent implements OnInit, OnDestroy {
+export class DashboardDisplayComponent implements OnInit {
 
     // Loading states
     loading = true;
@@ -27,10 +27,6 @@ export class DashboardDisplayComponent implements OnInit, OnDestroy {
 
     ngOnInit(): void {
         this.loadDashboardData();
-    }
-
-    ngOnDestroy(): void {
-        // Cleanup handled by Angular's automatic unsubscription
     }
 
     /**

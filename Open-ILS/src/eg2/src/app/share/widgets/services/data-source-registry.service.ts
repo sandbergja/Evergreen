@@ -56,7 +56,8 @@ export class DataSourceRegistryService {
 
         // Register circulation data source (DEPRECATED - for backward compatibility only)
         this.registerDataSource('circulation', this.circulationDataService, {
-            'getCirculationByShelvingLocation': this.circulationDataService.getCirculationByShelvingLocation.bind(this.circulationDataService),
+            'getCirculationByShelvingLocation':
+                this.circulationDataService.getCirculationByShelvingLocation.bind(this.circulationDataService),
             'getCirculationTrend': this.circulationDataService.getCirculationTrend.bind(this.circulationDataService),
             'getCirculationSummary': this.circulationDataService.getCirculationSummary.bind(this.circulationDataService),
             'getCurrentHoldsCount': this.circulationDataService.getCurrentHoldsCount.bind(this.circulationDataService),
@@ -198,8 +199,9 @@ export class DataSourceRegistryService {
             return null;
         }
 
+        const DEFAULT_CACHE_IN_SECONDS = 300;
         // Check if cache has expired
-        const ttl = (config.cache?.ttl || 300) * 1000; // Convert to milliseconds
+        const ttl = (config.cache?.ttl || DEFAULT_CACHE_IN_SECONDS) * 1000; // Convert to milliseconds
         const age = Date.now() - cached.timestamp.getTime();
 
         if (age > ttl) {
