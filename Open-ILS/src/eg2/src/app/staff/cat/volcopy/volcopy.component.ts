@@ -1,5 +1,5 @@
-import {DOCUMENT, ViewportScroller} from '@angular/common';
-import {Component, OnInit, ViewChild, HostListener,  inject} from '@angular/core';
+import {ViewportScroller} from '@angular/common';
+import {Component, OnInit, ViewChild, HostListener, inject, DOCUMENT} from '@angular/core';
 import {Router, ActivatedRoute, ParamMap} from '@angular/router';
 import {BehaviorSubject, from, Observable, of, finalize, switchMap, tap, map} from 'rxjs';
 import {IdlObject, IdlService} from '@eg/core/idl.service';

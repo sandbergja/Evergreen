@@ -1,4 +1,4 @@
-import {Input, Output, EventEmitter, Directive} from '@angular/core';
+import {Input, Output, EventEmitter, Directive, DOCUMENT} from '@angular/core';
 import {NgbPopover} from '@ng-bootstrap/ng-bootstrap';
 import {ContextMenuService, ContextMenu, ContextMenuEntry} from './context-menu.service';
 
@@ -10,7 +10,7 @@ import {
     Inject, Injector, Renderer2, ElementRef, ViewContainerRef,
     NgZone, ChangeDetectorRef, ApplicationRef
 } from '@angular/core';
-import {DOCUMENT} from '@angular/common';
+
 import {NgbPopoverConfig} from '@ng-bootstrap/ng-bootstrap';
 /* eslint-enable no-duplicate-imports */
 /* --- */
