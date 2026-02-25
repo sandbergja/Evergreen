@@ -1,5 +1,5 @@
-import {DOCUMENT} from '@angular/common';
-import {Component, Input, OnInit, ViewChild, TemplateRef, EventEmitter, Inject, ElementRef} from '@angular/core';
+
+import {Component, Input, OnInit, ViewChild, TemplateRef, EventEmitter, Inject, ElementRef, DOCUMENT} from '@angular/core';
 import {Observable, Observer} from 'rxjs';
 import {NgbModal, NgbModalRef, NgbModalOptions} from '@ng-bootstrap/ng-bootstrap';
 
