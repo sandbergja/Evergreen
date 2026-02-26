@@ -1,5 +1,5 @@
 /* eslint-disable no-case-declarations, no-magic-numbers */
-import {Injectable} from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import {Observable, empty, from, concatMap} from 'rxjs';
 import {IdlObject} from '@eg/core/idl.service';
 import {NetService} from '@eg/core/net.service';
@@ -209,6 +209,18 @@ export interface CheckinResult extends CircResultCommon {
 
 @Injectable()
 export class CircService {
+    private audio = inject(AudioService);
+    private evt = inject(EventService);
+    private org = inject(OrgService);
+    private net = inject(NetService);
+    private pcrud = inject(PcrudService);
+    private serverStore = inject(ServerStoreService);
+    private strings = inject(StringService);
+    private auth = inject(AuthService);
+    private holdings = inject(HoldingsService);
+    private worklog = inject(WorkLogService);
+    private bib = inject(BibRecordService);
+
     static resultIndex = 0;
 
     components: CircComponentsComponent;
@@ -219,20 +231,6 @@ export class CircService {
     copyLocationCache: {[id: number]: IdlObject} = {};
     clearHoldsOnCheckout = false;
     orgAddrCache: {[addrId: number]: IdlObject} = {};
-
-    constructor(
-        private audio: AudioService,
-        private evt: EventService,
-        private org: OrgService,
-        private net: NetService,
-        private pcrud: PcrudService,
-        private serverStore: ServerStoreService,
-        private strings: StringService,
-        private auth: AuthService,
-        private holdings: HoldingsService,
-        private worklog: WorkLogService,
-        private bib: BibRecordService
-    ) {}
 
     applySettings(): Promise<any> {
         return this.serverStore.getItemBatch([

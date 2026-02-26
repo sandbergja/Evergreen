@@ -1,4 +1,4 @@
-import {Component, OnInit, ViewChild, Input, Output, EventEmitter} from '@angular/core';
+import { Component, OnInit, ViewChild, Input, Output, EventEmitter, inject } from '@angular/core';
 import {IdlObject, IdlService} from '@eg/core/idl.service';
 import {NetService} from '@eg/core/net.service';
 import {AuthService} from '@eg/core/auth.service';
@@ -24,6 +24,13 @@ import { FormsModule } from '@angular/forms';
     ]
 })
 export class LineitemCopyAttrsComponent implements OnInit {
+    private idl = inject(IdlService);
+    private net = inject(NetService);
+    private auth = inject(AuthService);
+    private org = inject(OrgService);
+    private liService = inject(LineitemService);
+    private perm = inject(PermService);
+
 
     @Input() lineitem: IdlObject;
     @Input() rowIndex: number;
@@ -79,15 +86,6 @@ export class LineitemCopyAttrsComponent implements OnInit {
     @ViewChild('locationSelector') locationSelector: ItemLocationSelectComponent;
     @ViewChild('circModSelector') circModSelector: ComboboxComponent;
     @ViewChild('fundSelector') fundSelector: ComboboxComponent;
-
-    constructor(
-        private idl: IdlService,
-        private net: NetService,
-        private auth: AuthService,
-        private org: OrgService,
-        private liService: LineitemService,
-        private perm: PermService
-    ) {}
 
     ngOnInit() {
 

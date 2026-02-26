@@ -1,4 +1,4 @@
-import {Component, Input, ViewChild, OnInit, AfterViewInit} from '@angular/core';
+import { Component, Input, ViewChild, OnInit, AfterViewInit, inject } from '@angular/core';
 import {Router} from '@angular/router';
 import {IdlObject, IdlService} from '@eg/core/idl.service';
 import {PcrudService} from '@eg/core/pcrud.service';
@@ -28,6 +28,15 @@ import { StaffCommonModule } from '@eg/staff/common.module';
 })
 
 export class CourseListComponent implements OnInit, AfterViewInit {
+    private courseSvc = inject(CourseService);
+    private locale = inject(LocaleService);
+    private auth = inject(AuthService);
+    private idl = inject(IdlService);
+    private org = inject(OrgService);
+    private pcrud = inject(PcrudService);
+    private router = inject(Router);
+    private toast = inject(ToastService);
+
 
     @ViewChild('editDialog', { static: true }) editDialog: FmRecordEditorComponent;
     @ViewChild('grid') grid: GridComponent;
@@ -58,18 +67,6 @@ export class CourseListComponent implements OnInit, AfterViewInit {
     defaultOuId: number;
     searchOrgs: OrgFamily;
     defaultTerm: IdlObject;
-
-
-    constructor(
-        private courseSvc: CourseService,
-        private locale: LocaleService,
-        private auth: AuthService,
-        private idl: IdlService,
-        private org: OrgService,
-        private pcrud: PcrudService,
-        private router: Router,
-        private toast: ToastService
-    ) {}
 
     ngOnInit() {
         this.getSource();

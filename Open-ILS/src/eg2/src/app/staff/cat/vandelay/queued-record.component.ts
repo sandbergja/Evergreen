@@ -1,4 +1,4 @@
-import {Component} from '@angular/core';
+import { Component, inject } from '@angular/core';
 import {Router, ActivatedRoute, ParamMap} from '@angular/router';
 import {NgbNavChangeEvent} from '@ng-bootstrap/ng-bootstrap';
 import {PcrudService} from '@eg/core/pcrud.service';
@@ -10,6 +10,10 @@ import { StaffCommonModule } from '@eg/staff/common.module';
     imports: [StaffCommonModule]
 })
 export class QueuedRecordComponent {
+    private router = inject(Router);
+    private route = inject(ActivatedRoute);
+    private pcrud = inject(PcrudService);
+
 
     queueId: number;
     queueType: string;
@@ -17,10 +21,7 @@ export class QueuedRecordComponent {
     recordTab: string;
     queuedRecord: IdlObject;
 
-    constructor(
-        private router: Router,
-        private route: ActivatedRoute,
-        private pcrud: PcrudService) {
+    constructor() {
 
         this.route.paramMap.subscribe((params: ParamMap) => {
             this.queueId = +params.get('id');

@@ -1,4 +1,4 @@
-import {Component, OnInit, Output, Input, ViewChild, EventEmitter} from '@angular/core';
+import { Component, OnInit, Output, Input, ViewChild, EventEmitter, inject } from '@angular/core';
 import {Observable, empty, from, map, concatWith as concat, ignoreElements, tap, concatMap} from 'rxjs';
 import {IdlObject} from '@eg/core/idl.service';
 import {OrgService} from '@eg/core/org.service';
@@ -80,6 +80,17 @@ const CIRC_FLESH_FIELDS = {
     ]
 })
 export class CircGridComponent implements OnInit {
+    private org = inject(OrgService);
+    private net = inject(NetService);
+    private auth = inject(AuthService);
+    private pcrud = inject(PcrudService);
+    circ = inject(CircService);
+    private audio = inject(AudioService);
+    private store = inject(StoreService);
+    private printer = inject(PrintService);
+    private toast = inject(ToastService);
+    private serverStore = inject(ServerStoreService);
+
 
     @Input() persistKey: string;
     @Input() printTemplate: string; // defaults to items_out
@@ -124,19 +135,6 @@ export class CircGridComponent implements OnInit {
     private claimsReturnedDialog: ClaimsReturnedDialogComponent;
     @ViewChild('addBillingDialog')
     private addBillingDialog: AddBillingDialogComponent;
-
-    constructor(
-        private org: OrgService,
-        private net: NetService,
-        private auth: AuthService,
-        private pcrud: PcrudService,
-        public circ: CircService,
-        private audio: AudioService,
-        private store: StoreService,
-        private printer: PrintService,
-        private toast: ToastService,
-        private serverStore: ServerStoreService
-    ) {}
 
     ngOnInit() {
 

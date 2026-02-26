@@ -1,4 +1,4 @@
-import {Component, Input, Output, OnInit, EventEmitter, ViewChild} from '@angular/core';
+import { Component, Input, Output, OnInit, EventEmitter, ViewChild, inject } from '@angular/core';
 import {IdlService} from '@eg/core/idl.service';
 import {EventService} from '@eg/core/event.service';
 import {NetService} from '@eg/core/net.service';
@@ -53,6 +53,16 @@ export interface MarcSavedEvent {
 })
 
 export class MarcEditorComponent implements OnInit {
+    private evt = inject(EventService);
+    private idl = inject(IdlService);
+    private net = inject(NetService);
+    private auth = inject(AuthService);
+    private org = inject(OrgService);
+    private pcrud = inject(PcrudService);
+    private toast = inject(ToastService);
+    private holdings = inject(HoldingsService);
+    private store = inject(ServerStoreService);
+
 
     editorTab: 'rich' | 'flat';
     sources: ComboboxEntry[];
@@ -119,17 +129,7 @@ export class MarcEditorComponent implements OnInit {
     showFastAdd: boolean;
     initCalled = false;
 
-    constructor(
-        private evt: EventService,
-        private idl: IdlService,
-        private net: NetService,
-        private auth: AuthService,
-        private org: OrgService,
-        private pcrud: PcrudService,
-        private toast: ToastService,
-        private holdings: HoldingsService,
-        private store: ServerStoreService
-    ) {
+    constructor() {
         this.sources = [];
         this.recordSaved = new EventEmitter<MarcSavedEvent>();
         this.context = new MarcEditContext();
