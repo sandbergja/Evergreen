@@ -3,7 +3,7 @@ import {Component, OnInit, Input, Output, EventEmitter, forwardRef} from '@angul
 import {NgbDateStruct, NgbInputDatepicker} from '@ng-bootstrap/ng-bootstrap';
 import {ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR, ReactiveFormsModule} from '@angular/forms';
 import {DateUtil} from '@eg/share/util/date';
-import { NgClass, NgIf } from '@angular/common';
+import { NgClass } from '@angular/common';
 
 /**
  * RE: displaying locale dates in the input field:
@@ -24,8 +24,7 @@ import { NgClass, NgIf } from '@angular/common';
         FormsModule,
         ReactiveFormsModule,
         NgbInputDatepicker,
-        NgClass,
-        NgIf
+        NgClass
     ]
 })
 export class DateSelectComponent implements OnInit, ControlValueAccessor {

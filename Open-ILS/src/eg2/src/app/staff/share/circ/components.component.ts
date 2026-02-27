@@ -10,7 +10,7 @@ import {CopyInTransitDialogComponent} from './in-transit-dialog.component';
 import {CopyAlertManagerDialogComponent
 } from '@eg/staff/share/holdings/copy-alert-manager.component';
 import {BadBarcodeDialogComponent} from './bad-barcode-dialog.component';
-import { CommonModule } from '@angular/common';
+
 
 /* Container component for sub-components used by circulation actions.
  *
@@ -26,7 +26,6 @@ import { CommonModule } from '@angular/common';
         AlertDialogComponent,
         BadBarcodeDialogComponent,
         CircEventsComponent,
-        CommonModule,
         CopyAlertManagerDialogComponent,
         CopyInTransitDialogComponent,
         RouteDialogComponent,

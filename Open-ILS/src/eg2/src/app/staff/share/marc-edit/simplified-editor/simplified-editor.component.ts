@@ -4,7 +4,7 @@ import {MarcField, MarcRecord} from '../marcrecord';
 import {TagTableService} from '../tagtable.service';
 import {NetService} from '@eg/core/net.service';
 import {ComboboxComponent, ComboboxEntry} from '@eg/share/combobox/combobox.component';
-import { CommonModule } from '@angular/common';
+
 
 const DEFAULT_RECORD_TYPE = 'BKS';
 
@@ -18,8 +18,7 @@ const DEFAULT_RECORD_TYPE = 'BKS';
     templateUrl: './simplified-editor.component.html',
     imports: [
         ComboboxComponent,
-        CommonModule,
-        FormsModule,
+        FormsModule
     ],
     providers: [TagTableService]
 })

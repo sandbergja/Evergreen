@@ -30,7 +30,7 @@
 </div>
 
 <div class="row">
-  <h2 class="mt-3" i18n>{{listFromMap().length}} records from {{bibIdMapKeys().length}} {{bibIdMapKeys().length == 1 ? 'file' : 'files'}}</h2>
+  <h2 class="mt-3" i18n>{{listFromMap().length}} records from {{bibIdMapKeys().length}} {{bibIdMapKeys().length === 1 ? 'file' : 'files'}}</h2>
 
   <ul class="mt-2 list-unstyled lineitem-file-list">
     <li *ngFor="let fname of bibIdMapKeys()" class="lineitem-file-item">

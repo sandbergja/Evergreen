@@ -11,7 +11,7 @@ import {StringComponent} from '@eg/share/string/string.component';
 import {ComboboxComponent, ComboboxEntry} from '@eg/share/combobox/combobox.component';
 import {WorkLogService, WorkLogEntry} from '@eg/staff/share/worklog/worklog.service';
 import { WorkLogStringsComponent } from '../worklog/strings.component';
-import { CommonModule } from '@angular/common';
+
 
 /**
  * Dialog for canceling hold requests.
@@ -22,7 +22,6 @@ import { CommonModule } from '@angular/common';
     templateUrl: 'cancel-dialog.component.html',
     imports: [
         ComboboxComponent,
-        CommonModule,
         StringComponent,
         WorkLogStringsComponent
     ]

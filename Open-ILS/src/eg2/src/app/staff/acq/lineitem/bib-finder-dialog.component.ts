@@ -7,7 +7,7 @@ import {EventService} from '@eg/core/event.service';
 import {IdlObject} from '@eg/core/idl.service';
 import {LineitemService} from './lineitem.service';
 import {BibRecordService, BibRecordSummary} from '@eg/share/catalog/bib-record.service';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { MarcHtmlComponent } from '@eg/share/catalog/marc-html.component';
 
@@ -16,7 +16,6 @@ import { MarcHtmlComponent } from '@eg/share/catalog/marc-html.component';
     styleUrls: ['./bib-finder-dialog.component.css'],
     templateUrl: './bib-finder-dialog.component.html',
     imports: [
-        CommonModule,
         FormsModule,
         MarcHtmlComponent
     ]

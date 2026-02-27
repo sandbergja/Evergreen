@@ -9,8 +9,8 @@
   </div>
 </div>
 
-<ul ngbNav #recordTabs="ngbNav" [(activeId)]="recordTab" 
-      (navChange)="onNavChange($event)" [keyboard]="true" [roles]="false" role="tablist" class="nav-tabs">
+<ul ngbNav #recordTabs="ngbNav" [(activeId)]="recordTab"
+  (navChange)="onNavChange($event)" [keyboard]="true" [roles]="false" role="tablist" class="nav-tabs">
   <li role="presentation" [ngbNavItem]="'marc'">
     <a i18n ngbNavLink role="tab">Queued Record MARC</a>
     <ng-template ngbNavContent>
@@ -21,15 +21,19 @@
   <li role="presentation" [ngbNavItem]="'edit'">
     <a i18n ngbNavLink role="tab">Edit Record</a>
     <ng-template ngbNavContent>
-      <ng-container *ngIf="queuedRecord">
-        <eg-marc-editor [inPlaceMode]="true" [recordXml]="queuedRecord.marc()"
-          [recordSource]="queuedRecord.bib_source()"
-          (recordSaved)="handleMarcRecordSaved($event)"
-          *ngIf="queueType === 'bib'"></eg-marc-editor>
-        <eg-marc-editor [inPlaceMode]="true" [recordXml]="queuedRecord.marc()"
-          (recordSaved)="handleMarcRecordSaved($event)"
-          *ngIf="queueType !== 'bib'"></eg-marc-editor>
-      </ng-container>
+      @if (queuedRecord) {
+        @if (queueType === 'bib') {
+          <eg-marc-editor [inPlaceMode]="true" [recordXml]="queuedRecord.marc()"
+            [recordSource]="queuedRecord.bib_source()"
+            (recordSaved)="handleMarcRecordSaved($event)"
+          ></eg-marc-editor>
+        }
+        @if (queueType !== 'bib') {
+          <eg-marc-editor [inPlaceMode]="true" [recordXml]="queuedRecord.marc()"
+            (recordSaved)="handleMarcRecordSaved($event)"
+          ></eg-marc-editor>
+        }
+      }
     </ng-template>
   </li>
   <li role="presentation" [ngbNavItem]="'matches'">

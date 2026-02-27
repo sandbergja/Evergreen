@@ -8,7 +8,7 @@ import {PcrudService} from '@eg/core/pcrud.service';
 import {AuthService} from '@eg/core/auth.service';
 import {ComboboxComponent, ComboboxEntry} from '@eg/share/combobox/combobox.component';
 import {PrintService} from '@eg/share/print/print.service';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 
 @Component({
@@ -16,7 +16,6 @@ import { FormsModule } from '@angular/forms';
     templateUrl: './manage-claims-dialog.component.html',
     imports: [
         ComboboxComponent,
-        CommonModule,
         FormsModule
     ]
 })

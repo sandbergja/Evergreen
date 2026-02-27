@@ -7,7 +7,7 @@ import { BroadcastService } from '@eg/share/util/broadcast.service';
 import { GridComponent } from '@eg/share/grid/grid.component';
 import { GridDataSource, GridCellTextGenerator, GridColumnSort } from '@eg/share/grid/grid';
 import {Pager} from '@eg/share/util/pager';
-import { CommonModule } from '@angular/common';
+
 import { GridModule } from '@eg/share/grid/grid.module';
 
 @Component({
@@ -15,7 +15,6 @@ import { GridModule } from '@eg/share/grid/grid.module';
     templateUrl: './tag-map-list.component.html',
     styleUrls: ['./tag-map-list.component.css'],
     imports: [
-        CommonModule,
         GridModule
     ]
 })

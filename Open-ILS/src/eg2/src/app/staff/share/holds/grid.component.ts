@@ -1,5 +1,5 @@
 import { Component, OnInit, Input, Output, EventEmitter, ViewChild, inject } from '@angular/core';
-import {CommonModule, Location} from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import {Observable, Observer, of, from, concatMap} from 'rxjs';
 import {IdlObject} from '@eg/core/idl.service';
 import {NetService} from '@eg/core/net.service';

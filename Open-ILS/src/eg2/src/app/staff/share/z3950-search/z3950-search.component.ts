@@ -23,7 +23,7 @@ import {ProgressInlineComponent} from '@eg/share/dialog/progress-inline.componen
 import { StaffBannerComponent } from '../staff-banner.component';
 import { TitleComponent } from '@eg/share/title/title.component';
 import { MarcEditorComponent } from '../marc-edit/editor.component';
-import { CommonModule } from '@angular/common';
+
 import { OrgSelectComponent } from '@eg/share/org-select/org-select.component';
 import { GridModule } from '@eg/share/grid/grid.module';
 import { MarcHtmlComponent } from '@eg/share/catalog/marc-html.component';
@@ -46,20 +46,19 @@ export class AutofocusDirective implements OnInit {
     styleUrls: ['z3950-search.component.css'],
     templateUrl: 'z3950-search.component.html',
     imports: [
-        AutofocusDirective,
-        ComboboxComponent,
-        CommonModule,
-        ConfirmDialogComponent,
-        FormsModule,
-        GridModule,
-        MarcEditorComponent,
-        MarcHtmlComponent,
-        OrgSelectComponent,
-        ProgressInlineComponent,
-        PromptDialogComponent,
-        StaffBannerComponent,
-        TitleComponent
-    ]
+    AutofocusDirective,
+    ComboboxComponent,
+    ConfirmDialogComponent,
+    FormsModule,
+    GridModule,
+    MarcEditorComponent,
+    MarcHtmlComponent,
+    OrgSelectComponent,
+    ProgressInlineComponent,
+    PromptDialogComponent,
+    StaffBannerComponent,
+    TitleComponent
+]
 })
 
 export class Z3950SearchComponent implements OnInit {

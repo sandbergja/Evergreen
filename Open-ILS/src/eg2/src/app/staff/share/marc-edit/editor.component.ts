@@ -15,7 +15,7 @@ import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 import {MarcEditContext, MARC_RECORD_TYPE} from './editor-context';
 import {NgbNavChangeEvent, NgbNavModule} from '@ng-bootstrap/ng-bootstrap';
 import {HoldingsService} from '@eg/staff/share/holdings/holdings.service';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { AlertDialogComponent } from '@eg/share/dialog/alert.component';
 import { ProgressInlineComponent } from '@eg/share/dialog/progress-inline.component';
@@ -41,7 +41,6 @@ export interface MarcSavedEvent {
     imports: [
         AlertDialogComponent,
         ComboboxComponent,
-        CommonModule,
         ConfirmDialogComponent,
         FormsModule,
         MarcFlatEditorComponent,

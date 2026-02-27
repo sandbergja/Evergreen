@@ -2,7 +2,7 @@
 /* eslint-disable rxjs/no-implicit-any-catch, rxjs/no-nested-subscribe */
 import { Component, Input, OnInit, TemplateRef, ViewChild, inject } from '@angular/core';
 import {ActivatedRoute} from '@angular/router';
-import {CommonModule, Location} from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import {IdlService, IdlObject} from '@eg/core/idl.service';
 import {FormatService} from '@eg/core/format.service';
 import {GridDataSource, GridColumn} from '@eg/share/grid/grid';
