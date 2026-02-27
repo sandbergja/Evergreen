@@ -49,9 +49,11 @@
               required
               (change)="checkSSO($event.target.value)"
               [(ngModel)]="args.workstation">
-              <option *ngFor="let ws of workstations" [value]="ws.name">
+              @for (ws of workstations; track ws) {
+              <option [value]="ws.name">
                 {{ws.name}}
               </option>
+              }
             </select>
           </div>
         </div>
