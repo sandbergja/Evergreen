@@ -4,7 +4,7 @@ import {PcrudService} from '@eg/core/pcrud.service';
 import {DialogComponent} from '@eg/share/dialog/dialog.component';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
-import { CommonModule } from '@angular/common';
+
 
 /**
  * 007 Physical Characteristics Dialog
@@ -17,7 +17,7 @@ import { CommonModule } from '@angular/common';
 @Component({
     selector: 'eg-phys-char-dialog',
     templateUrl: './phys-char-dialog.component.html',
-    imports: [CommonModule]
+    imports: []
 })
 
 export class PhysCharDialogComponent

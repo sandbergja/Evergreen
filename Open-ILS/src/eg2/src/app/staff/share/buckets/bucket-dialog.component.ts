@@ -11,7 +11,7 @@ import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
 import {StringComponent} from '@eg/share/string/string.component';
 import {BucketService} from '@eg/staff/share/buckets/bucket.service';
-import { NgIf } from '@angular/common';
+
 
 /**
  * Dialog for adding bib records to new and existing record buckets.
@@ -27,7 +27,6 @@ import { NgIf } from '@angular/common';
         NgbNavItem,
         NgbNavLink,
         NgbNavOutlet,
-        NgIf,
         StringComponent
     ]
 })

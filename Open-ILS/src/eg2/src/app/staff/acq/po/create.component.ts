@@ -10,7 +10,7 @@ import {ComboboxComponent, ComboboxEntry} from '@eg/share/combobox/combobox.comp
 import {EventService} from '@eg/core/event.service';
 import {PoService} from './po.service';
 import {LineitemService} from '../lineitem/lineitem.service';
-import { CommonModule } from '@angular/common';
+
 import { StaffBannerComponent } from '@eg/staff/share/staff-banner.component';
 import { FormsModule } from '@angular/forms';
 import { OrgSelectComponent } from '@eg/share/org-select/org-select.component';
@@ -27,10 +27,9 @@ const VALID_PRE_PO_LI_STATES = [
     selector: 'eg-acq-po-create',
     imports: [
         ComboboxComponent,
-        CommonModule,
         FormsModule,
         OrgSelectComponent,
-        StaffBannerComponent,
+        StaffBannerComponent
     ]
 })
 export class PoCreateComponent implements OnInit {

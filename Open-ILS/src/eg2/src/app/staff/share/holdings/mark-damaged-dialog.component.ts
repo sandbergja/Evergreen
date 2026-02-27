@@ -13,7 +13,7 @@ import {NgbModal, NgbModalOptions} from '@ng-bootstrap/ng-bootstrap';
 import {BibRecordService, BibRecordSummary} from '@eg/share/catalog/bib-record.service';
 import {ComboboxComponent, ComboboxEntry} from '@eg/share/combobox/combobox.component';
 import {BillingService} from '@eg/staff/share/billing/billing.service';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 
 /**
@@ -25,7 +25,6 @@ import { FormsModule } from '@angular/forms';
     templateUrl: 'mark-damaged-dialog.component.html',
     imports: [
         ComboboxComponent,
-        CommonModule,
         FormsModule,
         StringComponent
     ]

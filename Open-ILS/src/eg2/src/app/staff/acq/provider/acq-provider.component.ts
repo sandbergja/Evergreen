@@ -15,7 +15,7 @@ import {AuthService} from '@eg/core/auth.service';
 import {StoreService} from '@eg/core/store.service';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
 import { StaffBannerComponent } from '@eg/staff/share/staff-banner.component';
-import { CommonModule } from '@angular/common';
+
 import { ProviderAttributesComponent } from './provider-attributes.component';
 import { ProviderEdiAccountsComponent } from './provider-edi-accounts.component';
 import { ProviderInvoicesComponent } from './provider-invoices.component';
@@ -25,7 +25,6 @@ import { ProviderPurchaseOrdersComponent } from './provider-purchase-orders.comp
     templateUrl: './acq-provider.component.html',
     imports: [
         AcqProviderSummaryPaneComponent,
-        CommonModule,
         ConfirmDialogComponent,
         FmRecordEditorComponent,
         NgbNavModule,

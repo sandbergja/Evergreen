@@ -13,7 +13,7 @@ import {NgbTypeahead, NgbTypeaheadSelectItemEvent} from '@ng-bootstrap/ng-bootst
 import {IdlService, IdlObject} from '@eg/core/idl.service';
 import {PcrudService} from '@eg/core/pcrud.service';
 import {OrgService} from '@eg/core/org.service';
-import { NgClass, NgIf } from '@angular/common';
+import { NgClass } from '@angular/common';
 
 export interface ComboboxEntry {
   id: any;
@@ -48,11 +48,10 @@ export class IdlClassTemplateDirective {
             multi: true
         }],
         imports: [
-            FormsModule,
-            NgClass,
-            NgIf,
-            NgbTypeahead
-        ]
+    FormsModule,
+    NgClass,
+    NgbTypeahead
+]
 })
 export class ComboboxComponent
 implements ControlValueAccessor, OnInit, AfterViewInit, OnChanges {

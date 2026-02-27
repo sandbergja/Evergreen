@@ -6,7 +6,7 @@ import {GridPrintComponent} from './grid-print.component';
 import {GridColumn} from './grid';
 import { GridToolbarActionsEditorComponent } from './grid-toolbar-actions-editor.component';
 import { GridManageFiltersDialogComponent } from './grid-manage-filters-dialog.component';
-import { NgClass, NgFor, NgIf, NgTemplateOutlet } from '@angular/common';
+import { NgClass, NgTemplateOutlet } from '@angular/common';
 import { NgbDropdown } from '@ng-bootstrap/ng-bootstrap';
 import { GridToolbarActionsMenuComponent } from './grid-toolbar-actions-menu.component';
 import { GridColumnConfigComponent } from './grid-column-config.component';
@@ -26,8 +26,6 @@ import { FormsModule } from '@angular/forms';
         GridToolbarActionsMenuComponent,
         NgbDropdown,
         NgClass,
-        NgFor,
-        NgIf,
         NgTemplateOutlet
     ]
 })

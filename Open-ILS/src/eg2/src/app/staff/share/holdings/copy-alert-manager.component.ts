@@ -12,7 +12,7 @@ import {NgbModal, NgbModalOptions} from '@ng-bootstrap/ng-bootstrap';
 import {HoldingsService} from './holdings.service';
 import {CopyAlertsDialogComponent} from '@eg/staff/share/holdings/copy-alerts-dialog.component';
 import { StringComponent } from '@eg/share/string/string.component';
-import { CommonModule } from '@angular/common';
+
 
 /**
  * Dialog for managing copy alerts.
@@ -23,9 +23,8 @@ import { CommonModule } from '@angular/common';
     templateUrl: 'copy-alert-manager.component.html',
     styles: ['.acknowledged {text-decoration: line-through }'],
     imports: [
-        CommonModule,
         CopyAlertsDialogComponent,
-        StringComponent,
+        StringComponent
     ]
 })
 

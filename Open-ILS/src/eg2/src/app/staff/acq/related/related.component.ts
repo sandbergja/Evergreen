@@ -11,7 +11,7 @@ import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
 import {ComboboxComponent, ComboboxEntry} from '@eg/share/combobox/combobox.component';
 import { StaffBannerComponent } from '@eg/staff/share/staff-banner.component';
 import { BibSummaryComponent } from '@eg/staff/share/bib-summary/bib-summary.component';
-import { CommonModule } from '@angular/common';
+
 
 @Component({
     templateUrl: 'related.component.html',
@@ -19,7 +19,6 @@ import { CommonModule } from '@angular/common';
         AlertDialogComponent,
         BibSummaryComponent,
         ComboboxComponent,
-        CommonModule,
         PromptDialogComponent,
         RouterModule,
         StaffBannerComponent

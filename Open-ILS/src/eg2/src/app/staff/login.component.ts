@@ -1,5 +1,5 @@
 import { Component, ElementRef, OnInit, Renderer2, ViewChild, inject } from '@angular/core';
-import {Location, NgClass, NgIf} from '@angular/common';
+import { Location, NgClass } from '@angular/common';
 import {Router, ActivatedRoute} from '@angular/router';
 import {AuthService, AuthWsState} from '@eg/core/auth.service';
 import {StoreService} from '@eg/core/store.service';
@@ -14,8 +14,7 @@ import { FormsModule } from '@angular/forms';
     imports: [
         CredentialInputComponent,
         FormsModule,
-        NgClass,
-        NgIf,
+        NgClass
     ]
 })
 export class StaffLoginComponent implements OnInit {

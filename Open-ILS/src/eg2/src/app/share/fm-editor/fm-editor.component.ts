@@ -14,7 +14,7 @@ import {FormatService} from '@eg/core/format.service';
 import {TranslateComponent} from '@eg/share/translate/translate.component';
 import {FmRecordEditorActionComponent} from './fm-editor-action.component';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
-import { NgClass, NgFor, NgIf, NgSwitch, NgSwitchCase, NgTemplateOutlet } from '@angular/common';
+import { NgClass, NgTemplateOutlet } from '@angular/common';
 import { ProgressInlineComponent } from '../dialog/progress-inline.component';
 import { EgHelpPopoverComponent } from '../eg-help-popover/eg-help-popover.component';
 import { DateSelectComponent } from '../date-select/date-select.component';
@@ -108,27 +108,23 @@ export interface FmFieldOptions {
     templateUrl: './fm-editor.component.html',
     styleUrls: ['fm-editor.component.css'],
     imports: [
-        BooleanSelectComponent,
-        ComboboxComponent,
-        ConfirmDialogComponent,
-        DateSelectComponent,
-        DatesInOrderValidatorDirective,
-        DateTimeSelectComponent,
-        EgHelpPopoverComponent,
-        MinValidatorDirective,
-        MaxValidatorDirective,
-        FormsModule,
-        NgClass,
-        NgFor,
-        NgIf,
-        NgSwitch,
-        NgSwitchCase,
-        NgTemplateOutlet,
-        OrgSelectComponent,
-        ProgressInlineComponent,
-        StringComponent,
-        TranslateComponent
-    ]
+    BooleanSelectComponent,
+    ComboboxComponent,
+    ConfirmDialogComponent,
+    DateSelectComponent,
+    DatesInOrderValidatorDirective,
+    DateTimeSelectComponent,
+    EgHelpPopoverComponent,
+    MinValidatorDirective,
+    MaxValidatorDirective,
+    FormsModule,
+    NgClass,
+    NgTemplateOutlet,
+    OrgSelectComponent,
+    ProgressInlineComponent,
+    StringComponent,
+    TranslateComponent
+]
 })
 export class FmRecordEditorComponent
     extends DialogComponent implements OnInit {

@@ -6,7 +6,7 @@ import {OrgService} from '@eg/core/org.service';
 import {PcrudService} from '@eg/core/pcrud.service';
 import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {StringComponent} from '@eg/share/string/string.component';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { OrgSelectComponent } from '@eg/share/org-select/org-select.component';
 import { ComboboxComponent } from '@eg/share/combobox/combobox.component';
@@ -16,7 +16,6 @@ import { ComboboxComponent } from '@eg/share/combobox/combobox.component';
     templateUrl: './distribution-formula-edit-dialog.component.html',
     imports: [
         ComboboxComponent,
-        CommonModule,
         FormsModule,
         OrgSelectComponent,
         StringComponent
