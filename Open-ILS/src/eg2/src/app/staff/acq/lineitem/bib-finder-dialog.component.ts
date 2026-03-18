@@ -10,6 +10,7 @@ import {BibRecordService, BibRecordSummary} from '@eg/share/catalog/bib-record.s
 
 import { FormsModule } from '@angular/forms';
 import { MarcHtmlComponent } from '@eg/share/catalog/marc-html.component';
+import { ProgressInlineComponent } from '@eg/share/dialog/progress-inline.component';
 
 @Component({
     selector: 'eg-acq-bib-finder-dialog',
@@ -17,7 +18,8 @@ import { MarcHtmlComponent } from '@eg/share/catalog/marc-html.component';
     templateUrl: './bib-finder-dialog.component.html',
     imports: [
         FormsModule,
-        MarcHtmlComponent
+        MarcHtmlComponent,
+        ProgressInlineComponent
     ]
 })
 

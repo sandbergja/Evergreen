@@ -1,6 +1,6 @@
 /* eslint-disable */
 import { Component, AfterViewInit, Input, ViewChild, OnDestroy, inject } from '@angular/core';
-import {Router, ActivatedRoute} from '@angular/router';
+import {Router, ActivatedRoute, RouterModule} from '@angular/router';
 import {tap} from 'rxjs/operators';
 import {IdlObject} from '@eg/core/idl.service';
 import {NetService} from '@eg/core/net.service';
@@ -23,6 +23,7 @@ import {PicklistUploadService} from './upload.service';
 import { StaffBannerComponent } from '@eg/staff/share/staff-banner.component';
 
 import { FormsModule } from '@angular/forms';
+import { OrgSelectComponent } from '@eg/share/org-select/org-select.component';
 
 
 const TEMPLATE_SETTING_NAME = 'eg.acq.picklist.upload.templates';
@@ -68,7 +69,9 @@ const ORG_SETTINGS = [
     AlertDialogComponent,
     ComboboxComponent,
     FormsModule,
+    OrgSelectComponent,
     ProgressInlineComponent,
+    RouterModule,
     StaffBannerComponent,
     StringComponent
 ]

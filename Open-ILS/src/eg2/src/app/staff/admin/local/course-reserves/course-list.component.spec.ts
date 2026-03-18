@@ -10,6 +10,11 @@ import { MockGenerators } from 'test_data/mock_generators';
 import { ToastService } from '@eg/share/toast/toast.service';
 import { Component, CUSTOM_ELEMENTS_SCHEMA, EventEmitter, Output } from '@angular/core';
 import { NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
+import { FormatService } from '@eg/core/format.service';
+import { StaffCommonModule } from '@eg/staff/common.module';
+import { LocaleService } from '@eg/core/locale.service';
+import { StringService } from '@eg/share/string/string.service';
+import { FmRecordEditorComponent } from '@eg/share/fm-editor/fm-editor.component';
 
 @Component({selector: 'eg-grid'})
 class MockGridComponent {
@@ -29,9 +34,7 @@ describe('CourseListComponent', () => {
         });
         window = jasmine.createSpyObj<Window>(['open'], {location: mockLocation});
         TestBed.configureTestingModule({
-            declarations: [ CourseListComponent, MockGridComponent ],
-            schemas: [ CUSTOM_ELEMENTS_SCHEMA ],
-            imports: [NgbNavModule],
+            imports: [CourseListComponent],
             providers: [
                 { provide: CourseService, useValue: {}},
                 { provide: AuthService, useValue: MockGenerators.authService() },
@@ -40,9 +43,16 @@ describe('CourseListComponent', () => {
                 { provide: PcrudService, useValue: {} },
                 { provide: ToastService, useValue: {} },
                 { provide: Router, useValue: router},
-                { provide: WINDOW, useValue: window }
+                { provide: WINDOW, useValue: window },
+                { provide: FormatService, useValue: {} },
+                { provide: LocaleService, useValue: {} },
+                { provide: StringService, useValue: {}}
             ]
         }).compileComponents();
+        TestBed.overrideComponent(CourseListComponent, {
+            remove: {imports: [StaffCommonModule, FmRecordEditorComponent]},
+            add: {imports: [MockGridComponent, NgbNavModule], schemas: [CUSTOM_ELEMENTS_SCHEMA]}
+        });
         const fixture = TestBed.createComponent(CourseListComponent);
         component = fixture.componentInstance;
         await fixture.detectChanges();

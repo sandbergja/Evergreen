@@ -28,6 +28,9 @@ import { ItemsComponent } from './items.component';
 import { PatronMessagesComponent } from './messages.component';
 import { PatronSurveyResponsesComponent } from './surveys.component';
 import { PatronStatCatsComponent } from './statcats.component';
+import { PatronGroupComponent } from './group.component';
+import { PatronPermsComponent } from './perms.component';
+import { TestPatronPasswordComponent } from './test-password.component';
 
 @Component({
     templateUrl: 'patron.component.html',
@@ -39,12 +42,16 @@ import { PatronStatCatsComponent } from './statcats.component';
         EditComponent,
         HoldsComponent,
         ItemsComponent,
+        EditToolbarComponent,
+        PatronGroupComponent,
         PatronMessagesComponent,
+        PatronPermsComponent,
         PatronSearchComponent,
         PatronStatCatsComponent,
         PatronSummaryComponent,
         PatronSurveyResponsesComponent,
         StaffCommonModule,
+        TestPatronPasswordComponent,
         WorkLogStringsComponent
     ]
 })

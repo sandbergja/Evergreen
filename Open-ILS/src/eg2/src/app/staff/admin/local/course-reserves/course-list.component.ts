@@ -12,14 +12,9 @@ import {ToastService} from '@eg/share/toast/toast.service';
 import {AuthService} from '@eg/core/auth.service';
 import {OrgService} from '@eg/core/org.service';
 import {OrgFamily} from '@eg/share/org-family-select/org-family-select.component';
+import { StaffCommonModule } from '@eg/staff/common.module';
 
 export const WINDOW = new InjectionToken<Window>('Browser window', {  providedIn: 'root',  factory: () => window});
-import {CourseAssociateMaterialComponent
-} from './course-associate-material.component';
-
-import {CourseAssociateUsersComponent
-} from './course-associate-users.component';
-import { StaffCommonModule } from '@eg/staff/common.module';
 
 @Component({
     templateUrl: './course-list.component.html',

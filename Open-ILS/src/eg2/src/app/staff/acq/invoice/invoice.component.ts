@@ -18,16 +18,25 @@ import {firstValueFrom, Subscription} from 'rxjs';
 import { ServerStoreService } from '@eg/core/server-store.service';
 import { StaffBannerComponent } from '@eg/staff/share/staff-banner.component';
 import { CommonModule } from '@angular/common';
+import { HoldingsService } from '@eg/staff/share/holdings/holdings.service';
+import { InvoiceBatchReceiveComponent } from './batch_receive.component';
+import { PrintComponent } from './print.component';
 
 @Component({
     templateUrl: 'invoice.component.html',
     styleUrls: ['invoice.component.css'],
     imports: [
-        InvoiceDetailsComponent,
         CommonModule,
+        InvoiceBatchReceiveComponent,
+        InvoiceChargesComponent,
+        InvoiceDetailsComponent,
+        LineitemListComponent,
+        LineitemResultsComponent,
         NgbNavModule,
+        PrintComponent,
         StaffBannerComponent
-    ]
+    ],
+    providers: [HoldingsService]
 })
 export class InvoiceComponent implements OnInit, OnDestroy, CanComponentDeactivate {
     private route = inject(ActivatedRoute);

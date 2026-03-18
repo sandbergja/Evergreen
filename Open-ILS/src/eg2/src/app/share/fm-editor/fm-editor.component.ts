@@ -128,7 +128,6 @@ export interface FmFieldOptions {
 })
 export class FmRecordEditorComponent
     extends DialogComponent implements OnInit {
-    private modal: NgbModal;
     private idl = inject(IdlService);
     private toast = inject(ToastService);
     private format = inject(FormatService);
@@ -297,14 +296,6 @@ export class FmRecordEditorComponent
 
     // When true, show a delete button and support delete operations.
     @Input() showDelete: boolean;
-
-    constructor() {
-        const modal = inject(NgbModal);
-
-        super(modal);
-    
-        this.modal = modal;
-    }
 
     // Avoid fetching data on init since that may lead to unnecessary
     // data retrieval.

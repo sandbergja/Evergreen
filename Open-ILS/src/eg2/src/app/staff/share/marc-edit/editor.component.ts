@@ -1,5 +1,4 @@
 import {Component, Input, Output, OnInit, EventEmitter, ViewChild, AfterContentInit, ContentChild, inject} from '@angular/core';
-import {IdlService} from '@eg/core/idl.service';
 import {EventService} from '@eg/core/event.service';
 import {NetService} from '@eg/core/net.service';
 import {AuthService} from '@eg/core/auth.service';
@@ -54,10 +53,8 @@ export interface MarcSavedEvent {
 
 export class MarcEditorComponent implements OnInit, AfterContentInit {
     private evt = inject(EventService);
-    private idl = inject(IdlService);
     private net = inject(NetService);
     private auth = inject(AuthService);
-    private org = inject(OrgService);
     private pcrud = inject(PcrudService);
     private toast = inject(ToastService);
     private holdings = inject(HoldingsService);

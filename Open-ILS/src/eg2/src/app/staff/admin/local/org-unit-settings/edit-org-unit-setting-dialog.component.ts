@@ -6,6 +6,7 @@ import { TimezoneSelectComponent } from './timezone-select/timezone-select.compo
 import { OrgSelectComponent } from '@eg/share/org-select/org-select.component';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { ItemLocationSelectComponent } from '@eg/share/item-location-select/item-location-select.component';
 
 @Component({
     selector: 'eg-admin-edit-org-unit-setting-dialog',
@@ -13,6 +14,7 @@ import { CommonModule } from '@angular/common';
     imports: [
         CommonModule,
         FormsModule,
+        ItemLocationSelectComponent,
         OrgSelectComponent,
         TimezoneSelectComponent
     ]

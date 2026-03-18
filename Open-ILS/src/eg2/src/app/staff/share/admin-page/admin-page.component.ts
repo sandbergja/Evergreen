@@ -21,6 +21,7 @@ import {FmRecordEditorComponent, FmFieldOptions
 import {StringComponent} from '@eg/share/string/string.component';
 import {OrgFamily, OrgFamilySelectComponent} from '@eg/share/org-family-select/org-family-select.component';
 import { GridModule } from '@eg/share/grid/grid.module';
+import { FormsModule } from '@angular/forms';
 
 /**
  * General purpose CRUD interface for IDL objects
@@ -35,6 +36,7 @@ import { GridModule } from '@eg/share/grid/grid.module';
         CommonModule,
         ConfirmDialogComponent,
         FmRecordEditorComponent,
+        FormsModule,
         GridModule,
         OrgFamilySelectComponent,
         StringComponent,

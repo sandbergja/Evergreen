@@ -1,5 +1,5 @@
-import { NgClass } from '@angular/common';
-import {Component, TemplateRef, OnInit, Input, ViewEncapsulation} from '@angular/core';
+import { CommonModule } from '@angular/common';
+import {Component, TemplateRef, Input, ViewEncapsulation} from '@angular/core';
 import { TitleComponent } from '@eg/share/title/title.component';
 
 @Component({
@@ -24,7 +24,7 @@ import { TitleComponent } from '@eg/share/title/title.component';
     styleUrls: ['staff-banner.component.css'],
     encapsulation: ViewEncapsulation.None,
     imports: [
-        NgClass,
+        CommonModule,
         TitleComponent
     ]
 })
