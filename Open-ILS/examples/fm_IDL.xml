@@ -4892,6 +4892,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 			<field name="restrict_copy_delete" reporter:datatype="bool" reporter:label="Restrict Deletion"/>
 			<field name="is_available" reporter:datatype="bool" reporter:label="Available"/>
 			<field name="hopeless_prone" reporter:datatype="bool" reporter:label="Prone to Hopeless Holds?"/>
+			<field name="markable" reporter:datatype="bool" reporter:label="Markable?"/>
 		</fields>
 		<links/>
 		<permacrud xmlns="http://open-ils.org/spec/opensrf/IDL/permacrud/v1">
