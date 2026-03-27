@@ -21,7 +21,7 @@
       }</tr>
     </thead>
     <tbody>
-      @for (row of context.rows; track index($index, row)) {
+      @for (row of context.rows; track row) {
         <tr>
           <!-- item values have already been filtered, etc. -->
           @for (col of context.columns; track col) {

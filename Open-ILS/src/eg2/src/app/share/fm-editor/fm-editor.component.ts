@@ -1,6 +1,6 @@
 /* eslint-disable */
 import { Component, OnInit, Input, ViewChild, Output, EventEmitter, TemplateRef, inject } from '@angular/core';
-import {FormsModule, NgForm} from '@angular/forms';
+import {FormsModule, MaxValidator, MinValidator, NgForm} from '@angular/forms';
 import {IdlService, IdlObject} from '@eg/core/idl.service';
 import {Observable} from 'rxjs';
 import {PcrudService} from '@eg/core/pcrud.service';
@@ -8,7 +8,7 @@ import {OrgService} from '@eg/core/org.service';
 import {DialogComponent} from '@eg/share/dialog/dialog.component';
 import {ToastService} from '@eg/share/toast/toast.service';
 import {StringComponent} from '@eg/share/string/string.component';
-import {NgbModal, NgbModalOptions} from '@ng-bootstrap/ng-bootstrap';
+import {NgbModalOptions} from '@ng-bootstrap/ng-bootstrap';
 import {ComboboxComponent, ComboboxEntry} from '@eg/share/combobox/combobox.component';
 import {FormatService} from '@eg/core/format.service';
 import {TranslateComponent} from '@eg/share/translate/translate.component';
@@ -20,7 +20,6 @@ import { EgHelpPopoverComponent } from '../eg-help-popover/eg-help-popover.compo
 import { DateSelectComponent } from '../date-select/date-select.component';
 import { DateTimeSelectComponent } from '../datetime-select/datetime-select.component';
 import { OrgSelectComponent } from '../org-select/org-select.component';
-import { MaxValidatorDirective, MinValidatorDirective } from './validators.directive';
 import { DatesInOrderValidatorDirective } from '../validators/dates_in_order_validator.directive';
 import { BooleanSelectComponent } from '../boolean-select/boolean-select.component';
 
@@ -115,8 +114,6 @@ export interface FmFieldOptions {
     DatesInOrderValidatorDirective,
     DateTimeSelectComponent,
     EgHelpPopoverComponent,
-    MinValidatorDirective,
-    MaxValidatorDirective,
     FormsModule,
     NgClass,
     NgTemplateOutlet,

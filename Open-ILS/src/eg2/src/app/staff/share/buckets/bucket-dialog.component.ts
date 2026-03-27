@@ -8,9 +8,10 @@ import {AuthService} from '@eg/core/auth.service';
 import {DialogComponent} from '@eg/share/dialog/dialog.component';
 import {NgbModal, NgbNav, NgbNavContent, NgbNavItem, NgbNavLink, NgbNavOutlet} from '@ng-bootstrap/ng-bootstrap';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
-import {ComboboxEntry} from '@eg/share/combobox/combobox.component';
+import {ComboboxComponent, ComboboxEntry} from '@eg/share/combobox/combobox.component';
 import {StringComponent} from '@eg/share/string/string.component';
 import {BucketService} from '@eg/staff/share/buckets/bucket.service';
+import { FormsModule } from '@angular/forms';
 
 
 /**
@@ -21,7 +22,9 @@ import {BucketService} from '@eg/staff/share/buckets/bucket.service';
     selector: 'eg-bucket-dialog',
     templateUrl: 'bucket-dialog.component.html',
     imports: [
+        ComboboxComponent,
         ConfirmDialogComponent,
+        FormsModule,
         NgbNav,
         NgbNavContent,
         NgbNavItem,

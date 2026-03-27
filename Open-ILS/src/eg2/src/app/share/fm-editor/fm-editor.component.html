@@ -135,8 +135,8 @@
                         id="{{idPrefix}}-{{field.name}}"
                         [attr.aria-describedby]="field.helpText ? idPrefix+'-'+field.name+'-help' : null"
                         [required]="field.isRequired()"
-                        egMin="{{field.min}}"
-                        egMax="{{field.max}}"
+                        min="{{field.min}}"
+                        max="{{field.max}}"
                         [ngModel]="record[field.name]()"
                         (ngModelChange)="record[field.name]($event)"/>
                     }
