@@ -17,8 +17,8 @@ describe('LocaleService', () => {
                 {provide: PcrudService, useValue: pcrudMock},
                 {provide: Location, useValue: {}},
                 {provide: CookieService, useValue: {}}
-            ]})
-        })
+            ]});
+        });
         describe('when not in a production environment', () => {
             beforeEach(() => environment.production = false);
             afterEach(() => environment.production = orignalProductionState);
