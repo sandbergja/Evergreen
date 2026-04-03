@@ -26,12 +26,14 @@ import {ProgressDialogComponent} from '@eg/share/dialog/progress.component';
     imports: [
         AlertDialogComponent,
         BadBarcodeDialogComponent,
+        CircEmailReceiptDialogComponent,
         CircEventsComponent,
         CopyAlertManagerDialogComponent,
         CopyInTransitDialogComponent,
         RouteDialogComponent,
         OpenCircDialogComponent,
         PrecatCheckoutDialogComponent,
+        ProgressDialogComponent,
         StringComponent
     ]
 })

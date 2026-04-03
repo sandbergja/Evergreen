@@ -1,25 +1,19 @@
-import { Component, inject } from '@angular/core';
+import { Component } from '@angular/core';
 import { DialogComponent } from '@eg/share/dialog/dialog.component';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { EmailReceiptData } from './circ.service';
+import { FormsModule } from '@angular/forms';
 
 @Component({
     selector: 'eg-circ-email-receipt-dialog',
-    templateUrl: './circ-email-receipt-dialog.component.html'
+    templateUrl: './circ-email-receipt-dialog.component.html',
+    providers: [FormsModule]
 })
 export class CircEmailReceiptDialogComponent
     extends DialogComponent {
-    private modal: NgbModal;
 
 
     options: EmailReceiptData[] = [];
     selected?: { patronId: number };
-
-    constructor() {
- const modal = inject(NgbModal);
- super(modal); 
- this.modal = modal;
-    }
 
     preventEnterOnSubmit(event: KeyboardEvent): void {
         const enterKeyCode = 13;
