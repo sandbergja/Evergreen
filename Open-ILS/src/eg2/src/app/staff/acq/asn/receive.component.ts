@@ -28,6 +28,7 @@ interface ReceiveResponse {
         CommonModule,
         FormsModule,
         GridModule,
+        ProgressInlineComponent,
         RouterModule,
         StaffBannerComponent,
     ]
