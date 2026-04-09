@@ -1,9 +1,10 @@
 import { AfterViewInit, Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
-import {FormGroup, FormControl, FormsModule} from '@angular/forms';
+import {FormGroup, FormControl, ReactiveFormsModule} from '@angular/forms';
 import {MarcField, MarcRecord} from '../marcrecord';
 import {TagTableService} from '../tagtable.service';
 import {NetService} from '@eg/core/net.service';
 import {ComboboxComponent, ComboboxEntry} from '@eg/share/combobox/combobox.component';
+import { ComboboxEntryComponent } from '@eg/share/combobox/combobox-entry.component';
 
 
 const DEFAULT_RECORD_TYPE = 'BKS';
@@ -18,7 +19,8 @@ const DEFAULT_RECORD_TYPE = 'BKS';
     templateUrl: './simplified-editor.component.html',
     imports: [
         ComboboxComponent,
-        FormsModule
+        ComboboxEntryComponent,
+        ReactiveFormsModule
     ],
     providers: [TagTableService]
 })

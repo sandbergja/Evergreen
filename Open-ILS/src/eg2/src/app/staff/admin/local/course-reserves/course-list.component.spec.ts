@@ -15,12 +15,16 @@ import { StaffCommonModule } from '@eg/staff/common.module';
 import { LocaleService } from '@eg/core/locale.service';
 import { StringService } from '@eg/share/string/string.service';
 import { FmRecordEditorComponent } from '@eg/share/fm-editor/fm-editor.component';
+import { OrgFamilySelectComponent } from '@eg/share/org-family-select/org-family-select.component';
 
 @Component({selector: 'eg-grid'})
 class MockGridComponent {
     // eslint-disable-next-line @angular-eslint/no-output-on-prefix
     @Output() onRowActivate = new EventEmitter();
 }
+
+@Component({selector: 'eg-org-family-select'})
+class MockOrgFamilySelectComponent {}
 
 describe('CourseListComponent', () => {
     let component: CourseListComponent;
@@ -50,8 +54,8 @@ describe('CourseListComponent', () => {
             ]
         }).compileComponents();
         TestBed.overrideComponent(CourseListComponent, {
-            remove: {imports: [StaffCommonModule, FmRecordEditorComponent]},
-            add: {imports: [MockGridComponent, NgbNavModule], schemas: [CUSTOM_ELEMENTS_SCHEMA]}
+            remove: {imports: [StaffCommonModule, FmRecordEditorComponent, OrgFamilySelectComponent]},
+            add: {imports: [MockGridComponent, MockOrgFamilySelectComponent, NgbNavModule], schemas: [CUSTOM_ELEMENTS_SCHEMA]}
         });
         const fixture = TestBed.createComponent(CourseListComponent);
         component = fixture.componentInstance;

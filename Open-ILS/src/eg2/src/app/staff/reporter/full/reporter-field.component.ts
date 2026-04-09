@@ -8,13 +8,17 @@ import {ReporterService} from '../share/reporter.service';
 import {Tree, TreeNode} from '@eg/share/tree/tree';
 import {Md5} from 'ts-md5';
 import { StaffCommonModule } from '@eg/staff/common.module';
+import { OrgFamilySelectComponent } from '@eg/share/org-family-select/org-family-select.component';
 
 @Component({
     selector: 'eg-reporter-field',
     templateUrl: './reporter-field.component.html',
     styleUrls: ['./reporter-field.component.css'],
     encapsulation: ViewEncapsulation.None,
-    imports: [StaffCommonModule]
+    imports: [
+        OrgFamilySelectComponent,
+        StaffCommonModule
+    ]
 })
 export class ReporterFieldComponent implements OnInit {
     private idl = inject(IdlService);

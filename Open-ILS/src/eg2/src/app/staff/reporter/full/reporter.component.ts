@@ -1,36 +1,26 @@
 /* eslint-disable */
 import { Component, OnInit, ViewChild, inject } from '@angular/core';
-import {Router, ActivatedRoute} from '@angular/router';
-import {Location} from '@angular/common';
-import {EventService} from '@eg/core/event.service';
-import {ToastService} from '@eg/share/toast/toast.service';
 import {PromptDialogComponent} from '@eg/share/dialog/prompt.component';
-import {IdlService, IdlObject} from '@eg/core/idl.service';
-import {PcrudService} from '@eg/core/pcrud.service';
+import {IdlObject} from '@eg/core/idl.service';
 import {StringComponent} from '@eg/share/string/string.component';
 import {ReporterService} from '../share/reporter.service';
 import { StaffCommonModule } from '@eg/staff/common.module';
 import { TreeComponent } from '@eg/share/tree/tree.component';
 import { ReportTemplatesComponent } from './my-templates.component';
+import { FullReporterOutputsComponent } from './my-outputs.component';
 
 @Component({
     templateUrl: './reporter.component.html',
     styleUrls: ['./reporter.component.css'],
     imports: [
 		ReportTemplatesComponent,
+		FullReporterOutputsComponent,
 		StaffCommonModule,
 		TreeComponent
 	]
 })
 
 export class FullReporterComponent implements OnInit {
-    private route = inject(ActivatedRoute);
-    private router = inject(Router);
-    private location = inject(Location);
-    private toast = inject(ToastService);
-    private evt = inject(EventService);
-    private idl = inject(IdlService);
-    private pcrud = inject(PcrudService);
     RSvc = inject(ReporterService);
 
 

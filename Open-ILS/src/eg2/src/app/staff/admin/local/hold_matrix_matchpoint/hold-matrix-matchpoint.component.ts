@@ -20,6 +20,7 @@ import { CommonModule } from '@angular/common';
 import { ComboboxComponent } from '@eg/share/combobox/combobox.component';
 import { ComboboxEntryComponent } from '@eg/share/combobox/combobox-entry.component';
 import { GridModule } from '@eg/share/grid/grid.module';
+import { FormsModule } from '@angular/forms';
 
   @Component({
       templateUrl: './hold-matrix-matchpoint.component.html',
@@ -28,6 +29,7 @@ import { GridModule } from '@eg/share/grid/grid.module';
           ComboboxEntryComponent,
           CommonModule,
           FmRecordEditorComponent,
+          FormsModule,
           GridModule,
           HoldMatrixMatchpointComponent,
           HoldMatrixMatchpointDialogComponent,

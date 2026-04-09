@@ -4,12 +4,11 @@ import {DialogComponent} from '@eg/share/dialog/dialog.component';
 import {IdlService, IdlObject} from '@eg/core/idl.service';
 import {OrgService} from '@eg/core/org.service';
 import {PcrudService} from '@eg/core/pcrud.service';
-import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {StringComponent} from '@eg/share/string/string.component';
-
 import { FormsModule } from '@angular/forms';
 import { OrgSelectComponent } from '@eg/share/org-select/org-select.component';
 import { ComboboxComponent } from '@eg/share/combobox/combobox.component';
+import { ItemLocationSelectComponent } from '@eg/share/item-location-select/item-location-select.component';
 
 @Component({
     selector: 'eg-distribution-formula-edit-dialog',
@@ -17,6 +16,7 @@ import { ComboboxComponent } from '@eg/share/combobox/combobox.component';
     imports: [
         ComboboxComponent,
         FormsModule,
+        ItemLocationSelectComponent,
         OrgSelectComponent,
         StringComponent
     ]
@@ -27,7 +27,6 @@ export class DistributionFormulaEditDialogComponent
     private idl = inject(IdlService);
     private org = inject(OrgService);
     private pcrud = inject(PcrudService);
-    private modal: NgbModal;
 
 
     @Input() mode = 'create';
@@ -38,14 +37,6 @@ export class DistributionFormulaEditDialogComponent
     formula: IdlObject;
     deadEntries: IdlObject[];
     clonedLabel = '';
-
-    constructor() {
-        const modal = inject(NgbModal);
-
-        super(modal);
-
-        this.modal = modal;
-    }
 
     ngOnInit() {
         this.onOpen$.subscribe(() => this._initRecord());

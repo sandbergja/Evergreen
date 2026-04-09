@@ -20,6 +20,8 @@ import { ProviderAttributesComponent } from './provider-attributes.component';
 import { ProviderEdiAccountsComponent } from './provider-edi-accounts.component';
 import { ProviderInvoicesComponent } from './provider-invoices.component';
 import { ProviderPurchaseOrdersComponent } from './provider-purchase-orders.component';
+import { ProviderAddressesComponent } from './provider-addresses.component';
+import { ProviderContactsComponent } from './provider-contacts.component';
 
 @Component({
     templateUrl: './acq-provider.component.html',
@@ -28,7 +30,10 @@ import { ProviderPurchaseOrdersComponent } from './provider-purchase-orders.comp
         ConfirmDialogComponent,
         FmRecordEditorComponent,
         NgbNavModule,
+        ProviderAddressesComponent,
         ProviderAttributesComponent,
+        ProviderContactsComponent,
+        ProviderDetailsComponent,
         ProviderEdiAccountsComponent,
         ProviderHoldingsComponent,
         ProviderInvoicesComponent,

@@ -4,7 +4,6 @@ import {Tree, TreeNode} from '@eg/share/tree/tree';
 import {IdlService, IdlObject} from '@eg/core/idl.service';
 import {NgbNavChangeEvent, NgbNavModule} from '@ng-bootstrap/ng-bootstrap';
 import {OrgService} from '@eg/core/org.service';
-import {AuthService} from '@eg/core/auth.service';
 import {PcrudService} from '@eg/core/pcrud.service';
 import {ToastService} from '@eg/share/toast/toast.service';
 import {StringComponent} from '@eg/share/string/string.component';
@@ -29,7 +28,6 @@ import { FmRecordEditorModule } from '@eg/share/fm-editor/fm-editor.module';
 export class OrgUnitComponent implements OnInit {
     private idl = inject(IdlService);
     private org = inject(OrgService);
-    private auth = inject(AuthService);
     private pcrud = inject(PcrudService);
     private strings = inject(StringService);
     private toast = inject(ToastService);

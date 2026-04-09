@@ -1,5 +1,5 @@
 import { Component, OnInit, AfterViewInit, OnDestroy, Input, ViewChild, inject } from '@angular/core';
-import {NgForm} from '@angular/forms';
+import {FormsModule, NgForm} from '@angular/forms';
 import {EMPTY, from, Subscription} from 'rxjs';
 import {Pager} from '@eg/share/util/pager';
 import {IdlService, IdlObject} from '@eg/core/idl.service';
@@ -20,6 +20,7 @@ import { ComboboxComponent } from '@eg/share/combobox/combobox.component';
     imports: [
         ComboboxComponent,
         FmRecordEditorComponent,
+        FormsModule,
         GridModule,
         StringComponent
     ]
