@@ -14,6 +14,7 @@ import {PermService} from '@eg/core/perm.service';
 import { StaffCommonModule } from '@eg/staff/common.module';
 import { TreeComponent } from '@eg/share/tree/tree.component';
 import { FmRecordEditorModule } from '@eg/share/fm-editor/fm-editor.module';
+import { OrgAddressComponent } from './org-addr.component';
 
 @Component({
     templateUrl: './org-unit.component.html',
@@ -22,7 +23,8 @@ import { FmRecordEditorModule } from '@eg/share/fm-editor/fm-editor.module';
         FmRecordEditorModule,
         NgbNavModule,
         StaffCommonModule,
-        TreeComponent
+        TreeComponent,
+        OrgAddressComponent
     ]
 })
 export class OrgUnitComponent implements OnInit {

@@ -17,6 +17,7 @@ import {Pager} from '@eg/share/util/pager';
 import {StoreService} from '@eg/core/store.service';
 import {Z3950SearchService} from './z3950.service';
 import {EventService} from '@eg/core/event.service';
+import {HoldingsModule} from '@eg/staff/share/holdings/holdings.module';
 import {HoldingsService} from '@eg/staff/share/holdings/holdings.service';
 import {ComboboxEntry, ComboboxComponent} from '@eg/share/combobox/combobox.component';
 import {ProgressInlineComponent} from '@eg/share/dialog/progress-inline.component';
@@ -46,19 +47,20 @@ export class AutofocusDirective implements OnInit {
     styleUrls: ['z3950-search.component.css'],
     templateUrl: 'z3950-search.component.html',
     imports: [
-    AutofocusDirective,
-    ComboboxComponent,
-    ConfirmDialogComponent,
-    FormsModule,
-    GridModule,
-    MarcEditorComponent,
-    MarcHtmlComponent,
-    OrgSelectComponent,
-    ProgressInlineComponent,
-    PromptDialogComponent,
-    StaffBannerComponent,
-    TitleComponent
-]
+        AutofocusDirective,
+        ComboboxComponent,
+        ConfirmDialogComponent,
+        FormsModule,
+        GridModule,
+        HoldingsModule,
+        MarcEditorComponent,
+        MarcHtmlComponent,
+        OrgSelectComponent,
+        ProgressInlineComponent,
+        PromptDialogComponent,
+        StaffBannerComponent,
+        TitleComponent
+    ]
 })
 
 export class Z3950SearchComponent implements OnInit {
