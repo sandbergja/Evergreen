@@ -505,7 +505,7 @@ implements ControlValueAccessor, OnInit, AfterViewInit, OnChanges {
         if (!this.controller)
             return;
 
-        const listbox = document.getElementById(this.controller.getAttribute('aria-owns'));
+        const listbox = document.getElementById(this.controller.getAttribute('aria-controls'));
         // console.debug("Listbox: ", listbox);
 
         const activeItem = document.getElementById(this.controller.getAttribute('aria-activedescendant'));

@@ -426,7 +426,7 @@ export class OrgSelectComponent implements OnInit, AfterViewInit {
         // adapted from https://github.com/ng-bootstrap/ng-bootstrap/issues/4789
         if (!this.controller) {return;}
 
-        const listbox = document.getElementById(this.controller.getAttribute('aria-owns'));
+        const listbox = document.getElementById(this.controller.getAttribute('aria-controls'));
         // console.debug("Listbox: ", listbox);
 
         const activeItem = document.getElementById(this.controller.getAttribute('aria-activedescendant'));
@@ -444,7 +444,7 @@ export class OrgSelectComponent implements OnInit, AfterViewInit {
     applyDisableStyle() {
         // DOM nodes may be reused when filtering, so clear styles first
         const listbox = document.getElementById(
-            this.instance?.['_nativeElement']?.getAttribute('aria-owns')
+            this.instance?.['_nativeElement']?.getAttribute('aria-controls')
         );
         if (listbox) {
             const buttons = listbox.querySelectorAll('button.disabled');
