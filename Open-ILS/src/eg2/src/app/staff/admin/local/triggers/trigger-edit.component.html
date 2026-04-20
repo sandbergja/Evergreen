@@ -29,7 +29,7 @@
         <li role="presentation" ngbNavItem="'alt'">
             <a role="tab" ngbNavLink i18n>Edit Alternate Template</a>
             <ng-template ngbNavContent>
-                <ng-template #textAreaTemplate let-field="field" let-record="record">
+                <ng-template #altTextAreaTemplate let-field="field" let-record="record">
                     <textarea class="form-control" name="{{field.name}}"
                         [readonly]="field.readOnly" [required]="field.isRequired()"
                         [ngModel]="record[field.name]()"
@@ -48,7 +48,7 @@
                         (onClick)="deleteSelected($event)"></eg-grid-toolbar-action>
                 </eg-grid>
                 <eg-fm-record-editor #altTemplateDialog idlClass="atevalt"
-                    [fieldOptions]="{template:{customTemplate:{template:textAreaTemplate}},message_template:{customTemplate:{template:textAreaTemplate}}}"
+                    [fieldOptions]="{template:{customTemplate:{template:alTextAreaTemplate}},message_template:{customTemplate:{template:textAreaTemplate}}}"
                     fieldOrder="active,locale,template,message_title,message_template"
                     [preloadLinkedValues]="true"
                     hiddenFields="event_def,id"></eg-fm-record-editor>

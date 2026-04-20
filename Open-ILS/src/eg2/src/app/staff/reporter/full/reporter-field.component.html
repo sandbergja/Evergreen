@@ -186,8 +186,8 @@
         </div>
 
         <div *ngIf="field.operator.name.indexOf('between') > -1">
+          <label for="FV-{{pathId}}-1" class="form-label" i18n>Filter value</label>
           <div class="reporter-field-value-input pt-2" [ngSwitch]="field.transform.final_datatype || field.datatype">
-            <label for="FV-{{pathId}}-1" class="form-label" i18n>Filter value</label>
             <div *ngSwitchCase="'interval'" class="row">
               <div class="col-md-5 pe-0">
               <label for="FV-{{pathId}}-1" class="visually-hidden form-label" i18n>Beginning of filter range</label>
@@ -296,8 +296,8 @@
 
         <div class="reporter-field-transform-inputs"
           *ngIf="field.operator.name.indexOf('between') === -1 && field.operator.name.indexOf('in') === -1 && field.operator.name.indexOf('is') === -1">
+          <label for="FV-{{pathId}}" class="form-label" i18n>Filter value</label>
           <div [ngSwitch]="field.transform.final_datatype || field.datatype">
-            <label for="FV-{{pathId}}" class="form-label" i18n>Filter value</label>
             <div *ngSwitchCase="'org_unit'">
               <eg-org-select *ngIf="!field.operator.name.match('any')"
                 [disabled]="disabled || editorMode === 'report' && field.with_value_input"
