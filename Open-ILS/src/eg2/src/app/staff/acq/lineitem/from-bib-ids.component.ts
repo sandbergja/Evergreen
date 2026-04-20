@@ -6,6 +6,7 @@ import {NetService} from '@eg/core/net.service';
 import {EventService} from '@eg/core/event.service';
 import {AuthService} from '@eg/core/auth.service';
 import {ComboboxComponent, ComboboxEntry} from '@eg/share/combobox/combobox.component';
+import { StaffBannerComponent } from '@eg/staff/share/staff-banner.component';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -16,7 +17,8 @@ import { FormsModule } from '@angular/forms';
     imports: [
         ComboboxComponent,
         CommonModule,
-        FormsModule
+        FormsModule,
+        StaffBannerComponent
     ]
 })
 export class LineitemFromBibIdsComponent implements OnInit {
