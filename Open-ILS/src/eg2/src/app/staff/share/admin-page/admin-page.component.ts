@@ -1,6 +1,6 @@
 /* eslint-disable */
 /* eslint-disable rxjs/no-implicit-any-catch, rxjs/no-nested-subscribe */
-import { Component, Input, OnInit, TemplateRef, ViewChild, inject } from '@angular/core';
+import { Component, Input, OnInit, TemplateRef, ViewChild, computed, contentChild, inject, viewChild } from '@angular/core';
 import {ActivatedRoute} from '@angular/router';
 import { CommonModule, Location } from '@angular/common';
 import {IdlService, IdlObject} from '@eg/core/idl.service';
@@ -180,7 +180,6 @@ export class AdminPageComponent implements OnInit {
     @Input() customButtons: TemplateAction[];
 
     @ViewChild('grid', { static: true }) grid: GridComponent;
-    @ViewChild('editDialog', { static: true }) editDialog: FmRecordEditorComponent;
     @ViewChild('successString', { static: true }) successString: StringComponent;
     @ViewChild('createString', { static: true }) createString: StringComponent;
     @ViewChild('createErrString', { static: true }) createErrString: StringComponent;
@@ -192,6 +191,10 @@ export class AdminPageComponent implements OnInit {
     @ViewChild('translator', { static: true }) translator: TranslateComponent;
     @ViewChild('deleteConfirmDialog', { static: true })
     private deleteConfirmDialog: ConfirmDialogComponent;
+
+    protected editDialog = computed(() => this.customEditDialog() || this.defaultEditDialog());
+    private defaultEditDialog = viewChild<FmRecordEditorComponent>('editDialog');
+    private customEditDialog = contentChild<FmRecordEditorComponent>('editDialog');
 
     idlClassDef: any;
     idlEditClassDef: any;
@@ -432,10 +435,10 @@ export class AdminPageComponent implements OnInit {
         if (this.idlEditClass) {
             idlThing =  this.convertIdlClass2IdlEditClass(idlThing);
         }
-        this.editDialog.mode = 'update';
-        this.editDialog.recordId = idlThing[this.pkeyField]();
+        this.editDialog().mode = 'update';
+        this.editDialog().recordId = idlThing[this.pkeyField]();
         return new Promise((resolve, reject) => {
-            this.editDialog.open({size: this.dialogSize}).subscribe(
+            this.editDialog().open({size: this.dialogSize}).subscribe(
                 result => {
                     this.successString.current()
                         .then(str => this.toast.success(str));
@@ -557,12 +560,12 @@ export class AdminPageComponent implements OnInit {
     }
 
     createNew() {
-        this.editDialog.mode = 'create';
+        this.editDialog().mode = 'create';
         // We reuse the same editor for all actions.  Be sure
         // create action does not try to modify an existing record.
-        this.editDialog.recordId = null;
-        this.editDialog.record = null;
-        this.editDialog.open({size: this.dialogSize}).subscribe(
+        this.editDialog().recordId = null;
+        this.editDialog().record = null;
+        this.editDialog().open({size: this.dialogSize}).subscribe(
             ok => {
                 this.createString.current()
                     .then(str => this.toast.success(str));

@@ -52,11 +52,11 @@ export class SearchFilterGroupComponent extends AdminPageComponent implements On
     }
 
     createNew = () => {
-        this.editDialog.mode = 'create';
-        this.editDialog.recordId = null;
-        this.editDialog.record = null;
-        this.editDialog.hiddenFieldsList = ['id', 'create_date'];
-        this.editDialog.open({size: 'lg'}).subscribe(
+        this.editDialog().mode = 'create';
+        this.editDialog().recordId = null;
+        this.editDialog().record = null;
+        this.editDialog().hiddenFieldsList = ['id', 'create_date'];
+        this.editDialog().open({size: 'lg'}).subscribe(
             { next: ok => {
                 this.createString.current()
                     .then(str => this.toast.success(str));
