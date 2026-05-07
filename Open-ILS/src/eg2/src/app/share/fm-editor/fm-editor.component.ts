@@ -82,6 +82,8 @@ export interface FmFieldOptions {
     // If this function is defined, the function will be called
     // at render time to see if the field should be marked readonly.
     // This supersedes all other isReadonly specifiers.
+    // Note that if the function returns TRUE, the field will be editable
+    // and if it returns FALSE, it will be readonly
     isReadonlyOverride?: (field: string, record: IdlObject) => boolean;
 
     // Render the field using this custom template instead of chosing
@@ -250,7 +252,7 @@ export class FmRecordEditorComponent
     // Record ID to view/update.
     _recordId: any = null;
     @Input() set recordId(id: any) {
-        if (id) {
+        if (id !== null && id !== undefined) {
             if (id !== this._recordId) {
                 this._recordId = id;
                 this._record = null; // force re-fetch
@@ -391,7 +393,7 @@ export class FmRecordEditorComponent
             let promise;
             if (this.record && this.recordId === null) {
                 promise = Promise.resolve(this.record);
-            } else if (this.recordId) {
+            } else if (this.recordId !== null && this.recordId !== undefined) {
                 promise =
                     this.pcrud.retrieve(this.idlClass, this.recordId).toPromise();
             } else {

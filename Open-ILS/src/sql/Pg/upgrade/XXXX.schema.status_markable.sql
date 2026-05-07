@@ -4,6 +4,6 @@ BEGIN;
 
 ALTER TABLE config.copy_status
   ADD COLUMN markable BOOLEAN NOT NULL DEFAULT FALSE,
-  ADD CONSTRAINT magic_status_cannot_be_markable CHECK (NOT markable OR id NOT IN (1, 3, 6, 8, 16, 18));
+  ADD CONSTRAINT status_cannot_be_markable CHECK (NOT markable OR id NOT IN (1, 6, 8, 9, 15));
 
 COMMIT;

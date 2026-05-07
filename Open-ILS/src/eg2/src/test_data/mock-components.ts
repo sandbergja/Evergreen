@@ -3,8 +3,9 @@
 // but you don't want to have to re-implement all of
 // the child's logic in your test
 
-import { Component, Input } from '@angular/core';
+import { Component, input, Input, NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComboboxEntry } from '@eg/share/combobox/combobox.component';
+import { FmFieldOptions } from '@eg/share/fm-editor/fm-editor.component';
 
 @Component({
     selector: 'eg-combobox',
@@ -27,4 +28,18 @@ export class MockOrgSelectComponent {
     @Input() required: boolean;
 
     @Input() applyOrgId(_id: number) {};
+}
+
+@Component({
+    selector: 'eg-admin-page',
+    template: ''
+})
+export class MockAdminPageComponent {}
+
+@Component({
+    selector: 'eg-fm-record-editor',
+    template: ''
+})
+export class MockFmRecordEditorComponent {
+    fieldOptions = input<{[fieldName: string]: FmFieldOptions}>()
 }

@@ -6,6 +6,7 @@ import {OrgUnitTypeComponent} from './org-unit-type.component';
 import {CustomOrgUnitTreesComponent} from './custom-org-unit-trees.component';
 import {PrintTemplateComponent} from './print-template.component';
 import {PermGroupTreeComponent} from './perm-group-tree.component';
+import { ItemStatusAdminComponent } from './item-status-admin.component';
 
 const routes: Routes = [{
     path: 'splash',
@@ -76,6 +77,9 @@ const routes: Routes = [{
         table: 'z3950_source',
         fieldOrder: 'name,label,host,port,db,record_format,transmission_format,auth,use_perm'
     }]
+}, {
+    path: 'config/copy_status',
+    component: ItemStatusAdminComponent
 }, {
     path: 'config/copy_tag_type',
     component: BasicAdminPageComponent,
