@@ -45,8 +45,6 @@
   }
 </ng-template>
 
-<eg-mark-damaged-dialog #markDamagedDialog [handleCheckin]="true"></eg-mark-damaged-dialog>
-<eg-mark-missing-dialog #markMissingDialog></eg-mark-missing-dialog>
 <eg-copy-alerts-dialog #copyAlertsDialog></eg-copy-alerts-dialog>
 <eg-copy-tags-dialog #copyTagsDialog></eg-copy-tags-dialog>
 <eg-copy-notes-dialog #copyNotesDialog></eg-copy-notes-dialog>
@@ -212,22 +210,7 @@ dialogBody="Please select a suitable transfer target"></eg-alert-dialog>
       i18n-group group="Show" i18n-label label="Show Triggered Events"
     (onClick)="openItemTriggeredEvents($event)"></eg-grid-toolbar-action>
 
-    <!-- row actions : Mark -->
-
-    <eg-grid-toolbar-action
-      group="Mark" i18n-group i18n-label label="Mark Item Damaged"
-    (onClick)="showMarkDamagedDialog($event)"></eg-grid-toolbar-action>
-
-    <eg-grid-toolbar-action
-      i18n-group group="Mark" i18n-label label="Mark Item Missing"
-      (onClick)="showMarkMissingDialog($event)">
-    </eg-grid-toolbar-action>
-
-    <eg-grid-toolbar-action
-      i18n-group group="Mark"
-      i18n-label label="Mark Library/Call Number as Transfer Destination"
-      (onClick)="markLibCnForTransfer($event)">
-    </eg-grid-toolbar-action>
+    <eg-mark-item-actions (actionFinished)="reload()"></eg-mark-item-actions>
 
     <eg-grid-toolbar-action
       i18n-group group="Transfer"

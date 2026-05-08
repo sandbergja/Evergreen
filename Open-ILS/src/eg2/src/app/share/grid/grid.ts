@@ -1617,13 +1617,13 @@ export class GridContext {
 export class GridToolbarAction {
     label: string;
     onClick: EventEmitter<any []>;
-    action: (rows: any[]) => any; // DEPRECATED
+    action?: (rows: any[]) => any; // DEPRECATED
     group: string;
-    disabled: boolean;
-    isGroup: boolean; // used for group placeholder entries
-    isSeparator: boolean;
+    disabled?: boolean;
+    isGroup?: boolean; // used for group placeholder entries
+    isSeparator?: boolean;
     disableOnRows: (rows: any[]) => boolean;
-    describedbySelectionCount: boolean;
+    describedbySelectionCount?: boolean;
     hidden?: boolean;
 }
 

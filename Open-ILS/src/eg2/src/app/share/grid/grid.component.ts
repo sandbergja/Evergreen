@@ -5,7 +5,8 @@ import {OrgService} from '@eg/core/org.service';
 import {ServerStoreService} from '@eg/core/server-store.service';
 import {FormatService} from '@eg/core/format.service';
 import {GridContext, GridColumn, GridDataSource,
-    GridCellTextGenerator, GridRowFlairEntry} from './grid';
+    GridCellTextGenerator, GridRowFlairEntry,
+    GridToolbarAction} from './grid';
 import {GridToolbarComponent} from './grid-toolbar.component';
 import { CommonModule } from '@angular/common';
 import { GridPrintComponent } from './grid-print.component';
@@ -278,6 +279,10 @@ export class GridComponent implements OnInit, AfterViewInit, OnDestroy {
         // eslint-disable-next-line rxjs-x/no-subject-unsubscribe
         this.context.rowSelector.selectionChange.unsubscribe();
         this.context.destroy();
+    }
+
+    public registerToolbarAction(action: GridToolbarAction): void {
+        this.context.toolbarActions.push(action);
     }
 
     print = () => {

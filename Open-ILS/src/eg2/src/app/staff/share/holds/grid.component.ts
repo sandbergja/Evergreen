@@ -31,6 +31,7 @@ import { GridModule } from '@eg/share/grid/grid.module';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { HoldDetailComponent } from './detail.component';
+import { MarkItemActionsComponent } from '../holdings/mark-item-actions.component';
 
 /** Holds grid with access to detail page and other actions */
 
@@ -54,8 +55,10 @@ import { HoldDetailComponent } from './detail.component';
         MarkMissingDialogComponent,
         OrgSelectComponent,
         ProgressDialogComponent,
-        RouterModule
-    ]
+        RouterModule,
+        MarkItemActionsComponent
+    ],
+    viewProviders: [GridComponent]
 })
 export class HoldsGridComponent implements OnInit {
     private ngLocation = inject(Location);
@@ -821,6 +824,10 @@ export class HoldsGridComponent implements OnInit {
             return holdData.hold_type.match(/C|R|F/) !== null;
         }
         return false;
+    }
+
+    protected reload() {
+        this.holdsGrid.reload();
     }
 }
 

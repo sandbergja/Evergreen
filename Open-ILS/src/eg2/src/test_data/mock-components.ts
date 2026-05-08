@@ -6,6 +6,7 @@
 import { Component, input, Input, NO_ERRORS_SCHEMA } from '@angular/core';
 import { ComboboxEntry } from '@eg/share/combobox/combobox.component';
 import { FmFieldOptions } from '@eg/share/fm-editor/fm-editor.component';
+import { GridComponent } from '@eg/share/grid/grid.component';
 
 @Component({
     selector: 'eg-combobox',
@@ -41,5 +42,22 @@ export class MockAdminPageComponent {}
     template: ''
 })
 export class MockFmRecordEditorComponent {
-    fieldOptions = input<{[fieldName: string]: FmFieldOptions}>()
+    fieldOptions = input<{[fieldName: string]: FmFieldOptions}>();
 }
+
+@Component({
+    selector: 'eg-grid',
+    template: '',
+})
+export class MockGridComponent {
+
+}
+
+@Component({selector: 'eg-mark-damaged-dialog', template: ''})
+export class MockMarkDamagedDialogComponent {}
+
+@Component({selector: 'eg-mark-missing-dialog', template: ''})
+export class MockMarkMissingDialogComponent {}
+
+@Component({selector: 'eg-mark-discard-dialog', template: ''})
+export class MockMarkDiscardDialogComponent {}
