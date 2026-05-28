@@ -1,0 +1,46 @@
+<form [formGroup]="changeHoldType" class="common-form striped-odd">
+    <div class="form-group row">
+        <div class="col-lg-3">
+            <label i18n="@@change_hold_type.new_type" for="change-hold-type-desired-type">New hold type</label>
+        </div>
+        <div class="col-lg-9 pe-0">
+            <select id="change-hold-type-desired-type" formControlName="desiredType" (change)="selectType($event.target.value)" class="form-select">
+                @for (option of typeOptions(); track option.code) {
+                    <option [value]="option.code">{{ option.label }}</option>
+                }
+            </select>
+        </div>
+    </div>
+    @if (desiredType() && targetOptions.hasValue()) {
+        <div class="form-group row">
+            <div class="col-lg-3"><label i18n="@@change_hold_type.new_target" for="desiredTarget">New hold target</label></div>
+            <div class="col-lg-9 pe-0">
+                @switch (targetOptions.value().length) {
+                    @case (0) {
+                        <ng-container i18n>There are no possible targets of this type.</ng-container>
+                    }
+                    @case (1) {
+                        {{ targetOptions.value()[0].label }}
+                    }
+                    @default {
+                        <eg-combobox [entries]="targetOptions.value()" name="desiredTarget" (onChange)="selectOption($event)" domId="desiredTarget"></eg-combobox>
+                    }
+                }
+            </div>
+        </div>
+    }
+    @if (metarecordHoldFilters.hasValue()) {
+        @for (holdFilter of metarecordHoldFilters.value(); track holdFilter.name) {
+            <div class="form-group row">
+                <div class="col-lg-3"><label [for]="holdFilter.name">{{ holdFilter | metarecordHoldFilterLabel }}</label></div>
+                <div class="col-lg-9 pe-0">
+                    <select [id]="holdFilter.name" [formControlName]="holdFilter.name" class="form-select">
+                        @for (val of holdFilter.options() | keyvalue; track val.key) {
+                            <option [value]="val.key">{{val.value}}</option>
+                        }
+                    </select>
+                </div>
+            </div>
+        }
+    }
+</form>

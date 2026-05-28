@@ -27,6 +27,7 @@ import { RouterModule } from '@angular/router';
 import { HoldDetailComponent } from './detail.component';
 import { MarkItemActionsComponent } from '../holdings/mark-item-actions.component';
 import { DAMAGED, DISCARD_WEED, MISSING } from '../holdings/item-statuses';
+import { ChangeTypeDialogComponent } from '@eg/staff/circ/holds/change-type-dialog.component';
 
 /** Holds grid with access to detail page and other actions */
 
@@ -35,6 +36,7 @@ import { DAMAGED, DISCARD_WEED, MISSING } from '../holdings/item-statuses';
     templateUrl: 'grid.component.html',
     styles: ['.input-group > .form-control { width: auto; flex-grow: 0; }'],
     imports: [
+        ChangeTypeDialogComponent,
         CommonModule,
         ConfirmDialogComponent,
         FormsModule,
@@ -124,6 +126,7 @@ export class HoldsGridComponent implements OnInit {
     copyLocationClass?: string;
     copyLocationEntries: ComboboxEntry[] = [];
     copyLocationIds: number[] = [];
+    selectedHoldIds: number[] = [];
 
     @ViewChild('holdsGrid', { static: false }) private holdsGrid: GridComponent;
     @ViewChild('progressDialog', { static: true })
@@ -141,6 +144,8 @@ export class HoldsGridComponent implements OnInit {
     private copyLocationsDialog: HoldCopyLocationsDialogComponent;
     @ViewChild('clearCopyLocationsDialog')
     private clearCopyLocationsDialog: ConfirmDialogComponent;
+    @ViewChild('changeTypeDialog')
+    private changeTypeDialog: ChangeTypeDialogComponent;
     @ViewChild('pullPickupLibFilter')
     private pullPickupLibFilter: OrgSelectComponent;
 
@@ -558,6 +563,10 @@ export class HoldsGridComponent implements OnInit {
         return found;
     }
 
+    noSingleRowSelected(rows: IdlObject[]) {
+        return rows.length !== 1;
+    }
+
     showDetails(rows: any[]) {
         this.showDetail(rows[0]);
     }
@@ -632,6 +641,19 @@ export class HoldsGridComponent implements OnInit {
         bibIds.forEach( bibId => {
             this.holdings.spawnAddHoldingsUi(bibId);
         });
+    }
+
+    showChangeTypeDialog(rows: any[]) {
+        this.selectedHoldIds = rows.map(r => r.id).filter(id => Boolean(id));
+        if (this.selectedHoldIds.length === 1) {
+            this.changeTypeDialog.open({size: 'lg'}).subscribe(
+                rowsModified => {
+                    if (rowsModified) {
+                        this.holdsGrid.reload();
+                    }
+                }
+            );
+        }
     }
 
     showTitle(rows: any[]) {

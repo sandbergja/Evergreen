@@ -1,0 +1,15 @@
+== Changing Hold Types ==
+
+In this version of Evergreen, staff users can convert existing
+holds from one type to another.  Currently, changing between Metarecord,
+Title, Volume, Part, and Copy holds is supported.  Overriding a
+potential hold type failure is not supported at this time.
+
+Internally, the feature is implemented by placing a new hold with the
+same placement date as the original, then canceling the original once
+the new hold goes through.  All permission checks are the same as they
+would be for placing a hold fresh.  By maintaining the same hold
+placement date, theoretically the user should keep their place in the
+queue (not 100% guaranteed due to the complexity of holds and the fact
+that the changed type may change the number of possible hold targets).
+

@@ -32,4 +32,13 @@ describe('Maybe', () => {
             expect(myAnimal).toEqual('dog');
         });
     });
+    describe('and', () => {
+        it('returns the right hand side if both are Some', () => {
+            expect(new Some('cat').and(new Some('dog'))).toEqual(new Some('dog'));
+        });
+        it('returns None if either side is None', () => {
+            expect(new Some('cat').and(new None())).toEqual(new None());
+            expect(new None().and(new Some('dog'))).toEqual(new None());
+        });
+    });
 });
