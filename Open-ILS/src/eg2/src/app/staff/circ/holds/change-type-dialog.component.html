@@ -1,0 +1,18 @@
+<ng-template #dialogContent>
+  <div class="modal-header">
+    <h4 class="modal-title" i18n>Change Hold Type</h4>
+    <button type="button" class="btn-close btn-close-white"
+    i18n-aria-label aria-label="Close dialog" (click)="close()"></button>
+  </div>
+  <div class="modal-body">
+    @if (hold.hasValue()) {
+      <eg-change-hold-type-form [hold]="hold.value()" (targetSelected)="targetSelected($event)" (typeSelected)="typeSelected($event)" (holdableFormatSelected)="holdableFormatSelected($event)"></eg-change-hold-type-form>
+    }
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-normal"
+    (click)="close()" i18n>Cancel</button>
+    <button type="button" class="btn btn-success" (disabled)="!canSubmit()"
+    (click)="change()" i18n>Change</button>
+  </div>
+</ng-template>

@@ -3089,6 +3089,7 @@ INSERT INTO action.hold_request_cancel_cause (id,label) VALUES (7, oils_i18n_get
 INSERT INTO action.hold_request_cancel_cause (id,label) VALUES (8, oils_i18n_gettext(8, 'Hold Group Event rollback', 'ahrcc', 'label'));
 INSERT INTO action.hold_request_cancel_cause (id,label,manual) VALUES (9, oils_i18n_gettext(9, 'Patron via email', 'ahrcc', 'label'), TRUE);
 INSERT INTO action.hold_request_cancel_cause (id,label,manual) VALUES (10, oils_i18n_gettext(10, 'Patron via SMS', 'ahrcc', 'label'), TRUE);
+INSERT INTO action.hold_request_cancel_cause (id,label,manual) VALUES (11, oils_i18n_gettext(11, 'Replaced with another hold', 'ahrcc', 'label'), FALSE);
 SELECT SETVAL('action.hold_request_cancel_cause_id_seq', 100);
 
 

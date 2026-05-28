@@ -24,6 +24,7 @@
   dialogTitle="Clear Shelving Location Filters?"
   dialogBody="Are you sure you want to clear the shelving location filters?"
 ></eg-confirm-dialog>
+<eg-change-hold-type-dialog #changeTypeDialog [holdId]="selectedHoldIds[0]"></eg-change-hold-type-dialog>
 
 <ng-template #statusTemplate let-hold="row">
   @switch (hold.hold_status) {
@@ -224,6 +225,10 @@
       <eg-grid-toolbar-action
         i18n-group group="Hold" i18n-label label="Find Another Target"
       (onClick)="showRetargetDialog($event)"></eg-grid-toolbar-action>
+      <eg-grid-toolbar-action
+        i18n-group group="Hold" i18n-label label="Change Hold Type"
+        [disableOnRows]="noSingleRowSelected"
+        (onClick)="showChangeTypeDialog($event)"></eg-grid-toolbar-action>
       @if (!showRecentlyCanceled) {
         <eg-grid-toolbar-action
           i18-group group="Hold" i18n-label label="Cancel Hold"

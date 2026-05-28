@@ -18,6 +18,7 @@ package OpenILS::Application::Circ::Holds;
 use base qw/OpenILS::Application/;
 use strict; use warnings;
 use OpenILS::Application::Circ::Holds::HoldsCommon;
+use OpenILS::Application::Circ::Holds::ChangeType;
 use List::Util qw(shuffle);
 use OpenILS::Application::AppUtils;
 use DateTime;
@@ -41,6 +42,7 @@ use OpenSRF::Utils::Cache;
 use OpenSRF::Utils::JSON;
 my $apputils = "OpenILS::Application::AppUtils";
 my $U = $apputils;
+my $HC = "OpenILS::Application::Circ::Holds::HoldsCommon";
 
 __PACKAGE__->register_method(
     method    => "test_and_create_hold_batch",
@@ -1288,7 +1290,7 @@ sub update_hold_impl {
 
 
     # --------------------------------------------------------------
-    # Disallow hold suspencion if the hold is already captured.
+    # Disallow hold suspension if the hold is already captured.
     # --------------------------------------------------------------
     if ($U->is_true($hold->frozen) and not $U->is_true($orig_hold->frozen)) {
         $hold_status = _hold_status($e, $hold);
@@ -2803,7 +2805,7 @@ sub check_title_hold {
         my $depth = $soft_boundary;
         while($depth >= $min_depth) {
             $logger->info("performing hold possibility check with soft boundary $depth");
-            @status = do_possibility_checks($e, $patron, $request_lib, $depth, %params);
+            @status = $HC->do_possibility_checks($e, $patron, $request_lib, $depth, %params);
             if ($status[0]) {
                 $return_depth = $depth;
                 last;
@@ -2813,11 +2815,11 @@ sub check_title_hold {
     } elsif(defined $hard_boundary and $depth < $hard_boundary) {
         # there is no soft boundary, enforce the hard boundary if it exists
         $logger->info("performing hold possibility check with hard boundary $hard_boundary");
-        @status = do_possibility_checks($e, $patron, $request_lib, $hard_boundary, %params);
+        @status = $HC->do_possibility_checks($e, $patron, $request_lib, $hard_boundary, %params);
     } else {
         # no boundaries defined, fall back to user specifed boundary or no boundary
         $logger->info("performing hold possibility check with no boundary");
-        @status = do_possibility_checks($e, $patron, $request_lib, $params{depth}, %params);
+        @status = $HC->do_possibility_checks($e, $patron, $request_lib, $params{depth}, %params);
     }
 
     my $place_unfillable = 0;
