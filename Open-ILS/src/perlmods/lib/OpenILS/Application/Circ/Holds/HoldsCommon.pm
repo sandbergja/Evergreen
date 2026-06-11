@@ -9,6 +9,19 @@ use OpenSRF::Utils::Logger qw(:logger);
 
 my $U = "OpenILS::Application::AppUtils";
 
+sub target_field_name {
+    my ($class, $hold_type) = @_;
+    if ($hold_type eq 'T') { return 'titleid'; }
+    elsif ($hold_type eq 'C') { return 'copy_id'; }
+    elsif ($hold_type eq 'R') { return 'copy_id'; }
+    elsif ($hold_type eq 'F') { return 'copy_id'; }
+    elsif ($hold_type eq 'I') { return 'issuanceid'; }
+    elsif ($hold_type eq 'V') { return 'volume_id'; }
+    elsif ($hold_type eq 'M') { return 'mrid'; }
+    elsif ($hold_type eq 'P') { return 'partid'; }
+    return;
+}
+
 sub do_possibility_checks {
     my($e, $patron, $request_lib, $depth, %params) = @_;
 
