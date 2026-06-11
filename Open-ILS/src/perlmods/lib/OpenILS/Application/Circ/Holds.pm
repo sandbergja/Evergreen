@@ -83,16 +83,8 @@ sub test_and_create_hold_batch {
     return $e->die_event unless $e->checkauth;
     $$params{'requestor'} = $e->requestor->id;
 
-    my $target_field;
-    if ($$params{'hold_type'} eq 'T') { $target_field = 'titleid'; }
-    elsif ($$params{'hold_type'} eq 'C') { $target_field = 'copy_id'; }
-    elsif ($$params{'hold_type'} eq 'R') { $target_field = 'copy_id'; }
-    elsif ($$params{'hold_type'} eq 'F') { $target_field = 'copy_id'; }
-    elsif ($$params{'hold_type'} eq 'I') { $target_field = 'issuanceid'; }
-    elsif ($$params{'hold_type'} eq 'V') { $target_field = 'volume_id'; }
-    elsif ($$params{'hold_type'} eq 'M') { $target_field = 'mrid'; }
-    elsif ($$params{'hold_type'} eq 'P') { $target_field = 'partid'; }
-    else { return undef; }
+    my $target_field = $HC->target_field_name($$params{'hold_type'});
+    return undef unless $target_field;
 
     my $formats_map = delete $$params{holdable_formats_map};
 
