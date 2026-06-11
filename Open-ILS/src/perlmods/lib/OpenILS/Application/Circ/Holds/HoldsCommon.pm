@@ -23,7 +23,7 @@ sub target_field_name {
 }
 
 sub do_possibility_checks {
-    my($e, $patron, $request_lib, $depth, %params) = @_;
+    my($class, $e, $patron, $request_lib, $depth, %params) = @_;
 
     my $issuanceid   = $params{issuanceid}      || "";
     my $partid       = $params{partid}      || "";
@@ -86,7 +86,7 @@ sub do_possibility_checks {
         # of the selection_ou to be used, which is not what we want here.
         $depth ||= 0;
 
-        my ($recs) = __PACKAGE__->method_lookup('open-ils.circ.holds.metarecord.filtered_records')->run($mrid, $holdable_formats, $selection_ou, $depth);
+        my ($recs) = OpenSRF::Application->method_lookup('open-ils.circ.holds.metarecord.filtered_records')->run($mrid, $holdable_formats, $selection_ou, $depth);
         my @status = ();
         for my $rec (@$recs) {
             @status = _check_title_hold_is_possible(
@@ -162,7 +162,7 @@ sub _check_title_hold_is_possible {
         $logger->info("title hold when monographic part required");
         return (
             0, 0, [
-                new OpenILS::Event(
+                OpenILS::Event->new(
                     "TITLE_HOLD_WHEN_MONOGRAPHIC_PART_REQUIRED",
                     "payload" => {"fail_part" => "monographic_part_required"}
                 )
@@ -202,7 +202,7 @@ sub _check_title_hold_is_possible {
     $logger->info("title possible found ".scalar(@$copies)." potential copies");
     return (
         0, 0, [
-            new OpenILS::Event(
+            OpenILS::Event->new(
                 "HIGH_LEVEL_HOLD_HAS_NO_COPIES",
                 "payload" => {"fail_part" => "no_ultimate_items"}
             )
@@ -245,7 +245,7 @@ sub _check_title_hold_is_possible {
         my %hash2 = map { ($_->to_org => $_->prox) } @$req_prox;
         push( @{$buckets2{ $hash2{$_->{circ_lib}} } }, $_->{id} ) for @$copies;
 
-        my $highest_key = $keys[@keys - 1];  # the farthest prox in the exising buckets
+        my $highest_key = $keys[-1];  # the farthest prox in the exising buckets
         my $new_key = $highest_key - 0.5; # right before the farthest prox
         my @keys2   = sort { $a <=> $b } keys %buckets2;
         for my $key (@keys2) {
@@ -331,7 +331,7 @@ sub _check_issuance_hold_is_possible {
 
         return (
             0, 0, [
-                new OpenILS::Event(
+                OpenILS::Event->new(
                     "HIGH_LEVEL_HOLD_HAS_NO_COPIES",
                     "payload" => {"fail_part" => "no_ultimate_items"}
                 )
@@ -377,7 +377,7 @@ sub _check_issuance_hold_is_possible {
         my %hash2 = map { ($_->to_org => $_->prox) } @$req_prox;
         push( @{$buckets2{ $hash2{$_->{circ_lib}} } }, $_->{id} ) for @$copies;
 
-        my $highest_key = $keys[@keys - 1];  # the farthest prox in the exising buckets
+        my $highest_key = $keys[-1];  # the farthest prox in the exising buckets
         my $new_key = $highest_key - 0.5; # right before the farthest prox
         my @keys2   = sort { $a <=> $b } keys %buckets2;
         for my $key (@keys2) {
@@ -471,7 +471,7 @@ sub _check_monopart_hold_is_possible {
 
         return (
             0, 0, [
-                new OpenILS::Event(
+                OpenILS::Event->new(
                     "HIGH_LEVEL_HOLD_HAS_NO_COPIES",
                     "payload" => {"fail_part" => "no_ultimate_items"}
                 )
@@ -517,7 +517,7 @@ sub _check_monopart_hold_is_possible {
         my %hash2 = map { ($_->to_org => $_->prox) } @$req_prox;
         push( @{$buckets2{ $hash2{$_->{circ_lib}} } }, $_->{id} ) for @$copies;
 
-        my $highest_key = $keys[@keys - 1];  # the farthest prox in the exising buckets
+        my $highest_key = $keys[-1];  # the farthest prox in the exising buckets
         my $new_key = $highest_key - 0.5; # right before the farthest prox
         my @keys2   = sort { $a <=> $b } keys %buckets2;
         for my $key (@keys2) {
@@ -587,7 +587,7 @@ sub _check_volume_hold_is_possible {
 
     return (
         0, 0, [
-            new OpenILS::Event(
+            OpenILS::Event->new(
                 "HIGH_LEVEL_HOLD_HAS_NO_COPIES",
                 "payload" => {"fail_part" => "no_ultimate_items"}
             )
@@ -605,8 +605,6 @@ sub _check_volume_hold_is_possible {
     $status[3] = $age_protect_only;
     return @status;
 }
-
-
 
 sub verify_copy_for_hold {
     my( $patron, $requestor, $title, $copy, $pickup_lib, $request_lib, $oargs ) = @_;
@@ -655,7 +653,7 @@ sub verify_copy_for_hold {
 
                     # AppUtils::check_user_perms returns the perm if
                     # the user doesn't have it, undef if they do.
-                    if ($apputils->check_user_perms($requestor->id, $requestor->ws_ou, $evt->{textcode} . '.override')) {
+                    if ($U->check_user_perms($requestor->id, $requestor->ws_ou, $evt->{textcode} . '.override')) {
                         push(@disallowed, $evt);
                         push(@{$oargs->{failed}}, $evt->{textcode});
                     } else {
