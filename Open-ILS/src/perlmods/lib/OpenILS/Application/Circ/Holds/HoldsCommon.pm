@@ -9,16 +9,27 @@ use OpenSRF::Utils::Logger qw(:logger);
 
 my $U = "OpenILS::Application::AppUtils";
 
+=head1 NAME
+
+HoldsCommon - shared code regarding holds for use within the open-ils.circ application.
+
+=head1 DESCRIPTION
+
+Do not use this code outside the open-ils.circ OpenSRF application.
+Do not register OpenSRF methods from here.
+
+=cut
+
 sub target_field_name {
     my ($class, $hold_type) = @_;
-    if ($hold_type eq 'T') { return 'titleid'; }
-    elsif ($hold_type eq 'C') { return 'copy_id'; }
-    elsif ($hold_type eq 'R') { return 'copy_id'; }
-    elsif ($hold_type eq 'F') { return 'copy_id'; }
-    elsif ($hold_type eq 'I') { return 'issuanceid'; }
-    elsif ($hold_type eq 'V') { return 'volume_id'; }
-    elsif ($hold_type eq 'M') { return 'mrid'; }
-    elsif ($hold_type eq 'P') { return 'partid'; }
+    if ($hold_type eq OILS_HOLD_TYPE_TITLE) { return 'titleid'; }
+    elsif ($hold_type eq OILS_HOLD_TYPE_COPY) { return 'copy_id'; }
+    elsif ($hold_type eq OILS_HOLD_TYPE_RECALL) { return 'copy_id'; }
+    elsif ($hold_type eq OILS_HOLD_TYPE_FORCE) { return 'copy_id'; }
+    elsif ($hold_type eq OILS_HOLD_TYPE_ISSUANCE) { return 'issuanceid'; }
+    elsif ($hold_type eq OILS_HOLD_TYPE_VOLUME) { return 'volume_id'; }
+    elsif ($hold_type eq OILS_HOLD_TYPE_METARECORD) { return 'mrid'; }
+    elsif ($hold_type eq OILS_HOLD_TYPE_MONOPART) { return 'partid'; }
     return;
 }
 
