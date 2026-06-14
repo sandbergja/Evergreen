@@ -1088,6 +1088,123 @@ function(egCore , egOrg , egCirc , $uibModal , $q , $timeout , $window , ngToast
         });
     }
 
+    const UNMARKABLE_STATUSES = [
+        // Damaged: has its own UI and special considerations
+        14,
+
+        // Statuses that are forbidden at the DB constraint level
+        1,
+        6,
+        8,
+        9
+    ];
+
+    /**
+     * Statuses that the user can select to mark an item as
+     * @returns Array of CCS objects
+     */
+    service.markableStatuses = function(originalStatus) {
+        const unmarkable = [
+            // Marking an item as the status it already is: forbidden because
+            // it is pointless
+            originalStatus
+        ].concat(UNMARKABLE_STATUSES);
+
+        var allStatuses;
+        if (egCore.env.ccs)
+            allStatuses = $q.when(egCore.env.ccs.list);
+
+        allStatuses = egCore.pcrud.retrieveAll('ccs', {order_by : { ccs : 'name' }}, {atomic : true}).then(
+            function(list) {
+                egCore.env.absorbList(list, 'ccs');
+                return list;
+            }
+        );
+
+        return allStatuses
+            .then(function(statuses) {
+                return statuses.filter(function(status) {
+                    return !unmarkable.includes(status.id()) && status.markable() == 't'
+                })
+            })
+    }
+
+    /**
+     * Mark the item as the selected status
+     */
+    service.mark_item = function(item_id, status) {
+        const MARK_ITEM_METHODS = {
+            2: 'open-ils.circ.mark_item_bindery',
+            4: 'open-ils.circ.mark_item_missing',
+            9: 'open-ils.circ.mark_item_on_order',
+            10: 'open-ils.circ.mark_item_ill',
+            11: 'open-ils.circ.mark_item_cataloging',
+            12: 'open-ils.circ.mark_item_reserves',
+            13: 'open-ils.circ.mark_item_discard',
+            14: 'open-ils.circ.mark_item_damaged',
+        };
+
+        if (MARK_ITEM_METHODS[status]) {
+            return egCore.net.request(
+                'open-ils.circ',
+                MARK_ITEM_METHODS[status],
+                egCore.auth.token(),
+                item_id
+            )
+        } else {
+            return egCore.net.request(
+                'open-ils.circ',
+                'open-ils.circ.mark_item',
+                egCore.auth.token(),
+                item_id,
+                status
+            )
+        }
+    }
+
+    service.mark_item_dialog = function(item_id, current_status) {
+        return $uibModal.open({
+            templateUrl: './cat/item/t_mark_item_as',
+            backdrop: 'static',
+            animation: true,
+            size: 'md',
+            controller:
+                ['$scope','$uibModalInstance',
+                    function($scope , $uibModalInstance) {
+                        $scope.potentialStatuses = [];
+                        $scope.args = {};
+                        $scope.showCheckoutOutWarning = current_status == 1;
+                        $scope.showInTransitWarning = current_status == 6;
+
+                        $scope.canSubmit = function() {
+                            return ($scope.args.selectedStatus && !$scope.showCheckoutOutWarning && !$scope.showInTransitWarning);
+                        }
+
+                        service.markableStatuses().then(function(statuses) {
+                            $scope.potentialStatuses = statuses.map(function(status) {
+                                return {id: status.id(), label: status.name()}
+                            })
+                        });
+
+                        $scope.mark = function() {
+                            if ($scope.args.selectedStatus) {
+                                service.mark_item(item_id, $scope.args.selectedStatus)
+                                    .then(function(result) {
+                                        if (Number(result) == 1) {
+                                            $uibModalInstance.close();
+                                        }
+                                    })
+                            }
+                        }
+
+                        $scope.cancel = function() {
+                            $uibModalInstance.dismiss();
+                        }
+                    }
+                ]
+        }).result;
+    }
+
     return service;
 }])
 .filter('string_pick', function() { return function(i){ return arguments[i] || ''; }; })

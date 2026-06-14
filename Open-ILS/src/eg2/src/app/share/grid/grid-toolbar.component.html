@@ -105,7 +105,7 @@
       @if (!gridContext.disableSelect) {
         <div ngbDropdown autoClose="false" class="btn-group" container="body"
           placement="bottom-right" dropdownClass="eg-grid-toolbar-dropdown">
-          <button ngbDropdownToggle type="button" [disabled]="!gridContext.toolbarActions.length"
+          <button ngbDropdownToggle type="button" [disabled]="gridContext.toolbarActions.none()"
             title="Actions For {{gridContext.getSelectedRows().length}} Selected Rows" i18n-title
             class="btn btn-outline-dark btn-sm  no-dropdown-caret" i18n>
           Actions
@@ -189,7 +189,7 @@
                 <span class="ms-2" i18n>Manage Columns</span>
               </button>
               <button nbgDropdownItem class="dropdown-item label-with-material-icon" type="button"
-                [disabled]="gridContext.toolbarActions.length === 0" (click)="toolbarActionsEditor.open().subscribe()">
+                [disabled]="gridContext.toolbarActions.none()" (click)="toolbarActionsEditor.open().subscribe()">
                 <span class="material-icons" aria-hidden="true">menu</span>
                 <span class="ms-2" i18n>Manage Actions Menu</span>
               </button>

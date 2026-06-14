@@ -2,7 +2,7 @@
  * Collection of grid related classses and interfaces.
  */
 import {TemplateRef, EventEmitter, ChangeDetectorRef, QueryList} from '@angular/core';
-import {Observable, Subscription} from 'rxjs';
+import {lastValueFrom, Observable, Subscription} from 'rxjs';
 import {IdlService, IdlObject} from '@eg/core/idl.service';
 import {OrgService} from '@eg/core/org.service';
 import {ServerStoreService} from '@eg/core/server-store.service';
@@ -11,6 +11,7 @@ import {ButtonStyle} from '@eg/share/util/button-style.directive';
 import {Pager} from '@eg/share/util/pager';
 import {GridFilterControlComponent} from './grid-filter-control.component';
 import { Cardinality, cardinalityGuess } from '../util/cardinality';
+import { GridActions } from './grid-actions';
 
 const MAX_ALL_ROW_COUNT = 10000;
 
@@ -720,7 +721,7 @@ export class GridContext {
     toolbarLabel: string;
     toolbarButtons: GridToolbarButton[];
     toolbarCheckboxes: GridToolbarCheckbox[];
-    toolbarActions: GridToolbarAction[];
+    toolbarActions: GridActions;
     lastSelectedIndex: any;
     pageChanges: Subscription;
     rowFlairIsEnabled: boolean;
@@ -772,7 +773,7 @@ export class GridContext {
         this.rowSelector = new GridRowSelector();
         this.toolbarButtons = [];
         this.toolbarCheckboxes = [];
-        this.toolbarActions = [];
+        this.toolbarActions = new GridActions();
         this.resizeWrapper = true;
     }
 
@@ -829,25 +830,8 @@ export class GridContext {
 
 
     applyToolbarActionVisibility(hidden: string[]) {
-        if (!hidden || hidden.length === 0) { return; }
-
-        const groups = [];
-        this.toolbarActions.forEach(action => {
-            if (action.isGroup) {
-                groups.push(action);
-            } else if (!action.isSeparator) {
-                action.hidden = hidden.includes(action.label);
-            }
-        });
-
-        // If all actions in a group are hidden, hide the group as well.
-        // Note the group may be marked as hidden in the configuration,
-        // but the addition of new entries within a group should cause
-        // it to be visible again.
-        groups.forEach(group => {
-            const visible = this.toolbarActions
-                .filter(action => action.group === group.label && !action.hidden);
-            group.hidden = visible.length === 0;
+        this.toolbarActions.hiding(hidden).subscribe(updated => {
+            this.toolbarActions = new GridActions(updated);
         });
     }
 
@@ -1489,7 +1473,7 @@ export class GridContext {
         });
     }
 
-    saveGridConfig(): Promise<any> {
+    async saveGridConfig(): Promise<any> {
         if (!this.persistKey) {
             throw new Error('Grid persistKey required to save columns');
         }
@@ -1501,7 +1485,8 @@ export class GridContext {
         // Avoid persisting group visibility since that may change
         // with the addition of new columns.  Always calculate that
         // in real time.
-        conf.hideToolbarActions = this.toolbarActions
+        const actions = await lastValueFrom(this.toolbarActions.list());
+        conf.hideToolbarActions = actions
             .filter(action => !action.isGroup && action.hidden)
             .map(action => action.label);
 
@@ -1624,7 +1609,7 @@ export class GridToolbarAction {
     isSeparator: boolean;
     disableOnRows: (rows: any[]) => boolean;
     describedbySelectionCount: boolean;
-    hidden?: boolean;
+    hidden = false;
 }
 
 // Buttons are global actions

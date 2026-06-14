@@ -456,7 +456,9 @@ CREATE TABLE config.copy_status (
     copy_active  BOOL    NOT NULL DEFAULT FALSE,
 	restrict_copy_delete BOOL	  NOT NULL DEFAULT FALSE,
     is_available  BOOL    NOT NULL DEFAULT FALSE,
-    hopeless_prone  BOOL    NOT NULL DEFAULT FALSE
+    hopeless_prone  BOOL    NOT NULL DEFAULT FALSE,
+    markable BOOL     NOT NULL DEFAULT FALSE,
+    CONSTRAINT status_cannot_be_markable CHECK (NOT markable OR id NOT IN (1, 6, 8, 9, 15))
 );
 COMMENT ON TABLE config.copy_status IS $$
 Copy Statuses

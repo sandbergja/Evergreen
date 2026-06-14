@@ -71,6 +71,6 @@ export class GridToolbarActionComponent implements OnInit {
         this.toolbarAction.isSeparator = this.isSeparator;
         this.toolbarAction.disableOnRows = this.disableOnRows;
         this.toolbarAction.describedbySelectionCount = this.describedbySelectionCount;
-        this.grid.context.toolbarActions.push(this.toolbarAction);
+        this.grid.context.toolbarActions.register(this.toolbarAction);
     }
 }

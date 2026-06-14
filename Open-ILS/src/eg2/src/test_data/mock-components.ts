@@ -3,8 +3,12 @@
 // but you don't want to have to re-implement all of
 // the child's logic in your test
 
-import { Component, Input } from '@angular/core';
+import { Component, input, Input } from '@angular/core';
 import { ComboboxEntry } from '@eg/share/combobox/combobox.component';
+import { FmFieldOptions } from '@eg/share/fm-editor/fm-editor.component';
+import { GridContext, GridToolbarAction } from '@eg/share/grid/grid';
+import { GridActions } from '@eg/share/grid/grid-actions';
+import { EMPTY, map, merge, Observable, toArray } from 'rxjs';
 
 @Component({
     selector: 'eg-combobox',
@@ -28,3 +32,39 @@ export class MockOrgSelectComponent {
 
     @Input() applyOrgId(_id: number) {};
 }
+
+@Component({
+    selector: 'eg-admin-page',
+    template: ''
+})
+export class MockAdminPageComponent {}
+
+@Component({
+    selector: 'eg-fm-record-editor',
+    template: ''
+})
+export class MockFmRecordEditorComponent {
+    fieldOptions = input<{[fieldName: string]: FmFieldOptions}>();
+}
+
+@Component({
+    selector: 'eg-grid',
+    template: ''
+})
+export class MockGridComponent {
+    public context = {toolbarActions: new GridActions()} as GridContext;
+}
+
+@Component({selector: 'eg-mark-damaged-dialog', template: ''})
+export class MockMarkDamagedDialogComponent {
+    handleCheckin = input<boolean>(false);
+}
+
+@Component({selector: 'eg-mark-missing-dialog', template: ''})
+export class MockMarkMissingDialogComponent {}
+
+@Component({selector: 'eg-mark-discard-dialog', template: ''})
+export class MockMarkDiscardDialogComponent {}
+
+@Component({selector: 'eg-mark-item-status-dialog', template: ''})
+export class MockMarkItemStatusDialogComponent {}

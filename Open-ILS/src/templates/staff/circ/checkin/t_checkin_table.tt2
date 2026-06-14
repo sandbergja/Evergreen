@@ -31,6 +31,9 @@
     handler="show_mark_missing_pieces"
     label="[% l('Mark Missing Pieces') %]">
   </eg-grid-action>
+  <eg-grid-action handler="markItem"
+    disabled="need_one_selected"
+    label="[% l('Mark as...') %]"></eg-grid-action>
   <eg-grid-action 
     handler="abortTransit"
     label="[% l('Cancel Transits') %]">

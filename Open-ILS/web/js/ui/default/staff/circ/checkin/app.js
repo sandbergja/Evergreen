@@ -456,6 +456,18 @@ function($scope , $q , $window , $location , $timeout , egCore ,
         });
     }
 
+    $scope.markItem = function(items) {
+        var item = items[0];
+        if (item) {
+            itemSvc.mark_item_dialog(item.acp.id(), item.acp.status())
+                .then(function() { checkinGrid.refresh() });
+        }
+    }
+
+    $scope.need_one_selected = function() {
+        return $scope.checkins?.length !== 1;
+    }
+
     $scope.printSpineLabels = function(items){
         var copy_ids = [];
         angular.forEach(items, function(item) {

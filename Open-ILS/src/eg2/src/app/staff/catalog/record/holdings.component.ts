@@ -14,10 +14,6 @@ import {GridToolbarCheckboxComponent
 } from '@eg/share/grid/grid-toolbar-checkbox.component';
 import {StoreService} from '@eg/core/store.service';
 import {ServerStoreService} from '@eg/core/server-store.service';
-import {MarkDamagedDialogComponent
-} from '@eg/staff/share/holdings/mark-damaged-dialog.component';
-import {MarkMissingDialogComponent
-} from '@eg/staff/share/holdings/mark-missing-dialog.component';
 import {AnonCacheService} from '@eg/share/util/anon-cache.service';
 import {HoldingsService} from '@eg/staff/share/holdings/holdings.service';
 import {CopyAlertsDialogComponent
@@ -43,6 +39,7 @@ import {TransferHoldingsComponent
 import {AlertDialogComponent} from '@eg/share/dialog/alert.component';
 import {BroadcastService} from '@eg/share/util/broadcast.service';
 import { StaffCommonModule } from '@eg/staff/common.module';
+import { MarkItemActionsComponent } from '@eg/staff/share/holdings/mark-item-actions.component';
 
 
 // The holdings grid models a single HoldingsTree, composed of HoldingsTreeNodes
@@ -94,12 +91,11 @@ export class HoldingsEntry {
         CopyTagsDialogComponent,
         DeleteHoldingDialogComponent,
         MakeBookableDialogComponent,
-        MarkDamagedDialogComponent,
-        MarkMissingDialogComponent,
         ReplaceBarcodeDialogComponent,
         StaffCommonModule,
         TransferHoldingsComponent,
-        TransferItemsComponent
+        TransferItemsComponent,
+        MarkItemActionsComponent
     ]
 })
 export class HoldingsMaintenanceComponent implements OnInit {
@@ -131,10 +127,6 @@ export class HoldingsMaintenanceComponent implements OnInit {
     private emptyCallNumsCheckbox: GridToolbarCheckboxComponent;
     @ViewChild('emptyLibsCheckbox', { static: true })
     private emptyLibsCheckbox: GridToolbarCheckboxComponent;
-    @ViewChild('markDamagedDialog', { static: true })
-    private markDamagedDialog: MarkDamagedDialogComponent;
-    @ViewChild('markMissingDialog', { static: true })
-    private markMissingDialog: MarkMissingDialogComponent;
     @ViewChild('copyAlertsDialog', { static: true })
     private copyAlertsDialog: CopyAlertsDialogComponent;
     @ViewChild('copyTagsDialog', {static: false})
@@ -781,51 +773,6 @@ export class HoldingsMaintenanceComponent implements OnInit {
     }
 
 
-    async showMarkDamagedDialog(rows: HoldingsEntry[]) {
-        // eslint-disable-next-line no-magic-numbers
-        const copyIds = this.selectedCopyIds(rows, 14 /* ignore damaged */);
-
-        if (copyIds.length === 0) { return; }
-
-        let rowsModified = false;
-
-        const markNext = async(ids: number[]) => {
-            if (ids.length === 0) {
-                return Promise.resolve();
-            }
-
-            this.markDamagedDialog.copyId = ids.pop();
-            return this.markDamagedDialog.open({size: 'lg'}).subscribe(
-                { next: ok => {
-                    if (ok) { rowsModified = true; }
-                    return markNext(ids);
-                }, error: (dismiss: unknown) => markNext(ids) }
-            );
-        };
-
-        await markNext(copyIds);
-        if (rowsModified) {
-            this.refreshHoldings = true;
-            this.holdingsGrid.reload();
-        }
-    }
-
-    showMarkMissingDialog(rows: any[]) {
-        // eslint-disable-next-line no-magic-numbers
-        const copyIds = this.selectedCopyIds(rows, 4 /* ignore missing */);
-        if (copyIds.length > 0) {
-            this.markMissingDialog.copyIds = copyIds;
-            this.markMissingDialog.open({}).subscribe(
-                { next: rowsModified => {
-                    if (rowsModified) {
-                        this.refreshHoldings = true;
-                        this.holdingsGrid.reload();
-                    }
-                }, error: (dismissed: unknown) => {} } // avoid console errors
-            );
-        }
-    }
-
     // Mark record, library, and potentially the selected call number
     // as the current transfer target.
     markLibCnForTransfer(rows: HoldingsEntry[]) {
@@ -1206,5 +1153,12 @@ export class HoldingsMaintenanceComponent implements OnInit {
         this.transferHoldings.transferHoldings()
             .then(success => success ?  this.hardRefresh() : null);
     }
+
+    protected reload() {
+        this.holdingsGrid.reload();
+    }
+
+    protected readonly idFn = (row: IdlObject) => row.copy.id();
+    protected readonly statusIdFn = (row: IdlObject) => row.copy.status().id();
 }
 

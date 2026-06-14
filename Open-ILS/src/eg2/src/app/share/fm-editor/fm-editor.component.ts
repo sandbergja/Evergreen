@@ -82,6 +82,8 @@ export interface FmFieldOptions {
     // If this function is defined, the function will be called
     // at render time to see if the field should be marked readonly.
     // This supersedes all other isReadonly specifiers.
+    // Note that if the function returns TRUE, the field will be editable
+    // and if it returns FALSE, it will be readonly
     isReadonlyOverride?: (field: string, record: IdlObject) => boolean;
 
     // Render the field using this custom template instead of chosing

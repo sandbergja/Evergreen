@@ -746,6 +746,14 @@ function($scope , $q , $window , $location , $timeout , egCore , egNet , egGridD
         itemSvc.changeItemOwningLib(copyGrid.selectedItems());
     }
 
+    $scope.markItem = function() {
+        var item = copyGrid.selectedItems()[0];
+        if (item) {
+            itemSvc.mark_item_dialog(item.id, item['status.id'])
+                .then(function() { $scope.refreshGridData() });
+        }
+    }
+
     $scope.transferItems = function (){
         itemSvc.transferItems(copyGrid.selectedItems());
     }
@@ -840,8 +848,8 @@ function($scope , $q , $window , $location , $timeout , egCore , egNet , egGridD
  * Detail view -- shows one copy
  */
 .controller('ViewCtrl', 
-       ['$scope','$q','egGridDataProvider','$location','$routeParams','$timeout','$window','egCore','egItem','egBilling','egCirc',
-function($scope , $q , egGridDataProvider , $location , $routeParams , $timeout , $window , egCore , itemSvc , egBilling , egCirc) {
+       ['$scope','$q','$location','$routeParams','$timeout','$window','egCore','egItem','egBilling','egCirc',
+function($scope , $q , $location , $routeParams , $timeout , $window , egCore , itemSvc , egBilling , egCirc) {
     var copyId = $routeParams.id;
     $scope.args.copyId = copyId;
     $scope.tab = $routeParams.tab || 'summary';

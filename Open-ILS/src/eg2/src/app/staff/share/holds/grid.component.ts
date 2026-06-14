@@ -11,12 +11,6 @@ import {GridDataSource, GridCellTextGenerator} from '@eg/share/grid/grid';
 import {GridComponent} from '@eg/share/grid/grid.component';
 import {ProgressDialogComponent} from '@eg/share/dialog/progress.component';
 import {ConfirmDialogComponent} from '@eg/share/dialog/confirm.component';
-import {MarkDamagedDialogComponent
-} from '@eg/staff/share/holdings/mark-damaged-dialog.component';
-import {MarkMissingDialogComponent
-} from '@eg/staff/share/holdings/mark-missing-dialog.component';
-import {MarkDiscardDialogComponent
-} from '@eg/staff/share/holdings/mark-discard-dialog.component';
 import {HoldRetargetDialogComponent
 } from '@eg/staff/share/holds/retarget-dialog.component';
 import {HoldTransferDialogComponent} from './transfer-dialog.component';
@@ -31,6 +25,8 @@ import { GridModule } from '@eg/share/grid/grid.module';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { HoldDetailComponent } from './detail.component';
+import { MarkItemActionsComponent } from '../holdings/mark-item-actions.component';
+import { DAMAGED, DISCARD_WEED, MISSING } from '../holdings/item-statuses';
 
 /** Holds grid with access to detail page and other actions */
 
@@ -49,13 +45,12 @@ import { HoldDetailComponent } from './detail.component';
         HoldManageDialogComponent,
         HoldRetargetDialogComponent,
         HoldTransferDialogComponent,
-        MarkDamagedDialogComponent,
-        MarkDiscardDialogComponent,
-        MarkMissingDialogComponent,
         OrgSelectComponent,
         ProgressDialogComponent,
-        RouterModule
-    ]
+        RouterModule,
+        MarkItemActionsComponent
+    ],
+    viewProviders: [GridComponent]
 })
 export class HoldsGridComponent implements OnInit {
     private ngLocation = inject(Location);
@@ -135,12 +130,6 @@ export class HoldsGridComponent implements OnInit {
     private progressDialog: ProgressDialogComponent;
     @ViewChild('transferDialog', { static: true })
     private transferDialog: HoldTransferDialogComponent;
-    @ViewChild('markDamagedDialog', { static: true })
-    private markDamagedDialog: MarkDamagedDialogComponent;
-    @ViewChild('markMissingDialog', { static: true })
-    private markMissingDialog: MarkMissingDialogComponent;
-    @ViewChild('markDiscardDialog')
-    private markDiscardDialog: MarkDiscardDialogComponent;
     @ViewChild('retargetDialog', { static: true })
     private retargetDialog: HoldRetargetDialogComponent;
     @ViewChild('cancelDialog', { static: true })
@@ -218,6 +207,8 @@ export class HoldsGridComponent implements OnInit {
 
     // Notify the caller the place hold button was clicked.
     @Output() placeHoldRequested: EventEmitter<void> = new EventEmitter<void>();
+
+    protected readonly markItemStatuses = [DAMAGED, MISSING, DISCARD_WEED];
 
     constructor() {
         this.gridDataSource = new GridDataSource();
@@ -680,60 +671,6 @@ export class HoldsGridComponent implements OnInit {
         }
     }
 
-    async showMarkDamagedDialog(rows: any[]) {
-        const copyIds = rows.map(r => r.cp_id).filter(id => Boolean(id));
-        if (copyIds.length === 0) { return; }
-
-        let rowsModified = false;
-
-        const markNext = async(ids: number[]) => {
-            if (ids.length === 0) {
-                return Promise.resolve();
-            }
-
-            this.markDamagedDialog.copyId = ids.pop();
-            return this.markDamagedDialog.open({size: 'lg'}).subscribe(
-                { next: ok => {
-                    if (ok) { rowsModified = true; }
-                    return markNext(ids);
-                }, error: (dismiss: unknown) => markNext(ids) }
-            );
-        };
-
-        await markNext(copyIds);
-        if (rowsModified) {
-            this.holdsGrid.reload();
-        }
-    }
-
-    showMarkMissingDialog(rows: any[]) {
-        const copyIds = rows.map(r => r.cp_id).filter(id => Boolean(id));
-        if (copyIds.length > 0) {
-            this.markMissingDialog.copyIds = copyIds;
-            this.markMissingDialog.open({}).subscribe(
-                rowsModified => {
-                    if (rowsModified) {
-                        this.holdsGrid.reload();
-                    }
-                }
-            );
-        }
-    }
-
-    showMarkDiscardDialog(rows: any[]) {
-        const copyIds = rows.map(r => r.cp_id).filter(id => Boolean(id));
-        if (copyIds.length > 0) {
-            this.markDiscardDialog.copyIds = copyIds;
-            this.markDiscardDialog.open({}).subscribe(
-                rowsModified => {
-                    if (rowsModified) {
-                        this.holdsGrid.reload();
-                    }
-                }
-            );
-        }
-    }
-
 
     showRetargetDialog(rows: any[]) {
         const holdIds = rows.map(r => r.id).filter(id => Boolean(id));
@@ -821,6 +758,10 @@ export class HoldsGridComponent implements OnInit {
             return holdData.hold_type.match(/C|R|F/) !== null;
         }
         return false;
+    }
+
+    protected reload() {
+        this.holdsGrid.reload();
     }
 }
 

@@ -1,0 +1,25 @@
+BEGIN;
+
+SELECT plan(3);
+
+SELECT lives_ok(
+    'INSERT INTO config.copy_status (name, markable) VALUES (''My test status'', TRUE)',
+    'Can add a new status that is markable'
+);
+
+SELECT lives_ok(
+    'UPDATE config.copy_status SET markable=TRUE WHERE name = ''Discard/Weed''',
+    'Can update an existing status to be markable'
+);
+
+PREPARE set_checked_out_markable AS
+    UPDATE config.copy_status SET markable=TRUE WHERE name = 'Checked out';
+
+SELECT throws_like(
+    'set_checked_out_markable',
+    '%status_cannot_be_markable%',
+    'It does not allow certain statuses to be markable, since it would violate the logic specific to those statuses'
+);
+
+
+ROLLBACK;

@@ -1,0 +1,34 @@
+<ng-template #dialogContent>
+  <div class="modal-header">
+    <h4 class="modal-title">
+      <span i18n>Mark Items</span>
+    </h4>
+    <button type="button" class="btn-close btn-close-white"
+    i18n-aria-label aria-label="Close dialog" (click)="close()"></button>
+  </div>
+  <div class="modal-body">
+    @if (currentlyCheckedOut()) {
+      <div class="alert alert-warning" i18n>This item is checked out.  Check it in before marking it as another status.</div>
+    } @else if(currentlyInTransit()) {
+      <div class="alert alert-warning" i18n>This item is in transit.  Complete the transit before marking it as another status.</div>
+    } @else {
+      <div class="row d-flex justify-content-center">
+        <h5 i18n>Mark 1 Item</h5>
+        <select [formControl]="status" class="form-select">
+          @for (potentialStatus of statuses; track potentialStatus.id()) {
+              <option [value]="potentialStatus.id()">{{potentialStatus.name()}}</option>
+          }
+        </select>
+      </div>
+    }
+  </div>
+  <div class="modal-footer">
+      <button type="button" class="btn btn-normal"
+      (click)="close()" i18n>Cancel</button>
+      @if (!currentlyCheckedOut() && !currentlyInTransit()) {
+        <button type="button" class="btn btn-success"
+          (click)="markItems()" i18n>Mark Items</button>
+      }
+  </div>
+</ng-template>
+

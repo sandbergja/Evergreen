@@ -59,6 +59,9 @@
     label="[% l('Item as Discard/Weed') %]"></eg-grid-action>
   <eg-grid-action handler="selectedHoldingsMissing" group="[% l('Mark') %]"
     label="[% l('Item as Missing') %]"></eg-grid-action>
+  <eg-grid-action handler="markItem" group="[% l('Mark') %]"
+    disabled="need_one_selected"
+    label="[% l('Mark as...') %]"></eg-grid-action>
     
   <eg-grid-action handler="selectedHoldingsCopyAdd" group="[% l('Add') %]"
     label="[% l('Items') %]"></eg-grid-action>

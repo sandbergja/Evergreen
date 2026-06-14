@@ -529,7 +529,7 @@ INSERT INTO config.copy_status (id,name,holdable,opac_visible,copy_active,is_ava
 INSERT INTO config.copy_status (id,name,holdable,opac_visible,copy_active,restrict_copy_delete) VALUES (1,oils_i18n_gettext(1, 'Checked out', 'ccs', 'name'),'t','t','t','t');
 INSERT INTO config.copy_status (id,name) VALUES (2,oils_i18n_gettext(2, 'Bindery', 'ccs', 'name'));
 INSERT INTO config.copy_status (id,name,restrict_copy_delete) VALUES (3,oils_i18n_gettext(3, 'Lost', 'ccs', 'name'),'t');
-INSERT INTO config.copy_status (id,name) VALUES (4,oils_i18n_gettext(4, 'Missing', 'ccs', 'name'));
+INSERT INTO config.copy_status (id,name,markable) VALUES (4,oils_i18n_gettext(4, 'Missing', 'ccs', 'name'),'t');
 INSERT INTO config.copy_status (id,name,holdable,opac_visible) VALUES (5,oils_i18n_gettext(5, 'In process', 'ccs', 'name'),'t','t');
 INSERT INTO config.copy_status (id,name,holdable,opac_visible,restrict_copy_delete) VALUES (6,oils_i18n_gettext(6, 'In transit', 'ccs', 'name'),'t','t','t');
 INSERT INTO config.copy_status (id,name,holdable,opac_visible,copy_active,is_available) VALUES (7,oils_i18n_gettext(7, 'Reshelving', 'ccs', 'name'),'t','t','t','t');
@@ -538,8 +538,8 @@ INSERT INTO config.copy_status (id,name,holdable,opac_visible) VALUES (9,oils_i1
 INSERT INTO config.copy_status (id,name,copy_active) VALUES (10,oils_i18n_gettext(10, 'ILL', 'ccs', 'name'),'t');
 INSERT INTO config.copy_status (id,name) VALUES (11,oils_i18n_gettext(11, 'Cataloging', 'ccs', 'name'));
 INSERT INTO config.copy_status (id,name,opac_visible,copy_active) VALUES (12,oils_i18n_gettext(12, 'Reserves', 'ccs', 'name'),'t','t');
-INSERT INTO config.copy_status (id,name) VALUES (13,oils_i18n_gettext(13, 'Discard/Weed', 'ccs', 'name'));
-INSERT INTO config.copy_status (id,name) VALUES (14,oils_i18n_gettext(14, 'Damaged', 'ccs', 'name'));
+INSERT INTO config.copy_status (id,name,markable) VALUES (13,oils_i18n_gettext(13, 'Discard/Weed', 'ccs', 'name'),'t');
+INSERT INTO config.copy_status (id,name,markable) VALUES (14,oils_i18n_gettext(14, 'Damaged', 'ccs', 'name'),'t');
 INSERT INTO config.copy_status (id,name,copy_active) VALUES (15,oils_i18n_gettext(15, 'On reservation shelf', 'ccs', 'name'),'t');
 INSERT INTO config.copy_status
     (id, name, holdable, opac_visible, copy_active, restrict_copy_delete)
@@ -2061,7 +2061,9 @@ INSERT INTO permission.perm_list ( id, code, description ) VALUES
  ( 693, 'DELETE_HARD_DUE_DATE_VALUE', oils_i18n_gettext(693,
      'Allow delete hard due date values', 'ppl', 'description')),
  ( 695, 'ADMIN_CALL_NUMBER_CLASS', oils_i18n_gettext(695,
-     'Allow updates to call number classification names, normalizers, and fields.', 'ppl', 'description'))
+     'Allow updates to call number classification names, normalizers, and fields.', 'ppl', 'description')),
+ ( 696, 'MARK_ITEM', oils_i18n_gettext(696,
+     'Mark item as a configured status', 'ppl', 'description'))
 ;
 
 INSERT INTO permission.perm_list (id,code) VALUES

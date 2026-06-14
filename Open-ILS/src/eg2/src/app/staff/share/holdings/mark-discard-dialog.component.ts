@@ -24,7 +24,6 @@ import {StringComponent} from '@eg/share/string/string.component';
 
 export class MarkDiscardDialogComponent
     extends DialogComponent {
-    private modal: NgbModal;
     private toast = inject(ToastService);
     private net = inject(NetService);
     private evt = inject(EventService);
@@ -39,13 +38,6 @@ export class MarkDiscardDialogComponent
     @ViewChild('successMsg') private successMsg: StringComponent;
     @ViewChild('errorMsg') private errorMsg: StringComponent;
 
-    constructor() {
-        const modal = inject(NgbModal);
-
-        super(modal); // required for subclassing
-
-        this.modal = modal;
-    }
 
     open(args: NgbModalOptions): Observable<boolean> {
         this.numSucceeded = 0;

@@ -1,0 +1,33 @@
+<div class="modal-header">
+  <button type="button" class="close" ng-click="cancel()"
+    aria-hidden="true">&times;</button>
+  <h4 class="modal-title">[% l('Mark Item') %]</h4>
+</div>
+<div class="modal-body">
+  <div class="alert alert-warning" role="alert" ng-if="showCheckoutOutWarning">
+    [% l('This item is checked out.  Check it in before marking it as another status.') %]
+  </div>
+  <div class="alert alert-warning" role="alert" ng-if="showInTransitWarning">
+    [% l('This item is in transit.  Complete the transit before marking it as another status.') %]
+  </div>
+  <div class="row" ng-if="!showCheckoutOutWarning && !showInTransitWarning">
+    <div class="col-md-4">
+      <label for="select-status">[% l('New status') %]</label>
+    </div>
+    <div class="col-md-4">
+      <select id="select-status" ng-model="args.selectedStatus" required class="form-control">
+        <option ng-repeat="potentialStatus in potentialStatuses" value="{{potentialStatus.id}}">{{ potentialStatus.label }}</option>
+      </select>
+    </div>
+    <div class="col-md-4">
+      <button class="btn btn-primary" ng-class="{disabled : !canSubmit()}"
+          ng-click="mark()">[% l('Mark Item') %]</button>
+    </div>
+  </div>
+  </div>
+</div>
+<div class="modal-footer">
+  <div class="col-md-6 pull-right">
+    <button class="btn btn-warning" ng-click="cancel($event)">[% l('Cancel') %]</button>
+  </div>
+</div>

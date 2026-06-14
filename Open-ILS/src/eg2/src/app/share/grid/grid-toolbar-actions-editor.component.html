@@ -14,7 +14,7 @@
         </tr>
       </thead>
       <tbody>
-        @for (action of gridContext.toolbarActions; track action; let i = $index) {
+        @for (action of gridContext.toolbarActions.list() | async; track action; let i = $index) {
           <tr class="eg-grid-row"
             >
             @if (action.isGroup) {

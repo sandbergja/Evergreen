@@ -8,7 +8,6 @@
   </eg-staff-banner>
 }
 
-<eg-mark-damaged-dialog #markDamagedDialog [handleCheckin]="true"></eg-mark-damaged-dialog>
 <eg-circ-components></eg-circ-components>
 <eg-progress-dialog #progressDialog></eg-progress-dialog>
 <eg-barcode-select #barcodeSelect></eg-barcode-select>
@@ -169,9 +168,7 @@ text="Item CONC40000598 has never circulated."></eg-string>
       [useLocalSort]="true" [cellTextGenerator]="cellTextGenerator"
       [disablePaging]="true" [persistKey]="persistKey">
 
-      <eg-grid-toolbar-action
-        group="Mark" i18n-group i18n-label label="Mark Item Damaged"
-      (onClick)="markDamaged($event)"></eg-grid-toolbar-action>
+      <eg-mark-item-actions [idFn]="idFn" [statusIdFn]="statusIdFn" [defaultStatuses]="markItemStatuses" (modified)="grid.reload()"></eg-mark-item-actions>
 
       <eg-grid-toolbar-action
         group="Mark" i18n-group i18n-label label="Mark Missing Pieces"

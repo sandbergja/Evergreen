@@ -1,7 +1,7 @@
 /* eslint-disable no-magic-numbers */
 import { Component, ViewChild, OnInit, AfterViewInit, inject } from '@angular/core';
 import {Location} from '@angular/common';
-import {Router, ActivatedRoute} from '@angular/router';
+import {ActivatedRoute} from '@angular/router';
 import {empty, from, concatMap, catchError, EMPTY, tap} from 'rxjs';
 import {IdlObject} from '@eg/core/idl.service';
 import {OrgService} from '@eg/core/org.service';
@@ -15,8 +15,6 @@ import {CircService, CheckinParams, CheckinResult
 import {BarcodeSelectComponent
 } from '@eg/staff/share/barcodes/barcode-select.component';
 import {PrintService} from '@eg/share/print/print.service';
-import {MarkDamagedDialogComponent
-} from '@eg/staff/share/holdings/mark-damaged-dialog.component';
 import {CopyAlertsDialogComponent
 } from '@eg/staff/share/holdings/copy-alerts-dialog.component';
 import {BucketDialogComponent
@@ -31,6 +29,8 @@ import {AnonCacheService} from '@eg/share/util/anon-cache.service';
 import { StaffCommonModule } from '@eg/staff/common.module';
 import { WorkLogStringsComponent } from '@eg/staff/share/worklog/strings.component';
 import { CircComponentsComponent } from '@eg/staff/share/circ/components.component';
+import { MarkItemActionsComponent } from '@eg/staff/share/holdings/mark-item-actions.component';
+import { DAMAGED } from '@eg/staff/share/holdings/item-statuses';
 
 
 interface CheckinGridEntry extends CheckinResult {
@@ -66,7 +66,7 @@ const SETTINGS = [
         CancelTransitDialogComponent,
         CircComponentsComponent,
         CopyAlertsDialogComponent,
-        MarkDamagedDialogComponent,
+        MarkItemActionsComponent,
         StaffCommonModule,
         WorkLogStringsComponent
     ]
@@ -106,12 +106,13 @@ export class CheckinComponent implements OnInit, AfterViewInit {
 
     @ViewChild('grid') private grid: GridComponent;
     @ViewChild('barcodeSelect') private barcodeSelect: BarcodeSelectComponent;
-    @ViewChild('markDamagedDialog') private markDamagedDialog: MarkDamagedDialogComponent;
     @ViewChild('copyAlertsDialog') private copyAlertsDialog: CopyAlertsDialogComponent;
     @ViewChild('bucketDialog') private bucketDialog: BucketDialogComponent;
     @ViewChild('itemNeverCircedStr') private itemNeverCircedStr: StringComponent;
     @ViewChild('backdateDialog') private backdateDialog: BackdateDialogComponent;
     @ViewChild('cancelTransitDialog') private cancelTransitDialog: CancelTransitDialogComponent;
+
+    protected readonly markItemStatuses = [DAMAGED];
 
     ngOnInit() {
 
@@ -304,16 +305,6 @@ export class CheckinComponent implements OnInit, AfterViewInit {
     }
 
 
-    markDamaged(rows: CheckinGridEntry[]) {
-        const copyIds = this.getCopyIds(rows, 14 /* ignore damaged */);
-        if (copyIds.length === 0) { return; }
-
-        from(copyIds).pipe(concatMap(id => {
-            this.markDamagedDialog.copyId = id;
-            return this.markDamagedDialog.open({size: 'lg'});
-        })).subscribe();
-    }
-
     addItemAlerts(rows: CheckinGridEntry[]) {
         const copyIds = this.getCopyIds(rows);
         if (copyIds.length === 0) { return; }
@@ -455,5 +446,8 @@ export class CheckinComponent implements OnInit, AfterViewInit {
                 window.open(url);
             });
     }
+
+    protected readonly idFn = (row:CheckinGridEntry) => row.copy;
+    protected readonly statusIdFn = (row:CheckinGridEntry) => row.copy.status().id();
 }
 

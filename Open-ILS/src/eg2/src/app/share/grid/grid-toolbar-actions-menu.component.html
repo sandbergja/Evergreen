@@ -10,7 +10,7 @@ context menu as the entry point. -->
 
 <eg-clipboard-dialog #clipboardDialog></eg-clipboard-dialog>
 
-@for (action of gridContext.toolbarActions; track action; let idx = $index) {
+@for (action of gridContext.toolbarActions.list() | async; track action.label; let idx = $index) {
   @if (!action.hidden) {
     <button ngbDropdownItem class="dropdown-item"
       [disabled]="shouldDisable(action)"

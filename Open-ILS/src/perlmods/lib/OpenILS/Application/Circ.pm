@@ -32,6 +32,8 @@ use OpenILS::Const qw/:const/;
 use OpenSRF::Utils::SettingsClient;
 use OpenILS::Application::Cat::AssetCommon;
 
+use List::Util qw/all/;
+
 my $apputils = "OpenILS::Application::AppUtils";
 my $U = $apputils;
 
@@ -1343,18 +1345,6 @@ sub mark_item {
     my( $self, $conn, $auth, $copy_id, $args ) = @_;
     $args ||= {};
 
-    my $e = new_editor(authtoken=>$auth);
-    return $e->die_event unless $e->checkauth;
-    my $copy = $e->retrieve_asset_copy([
-        $copy_id,
-        {flesh => 1, flesh_fields => {'acp' => ['call_number','status']}}])
-            or return $e->die_event;
-
-    my $owning_lib =
-        ($copy->call_number->id == OILS_PRECAT_CALL_NUMBER) ? 
-            $copy->circ_lib : $copy->call_number->owning_lib;
-
-    my $evt; # For later.
     my $perm = 'MARK_ITEM_MISSING';
     my $stat = OILS_COPY_STATUS_MISSING;
 
@@ -1381,6 +1371,79 @@ sub mark_item {
         $stat = OILS_COPY_STATUS_DISCARD;
     }
 
+    return OpenILS::Application::Circ->mark_item_impl(
+        $auth,
+        $copy_id,
+        $stat,
+        $perm,
+        $args
+    );
+}
+
+__PACKAGE__->register_method(
+    method => 'mark_item_general',
+    api_name => 'open-ils.circ.mark_item',
+    signature   => q/
+        Changes the status of a copy to the specified status. Requires MARK_ITEM permission.
+        It cannot be used for statuses with a more specific mark item implementation.
+        @param authtoken The login session key
+        @param copy_id The ID of the copy to mark as the new status
+        @param 
+        @return 1 on success - Event otherwise.
+        /
+);
+
+sub mark_item_general {
+    my( $self, $conn, $auth, $copy_id, $stat, $args ) = @_;
+    $args ||= {};
+
+    my $disallowed_statuses = [
+        # These statuses are not markable
+        OILS_COPY_STATUS_CHECKED_OUT,
+        OILS_COPY_STATUS_IN_TRANSIT,
+        OILS_COPY_STATUS_ON_HOLDS_SHELF,
+        OILS_COPY_STATUS_ON_RESV_SHELF,
+
+        # These statuses have their own implementation which
+        # should be called instead
+        OILS_COPY_STATUS_CATALOGING,
+        OILS_COPY_STATUS_BINDERY,
+        OILS_COPY_STATUS_DAMAGED,
+        OILS_COPY_STATUS_DISCARD,
+        OILS_COPY_STATUS_ILL,
+        OILS_COPY_STATUS_MISSING,
+        OILS_COPY_STATUS_ON_ORDER,
+        OILS_COPY_STATUS_RESERVES,
+    ];
+
+    if (grep { $_ == $stat } @{ $disallowed_statuses }) {
+        return OpenILS::Event->new('BAD_PARAMS');
+    }
+
+    return OpenILS::Application::Circ->mark_item_impl(
+        $auth,
+        $copy_id,
+        $stat,
+        'MARK_ITEM', # permission
+        $args
+    );
+}
+
+sub mark_item_impl {
+    my( $self, $auth, $copy_id, $stat, $perm, $args ) = @_;
+
+    my $e = new_editor(authtoken=>$auth);
+    return $e->die_event unless $e->checkauth;
+    my $copy = $e->retrieve_asset_copy([
+        $copy_id,
+        {flesh => 1, flesh_fields => {'acp' => ['call_number','status']}}])
+            or return $e->die_event;
+
+    my $owning_lib =
+        ($copy->call_number->id == OILS_PRECAT_CALL_NUMBER) ? 
+            $copy->circ_lib : $copy->call_number->owning_lib;
+
+    my $evt; # For later.
     # caller may proceed if either perm is allowed
     return $e->die_event unless $e->allowed([$perm, 'UPDATE_COPY'], $owning_lib);
 
@@ -1423,7 +1486,7 @@ sub mark_item {
     ]);
 
     # Throw event if attempting to  mark discard the only copy to fill a hold.
-    if ($self->api_name =~ /discard/) {
+    if ($stat == OILS_COPY_STATUS_DISCARD) {
         if (!$args->{handle_last_hold_copy}) {
             for my $hold (@$holds) {
                 my $eligible = $hold->eligible_copies();
@@ -1440,7 +1503,7 @@ sub mark_item {
     $e->xact_begin;
 
     # Handle extra mark damaged charges, etc.
-    if ($self->api_name =~ /damaged/) {
+    if ($stat == OILS_COPY_STATUS_DAMAGED) {
         $evt = handle_mark_damaged($e, $copy, $owning_lib, $args);
         return $evt if $evt;
     }
@@ -1454,7 +1517,7 @@ sub mark_item {
 
     $e->commit;
 
-    if( $self->api_name =~ /damaged/ ) {
+    if( $stat == OILS_COPY_STATUS_DAMAGED ) {
         # now that we've committed the changes, create related A/T events
         my $ses = OpenSRF::AppSession->create('open-ils.trigger');
         $ses->request('open-ils.trigger.event.autocreate', 'damaged', $copy, $owning_lib);

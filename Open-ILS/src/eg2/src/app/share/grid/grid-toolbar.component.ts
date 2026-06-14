@@ -30,7 +30,7 @@ import { FormsModule } from '@angular/forms';
     ]
 })
 
-export class GridToolbarComponent implements OnInit, AfterViewInit {
+export class GridToolbarComponent implements AfterViewInit {
     private router = inject(Router);
     private sanitizer = inject(DomSanitizer);
     private cd = inject(ChangeDetectorRef);
@@ -46,46 +46,8 @@ export class GridToolbarComponent implements OnInit, AfterViewInit {
     csvExportUrl: SafeUrl;
     csvExportFileName: string;
 
-    ngOnInit() {
-        this.sortActions();
-    }
-
     ngAfterViewInit(): void {
         this.cd.detectChanges();
-    }
-
-    sortActions() {
-        const actions = this.gridContext.toolbarActions;
-
-        const unGrouped = actions.filter(a => !a.group)
-            .sort((a, b) => {
-                return a.label < b.label ? -1 : 1;
-            });
-
-        const grouped = actions.filter(a => Boolean(a.group))
-            .sort((a, b) => {
-                if (a.group === b.group) {
-                    return a.label < b.label ? -1 : 1;
-                } else {
-                    return a.group < b.group ? -1 : 1;
-                }
-            });
-
-        // Insert group markers for rendering
-        const seen: any = {};
-        const grouped2: any[] = [];
-        grouped.forEach(action => {
-            if (!seen[action.group]) {
-                seen[action.group] = true;
-                const act = new GridToolbarAction();
-                act.label = action.group;
-                act.isGroup = true;
-                grouped2.push(act);
-            }
-            grouped2.push(action);
-        });
-
-        this.gridContext.toolbarActions = unGrouped.concat(grouped2);
     }
 
     saveGridConfig() {
