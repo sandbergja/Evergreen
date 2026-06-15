@@ -1,7 +1,6 @@
 import { Component, Input, inject, viewChild } from '@angular/core';
 import {IdlService} from '@eg/core/idl.service';
 import {PcrudService} from '@eg/core/pcrud.service';
-import {NgbModal} from '@ng-bootstrap/ng-bootstrap';
 import {DialogComponent} from '@eg/share/dialog/dialog.component';
 import { FormsModule } from '@angular/forms';
 import { OpChangeComponent } from '../op-change/op-change.component';
@@ -18,7 +17,6 @@ import { lastValueFrom, switchMap } from 'rxjs';
     ]
 })
 export class HoldNoteDialogComponent extends DialogComponent {
-    private modal: NgbModal;
     private idl = inject(IdlService);
     private pcrud = inject(PcrudService);
 
@@ -30,12 +28,6 @@ export class HoldNoteDialogComponent extends DialogComponent {
     @Input() holdId: number;
     opChange = viewChild.required<OpChangeComponent>('opChange');
 
-    constructor() {
-        const modal = inject(NgbModal);
-        super(modal);
-        this.modal = modal;
-    }
-
     createNote() {
         const note = this.idl.create('ahrn');
         note.staff('t');
@@ -45,7 +37,7 @@ export class HoldNoteDialogComponent extends DialogComponent {
         note.slip(this.slip ? 't' : 'f');
         note.pub(this.pub ? 't' : 'f');
 
-        this.pcrud.create(note).toPromise().then(
+        lastValueFrom(this.pcrud.create(note)).then(
             resp => this.close(resp), // new note object
             (err: string) => {
                 if (err.includes('permissions')) {
