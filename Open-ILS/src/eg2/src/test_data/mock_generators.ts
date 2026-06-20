@@ -12,6 +12,9 @@ import { ItemLocationService } from '@eg/share/item-location-select/item-locatio
 import { ToastService } from '@eg/share/toast/toast.service';
 import { BatchLineitemStruct, FleshCacheParams, LineitemService } from '@eg/staff/acq/lineitem/lineitem.service';
 import { StaffCatalogService } from '@eg/staff/catalog/catalog.service';
+import { ChangeHoldTypeService } from '@eg/staff/circ/holds/change-hold-type.service';
+import { HoldType } from '@eg/staff/circ/holds/hold-type';
+import { MetarecordHoldFilter } from '@eg/staff/circ/holds/metarecord-hold-filter';
 import { SerialsService } from '@eg/staff/serials/serials.service';
 import { GroupedMarkableItems, MarkItemService } from '@eg/staff/share/holdings/mark-item-service';
 import { HoldsService } from '@eg/staff/share/holds/holds.service';
@@ -48,6 +51,28 @@ export class MockGenerators {
         auth.user.and.returnValue(user);
         auth.token.and.returnValue('MY_AUTH_TOKEN');
         return auth;
+    }
+
+    static changeHoldTypeService(): Partial<ChangeHoldTypeService> {
+        return {
+            holdableFormatString: (values) => '{"0":[{"_attr":"mr_hold_format","_val":"book"}],"1":[{"_attr":"item_lang","_val":"guj"}]}',
+            metarecordHoldFilters: (metarecordId: number) => {
+                return of([
+                    new MetarecordHoldFilter('langs', [
+                        MockGenerators.idlObject({code: 'eng', value: 'English'}),
+                        MockGenerators.idlObject({code: 'spa', value: 'Spanish'})]),
+                    new MetarecordHoldFilter('formats', [
+                        MockGenerators.idlObject({code: 'book', value: 'Book'}),
+                        MockGenerators.idlObject({code: 'lpbook', value: 'Large Print'})]),
+                ]);
+            },
+            possibleTargets: (originalHold: IdlObject, desiredType: HoldType) => {
+                return of(
+                    MockGenerators.idlObject({id: 1, label: 'Target 1'}, 'mmr')
+                );
+            },
+            possibleTargetLabeler: (desiredType: HoldType) => (item) => 'Target 1'
+        };
     }
 
     static holdsService() {

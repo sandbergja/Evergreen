@@ -9,6 +9,9 @@
       <eg-change-hold-type-form [hold]="hold.value()" (targetSelected)="targetSelected($event)" (typeSelected)="typeSelected($event)" (holdableFormatSelected)="holdableFormatSelected($event)"></eg-change-hold-type-form>
     }
   </div>
+  @if (errorMessage().isSome()) {
+    <div class="alert alert-warning">{{ errorMessage().toNullable() }}</div>
+  }
   <div class="modal-footer">
     <button type="button" class="btn btn-normal"
     (click)="close()" i18n>Cancel</button>

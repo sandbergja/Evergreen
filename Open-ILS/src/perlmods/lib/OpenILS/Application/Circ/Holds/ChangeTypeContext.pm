@@ -3,6 +3,7 @@ package OpenILS::Application::Circ::Holds::ChangeTypeContext;
 use strict;
 use warnings;
 
+use OpenILS::Const qw/:const/;
 use OpenILS::Application::Circ::Holds::HoldsCommon;
 
 my $HC = 'OpenILS::Application::Circ::Holds::HoldsCommon';
@@ -59,6 +60,7 @@ sub with_target_as_ahr {
 
     my $ahr = $self->{original_hold}->clone;
     $ahr->clear_id;
+    $ahr->clear_holdable_formats unless ($self->desired_type eq OILS_HOLD_TYPE_METARECORD);
     $ahr->hold_type($self->desired_type);
     $ahr->target($target);
     foreach my $field (keys %{ $additional_fields }) {

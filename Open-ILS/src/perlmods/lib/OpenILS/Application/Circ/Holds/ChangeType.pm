@@ -53,7 +53,15 @@ use constant TARGET_QUERY_BUILDERS => {
     OILS_HOLD_TYPE_METARECORD() => {
         OILS_HOLD_TYPE_COPY() => sub {
             my $ctx = shift;
-            return {from=>{acp=>{acn=>{join=>{bre=>{join=>{mmrsm=>{field=>'source'}}}}}},bpbcm=>{type=>'left',join=>{bre=>{join=>{mmrsm=>{field=>'source'}}}}}}, where=>{'+mmrsm'=>{metarecord=>$ctx->original_target}}}
+            return {from=>{
+                acp=>{acn=>{join=>{item_mr=>{class=>'mmrsm',field=>'source',fkey=>'record'}}},
+                bpbcm=>{type=>'left', join=>{peer_bib_mr=>{class=>'mmrsm',field=>'source',fkey=>'peer_record',type=>'left'}}}}
+            }, where=>{
+                '-or' => [
+                    {'+peer_bib_mr'=>{metarecord=>$ctx->original_target}},
+                    {'+item_mr'=>{metarecord=>$ctx->original_target}}
+                ]
+            }}
         },
         OILS_HOLD_TYPE_MONOPART() => sub {
             my $ctx = shift;
@@ -61,11 +69,11 @@ use constant TARGET_QUERY_BUILDERS => {
         },
         OILS_HOLD_TYPE_TITLE() => sub {
             my $ctx = shift;
-            return {from=>{bre=>'mmr'}, where=>{'+mmr'=>{id=>$ctx->original_target}}}
+            return {from=>{bre=>{mmrsm=>{field=>'source'}}}, where=>{'+mmrsm'=>{metarecord=>$ctx->original_target}}}
         },
         OILS_HOLD_TYPE_VOLUME() => sub {
             my $ctx = shift;
-            return {from=>{acn=>{bre=>{join=>'mmr'}}}, where=>{'+mmr'=>{id=>$ctx->original_target}}}
+            return {from=>{acn=>{mmrsm=>{field=>'source',fkey=>'record'}}}, where=>{'+mmrsm'=>{metarecord=>$ctx->original_target}}}
         },
     },
     OILS_HOLD_TYPE_MONOPART() => {
@@ -96,7 +104,7 @@ use constant TARGET_QUERY_BUILDERS => {
         }},
         OILS_HOLD_TYPE_METARECORD() => sub {
             my $ctx = shift;
-            return {from=>{mmr=>'bre'}, where=>{'+bre'=>{id=>$ctx->original_target}}}
+            return {from=>{mmr=>'mmrsm'}, where=>{'+mmrsm'=>{source=>$ctx->original_target}}}
         },
         OILS_HOLD_TYPE_MONOPART() => sub {
             my $ctx = shift;
@@ -114,7 +122,7 @@ use constant TARGET_QUERY_BUILDERS => {
         },
         OILS_HOLD_TYPE_METARECORD() => sub {
             my $ctx = shift;
-            return {from=>{mmr=>{bre=>{join=>'acn'}}}, where=>{'+acn'=>{id=>$ctx->original_target}}}
+            return {from=>{mmr=>{mmrsm=>{join=>{acn=>{fkey=>'source',field=>'record'}}}}}, where=>{'+acn'=>{id=>$ctx->original_target}}}
         },
         OILS_HOLD_TYPE_MONOPART() => sub {
             my $ctx = shift;
@@ -164,6 +172,7 @@ sub possible_targets {
 
     my $fieldmapper_class = FM_CLASSES->{$desired_type};
     return OpenILS::Event->new('BAD_PARAMS') unless defined $fieldmapper_class;
+    return OpenILS::Event->new('BAD_PARAMS') unless $original_hold;
 
     my $ctx = OpenILS::Application::Circ::Holds::ChangeTypeContext->new(
         $original_hold,
@@ -176,7 +185,9 @@ sub possible_targets {
     return $editor->event unless $editor->allowed('VIEW_HOLD', $patron->home_ou);
 
     my $request_lib = $editor->retrieve_actor_org_unit( $requestor_org_id ) or return $editor->event;
-    foreach (@{$ctx->possible_targets($editor, $target_query_builder, $extra_where_clauses)}) {
+    my $targets = $ctx->possible_targets($editor, $target_query_builder, $extra_where_clauses);
+    return unless $targets;
+    foreach (@{$targets}) {
         my @checked = $HC->do_possibility_checks(
             $editor,
             $patron,
@@ -240,7 +251,16 @@ sub change_type {
         my ($hold_id) = $self->method_lookup(
             'open-ils.circ.holds.create'
             )->run($auth, $new_ahr);
+
+        # open-ils.circ.holds.create can return a single event or an arrayref of events
+        # In either case, we should return a single event.
         return $hold_id if $U->is_event($hold_id);
+        if (ref $hold_id eq 'ARRAY') {
+            my @events = grep {$U->is_event($_)} @{$hold_id};
+            if (@events) {
+                return $events[0];
+            }
+        }
 
         # Cancel the original hold now that a new hold has been created
         $original_hold->cancel_time('now');

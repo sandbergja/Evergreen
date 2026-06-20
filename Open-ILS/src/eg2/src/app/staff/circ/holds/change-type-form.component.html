@@ -31,16 +31,17 @@
     }
     @if (metarecordHoldFilters.hasValue()) {
         @for (holdFilter of metarecordHoldFilters.value(); track holdFilter.name) {
-            <div class="form-group row">
-                <div class="col-lg-3"><label [for]="holdFilter.name">{{ holdFilter | metarecordHoldFilterLabel }}</label></div>
-                <div class="col-lg-9 pe-0">
-                    <select [id]="holdFilter.name" [formControlName]="holdFilter.name" class="form-select">
-                        @for (val of holdFilter.options() | keyvalue; track val.key) {
-                            <option [value]="val.key">{{val.value}}</option>
-                        }
-                    </select>
+            <fieldset class="form-group row" [formGroupName]="holdFilter.name">
+                <legend class="col-form-label">{{ holdFilter | metarecordHoldFilterLabel }}</legend>
+                <div class="row">
+                    @for (val of holdFilter.options() | keyvalue; track val.key) {
+                        <div class="form-check col-md-4">
+                            <input type="checkbox" class="form-check-input" [name]="val.key" [formControlName]="val.key" id="{{holdFilter.name}}-{{val.key}}"/>
+                            <label class="form-check-label" for="{{holdFilter.name}}-{{val.key}}">{{val.value}}</label>
+                        </div>
+                    }
                 </div>
-            </div>
+            </fieldset>
         }
     }
 </form>

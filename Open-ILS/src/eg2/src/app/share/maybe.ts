@@ -16,6 +16,10 @@ export class Some<T> {
         callback(this.value);
         return this;
     }
+
+    toNullable(): T {
+        return this.value;
+    }
 }
 
 export class None<T> {
@@ -30,5 +34,9 @@ export class None<T> {
     whenSome(_callback: (val: T) => void): None<T> {
         // Since this is not Some, we do not run the callback
         return this;
+    }
+
+    toNullable(): null {
+        return null;
     }
 }
