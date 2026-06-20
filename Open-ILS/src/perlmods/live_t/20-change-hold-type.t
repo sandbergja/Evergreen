@@ -32,6 +32,8 @@ use constant {
     ITEM_WITH_PEER_BIBS => 3105,
     PART_ID => 5,
     TITLE_WITH_PART_ID => 53,
+    METABIB_WITH_MULTIPLE_TITLES_ID => 241,
+    TITLE_IDS_IN_METABIB => [245, 246, 247, 248],
 };
 
 my $authtoken = $script->authenticate({
@@ -69,7 +71,7 @@ sub cleanup {
 }
 
 subtest 'open-ils.circ.holds.change_type.possible_targets', sub {
-    plan tests => 10;
+    plan tests => 12;
     subtest 'when incorrect hold type is provided', sub {
         plan tests => 3;
         my $hold_id = place_hold(OILS_HOLD_TYPE_COPY, ITEM_ID);
@@ -170,6 +172,28 @@ subtest 'open-ils.circ.holds.change_type.possible_targets', sub {
         cleanup($created_hold);
     };
 
+    subtest 'metarecord to title hold', sub {
+        plan tests => 4;
+        my $hold_id = place_hold(OILS_HOLD_TYPE_METARECORD, METABIB_WITH_MULTIPLE_TITLES_ID);
+        my $created_hold = $e->retrieve_action_hold_request($hold_id);
+        ok $created_hold, 'We can successfully find the hold we created in the db';
+
+        my $results = $U->simplereq(
+            'open-ils.circ',
+            'open-ils.circ.holds.change_type.possible_targets.atomic',
+            $authtoken,
+            $created_hold,
+            OILS_HOLD_TYPE_TITLE
+        );
+
+        ok none { $U->is_event($_) } @{$results}, 'none of the parts are ILS events';
+
+        my @title_ids = sort map { $_->id } @{$results};
+        is scalar @title_ids, 4, 'it finds the correct number of titles associated with the metarecord';
+        is_deeply \@title_ids, TITLE_IDS_IN_METABIB, 'it includes the correct titles associated with the metarecord'; 
+        cleanup($created_hold);
+    };
+
     subtest 'metarecord to part hold', sub {
         plan tests => 2;
         my $hold_id = place_hold(OILS_HOLD_TYPE_METARECORD, TITLE_WITH_PART_ID);
@@ -184,6 +208,25 @@ subtest 'open-ils.circ.holds.change_type.possible_targets', sub {
             OILS_HOLD_TYPE_MONOPART
         );
 
+        ok none { $U->is_event($_) } @{$results}, 'none of the parts are ILS events';
+        cleanup($created_hold);
+    };
+
+    subtest 'metarecord to copy hold', sub {
+        plan tests => 3;
+        my $hold_id = place_hold(OILS_HOLD_TYPE_METARECORD, TITLE_WITH_PART_ID);
+        my $created_hold = $e->retrieve_action_hold_request($hold_id);
+        ok $created_hold, 'We can successfully find the hold we created in the db';
+
+        my $results = $U->simplereq(
+            'open-ils.circ',
+            'open-ils.circ.holds.change_type.possible_targets.atomic',
+            $authtoken,
+            $created_hold,
+            OILS_HOLD_TYPE_COPY
+        );
+
+        is scalar @{$results}, 14, 'found 14 copies';
         ok none { $U->is_event($_) } @{$results}, 'none of the parts are ILS events';
         cleanup($created_hold);
     };

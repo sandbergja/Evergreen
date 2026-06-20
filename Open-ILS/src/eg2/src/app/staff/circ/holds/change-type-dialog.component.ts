@@ -1,4 +1,4 @@
-import { Component, computed, inject, input, signal, OnInit, EventEmitter, ComponentRef } from '@angular/core';
+import { Component, computed, inject, input, signal, OnInit } from '@angular/core';
 import { ChangeTypeFormComponent } from './change-type-form.component';
 import { DialogComponent } from '@eg/share/dialog/dialog.component';
 import { IdlObject } from '@eg/core/idl.service';
@@ -23,6 +23,7 @@ export class ChangeTypeDialogComponent extends DialogComponent implements OnInit
     });
 
     protected canSubmit = computed(() => this.target().and(this.type()).isSome());
+    protected errorMessage = signal<Maybe<string>>(new None());
     private target = signal<Maybe<number>>(new None());
     private type = signal<Maybe<HoldType>>(new None());
     private holdableFormats = signal<Maybe<string>>(new None());
@@ -39,6 +40,7 @@ export class ChangeTypeDialogComponent extends DialogComponent implements OnInit
                         // Object: probably an event indicating that the Change did not go through
                         if (typeof result === 'object') {
                             this.toast.warning($localize`Could not change hold type`);
+                            this.errorMessage.set(new Some(result.toString()));
                         // Likely a string that contains the new hold id as an integer
                         } else {
                             this.toast.success($localize`Changed hold type`);
@@ -51,13 +53,16 @@ export class ChangeTypeDialogComponent extends DialogComponent implements OnInit
 
     protected targetSelected(target: Maybe<number>) {
         this.target.set(target);
+        this.errorMessage.set(new None());
     }
 
     protected typeSelected(type: HoldType) {
         this.type.set(new Some(type));
+        this.errorMessage.set(new None());
     }
 
     protected holdableFormatSelected(formatString: Maybe<string>) {
         this.holdableFormats.set(formatString);
+        this.errorMessage.set(new None());
     }
 }

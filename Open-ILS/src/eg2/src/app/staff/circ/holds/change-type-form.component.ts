@@ -1,13 +1,13 @@
-import { Component, computed, effect, inject, input, output, signal, WritableSignal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, OnInit, output, signal, WritableSignal } from '@angular/core';
 import { IdlObject } from '@eg/core/idl.service';
 import { HoldType, holdTypeChangeOptions, holdTypeLabel } from './hold-type';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ComboboxComponent, ComboboxEntry } from '@eg/share/combobox/combobox.component';
 import { rxResource, toSignal } from '@angular/core/rxjs-interop';
-import { ChangeHoldTypeService } from './change-hold-type.service';
-import { EMPTY, filter, map, toArray } from 'rxjs';
+import { ChangeHoldTypeService, HoldableFormatAttr } from './change-hold-type.service';
+import { filter, map, of, toArray } from 'rxjs';
 import { Maybe, None, Some } from '@eg/share/maybe';
-import { KeyValuePipe } from '@angular/common';
+import { JsonPipe, KeyValuePipe } from '@angular/common';
 import { MetarecordHoldFilter, MetarecordHoldFilterLabelPipe } from './metarecord-hold-filter';
 
 type TypeOption = {code: HoldType, label: string};
@@ -15,7 +15,8 @@ type TypeOption = {code: HoldType, label: string};
 @Component({
     selector: 'eg-change-hold-type-form',
     templateUrl: './change-type-form.component.html',
-    imports: [ComboboxComponent, KeyValuePipe, MetarecordHoldFilterLabelPipe, ReactiveFormsModule]
+    imports: [ComboboxComponent, KeyValuePipe, MetarecordHoldFilterLabelPipe, ReactiveFormsModule],
+    changeDetection: ChangeDetectionStrategy.OnPush
 })
 // This component provides a form for users to select a new hold type and target.
 // It provides any selections as outputs.
@@ -64,7 +65,7 @@ export class ChangeTypeFormComponent {
                         toArray()
                     );
             } else {
-                return EMPTY;
+                return of([]);
             }
         },
         params: () => {return {originalHold: this.hold(), desiredType: this.desiredType()}; }
@@ -75,7 +76,7 @@ export class ChangeTypeFormComponent {
             if (params.desiredTarget && params.desiredType === HoldType.METARECORD) {
                 return this.changeTypeService.metarecordHoldFilters(params.desiredTarget);
             } else {
-                return EMPTY;
+                return of([]);
             }
         },
         params: () => {return {desiredTarget: this.selectedTarget(), desiredType: this.desiredType()};}
@@ -84,23 +85,40 @@ export class ChangeTypeFormComponent {
     protected changeHoldType = new FormGroup({
         desiredType: new FormControl<HoldType>(null),
         desiredTarget: new FormControl<number>(null),
-        formats: new FormControl<string>(null),
-        langs: new FormControl<string>(null)
+        formats: new FormGroup({}),
+        langs: new FormGroup({})
+    });
+    private updateCheckboxesEffect = effect(() => {
+        this.metarecordHoldFilters.value()?.forEach(mrFilter => {
+            if (mrFilter.name === 'formats') {
+                const formats = this.changeHoldType.get('formats') as FormGroup;
+                Object.keys(formats.controls).forEach(control => formats.removeControl(control));
+                Object.keys(mrFilter.options()).forEach(key => {
+                    formats.addControl(key, new FormControl<boolean>(false));
+                });
+            } else if (mrFilter.name === 'langs') {
+                const langs = this.changeHoldType.get('langs') as FormGroup;
+                Object.keys(langs.controls).forEach(control => langs.removeControl(control));
+                Object.keys(mrFilter.options()).forEach(key => {
+                    langs.addControl(key, new FormControl<boolean>(false));
+                });
+            }
+        });
     });
 
-    private selectedFormat = toSignal(this.changeHoldType.get('formats').valueChanges);
-    private selectedLanguage = toSignal(this.changeHoldType.get('langs').valueChanges);
+    private selectedFormats = toSignal(this.changeHoldType.get('formats').valueChanges);
+    private selectedLanguages = toSignal(this.changeHoldType.get('langs').valueChanges);
     private holdableFormatEffect = effect(() => {
         if (this.desiredType() === HoldType.METARECORD &&
-            (this.selectedFormat() || this.selectedLanguage())) {
-            const holdableFormats = {};
-            if (this.selectedFormat()) {
-                holdableFormats[0] = {'_val': this.selectedFormat, '_attr': 'mr_hold_format'};
+            (this.selectedFormats() || this.selectedLanguages())) {
+            const holdableFormats = {} as {[key in HoldableFormatAttr]: Record<string, boolean>};
+            if (this.selectedFormats()) {
+                holdableFormats['mr_hold_format'] = this.selectedFormats();
             }
-            if (this.selectedLanguage()) {
-                holdableFormats[1] = {'_val': this.selectedLanguage, '_attr': 'item_lang'};
+            if (this.selectedLanguages()) {
+                holdableFormats['item_lang'] = this.selectedLanguages();
             }
-            this.holdableFormatSelected.emit(new Some(JSON.stringify(holdableFormats)));
+            this.holdableFormatSelected.emit(new Some(this.changeTypeService.holdableFormatString(holdableFormats)));
         } else {
             this.holdableFormatSelected.emit(new None());
         }

@@ -9,6 +9,8 @@ import { base10Int } from '@eg/share/util/int';
 import { MetarecordHoldFilter } from './metarecord-hold-filter';
 import { Maybe } from '@eg/share/maybe';
 
+export type HoldableFormatAttr = 'mr_hold_format' | 'item_lang';
+
 @Injectable({providedIn: 'root'})
 export class ChangeHoldTypeService {
     private auth = inject(AuthService);
@@ -87,6 +89,20 @@ export class ChangeHoldTypeService {
             })
         );
     }
+
+
+    holdableFormatString(values: {[key in HoldableFormatAttr]: Record<string, boolean>}): string {
+        const holdableFormats = Object.keys(values).reduce((acc, formatField, index) => {
+            acc[index] = Object.keys(values[formatField])
+                .filter(formatValue => values[formatField][formatValue])
+                .map(formatValue => {
+                    return {'_attr': formatField, '_val': formatValue};
+                });
+            return acc;
+        }, {});
+        return JSON.stringify(holdableFormats);
+    }
+
 
     private maybeEgEvent<T>(itemOrEvent: T|object): T|EgEvent {
         const parsed = this.evt.parse(itemOrEvent);
