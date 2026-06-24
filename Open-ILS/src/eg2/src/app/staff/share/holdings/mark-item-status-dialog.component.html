@@ -7,26 +7,38 @@
     i18n-aria-label aria-label="Close dialog" (click)="close()"></button>
   </div>
   <div class="modal-body">
-    @if (currentlyCheckedOut()) {
-      <div class="alert alert-warning" i18n>This item is checked out.  Check it in before marking it as another status.</div>
-    } @else if(currentlyInTransit()) {
-      <div class="alert alert-warning" i18n>This item is in transit.  Complete the transit before marking it as another status.</div>
-    } @else {
-      <div class="row d-flex justify-content-center">
-        <h5 i18n>Mark 1 Item</h5>
-        <select [formControl]="status" class="form-select">
-          @for (potentialStatus of statuses; track potentialStatus.id()) {
-              <option [value]="potentialStatus.id()">{{potentialStatus.name()}}</option>
-          }
-        </select>
-      </div>
+    @if (items.hasValue() && !submitted()) {
+      @if (currentlyCheckedOut()) {
+        <div class="alert alert-warning" i18n>At least one item is checked out.  Check it in before marking it as another status.</div>
+      } @else if(currentlyInTransit()) {
+        <div class="alert alert-warning" i18n>At least one item is in transit.  Complete the transit before marking it as another status.</div>
+      } @else if(items.value().unmarkable.length) {
+        <div class="alert alert-warning" i18n>At least one item is not in a markable status.  Address this issue before proceeding.</div>
+      } @else {
+        <div class="row d-flex justify-content-center">
+          <label i18n for="mark-status-select">New Status</label>
+          <select [formControl]="status" class="form-select" id="mark-status-select">
+            @for (potentialStatus of statuses; track potentialStatus.id()) {
+                <option [value]="potentialStatus.id()">{{potentialStatus.name()}}</option>
+            }
+          </select>
+        </div>
+      }
     }
   </div>
+  @if (summary.events.length) {
+    <p i18n>There were some issues marking these items:</p>
+    <ul>
+      @for (event of summary.events; track $index) {
+        <li>{{ event.toString() }}</li>
+      }
+    </ul>
+  }
   <div class="modal-footer">
       <button type="button" class="btn btn-normal"
       (click)="close()" i18n>Cancel</button>
-      @if (!currentlyCheckedOut() && !currentlyInTransit()) {
-        <button type="button" class="btn btn-success"
+      @if (!items.value()?.unmarkable.length) {
+        <button type="button" class="btn btn-success" [disabled]="submitted()"
           (click)="markItems()" i18n>Mark Items</button>
       }
   </div>

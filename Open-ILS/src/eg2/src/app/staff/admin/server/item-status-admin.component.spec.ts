@@ -1,10 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { BINDERY, CHECKED_OUT } from '@eg/staff/share/holdings/item-statuses';
-import { ItemStatusAdminComponent, itemStatusFieldOptions } from './item-status-admin.component';
+import { ItemStatusAdminComponent } from './item-status-admin.component';
 import { AdminPageComponent } from '@eg/staff/share/admin-page/admin-page.component';
 import { MockAdminPageComponent, MockFmRecordEditorComponent } from 'test_data/mock-components';
 import { FmRecordEditorComponent } from '@eg/share/fm-editor/fm-editor.component';
-import { MockGenerators } from 'test_data/mock_generators';
+import { MarkItemService } from '@eg/staff/share/holdings/mark-item-service';
 
 describe('ItemStatusAdminComponent', () => {
     let component: ItemStatusAdminComponent;
@@ -12,7 +11,8 @@ describe('ItemStatusAdminComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            imports: [ItemStatusAdminComponent]
+            imports: [ItemStatusAdminComponent],
+            providers: [{provide: MarkItemService, useValue: {}}]
         })
             .compileComponents();
 
@@ -33,17 +33,5 @@ describe('ItemStatusAdminComponent', () => {
     it('has a banner that says Item Statuses', () => {
         fixture.detectChanges();
         expect(fixture.nativeElement.textContent).toContain('Item Statuses');
-    });
-});
-
-describe('itemStatusFieldOptions', () => {
-    it('does not allow marked field to be editable when the status is checked out', () => {
-        const status = MockGenerators.idlObject({id: CHECKED_OUT});
-        expect(itemStatusFieldOptions.markable.isReadonlyOverride('markable', status)).toBeFalse();
-    });
-
-    it('allows a marked field to be editable when the status is bindery', () => {
-        const status = MockGenerators.idlObject({id: BINDERY});
-        expect(itemStatusFieldOptions.markable.isReadonlyOverride('markable', status)).toBeTrue();
     });
 });

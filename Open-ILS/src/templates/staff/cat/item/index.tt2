@@ -122,6 +122,7 @@
         <li><a href ng-click="selectedHoldingsDamaged()">[% l('Item as Damaged') %]</a></li>
         <li><a href ng-click="selectedHoldingsDiscard()">[% l('Item as Discard/Weed') %]</a></li>
         <li><a href ng-click="selectedHoldingsMissing()">[% l('Item as Missing') %]</a></li>
+        <li><a href ng-click="selectedHoldingsGenericMarkAs()">[% l('Item as...') %]</a></li>
     
         <p><b>[% l('Add') %]</b></p>    
         <li><a href ng-click="selectedHoldingsCopyAdd()">[% l('Add Items') %]</a></li>

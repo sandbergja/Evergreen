@@ -1,4 +1,4 @@
-import { Component, EventEmitter, inject, input, OnInit, output, viewChild } from '@angular/core';
+import { Component, EventEmitter, inject, input, OnInit, output, signal, viewChild } from '@angular/core';
 import { MarkDamagedDialogComponent } from './mark-damaged-dialog.component';
 import { MarkMissingDialogComponent } from './mark-missing-dialog.component';
 import { MarkDiscardDialogComponent } from './mark-discard-dialog.component';
@@ -10,7 +10,7 @@ import { from, switchMap } from 'rxjs';
 import { MarkItemStatusDialogComponent } from './mark-item-status-dialog.component';
 import { GridToolbarAction } from '@eg/share/grid/grid';
 
-export type GetIdFromRow = (row: IdlObject) => number;
+export type GetIdFromRow = (row: any) => number;
 
 
 /**
@@ -31,7 +31,7 @@ export class MarkItemActionsComponent implements OnInit {
     protected defaultStatuses = input<number[]>([DAMAGED, MISSING]);
     protected group = input<string>($localize`:@@1226060325201042854:Mark`);
     protected idFn = input<GetIdFromRow>((row: IdlObject) => row.cp_id);
-    protected statusIdFn = input<GetIdFromRow>((row: IdlObject) => row.status().id());
+    protected itemIds = signal([]);
     modified = output();
 
     private markDamagedDialog = viewChild.required(MarkDamagedDialogComponent);
@@ -63,7 +63,7 @@ export class MarkItemActionsComponent implements OnInit {
                             genericAction.label = $localize`Mark as...`;
                             genericAction.group = this.group();
                             genericAction.onClick = new EventEmitter();
-                            genericAction.disableOnRows = (rows: IdlObject[]) => (rows.length !== 1);
+                            genericAction.disableOnRows = (rows: IdlObject[]) => (rows.length < 1);
                             genericAction.onClick.subscribe((rows) => this.showGenericDialog(rows));
                             return from(defaults.concat([genericAction]));
                         } else {
@@ -158,9 +158,7 @@ export class MarkItemActionsComponent implements OnInit {
     }
 
     private showGenericDialog(rows: IdlObject[]) {
-        const itemIds = this.ids(rows);
-        this.genericMarkDialog().itemId = itemIds[0];
-        this.genericMarkDialog().currentStatusId = this.statuses(rows)[0];
+        this.itemIds.set(this.ids(rows));
         this.genericMarkDialog().open({}).subscribe(
             rowsModified => {
                 if (rowsModified) {
@@ -177,15 +175,6 @@ export class MarkItemActionsComponent implements OnInit {
     private ids(rows: IdlObject[]): number[] {
         return rows
             .map(this.idFn())
-            .filter((id: number) => Boolean(id));
-    }
-
-    /**
-     * Get ids from each row
-     */
-    private statuses(rows: IdlObject[]): number[] {
-        return rows
-            .map(this.statusIdFn())
             .filter((id: number) => Boolean(id));
     }
 

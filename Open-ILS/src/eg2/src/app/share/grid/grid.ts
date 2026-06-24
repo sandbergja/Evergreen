@@ -812,7 +812,7 @@ export class GridContext {
                 if (conf.limit && !this.disablePaging) {
                     this.pager.limit = conf.limit;
                 }
-                this.applyToolbarActionVisibility(conf.hideToolbarActions);
+                await this.applyToolbarActionVisibility(conf.hideToolbarActions);
             }
 
             this.getGridDensity().then(
@@ -829,9 +829,11 @@ export class GridContext {
     }
 
 
-    applyToolbarActionVisibility(hidden: string[]) {
-        this.toolbarActions.hiding(hidden).subscribe(updated => {
-            this.toolbarActions = new GridActions(updated);
+    async applyToolbarActionVisibility(hidden: string[]) {
+        return Promise.resolve(() => {
+            this.toolbarActions.hiding(hidden).subscribe(updated => {
+                this.toolbarActions = new GridActions(updated);
+            });
         });
     }
 

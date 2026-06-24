@@ -457,9 +457,9 @@ function($scope , $q , $window , $location , $timeout , egCore ,
     }
 
     $scope.markItem = function(items) {
-        var item = items[0];
-        if (item) {
-            itemSvc.mark_item_dialog(item.acp.id(), item.acp.status())
+        var item_ids = items.map(function(item) { return item.acp.id() });
+        if (item_ids) {
+            itemSvc.mark_item_dialog(item_ids)
                 .then(function() { checkinGrid.refresh() });
         }
     }

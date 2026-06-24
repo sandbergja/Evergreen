@@ -6,9 +6,8 @@
 import { Component, input, Input } from '@angular/core';
 import { ComboboxEntry } from '@eg/share/combobox/combobox.component';
 import { FmFieldOptions } from '@eg/share/fm-editor/fm-editor.component';
-import { GridContext, GridToolbarAction } from '@eg/share/grid/grid';
+import { GridContext } from '@eg/share/grid/grid';
 import { GridActions } from '@eg/share/grid/grid-actions';
-import { EMPTY, map, merge, Observable, toArray } from 'rxjs';
 
 @Component({
     selector: 'eg-combobox',
@@ -67,4 +66,6 @@ export class MockMarkMissingDialogComponent {}
 export class MockMarkDiscardDialogComponent {}
 
 @Component({selector: 'eg-mark-item-status-dialog', template: ''})
-export class MockMarkItemStatusDialogComponent {}
+export class MockMarkItemStatusDialogComponent {
+    itemIds = input<number[]>();
+}

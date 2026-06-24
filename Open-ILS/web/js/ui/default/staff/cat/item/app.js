@@ -243,6 +243,13 @@ function($scope , $q , $window , $location , $timeout , egCore , egNet , egGridD
         }]).catch(function(){});
     }
 
+    $scope.selectedHoldingsGenericMarkAs = function () {
+        if ($scope.args.copyId) {
+            itemSvc.mark_item_dialog([$scope.args.copyId])
+                .then(function(){ window.location.reload() });
+        }
+    }
+
     $scope.selectedHoldingsVolCopyAdd = function () {
         itemSvc.spawnHoldingsAdd([{
             id : $scope.args.copyId,
@@ -747,9 +754,9 @@ function($scope , $q , $window , $location , $timeout , egCore , egNet , egGridD
     }
 
     $scope.markItem = function() {
-        var item = copyGrid.selectedItems()[0];
+        var item_ids = copyGrid.selectedItems().map(function(item) { return item.id });
         if (item) {
-            itemSvc.mark_item_dialog(item.id, item['status.id'])
+            itemSvc.mark_item_dialog(item_ids)
                 .then(function() { $scope.refreshGridData() });
         }
     }

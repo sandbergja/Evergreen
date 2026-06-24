@@ -210,7 +210,7 @@ dialogBody="Please select a suitable transfer target"></eg-alert-dialog>
       i18n-group group="Show" i18n-label label="Show Triggered Events"
     (onClick)="openItemTriggeredEvents($event)"></eg-grid-toolbar-action>
 
-    <eg-mark-item-actions (modified)="reload()" [statusIdFn]="statusIdFn" [idFn]="idFn"></eg-mark-item-actions>
+    <eg-mark-item-actions (modified)="reload()" [idFn]="idFn"></eg-mark-item-actions>
     <eg-grid-toolbar-action
       i18n-group group="Mark"
       i18n-label label="Mark Library/Call Number as Transfer Destination"

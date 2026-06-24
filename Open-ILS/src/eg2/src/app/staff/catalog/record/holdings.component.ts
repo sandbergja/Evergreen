@@ -1159,6 +1159,5 @@ export class HoldingsMaintenanceComponent implements OnInit {
     }
 
     protected readonly idFn = (row: IdlObject) => row.copy.id();
-    protected readonly statusIdFn = (row: IdlObject) => row.copy.status().id();
 }
 

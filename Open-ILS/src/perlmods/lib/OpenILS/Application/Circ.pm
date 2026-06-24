@@ -1399,10 +1399,12 @@ sub mark_item_general {
 
     my $disallowed_statuses = [
         # These statuses are not markable
+        OILS_COPY_STATUS_CANCELED_TRANSIT,
         OILS_COPY_STATUS_CHECKED_OUT,
         OILS_COPY_STATUS_IN_TRANSIT,
+        OILS_COPY_STATUS_LONG_OVERDUE,
+        OILS_COPY_STATUS_LOST,
         OILS_COPY_STATUS_ON_HOLDS_SHELF,
-        OILS_COPY_STATUS_ON_RESV_SHELF,
 
         # These statuses have their own implementation which
         # should be called instead
@@ -1417,7 +1419,7 @@ sub mark_item_general {
     ];
 
     if (grep { $_ == $stat } @{ $disallowed_statuses }) {
-        return OpenILS::Event->new('BAD_PARAMS');
+        return OpenILS::Event->new('COPY_BAD_STATUS');
     }
 
     return OpenILS::Application::Circ->mark_item_impl(

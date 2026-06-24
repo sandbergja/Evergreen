@@ -5,12 +5,18 @@
 </div>
 <div class="modal-body">
   <div class="alert alert-warning" role="alert" ng-if="showCheckoutOutWarning">
-    [% l('This item is checked out.  Check it in before marking it as another status.') %]
+    [% l('At least one item is checked out.  Check it in before marking it as another status.') %]
   </div>
   <div class="alert alert-warning" role="alert" ng-if="showInTransitWarning">
-    [% l('This item is in transit.  Complete the transit before marking it as another status.') %]
+    [% l('At least one item is in transit.  Complete the transit before marking it as another status.') %]
   </div>
-  <div class="row" ng-if="!showCheckoutOutWarning && !showInTransitWarning">
+  <div class="alert alert-warning" role="alert" ng-if="showGenericWarning">
+    [% l('At least one item is not in a markable status.  Address this issue before proceeding.') %]
+  </div>
+  <div class="alert alert-danger" role="alert" ng-if="showError">
+    [% l('There were some issues marking these items, not all items were successfully marked.') %]
+  </div>
+  <div class="row" ng-if="showForm">
     <div class="col-md-4">
       <label for="select-status">[% l('New status') %]</label>
     </div>
@@ -21,7 +27,7 @@
     </div>
     <div class="col-md-4">
       <button class="btn btn-primary" ng-class="{disabled : !canSubmit()}"
-          ng-click="mark()">[% l('Mark Item') %]</button>
+          ng-click="mark()">[% l('Mark Items') %]</button>
     </div>
   </div>
   </div>

@@ -14,6 +14,12 @@ function groupedAction(label: string, group: string): GridToolbarAction {
     return action;
 }
 
+function actionGroup(label: string): GridToolbarAction {
+    const action = ungroupedAction(label);
+    action.isGroup = true;
+    return action;
+}
+
 describe('GridActions', () => {
     it('can be constructed with actions', (done) => {
         const actions = new GridActions([ungroupedAction('Hello!'), ungroupedAction('How are you?')]);
@@ -74,13 +80,31 @@ describe('GridActions', () => {
 
         actions.list().subscribe(list => {
             expect(list.map(a => a.label)).toEqual([
+                // Ungrouped actions
                 'Budgerigar',
                 'Dog',
+                // Fish group
                 'Fish',
                 'Corydoras',
                 'Haddock',
+                // Reptile group
                 'Reptile',
                 'Tegu',
+                'Tuatara'
+            ]);
+            done();
+        });
+    });
+
+    it('does not duplicate groups', (done) => {
+        const actions = new GridActions([
+            actionGroup('Reptile'),
+            groupedAction('Tuatara', 'Reptile'),
+        ]);
+
+        actions.list().subscribe(list => {
+            expect(list.map(a => a.label)).toEqual([
+                'Reptile',
                 'Tuatara'
             ]);
             done();

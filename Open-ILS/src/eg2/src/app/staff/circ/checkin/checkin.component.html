@@ -168,7 +168,7 @@ text="Item CONC40000598 has never circulated."></eg-string>
       [useLocalSort]="true" [cellTextGenerator]="cellTextGenerator"
       [disablePaging]="true" [persistKey]="persistKey">
 
-      <eg-mark-item-actions [idFn]="idFn" [statusIdFn]="statusIdFn" [defaultStatuses]="markItemStatuses" (modified)="grid.reload()"></eg-mark-item-actions>
+      <eg-mark-item-actions [idFn]="idFn" [defaultStatuses]="markItemStatuses" (modified)="grid.reload()"></eg-mark-item-actions>
 
       <eg-grid-toolbar-action
         group="Mark" i18n-group i18n-label label="Mark Missing Pieces"

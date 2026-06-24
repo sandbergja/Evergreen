@@ -1,10 +1,12 @@
-import { ChangeDetectionStrategy, Component, computed, inject, Input, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, Input, OnInit, signal, viewChild } from '@angular/core';
 import { IdlObject } from '@eg/core/idl.service';
 import { DialogComponent } from '@eg/share/dialog/dialog.component';
-import { CHECKED_OUT, DAMAGED, IN_TRANSIT } from './item-statuses';
+import { CHECKED_OUT, IN_TRANSIT } from './item-statuses';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { MarkItemService } from './mark-item-service';
+import { MarkItemService, MarkItemsSummary } from './mark-item-service';
 import { ToastService } from '@eg/share/toast/toast.service';
+import { NgbModalOptions } from '@ng-bootstrap/ng-bootstrap';
+import { Observable } from 'rxjs';
 
 /**
  * This dialog allows a user with sufficient permission to change the status of the provided items
@@ -16,43 +18,47 @@ import { ToastService } from '@eg/share/toast/toast.service';
     changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MarkItemStatusDialogComponent extends DialogComponent implements OnInit {
-  @Input() itemId: number;
-  @Input() currentStatusId: number;
-  protected statuses: IdlObject[] = [];
+    itemIds = input<number[]>();
 
-  protected currentlyCheckedOut = computed(() => this.currentStatusId === CHECKED_OUT);
-  protected currentlyInTransit = computed(() => this.currentStatusId === IN_TRANSIT);
+    protected statuses: IdlObject[] = [];
 
-  protected status = new FormControl<number>(null);
-  private toast = inject(ToastService);
+    protected currentlyCheckedOut = computed(() => this.items.value()?.unmarkable.some(item => item.status() === CHECKED_OUT));
+    protected currentlyInTransit = computed(() => this.items.value()?.unmarkable.some(item => item.status() === IN_TRANSIT));
 
-  private markService = inject(MarkItemService);
-  private forbiddenStatuses = [
-      // Damaged has various parameters related to circulation
-      // behavior -- it is better to handle it in its own
-      // dedicated dialog than in this general dialog
-      DAMAGED,
-  ].concat(this.markService.forbiddenStatuses);
+    protected status = new FormControl<number>(null);
 
-  protected markItems() {
-      this.markService.markItems([this.itemId], this.selectedStatus)
-          .subscribe(response => {
-              if (Number(response)) {
-                  this.toast.success($localize`Item(s) marked`);
-                  this.close(response);
-              } else {
-                  this.toast.warning($localize`Could not mark item(s)`);
-              }
-          });
-  }
+    protected summary: MarkItemsSummary = {successes: 0, events: []};
 
-  ngOnInit(): void {
-      this.markService.markableStatuses()
-          .subscribe(statuses => this.statuses = statuses.filter(s => !this.forbiddenStatuses.includes(s.id())));
-  }
+    private toast = inject(ToastService);
+    private markService = inject(MarkItemService);
 
-  private get selectedStatus(): number {
-      return this.status.value;
-  }
+    protected items = this.markService.markableItems(this.itemIds);
+    protected submitted = signal(false);
+
+    protected markItems() {
+        this.submitted.set(true);
+        this.markService.markItems(this.itemIds(), this.selectedStatus)
+            .subscribe(response => {
+                this.summary = response;
+                if (this.summary.successes && !this.summary.events.length) {
+                    this.toast.success($localize`Item(s) marked`);
+                    this.close(response);
+                }
+            });
+    }
+
+    ngOnInit(): void {
+        this.markService.markableStatuses()
+            .subscribe(statuses => this.statuses = statuses.filter(s => !this.markService.forbiddenStatuses.includes(s.id())));
+    }
+
+    open(args?: NgbModalOptions): ReturnType<DialogComponent['open']> {
+        this.submitted.set(false);
+        return super.open(args);
+    }
+
+    private get selectedStatus(): number {
+        return this.status.value;
+    }
 
 }

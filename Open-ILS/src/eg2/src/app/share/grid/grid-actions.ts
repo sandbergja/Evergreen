@@ -1,5 +1,6 @@
+import { noSuch } from '../util/no-such';
 import { GridToolbarAction } from './grid';
-import { map, Observable, of, reduce, ReplaySubject, scan, toArray } from 'rxjs';
+import { map, Observable, of } from 'rxjs';
 
 export class GridActions {
     constructor(actions?: GridToolbarAction[]) {
@@ -25,11 +26,13 @@ export class GridActions {
                 }
             });
 
+        const groups = this.registry.filter(a => a.isGroup);
+
         // Insert group markers for rendering
         const seen: any = {};
         const grouped2: any[] = [];
         grouped.forEach(action => {
-            if (!seen[action.group]) {
+            if (noSuch((group:GridToolbarAction) => group.label === action.group)(groups) && !seen[action.group]) {
                 seen[action.group] = true;
                 const act = new GridToolbarAction();
                 act.label = action.group;

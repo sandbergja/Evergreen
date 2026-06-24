@@ -1089,27 +1089,20 @@ function(egCore , egOrg , egCirc , $uibModal , $q , $timeout , $window , ngToast
     }
 
     const UNMARKABLE_STATUSES = [
-        // Damaged: has its own UI and special considerations
-        14,
-
         // Statuses that are forbidden at the DB constraint level
-        1,
-        6,
-        8,
-        9
+        1, // checked out
+        3, // lost
+        6, // in transit
+        8, // on holds shelf
+        16, // long overdue
+        18 // canceled transit
     ];
 
     /**
      * Statuses that the user can select to mark an item as
      * @returns Array of CCS objects
      */
-    service.markableStatuses = function(originalStatus) {
-        const unmarkable = [
-            // Marking an item as the status it already is: forbidden because
-            // it is pointless
-            originalStatus
-        ].concat(UNMARKABLE_STATUSES);
-
+    service.markableStatuses = function() {
         var allStatuses;
         if (egCore.env.ccs)
             allStatuses = $q.when(egCore.env.ccs.list);
@@ -1124,7 +1117,7 @@ function(egCore , egOrg , egCirc , $uibModal , $q , $timeout , $window , ngToast
         return allStatuses
             .then(function(statuses) {
                 return statuses.filter(function(status) {
-                    return !unmarkable.includes(status.id()) && status.markable() == 't'
+                    return !UNMARKABLE_STATUSES.includes(status.id()) && status.markable() == 't'
                 })
             })
     }
@@ -1149,7 +1142,8 @@ function(egCore , egOrg , egCirc , $uibModal , $q , $timeout , $window , ngToast
                 'open-ils.circ',
                 MARK_ITEM_METHODS[status],
                 egCore.auth.token(),
-                item_id
+                item_id,
+                {apply_fines: 'noapply'}
             )
         } else {
             return egCore.net.request(
@@ -1162,7 +1156,7 @@ function(egCore , egOrg , egCirc , $uibModal , $q , $timeout , $window , ngToast
         }
     }
 
-    service.mark_item_dialog = function(item_id, current_status) {
+    service.mark_item_dialog = function(item_ids) {
         return $uibModal.open({
             templateUrl: './cat/item/t_mark_item_as',
             backdrop: 'static',
@@ -1173,11 +1167,22 @@ function(egCore , egOrg , egCirc , $uibModal , $q , $timeout , $window , ngToast
                     function($scope , $uibModalInstance) {
                         $scope.potentialStatuses = [];
                         $scope.args = {};
-                        $scope.showCheckoutOutWarning = current_status == 1;
-                        $scope.showInTransitWarning = current_status == 6;
+                        $scope.showCheckoutOutWarning = false;
+                        $scope.showInTransitWarning = false;
+                        $scope.showGenericWarning = false;
+                        $scope.showForm = false;
+                        $scope.showError = false;
+
+                        egCore.pcrud.search(
+                            'acp', {id: item_ids}, null, {atomic: true}).then(function(items) {
+                                if (items.some(item => item.status() === 1)) { $scope.showCheckoutOutWarning = true; }
+                                if (items.some(item => item.status() === 6)) { $scope.showInTransitWarning = true; }
+                                if (items.some(item => UNMARKABLE_STATUSES.includes(item.status()) && ![1, 6].includes(item.status()))) { $scope.showGenericWarning = true; }
+                                if (items.every(item => !UNMARKABLE_STATUSES.includes(item.status()))) { $scope.showForm = true; }
+                        })
 
                         $scope.canSubmit = function() {
-                            return ($scope.args.selectedStatus && !$scope.showCheckoutOutWarning && !$scope.showInTransitWarning);
+                            return ($scope.args.selectedStatus && $scope.showForm);
                         }
 
                         service.markableStatuses().then(function(statuses) {
@@ -1188,10 +1193,12 @@ function(egCore , egOrg , egCirc , $uibModal , $q , $timeout , $window , ngToast
 
                         $scope.mark = function() {
                             if ($scope.args.selectedStatus) {
-                                service.mark_item(item_id, $scope.args.selectedStatus)
+                                $q.all(item_ids.map(function(item_id) { return service.mark_item(item_id, $scope.args.selectedStatus) }))
                                     .then(function(result) {
-                                        if (Number(result) == 1) {
+                                        if (result.every(function(r) { return Number(r) == 1 })) {
                                             $uibModalInstance.close();
+                                        } else {
+                                            $scope.showError = true;
                                         }
                                     })
                             }

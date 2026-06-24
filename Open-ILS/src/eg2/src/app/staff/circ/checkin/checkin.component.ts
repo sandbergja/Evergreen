@@ -2,7 +2,7 @@
 import { Component, ViewChild, OnInit, AfterViewInit, inject } from '@angular/core';
 import {Location} from '@angular/common';
 import {ActivatedRoute} from '@angular/router';
-import {empty, from, concatMap, catchError, EMPTY, tap} from 'rxjs';
+import {from, concatMap, catchError, EMPTY, tap} from 'rxjs';
 import {IdlObject} from '@eg/core/idl.service';
 import {OrgService} from '@eg/core/org.service';
 import {ServerStoreService} from '@eg/core/server-store.service';
@@ -394,7 +394,7 @@ export class CheckinComponent implements OnInit, AfterViewInit {
                     this.cancelTransitDialog.transitIds = ids;
                     return this.cancelTransitDialog.open();
                 } else {
-                    return empty();
+                    return EMPTY;
                 }
 
             })).subscribe();
@@ -447,7 +447,6 @@ export class CheckinComponent implements OnInit, AfterViewInit {
             });
     }
 
-    protected readonly idFn = (row:CheckinGridEntry) => row.copy;
-    protected readonly statusIdFn = (row:CheckinGridEntry) => row.copy.status().id();
+    protected readonly idFn = (row:CheckinGridEntry) => row.copy.id();
 }
 

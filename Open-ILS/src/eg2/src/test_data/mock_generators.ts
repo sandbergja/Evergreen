@@ -1,3 +1,4 @@
+import { ResourceRef, signal } from '@angular/core';
 import { AuthService } from '@eg/core/auth.service';
 import { IdlObject, IdlService } from '@eg/core/idl.service';
 import { LocaleService } from '@eg/core/locale.service';
@@ -8,9 +9,11 @@ import { ServerStoreService } from '@eg/core/server-store.service';
 import { StoreService } from '@eg/core/store.service';
 import { CatalogSearchContext } from '@eg/share/catalog/search-context';
 import { ItemLocationService } from '@eg/share/item-location-select/item-location.service';
+import { ToastService } from '@eg/share/toast/toast.service';
 import { BatchLineitemStruct, FleshCacheParams, LineitemService } from '@eg/staff/acq/lineitem/lineitem.service';
 import { StaffCatalogService } from '@eg/staff/catalog/catalog.service';
 import { SerialsService } from '@eg/staff/serials/serials.service';
+import { GroupedMarkableItems, MarkItemService } from '@eg/staff/share/holdings/mark-item-service';
 import { HoldsService } from '@eg/staff/share/holds/holds.service';
 import { PatronService } from '@eg/staff/share/patron/patron.service';
 import { EMPTY, from, Observable, of } from 'rxjs';
@@ -104,6 +107,25 @@ export class MockGenerators {
             supportedLocaleCodes: () => returnValues['supportedLocaleCodes'] || ['en-US'],
             supportedLocales: () => of(returnValues['supportedLocales'] || MockGenerators.idlObject({code: 'en-US'})),
         } as Partial<LocaleService>;
+    }
+
+    static markItemService(items = {
+        markable: [
+            this.idlObject({barcode: '12345', status: 0}),
+            this.idlObject({barcode: '67890', status: 0}),
+        ],
+        unmarkable: []
+    }): Partial<MarkItemService> {
+        return {
+            markableItems: () => {
+                return {
+                    value: signal(items),
+                    hasValue: () => true
+                } as ResourceRef<GroupedMarkableItems>;
+            },
+            markableStatuses: () => of([]),
+            markItems: () => of({successes: 3, events: []})
+        };
     }
 
     // Use the method response map to say which OpenSRF methods
@@ -213,6 +235,12 @@ export class MockGenerators {
         return jasmine.createSpyObj<StaffCatalogService>([], {
             searchContext: context
         });
+    }
+
+    static toastService(): Partial<ToastService> {
+        return {
+            success: () => {}
+        };
     }
 
     static orgService() {
