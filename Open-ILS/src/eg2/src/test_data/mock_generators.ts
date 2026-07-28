@@ -68,7 +68,7 @@ export class MockGenerators {
             },
             possibleTargets: (originalHold: IdlObject, desiredType: HoldType) => {
                 return of(
-                    MockGenerators.idlObject({id: 1, label: 'Target 1'}, 'mmr')
+                    [{idlObject: MockGenerators.idlObject({id: 1, label: 'Target 1'}, 'mmr'), event: null}]
                 );
             },
             possibleTargetLabeler: (desiredType: HoldType) => (item) => 'Target 1'

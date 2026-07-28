@@ -8,6 +8,8 @@ import { ChangeHoldTypeService } from './change-hold-type.service';
 import { ToastService } from '@eg/share/toast/toast.service';
 import { PcrudService } from '@eg/core/pcrud.service';
 import { rxResource } from '@angular/core/rxjs-interop';
+import { EgEvent } from '@eg/core/event.service';
+import { Observable } from 'rxjs';
 
 @Component({
     selector: 'eg-change-hold-type-dialog',
@@ -16,6 +18,7 @@ import { rxResource } from '@angular/core/rxjs-interop';
 })
 // This component provides a way for users to change the type of a hold
 export class ChangeTypeDialogComponent extends DialogComponent implements OnInit {
+
     holdId = input.required<number>();
     protected hold = rxResource<IdlObject, {id: number}>({
         stream: ({params}) => this.pcrud.retrieve('ahr', params.id),
@@ -25,6 +28,7 @@ export class ChangeTypeDialogComponent extends DialogComponent implements OnInit
     protected canSubmit = computed(() => this.target().and(this.type()).isSome());
     protected errorMessage = signal<Maybe<string>>(new None());
     private target = signal<Maybe<number>>(new None());
+    protected targetEvent = signal<Maybe<EgEvent>>(new None());
     private type = signal<Maybe<HoldType>>(new None());
     private holdableFormats = signal<Maybe<string>>(new None());
 
@@ -32,10 +36,13 @@ export class ChangeTypeDialogComponent extends DialogComponent implements OnInit
     private pcrud = inject(PcrudService);
     private toast = inject(ToastService);
 
-    protected change() {
+    protected change() { this.changeImpl('change'); }
+    protected override() { this.changeImpl('override'); }
+
+    private changeImpl(method: 'change'|'override') {
         this.type().whenSome(type => {
             this.target().whenSome(target => {
-                this.changeTypeService.change(this.hold.value(), type, target, this.holdableFormats())
+                this.changeTypeService[method](this.hold.value(), type, target, this.holdableFormats())
                     .subscribe(result => {
                         // Object: probably an event indicating that the Change did not go through
                         if (typeof result === 'object') {
@@ -54,6 +61,10 @@ export class ChangeTypeDialogComponent extends DialogComponent implements OnInit
     protected targetSelected(target: Maybe<number>) {
         this.target.set(target);
         this.errorMessage.set(new None());
+    }
+
+    targetEventSelected(event: Maybe<EgEvent>) {
+        this.targetEvent.set(event);
     }
 
     protected typeSelected(type: HoldType) {

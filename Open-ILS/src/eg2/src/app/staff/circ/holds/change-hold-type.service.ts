@@ -11,6 +11,13 @@ import { Maybe } from '@eg/share/maybe';
 
 export type HoldableFormatAttr = 'mr_hold_format' | 'item_lang';
 
+/**
+ * The IDL Object represents the target.  If there is some problem that would require
+ * an override or cause the hold change to fail, there will also be an Event describing
+ * the situation.
+ */
+export type PossibleHoldChangeTarget = {idlObject: IdlObject, event: EgEvent|null};
+
 @Injectable({providedIn: 'root'})
 export class ChangeHoldTypeService {
     private auth = inject(AuthService);
@@ -22,10 +29,11 @@ export class ChangeHoldTypeService {
         originalHold: IdlObject,
         desiredType: HoldType,
         desiredTarget: number,
-        holdableFormats: Maybe<string>): Observable<number|EgEvent> {
+        holdableFormats: Maybe<string>,
+        method='open-ils.circ.holds.change_type.change'): Observable<number|EgEvent> {
         const args: [string, string, string, IdlObject, HoldType, number, string?] = [
             'open-ils.circ',
-            'open-ils.circ.holds.change_type.change',
+            method,
             this.auth.token(),
             originalHold,
             desiredType,
@@ -39,7 +47,21 @@ export class ChangeHoldTypeService {
         );
     }
 
-    possibleTargets(originalHold: IdlObject, desiredType: HoldType): Observable<IdlObject|EgEvent> {
+    override(
+        originalHold: IdlObject,
+        desiredType: HoldType,
+        desiredTarget: number,
+        holdableFormats: Maybe<string>): Observable<number|EgEvent> {
+        return this.change(
+            originalHold,
+            desiredType,
+            desiredTarget,
+            holdableFormats,
+            'open-ils.circ.holds.change_type.change.override'
+        );
+    }
+
+    possibleTargets(originalHold: IdlObject, desiredType: HoldType): Observable<PossibleHoldChangeTarget[]> {
         return this.net.request(
             'open-ils.circ',
             'open-ils.circ.holds.change_type.possible_targets',
@@ -47,7 +69,12 @@ export class ChangeHoldTypeService {
             originalHold,
             desiredType
         ).pipe(
-            map(idOrEvent => this.maybeEgEvent(idOrEvent)),
+            map(targets => {
+                return targets.allowed.map((target: IdlObject) => ({idlObject: target, event: null}))
+                    .concat(targets.not_allowed.map((target: [IdlObject, Object]) => {
+                        return {idlObject: target[0], event: this.evt.parse(target[1])};
+                    }));
+            }),
         );
     }
 

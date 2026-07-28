@@ -5,10 +5,11 @@ import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ComboboxComponent, ComboboxEntry } from '@eg/share/combobox/combobox.component';
 import { rxResource, toSignal } from '@angular/core/rxjs-interop';
 import { ChangeHoldTypeService, HoldableFormatAttr } from './change-hold-type.service';
-import { filter, map, of, toArray } from 'rxjs';
-import { Maybe, None, Some } from '@eg/share/maybe';
-import { JsonPipe, KeyValuePipe } from '@angular/common';
+import { map, of } from 'rxjs';
+import { Maybe, None, Some, toMaybe } from '@eg/share/maybe';
+import { KeyValuePipe } from '@angular/common';
 import { MetarecordHoldFilter, MetarecordHoldFilterLabelPipe } from './metarecord-hold-filter';
+import { EgEvent } from '@eg/core/event.service';
 
 type TypeOption = {code: HoldType, label: string};
 
@@ -26,6 +27,7 @@ export class ChangeTypeFormComponent {
     protected readonly hold = input<IdlObject>();
 
     targetSelected = output<Maybe<number>>();
+    targetEventSelected = output<Maybe<EgEvent>>();
     typeSelected = output<HoldType>();
     holdableFormatSelected = output<Maybe<string>>();
 
@@ -43,6 +45,13 @@ export class ChangeTypeFormComponent {
             this.targetSignal.set(null);
         }
     });
+    private selectEventEffect = effect(() => {
+        if (!this.selectedTarget()) { this.targetEventSelected.emit(new None()); };
+        const selected = this.targetOptions.value()
+            ?.find(option => option.id === this.selectedTarget())
+            ?.userdata;
+        this.targetEventSelected.emit(toMaybe(selected));
+    });
 
     protected typeOptions = computed<TypeOption[]>(() => {
         return holdTypeChangeOptions(this.hold()?.hold_type())
@@ -55,14 +64,17 @@ export class ChangeTypeFormComponent {
                 return this.changeTypeService
                     .possibleTargets(params.originalHold, params.desiredType)
                     .pipe(
-                        filter(target => 'classname' in target),
-                        map(target => {
-                            return {
-                                id: target.id(),
-                                label: this.changeTypeService.possibleTargetLabeler(params.desiredType)(target)
-                            };
-                        }),
-                        toArray()
+                        map(
+                            targets => {
+                                return targets.map(target => {
+                                    return {
+                                        id: target.idlObject.id(),
+                                        label: this.changeTypeService.possibleTargetLabeler(params.desiredType)(target.idlObject),
+                                        userdata: target.event
+                                    };
+                                });
+                            }
+                        )
                     );
             } else {
                 return of([]);
@@ -84,7 +96,7 @@ export class ChangeTypeFormComponent {
 
     protected changeHoldType = new FormGroup({
         desiredType: new FormControl<HoldType>(null),
-        desiredTarget: new FormControl<number>(null),
+        desiredTarget: new FormControl<ComboboxEntry>(null),
         formats: new FormGroup({}),
         langs: new FormGroup({})
     });
@@ -125,9 +137,9 @@ export class ChangeTypeFormComponent {
     });
 
     protected desiredType = toSignal(this.changeHoldType.get('desiredType').valueChanges);
-    private targetFromSelection = toSignal(this.changeHoldType.get('desiredTarget').valueChanges);
+    private targetEntryFromSelection = toSignal<ComboboxEntry>(this.changeHoldType.get('desiredTarget').valueChanges);
     private targetSignal: WritableSignal<number> = signal(null);
-    private selectedTarget = computed(() => this.targetSignal() || this.targetFromSelection());
+    private selectedTarget = computed(() => this.targetSignal() || this.targetEntryFromSelection()?.id);
 
     protected selectOption(entry: ComboboxEntry) {
         this.targetSelected.emit(new Some(entry.id));
