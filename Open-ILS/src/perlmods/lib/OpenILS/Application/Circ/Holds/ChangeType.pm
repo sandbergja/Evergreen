@@ -187,6 +187,9 @@ sub possible_targets {
     my $request_lib = $editor->retrieve_actor_org_unit( $requestor_org_id ) or return $editor->event;
     my $targets = $ctx->possible_targets($editor, $target_query_builder, $extra_where_clauses);
     return unless $targets;
+
+    my @allowed = ();
+    my @not_allowed = ();
     foreach (@{$targets}) {
         my @checked = $HC->do_possibility_checks(
             $editor,
@@ -195,17 +198,56 @@ sub possible_targets {
             $ctx->selection_depth,
             %{$ctx->with_target_as_params($_->{$fieldmapper_class->Identity})}
         );
-        if (@checked && $checked[0]) {
+        if (@checked) {
             my $fm_object = $fieldmapper_class->from_bare_hash($_);
-            $conn->respond($fm_object);
+            if ($checked[0]) {
+                # We did not get an event from the possibility checks, hooray!
+                # However, we still need to double check that it is not a
+                # duplicate hold
+                my $duplicate = $editor->search_action_hold_request({
+                    usr => $ctx->patron_id,
+                    hold_type => $desired_type,
+                    fulfillment_time => undef,
+                    target => $_->{$fieldmapper_class->Identity},
+                    cancel_time => undef
+                })->[0];
+                if ($duplicate) {
+                    push @not_allowed, [$fm_object, OpenILS::Event->new('HOLD_EXISTS')];
+                } else {
+                    push @allowed, $fm_object;
+                }
+            } elsif (@checked && $checked[2] && $U->is_event($checked[2]->[0])) {
+                push @not_allowed, [$fm_object, $checked[2][0]];
+            }
         }
     }
-    return undef;
+    return {allowed => \@allowed, not_allowed => \@not_allowed};
 }
 
 __PACKAGE__->register_method(
     method    => 'change_type',
     api_name  => 'open-ils.circ.holds.change_type.change',
+    signature => {
+        desc => <<'END_DESCRIPTION',
+            Change a hold to the desired type and target (if reasonable to do so).
+            Internally, it places a new hold then cancels the old one.
+END_DESCRIPTION
+        params => [
+            { desc => 'Authentication token', type => 'string' },
+            { desc => 'Original hold (Fieldmapper object)', type => 'object'},
+            { desc => 'New type (single character code)', type => 'string' },
+            { desc => 'New target', type => 'primary key'},
+            { desc => 'Optional: a json string of holdable formats', type => 'string'}
+        ],
+        return => {
+            desc => 'New hold id on success, event on error',
+        },
+    }
+);
+
+__PACKAGE__->register_method(
+    method    => 'change_type',
+    api_name  => 'open-ils.circ.holds.change_type.change.override',
     signature => {
         desc => <<'END_DESCRIPTION',
             Change a hold to the desired type and target (if reasonable to do so).
@@ -248,8 +290,9 @@ sub change_type {
         my $new_ahr = ($ctx->desired_type eq OILS_HOLD_TYPE_METARECORD) && $new_holdable_formats ?
             $ctx->with_target_as_ahr($new_target, {holdable_formats => $new_holdable_formats}) :
             $ctx->with_target_as_ahr($new_target);
+        my $method = $self->api_name =~ /override/ ? 'open-ils.circ.holds.create.override' : 'open-ils.circ.holds.create';
         my ($hold_id) = $self->method_lookup(
-            'open-ils.circ.holds.create'
+            $method
             )->run($auth, $new_ahr);
 
         # open-ils.circ.holds.create can return a single event or an arrayref of events

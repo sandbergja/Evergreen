@@ -23,7 +23,7 @@
                         {{ targetOptions.value()[0].label }}
                     }
                     @default {
-                        <eg-combobox [entries]="targetOptions.value()" name="desiredTarget" (onChange)="selectOption($event)" domId="desiredTarget"></eg-combobox>
+                        <eg-combobox [entries]="targetOptions.value()" formControlName="desiredTarget" (onChange)="selectOption($event)" domId="desiredTarget" [displayTemplate]="displayTemplate"></eg-combobox>
                     }
                 }
             </div>
@@ -45,3 +45,6 @@
         }
     }
 </form>
+<ng-template #displayTemplate let-target="result" i18n>
+  @if (target.userdata) { <span class="material-icons" aria-label="Requires override">error</span> } {{target.label}}
+</ng-template>

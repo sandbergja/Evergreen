@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { NetService } from '@eg/core/net.service';
 import { MockGenerators } from 'test_data/mock_generators';
-import { of, from } from 'rxjs';
+import { of } from 'rxjs';
 import { ChangeHoldTypeService } from './change-hold-type.service';
 import { HoldType } from './hold-type';
 import { EventService } from '@eg/core/event.service';
@@ -24,24 +24,32 @@ describe('ChangeHoldTypeService', () => {
     describe('possible_targets()', () => {
         it('gets its data from the NetService', (done: DoneFn) => {
             const mockNet = MockGenerators.netService({
-                'open-ils.circ.holds.change_type.possible_targets': from([
-                    MockGenerators.idlObject({id: 567}),
-                    MockGenerators.idlObject({id: 789}),
-                ])
+                'open-ils.circ.holds.change_type.possible_targets': of({
+                    allowed: [
+                        MockGenerators.idlObject({id: 567}),
+                        MockGenerators.idlObject({id: 789}),
+                    ], not_allowed: [
+                        [MockGenerators.idlObject({id: 345}), {textcode: 'TEST_EVENT'}]
+                    ]})
             });
             const service = createService(mockNet);
 
             const originalHold = MockGenerators.idlObject({});
-            service.possibleTargets(originalHold, HoldType.TITLE).subscribe({complete: () => {
-                expect(mockNet.request).toHaveBeenCalledOnceWith(
-                    'open-ils.circ',
-                    'open-ils.circ.holds.change_type.possible_targets',
-                    'MY_AUTH_TOKEN',
-                    originalHold,
-                    HoldType.TITLE
-                );
-                done();
-            }});
+            service.possibleTargets(originalHold, HoldType.TITLE).subscribe({
+                next: result => {
+                    expect(result.map(target => target.idlObject.id())).toEqual([567, 789, 345]);
+                    expect(result.map(target => target.event?.textcode)).toEqual([undefined, undefined, 'TEST_EVENT']);
+                },
+                complete: () => {
+                    expect(mockNet.request).toHaveBeenCalledOnceWith(
+                        'open-ils.circ',
+                        'open-ils.circ.holds.change_type.possible_targets',
+                        'MY_AUTH_TOKEN',
+                        originalHold,
+                        HoldType.TITLE
+                    );
+                    done();
+                }});
         });
     });
     describe('change()', () => {

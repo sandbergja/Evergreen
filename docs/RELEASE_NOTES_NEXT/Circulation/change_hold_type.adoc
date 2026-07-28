@@ -2,8 +2,7 @@
 
 In this version of Evergreen, staff users can convert existing
 holds from one type to another.  Currently, changing between Metarecord,
-Title, Volume, Part, and Copy holds is supported.  Overriding a
-potential hold type failure is not supported at this time.
+Title, Volume, Part, and Copy holds is supported.
 
 Internally, the feature is implemented by placing a new hold with the
 same placement date as the original, then canceling the original once

@@ -20,6 +20,10 @@ export class Some<T> {
     toNullable(): T {
         return this.value;
     }
+
+    toString(): string {
+        return this.value.toString();
+    }
 }
 
 export class None<T> {
@@ -38,5 +42,17 @@ export class None<T> {
 
     toNullable(): null {
         return null;
+    }
+
+    toString(): string {
+        return '';
+    }
+}
+
+export function toMaybe<T>(value: T|null|undefined): Maybe<T> {
+    if (value === undefined || value === null) {
+        return new None();
+    } else {
+        return new Some(value);
     }
 }

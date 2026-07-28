@@ -6,16 +6,24 @@
   </div>
   <div class="modal-body">
     @if (hold.hasValue()) {
-      <eg-change-hold-type-form [hold]="hold.value()" (targetSelected)="targetSelected($event)" (typeSelected)="typeSelected($event)" (holdableFormatSelected)="holdableFormatSelected($event)"></eg-change-hold-type-form>
+      <eg-change-hold-type-form [hold]="hold.value()" (targetSelected)="targetSelected($event)" (targetEventSelected)="targetEventSelected($event)" (typeSelected)="typeSelected($event)" (holdableFormatSelected)="holdableFormatSelected($event)"></eg-change-hold-type-form>
     }
   </div>
+  @if (targetEvent()?.isSome()) {
+    <div class="alert alert-warning"><span class="material-icons" aria-label="Requires override"></span>{{ targetEvent().toString() }}</div>
+  }
   @if (errorMessage().isSome()) {
     <div class="alert alert-warning">{{ errorMessage().toNullable() }}</div>
   }
   <div class="modal-footer">
     <button type="button" class="btn btn-normal"
     (click)="close()" i18n>Cancel</button>
+    @if (targetEvent()?.isSome()) {
+    <button type="button" class="btn btn-success" (disabled)="!canSubmit()"
+    (click)="override()" i18n>Change with override</button>
+    } @else {
     <button type="button" class="btn btn-success" (disabled)="!canSubmit()"
     (click)="change()" i18n>Change</button>
+    }
   </div>
 </ng-template>
