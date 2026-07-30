@@ -120,8 +120,8 @@ export class RecordDisplayEntryEditComponent extends DialogComponent implements 
     private create() {
         const entry = this.idl.create('curde');
         entry.col_pos(this.maxRow() + 1);
-        entry.type(this.type);
-        entry.page_col(this.columnIndex);
+        entry.type(this.type());
+        entry.page_col(this.columnIndex());
         entry.content_type(this.contentType.value);
         entry.field(this.recordDisplayEntryEditForm.get('field')?.value?.id);
         entry.value_limit(this.recordDisplayEntryEditForm.get('valueLimit').value);
