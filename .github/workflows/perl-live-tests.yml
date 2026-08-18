@@ -24,9 +24,12 @@ jobs:
   live:
     name: Run Live tests
     runs-on: ubuntu-24.04
+    timeout-minutes: 40
     container:
       image: ubuntu:24.04
     steps:
+      - name: Get hostname for troubleshooting purposes
+        run: hostname
       - run: apt-get update -y
       - run: apt-get install -y sudo git make lsb-release
       - name: Install a syslog implementation
