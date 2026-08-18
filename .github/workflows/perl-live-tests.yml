@@ -27,6 +27,7 @@ jobs:
     timeout-minutes: 40
     container:
       image: ubuntu:24.04
+      options: --hostname testing.blabla.com
     steps:
       - name: Get hostname for troubleshooting purposes
         run: hostname
