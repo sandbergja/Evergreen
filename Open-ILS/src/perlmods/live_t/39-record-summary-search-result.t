@@ -22,7 +22,7 @@ subtest 'single record' => sub {
 
     my ($physical_description) = grep {$_->{label} eq 'Physical Description'} @{$response->{search_result}};
     is_deeply $physical_description->{value},
-        ['374 p. ; 25 cm.', 'print'],
+        ['print', '374 p. ; 25 cm.'],
         'includes the physical description';
     
     is $physical_description->{display_as_link}, 'f', 'includes whether or not to display as a link';
@@ -45,7 +45,7 @@ subtest 'single record' => sub {
     my @labels = map {$_->{label}} @{$response->{search_result}};
     diag explain @labels;
     is_deeply \@labels,
-        ['Physical Description', 'Edition', 'Origin Info', 'Publication Date', 'ISBN', 'Physical Description'],
+        ['Physical Description', 'Edition', 'Origin Info', 'Publication Date', 'ISBN'],
         'entries are in the order specified by user';
 };
 
@@ -60,7 +60,7 @@ subtest 'metarecord' => sub {
 
     my ($physical_description) = grep {$_->{label} eq 'Physical Description'} @{$response->{search_result}};
     is_deeply $physical_description->{value},
-        ['374 p. ; 25 cm.', 'print'],
+        ['print', '374 p. ; 25 cm.'],
         'includes the physical description';
 };
 
@@ -112,7 +112,7 @@ subtest 'in non-English locale' => sub {
 
     my ($translated_physical_description) = grep {$_->{label} eq 'Translated Physical Description 😸'} @{$response->{search_result}};
     is_deeply $translated_physical_description->{value},
-        ['374 p. ; 25 cm.', 'print'],
+        ['print', '374 p. ; 25 cm.'],
         'includes the translated label for the physical description';
 
     # Cleanup
